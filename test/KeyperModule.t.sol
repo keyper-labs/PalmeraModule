@@ -52,6 +52,7 @@ contract KeyperModuleTest is Test, KeyperModule {
         assertEq(admin, org1);
         assertEq(parent, org1);
         assertEq(keyperModule.isChild(org1, org1, groupA), true);
+        assertEq(keyperModule.isChild(org1, org1, groupB), false);
     }
 
     function testExpectOrgNotRegistered() public {
@@ -84,7 +85,8 @@ contract KeyperModuleTest is Test, KeyperModule {
         vm.stopPrank();
         vm.startPrank(groupA);
         keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
-        keyperModule.addGroup(org1, groupA, groupA, org1, "Group B");
-
+        keyperModule.addGroup(org1, groupB, groupA, org1, "Group B");
+        assertEq(keyperModule.isChild(org1, org1, groupA), true);
+        assertEq(keyperModule.isChild(org1, groupA, groupB), true);
     }
 }
