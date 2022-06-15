@@ -13,6 +13,7 @@ contract KeyperModuleTest is Test, KeyperModule {
     address org2 = address(0x002);
     address groupA = address(0x000a);
     address groupB = address(0x000b);
+    string rootOrgName;
 
     // Function called before each test is run
     function setUp() public {
@@ -20,18 +21,18 @@ contract KeyperModuleTest is Test, KeyperModule {
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
         keyperModule = new KeyperModule();
+        rootOrgName = "Root Org";
     }
 
     function testCreateRootOrg() public {
         vm.startPrank(org1);
-        string memory name = "Root Org";
-        keyperModule.createOrg(name);
+        keyperModule.createOrg(rootOrgName);
         string memory orgname;
         address admin;
         address safe;
         address parent;
         (orgname, admin, safe, parent) = keyperModule.getOrg(org1);
-        assertEq(orgname, name);
+        assertEq(orgname, rootOrgName);
         assertEq(admin, org1);
         assertEq(safe, org1);
         assertEq(parent, address(0));
@@ -39,12 +40,8 @@ contract KeyperModuleTest is Test, KeyperModule {
 
     function testAddGroup() public {
         vm.startPrank(org1);
-        string memory name = "Root Org";
-        keyperModule.createOrg(name);
-        vm.stopPrank();
-        vm.startPrank(groupA);
-        keyperModule.addGroup(org1, org1, org1, "GroupA");
-        vm.stopPrank();
+        keyperModule.createOrg(rootOrgName);
+        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
         string memory groupName;
         address admin;
         address safe;
@@ -54,21 +51,40 @@ contract KeyperModuleTest is Test, KeyperModule {
         assertEq(safe, groupA);
         assertEq(admin, org1);
         assertEq(parent, org1);
+        assertEq(keyperModule.isChild(org1, org1, groupA), true);
     }
 
     function testExpectOrgNotRegistered() public {
         vm.startPrank(groupA);
         vm.expectRevert(KeyperModule.OrgNotRegistered.selector);
-        keyperModule.addGroup(org1, org1, org1, "GroupA");
+        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
     }
 
     function testExpectParentNotRegistered() public {
         vm.startPrank(org1);
-        string memory name = "Root Org";
-        keyperModule.createOrg(name);
+        keyperModule.createOrg(rootOrgName);
         vm.stopPrank();
         vm.startPrank(groupA);
         vm.expectRevert(KeyperModule.ParentNotRegistered.selector);
-        keyperModule.addGroup(org1, org2, org1, "GroupA");
+        keyperModule.addGroup(org1, groupA, org2, org1, "GroupA");
+    }
+
+    function testExpectAdminNotRegistered() public {
+        vm.startPrank(org1);
+        keyperModule.createOrg(rootOrgName);
+        vm.stopPrank();
+        vm.startPrank(groupA);
+        vm.expectRevert(KeyperModule.AdminNotRegistered.selector);
+        keyperModule.addGroup(org1, groupA, org1, org2, "GroupA");
+    }
+
+    function testAddSubGroup() public {
+        vm.startPrank(org1);
+        keyperModule.createOrg(rootOrgName);
+        vm.stopPrank();
+        vm.startPrank(groupA);
+        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
+        keyperModule.addGroup(org1, groupA, groupA, org1, "Group B");
+
     }
 }

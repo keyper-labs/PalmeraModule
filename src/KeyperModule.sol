@@ -36,7 +36,9 @@ contract KeyperModule {
 
     // Errors
     error OrgNotRegistered();
+    error GroupNotRegistered();
     error ParentNotRegistered();
+    error AdminNotRegistered();
 
     struct Group {
         string name;
@@ -48,7 +50,7 @@ contract KeyperModule {
 
     function getOrg(address _org) view public returns (string memory, address, address, address) {
         require(_org != address(0));
-        require(orgs[_org].safe != address(0), "org not registered");
+        if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
         return (orgs[_org].name, orgs[_org].admin, orgs[_org].safe, orgs[_org].parent);
     }
 
@@ -59,35 +61,66 @@ contract KeyperModule {
         rootOrg.safe = msg.sender;
     }
 
-    // TODO only admin can add a group
-    function addGroup(address _org, address _parent, address _admin, string memory _name) public {
-        address orgSafe = orgs[_org].safe;
-        if (orgSafe == address(0)) revert OrgNotRegistered();
-        address parent = orgs[_parent].safe;
-        if (parent == address(0)) {
+    // TODO call auth modifier (only admin can add a group)
+    // Org to add group
+    // group safe address
+    // Parent: Registered org or group
+    // Admin: Registered org
+    // Group name
+    function addGroup(address _org, address _group, address _parent, address _admin, string memory _name) public {
+        if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
+        if (orgs[_parent].safe == address(0)) {
             // Check within groups
-            address parentGroup = groups[_org][_parent].safe;
-            if (parentGroup == address(0)) revert ParentNotRegistered();
+            if (groups[_org][_parent].safe == address(0)) revert ParentNotRegistered();
         }
-        // TODO Add check for admin exist => Admin can only be an org?
-        // require(groups[_org][_admin].safe != address(0), "admin group must be registered within org");
-        Group storage group = groups[_org][msg.sender];
+        if (orgs[_admin].safe == address(0)) revert AdminNotRegistered();
+        Group storage group = groups[_org][_group];
         group.name = _name;
         group.admin = _admin;
         group.parent = _parent;
-        // TODO check if the sender will always be the safe or can be the admin
-        group.safe = msg.sender;
+        group.safe = _group;
+        // Update child on parent
+        // TODO add logic to handle childs for orgs
+        Group storage parentGroup = groups[_org][_parent];
+        parentGroup.childs[_group] = true;
+        // Is parent an org? => need to update the org mapping info too
+        if (_org == _parent) {
+            Group storage org = orgs[_org];
+            org.childs[_group] = true;
+        }
     }
 
+    // returns
+    // name Group
+    // admin @
+    // safe @
+    // parent @
     function getGroupInfo(address _org, address _group) view public returns (string memory, address, address, address) {
         address groupSafe = groups[_org][_group].safe;
-        require(groupSafe != address(0), "group not registered");
+        if (groupSafe == address(0)) revert OrgNotRegistered();
+
         return (groups[_org][_group].name, groups[_org][_group].admin, groups[_org][_group].safe, groups[_org][_group].parent);
     }
 
-    function addChild(address _org, address _group, address _child) private {
-        require(groups[_org][msg.sender].safe != address(0), "org must be registered");
-        Group storage group = groups[_org][_group];
-        group.childs[_child]=true;
+    // Check if _child address is part of the group
+    function isChild(address _org, address _parent, address _child) view public returns (bool) {
+        if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
+        // Check within orgs first if parent is org
+        if (_org == _parent) {
+            Group storage org = orgs[_org];
+            return org.childs[_child];
+        }
+        // Check within groups of the org
+        if (groups[_org][_parent].safe == address(0)) revert ParentNotRegistered();
+        Group storage group = groups[_org][_parent];
+        return group.childs[_child];
     }
+
+    // Pre condition : group has to exist
+    // function associateChild(address _org, address _group, address _child) private {
+    //     if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
+    //     if (groups[_org][_group].safe == address(0)) revert GroupNotRegistered();
+    //     Group storage group = groups[_org][_group];
+    //     group.childs[_child]=true;
+    // }
 }
