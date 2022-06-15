@@ -9,10 +9,11 @@ import {KeyperModule} from "../src/KeyperModule.sol";
 contract KeyperModuleTest is Test, KeyperModule {
     KeyperModule keyperModule;
 
-    address org1 = address(0x001);
-    address org2 = address(0x002);
-    address groupA = address(0x000a);
-    address groupB = address(0x000b);
+    address org1 = address(0x1);
+    address org2 = address(0x2);
+    address groupA = address(0xa);
+    address groupB = address(0xb);
+    address groupC = address(0xc);
     string rootOrgName;
 
     // Function called before each test is run
@@ -82,11 +83,29 @@ contract KeyperModuleTest is Test, KeyperModule {
     function testAddSubGroup() public {
         vm.startPrank(org1);
         keyperModule.createOrg(rootOrgName);
-        vm.stopPrank();
-        vm.startPrank(groupA);
         keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
         keyperModule.addGroup(org1, groupB, groupA, org1, "Group B");
         assertEq(keyperModule.isChild(org1, org1, groupA), true);
         assertEq(keyperModule.isChild(org1, groupA, groupB), true);
+    }
+
+    // Test tree structure for groups
+    //                  org1        org2
+    //                  |            |
+    //              groupA          groupB
+    //                |
+    //              groupC
+    function testTreeOrgs() public {
+        vm.startPrank(org1);
+        keyperModule.createOrg(rootOrgName);
+        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
+        keyperModule.addGroup(org1, groupC, groupA, org1, "Group C");
+        assertEq(keyperModule.isChild(org1, org1, groupA), true);
+        assertEq(keyperModule.isChild(org1, groupA, groupC), true);
+        vm.stopPrank();
+        vm.startPrank(org2);
+        keyperModule.createOrg("RootOrg2");
+        keyperModule.addGroup(org2, groupB, org2, org2, "GroupB");
+        assertEq(keyperModule.isChild(org2, org2, groupB), true);
     }
 }
