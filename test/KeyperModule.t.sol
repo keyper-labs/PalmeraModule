@@ -56,6 +56,15 @@ contract KeyperModuleTest is Test, KeyperModule {
         assertEq(keyperModule.isChild(org1, org1, groupB), false);
     }
 
+    function testAddGroupNotAuthorized(address caller) public {
+        vm.startPrank(org1);
+        keyperModule.createOrg(rootOrgName);
+        vm.stopPrank();
+        vm.startPrank(caller);
+        vm.expectRevert(KeyperModule.NotAuthorized.selector);
+        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
+    }
+
     function testExpectOrgNotRegistered() public {
         vm.startPrank(groupA);
         vm.expectRevert(KeyperModule.OrgNotRegistered.selector);
@@ -87,6 +96,16 @@ contract KeyperModuleTest is Test, KeyperModule {
         keyperModule.addGroup(org1, groupB, groupA, org1, "Group B");
         assertEq(keyperModule.isChild(org1, org1, groupA), true);
         assertEq(keyperModule.isChild(org1, groupA, groupB), true);
+    }
+
+    function testAddSubGroupNotAuthorized(address caller) public {
+        vm.startPrank(org1);
+        keyperModule.createOrg(rootOrgName);
+        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
+        vm.stopPrank();
+        vm.startPrank(caller);
+        vm.expectRevert(KeyperModule.NotAuthorized.selector);
+        keyperModule.addGroup(org1, groupB, groupA, org1, "Group B");
     }
 
     // Test tree structure for groups
