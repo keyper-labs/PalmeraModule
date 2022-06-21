@@ -127,4 +127,11 @@ contract KeyperModuleTest is Test, KeyperModule {
         keyperModule.addGroup(org2, groupB, org2, org2, "GroupB");
         assertEq(keyperModule.isChild(org2, org2, groupB), true);
     }
+
+    // Test transaction execution
+    function testExecKeeperTransaction() public {
+        vm.startPrank(org1);
+        keyperModule.createOrg(rootOrgName);
+        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
+    }
 }
