@@ -4,9 +4,11 @@ pragma solidity 0.8.0;
 import "forge-std/Test.sol";
 import {EIP712} from "@openzeppelin/utils/cryptography/draft-EIP712.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
+import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
 contract TestSigningSafeTx is Test, EIP712("TODO-CheckSAFETX", "1.3") {
     Transaction mockTx;
+    GnosisSafe safe;
 
     struct Transaction {
         address to;
@@ -34,9 +36,39 @@ contract TestSigningSafeTx is Test, EIP712("TODO-CheckSAFETX", "1.3") {
             address(0),
             "0x"
         );
+
+        safe = new GnosisSafe();
     }
 
-    function testCreateSignature() public {}
+    function testCreateSignature() public returns (bytes memory) {
+        uint256[] memory privateKeys = new uint256[](2);
+        privateKeys[0] = 0xA11CE;
+        privateKeys[1] = 0xB11CD;
+
+        bytes memory signatures = createSignedPayload(privateKeys, mockTx);
+        bytes32 payloadDigest = createDigestExecTx(mockTx);
+        // This test is supposed to failed as the safe has not owners
+        safe.checkSignatures(payloadDigest, mockTx.data, signatures);
+
+        return signatures;
+    }
+
+    function createSignedPayload(
+        uint256[] memory privateKeys,
+        Transaction memory safeTx
+    ) public returns (bytes memory) {
+        bytes32 payloadDigest = createDigestExecTx(safeTx);
+        bytes memory signatures;
+        for (uint256 i = 0; i < privateKeys.length; i++) {
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+                privateKeys[i],
+                payloadDigest
+            );
+            signatures = abi.encodePacked(signatures, r, s, v);
+        }
+
+        return signatures;
+    }
 
     function createDigestExecTx(Transaction memory safeTx)
         private
