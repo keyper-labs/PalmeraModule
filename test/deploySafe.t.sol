@@ -11,7 +11,7 @@ contract TestDeploySafe is Test {
         deploySafe = new DeploySafe();
     }
 
-    function testDeploy() public {
+    function testSafeSetup() public {
         deploySafe.run();
 
         // address safeProxy = deploySafe.safeProxy.address;
@@ -33,7 +33,7 @@ contract TestDeploySafe is Test {
 
         (bool success, bytes memory result) = gnosisSafe.delegatecall(setupData);
 
-        address keyperModule = address(0x2);
+        // address keyperModule = address(0x2);
         // TODO: Try to encode enable module call
     }
 }
