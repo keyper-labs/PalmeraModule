@@ -24,8 +24,8 @@ contract DeploySafe is Script {
     MultiSend multisend;
     MultiSendCallOnly multisendCallOnly;
     SignMessageLib signMessageLib;
-    GnosisSafe public gnosisSafe;
-    GnosisSafeProxy public safeProxy;
+    GnosisSafe gnosisSafeContract;
+    GnosisSafeProxy safeProxy;
     address public safeProxyAddress;
 
     function run() public {
@@ -39,12 +39,12 @@ contract DeploySafe is Script {
         multisend = new MultiSend();
         multisendCallOnly = new MultiSendCallOnly();
         signMessageLib = new SignMessageLib();
-        gnosisSafe = new GnosisSafe();
+        gnosisSafeContract = new GnosisSafe();
   
         bytes memory initializer;
         uint256 nonce = uint256(keccak256(initializer));
 
-        safeProxy = proxyFactory.createProxyWithNonce(address(gnosisSafe), initializer, nonce);
+        safeProxy = proxyFactory.createProxyWithNonce(address(gnosisSafeContract), initializer, nonce);
     
         safeProxyAddress = address(safeProxy);
         console.log(safeProxyAddress);

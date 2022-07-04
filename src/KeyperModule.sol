@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "./Enum.sol";
+import {Enum} from "@safe-contracts/common/Enum.sol";
 import {console} from "forge-std/console.sol";
 
 interface GnosisSafe {
