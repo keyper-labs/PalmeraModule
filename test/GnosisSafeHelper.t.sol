@@ -16,11 +16,7 @@ contract GnosisSafeHelper is Test, SigningUtils {
         deploySafe.run();
         address gnosisSafeProxy = deploySafe.getProxyAddress();
         gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
-
-        privateKeyOwners = new uint256[](3);
-        privateKeyOwners[0] = 0xA11CE;
-        privateKeyOwners[1] = 0xB11CD;
-        privateKeyOwners[2] = 0xD11CD;
+        initOnwers();
 
         address[] memory owners = new address[](3);
         owners[0] = vm.addr(privateKeyOwners[0]);
@@ -39,6 +35,41 @@ contract GnosisSafeHelper is Test, SigningUtils {
             uint256(0),
             payable(address(0x0))
         );
+
+        return address(gnosisSafe);
+    }
+
+    // TODO grab the pk from env file
+    function initOnwers() private {
+        privateKeyOwners = new uint256[](5);
+        privateKeyOwners[0] = 0xA11CE;
+        privateKeyOwners[1] = 0xB11CD;
+        privateKeyOwners[2] = 0xD11CD;
+        privateKeyOwners[3] = 0xE11CD;
+        privateKeyOwners[4] = 0xF11CD;
+    }
+
+    function newKeyperSafe(uint256 numberOwners, uint256 threshold) public returns (address) {
+        require(privateKeyOwners.length >= numberOwners, "not enough initialized owners");
+        address[] memory owners = new address[](numberOwners);
+        for(uint256 i = 0; i< numberOwners; i++) {
+            owners[i] = vm.addr(privateKeyOwners[i]);
+        }
+        bytes memory emptyData;
+        bytes memory initializer = abi.encodeWithSignature(
+            "setup(address[],uint256,address,bytes,address,address,uint256,address)",
+            owners,
+            threshold,
+            address(0x0),
+            emptyData,
+            address(0x0),
+            address(0x0),
+            uint256(0),
+            payable(address(0x0))
+        );
+
+        address gnosisSafeProxy = deploySafe.newSafeProxy(initializer);
+        gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
 
         return address(gnosisSafe);
     }
@@ -62,5 +93,22 @@ contract GnosisSafeHelper is Test, SigningUtils {
         );
 
         return txHashed;
+    }
+
+    function createDefaultTx(address to, bytes memory data) public pure returns (Transaction memory) {
+        bytes memory emptyData;
+        Transaction memory defaultTx = Transaction(
+                    to,
+                    0 gwei,
+                    data,
+                    Enum.Operation(0),
+                    0,
+                    0,
+                    0,
+                    address(0),
+                    address(0),
+                    emptyData
+                );
+        return defaultTx;
     }
 }

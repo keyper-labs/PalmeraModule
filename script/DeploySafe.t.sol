@@ -40,18 +40,34 @@ contract DeploySafe is Script {
         multisendCallOnly = new MultiSendCallOnly();
         signMessageLib = new SignMessageLib();
         gnosisSafeContract = new GnosisSafe();
-  
+
         bytes memory initializer;
         uint256 nonce = uint256(keccak256(initializer));
 
-        safeProxy = proxyFactory.createProxyWithNonce(address(gnosisSafeContract), initializer, nonce);
-    
+        safeProxy = proxyFactory.createProxyWithNonce(
+            address(gnosisSafeContract),
+            initializer,
+            nonce
+        );
         safeProxyAddress = address(safeProxy);
-        console.log(safeProxyAddress);
+
         vm.stopBroadcast();
     }
 
-    function getProxyAddress() public view returns(address) {
+    function newSafeProxy(bytes memory initializer)
+        public
+        returns (address)
+    {
+        uint256 nonce = uint256(keccak256(initializer));
+        safeProxy = proxyFactory.createProxyWithNonce(
+            address(gnosisSafeContract),
+            initializer,
+            nonce
+        );
+        return address(safeProxy);
+    }
+
+    function getProxyAddress() public view returns (address) {
         return safeProxyAddress;
     }
 }

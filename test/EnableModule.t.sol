@@ -26,20 +26,8 @@ contract TestEnableModule is Test, SigningUtils, SignDigestHelper {
             address(keyperModule)
         );
 
-        bytes memory emptyData;
         // Create enable module safe tx
-        Transaction memory mockTx = Transaction(
-            gnosisSafeAddr,
-            0 gwei,
-            data,
-            Enum.Operation(0),
-            0,
-            0,
-            0,
-            address(0),
-            address(0),
-            emptyData
-        );
+        Transaction memory mockTx = gnosisHelper.createDefaultTx(gnosisSafeAddr, data);
 
         // Create encoded tx to be signed
         uint256 nonce = gnosisHelper.gnosisSafe().nonce();
@@ -72,5 +60,13 @@ contract TestEnableModule is Test, SigningUtils, SignDigestHelper {
             address(keyperModule)
         );
         assertEq(isKeyperModuleEnabled, true);
+    }
+
+    function testNewSafeWithKeyperModule() public {
+        // Create new safe with setup called while creating contract
+        address keyperSafe = gnosisHelper.newKeyperSafe(4,2);
+        address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
+        assertEq(owners.length, 4);
+        assertEq(gnosisHelper.gnosisSafe().getThreshold(), 2);
     }
 }
