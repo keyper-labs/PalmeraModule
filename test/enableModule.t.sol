@@ -50,17 +50,49 @@ contract enableModule is Test, SigningUtils {
         );
 
         mockTx = Transaction(
-            address(0x1),
+            address(gnosisSafe),
             0 gwei,
-            "0x",
+            emptyData,
             Enum.Operation(0),
-            5 gwei,
-            5 gwei,
-            5 gwei,
+            0,
+            0,
+            0,
             address(0),
             address(0),
-            "0x"
+            emptyData
         );
+    }
+
+    function testTransferFundsSafe() public {
+        // Send funds to safe
+        vm.deal(address(gnosisSafe), 2 ether);
+        // Create encoded tx to be signed
+        uint256 nonce = gnosisSafe.nonce();
+        mockTx.value = 0.5 ether;
+        bytes32 transferSafeTx = createSafeTxData(mockTx, nonce);
+        // Sign encoded tx with 1 owner
+        uint256[] memory privateKeyOwner = new uint256[](1);
+        privateKeyOwner[0] = privateKeyOwners[0];
+
+        bytes memory signatures = signDigestTx(
+            privateKeyOwner,
+            transferSafeTx
+        );
+        // Exec tx
+        bool result = gnosisSafe.execTransaction(
+            mockTx.to,
+            mockTx.value,
+            mockTx.data,
+            mockTx.operation,
+            mockTx.safeTxGas,
+            mockTx.baseGas,
+            mockTx.gasPrice,
+            mockTx.gasToken,
+            payable(address(0)),
+            signatures
+        );
+
+        assertEq(address(gnosisSafe).balance, 1.5 ether);
     }
 
     function testEnableKeyperModule() public {
@@ -71,47 +103,54 @@ contract enableModule is Test, SigningUtils {
             "enableModule(address)",
             address(keyperModule)
         );
+        mockTx.data = data;
         // Create encoded tx to be signed
-        // TODO how to get the nonce for the safe?
         uint256 nonce = gnosisSafe.nonce();
-        bytes32 enableModuleSafeTx = createSafeTxData(data, nonce);
+        bytes32 enableModuleSafeTx = createSafeTxData(mockTx, nonce);
         // Sign encoded tx with 1 owner
         uint256[] memory privateKeyOwner = new uint256[](1);
         privateKeyOwner[0] = privateKeyOwners[0];
 
-        bytes memory signatures = signDigestTx(privateKeyOwner, enableModuleSafeTx);
+        bytes memory signatures = signDigestTx(
+            privateKeyOwner,
+            enableModuleSafeTx
+        );
         // Exec tx
         bool result = gnosisSafe.execTransaction(
             mockTx.to,
             mockTx.value,
-            data,
+            mockTx.data,
             mockTx.operation,
             mockTx.safeTxGas,
             mockTx.baseGas,
             mockTx.gasPrice,
             mockTx.gasToken,
             payable(address(0)),
-            signatures);
+            signatures
+        );
+
         // Verify module has been enabled
-        bool isKeyperModuleEnabled = gnosisSafe.isModuleEnabled(address(keyperModule));
+        bool isKeyperModuleEnabled = gnosisSafe.isModuleEnabled(
+            address(keyperModule)
+        );
         assertEq(isKeyperModuleEnabled, true);
     }
 
-    function createSafeTxData(bytes memory data, uint256 nonce)
+    function createSafeTxData(Transaction memory safeTx, uint256 nonce)
         public
         view
         returns (bytes32)
     {
         bytes32 dataHashed = this.callGetTransactionHash(
-            mockTx.to,
-            mockTx.value,
-            data,
-            mockTx.operation,
-            mockTx.safeTxGas,
-            mockTx.baseGas,
-            mockTx.gasPrice,
-            mockTx.gasToken,
-            mockTx.refundReceiver,
+            safeTx.to,
+            safeTx.value,
+            safeTx.data,
+            safeTx.operation,
+            safeTx.safeTxGas,
+            safeTx.baseGas,
+            safeTx.gasPrice,
+            safeTx.gasToken,
+            safeTx.refundReceiver,
             nonce
         );
 

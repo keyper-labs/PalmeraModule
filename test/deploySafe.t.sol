@@ -17,6 +17,7 @@ contract TestDeploySafe is Test {
         // address safeProxy = deploySafe.safeProxy.address;
         address gnosisSafe = deploySafe.gnosisSafe.address;
 
+        // Encoding calldata
         address[3] memory owners = [address(0x11), address(0x12), address(0x13)];
         bytes memory emptyData;
         bytes memory setupData = abi.encodeWithSignature(
@@ -32,9 +33,6 @@ contract TestDeploySafe is Test {
         );
 
         (bool success, bytes memory result) = gnosisSafe.delegatecall(setupData);
-
-        // address keyperModule = address(0x2);
-        // TODO: Try to encode enable module call
     }
 }
 

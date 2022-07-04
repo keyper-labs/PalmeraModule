@@ -15,7 +15,9 @@ interface GnosisSafe {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    ) external returns (bool success);
+    )
+        external
+        returns (bool success);
 
     /// @dev Allows to execute a Safe transaction confirmed by required number of owners and then pays the account that submitted the transaction.
     ///      Note: The fees are always transferred, even if the user transaction fails.
@@ -40,7 +42,10 @@ interface GnosisSafe {
         address gasToken,
         address payable refundReceiver,
         bytes memory signatures
-    ) external payable returns (bool success);
+    )
+        external
+        payable
+        returns (bool success);
 }
 
 // TODO modifiers for auth calling the diff functions
@@ -95,12 +100,7 @@ contract KeyperModule {
     function getOrg(address _org)
         public
         view
-        returns (
-            string memory,
-            address,
-            address,
-            address
-        )
+        returns (string memory, address, address, address)
     {
         require(_org != address(0));
         if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
@@ -131,12 +131,14 @@ contract KeyperModule {
         address _parent,
         address _admin,
         string memory _name
-    ) public {
+    )
+        public
+    {
         if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
         if (orgs[_parent].safe == address(0)) {
             // Check within groups
             if (groups[_org][_parent].safe == address(0))
-                revert ParentNotRegistered();
+            revert ParentNotRegistered();
         }
         if (orgs[_admin].safe == address(0)) revert AdminNotRegistered();
         // check msg.sender is the admin of the _org
@@ -165,12 +167,7 @@ contract KeyperModule {
     function getGroupInfo(address _org, address _group)
         public
         view
-        returns (
-            string memory,
-            address,
-            address,
-            address
-        )
+        returns (string memory, address, address, address)
     {
         address groupSafe = groups[_org][_group].safe;
         if (groupSafe == address(0)) revert OrgNotRegistered();
@@ -184,11 +181,11 @@ contract KeyperModule {
     }
 
     // Check if _child address is part of the group
-    function isChild(
-        address _org,
-        address _parent,
-        address _child
-    ) public view returns (bool) {
+    function isChild(address _org, address _parent, address _child)
+        public
+        view
+        returns (bool)
+    {
         if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
         // Check within orgs first if parent is org
         if (_org == _parent) {
@@ -197,7 +194,7 @@ contract KeyperModule {
         }
         // Check within groups of the org
         if (groups[_org][_parent].safe == address(0))
-            revert ParentNotRegistered();
+        revert ParentNotRegistered();
         Group storage group = groups[_org][_parent];
         return group.childs[_child];
     }
@@ -213,7 +210,11 @@ contract KeyperModule {
         TransactionHelper calldata txHelper,
         address payable refundReceiver,
         bytes memory signatures
-    ) external payable returns (bool success) {
+    )
+        external
+        payable
+        returns (bool success)
+    {
         // TODO Remove this dummy logic
         // if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
         // check msg.sender is the admin of the _org

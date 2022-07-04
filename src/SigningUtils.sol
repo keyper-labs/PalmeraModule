@@ -35,15 +35,25 @@ abstract contract SigningUtils {
      * address signer = ECDSA.recover(digest, signature);
      * ```
      */
-    function _hashTypedDataV4(bytes32 domainSeparator, bytes32 structHash) internal view virtual returns (bytes32) {
+    function _hashTypedDataV4(bytes32 domainSeparator, bytes32 structHash)
+        internal
+        view
+        virtual
+        returns (bytes32)
+    {
         return ECDSA.toTypedDataHash(domainSeparator, structHash);
     }
 
-    function createDigestExecTx(bytes32 domainSeparatorGnosis, Transaction memory safeTx)
-        public view
+    function createDigestExecTx(
+        bytes32 domainSeparatorGnosis,
+        Transaction memory safeTx
+    )
+        public
+        view
         returns (bytes32)
     {
-        bytes32 digest = _hashTypedDataV4(domainSeparatorGnosis,
+        bytes32 digest = _hashTypedDataV4(
+            domainSeparatorGnosis,
             keccak256(
                 abi.encode(
                     keccak256(
