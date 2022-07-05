@@ -80,6 +80,10 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         return address(gnosisSafe);
     }
 
+    function updateSafeInterface(address safe) public {
+        gnosisSafe = GnosisSafe(payable(address(safe)));
+    }
+
     function createSafeTxHash(Transaction memory safeTx, uint256 nonce)
         public
         view
@@ -127,27 +131,7 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
 
         // Create enable module safe tx
         Transaction memory mockTx = createDefaultTx(safe, data);
-
-        // Create encoded tx to be signed
-        uint256 nonce = gnosisSafe.nonce();
-        bytes32 enableModuleSafeTx = createSafeTxHash(mockTx, nonce);
-
-        address[] memory owners = gnosisSafe.getOwners();
-        // Order owners
-        address[] memory sortedOwners = sortAddresses(owners);
-        uint256 threshold = gnosisSafe.getThreshold();
-
-        // Get pk for the signing threshold 
-        uint256[] memory privateKeySafeOwners = new uint256[](threshold);
-        for(uint256 i = 0; i< threshold; i++) {
-            privateKeySafeOwners[i] = ownersPK[sortedOwners[i]];
-        }
-
-        bytes memory signatures = signDigestTx(
-            privateKeySafeOwners,
-            enableModuleSafeTx
-        );
-
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
         return result;
     }
@@ -176,9 +160,25 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
             orgName
         );
 
-        // Create enable module safe tx
+        // Create module safe tx
         Transaction memory mockTx = createDefaultTx(module, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
 
+    function createAddGroupTx(address org, address group, address parent, address admin, string memory name, address module) public returns (bool){
+        bytes memory data = abi.encodeWithSignature("addGroup(address,address,address,address,string)", org, group, parent, admin, name);
+        // Create module safe tx
+        Transaction memory mockTx = createDefaultTx(module, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
+    function encodeSignaturesModuleSafeTx(Transaction memory mockTx) public returns (bytes memory){
         // Create encoded tx to be signed
         uint256 nonce = gnosisSafe.nonce();
         bytes32 enableModuleSafeTx = createSafeTxHash(mockTx, nonce);
@@ -199,7 +199,6 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
             enableModuleSafeTx
         );
 
-        bool result = executeSafeTx(mockTx, signatures);
-        return result;
+        return signatures;
     }
 }
