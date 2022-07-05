@@ -1,13 +1,15 @@
 pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
+import "./SignDigestHelper.t.sol";
 import "../script/DeploySafe.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
-contract GnosisSafeHelper is Test, SigningUtils {
+contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
     GnosisSafe public gnosisSafe;
     DeploySafe public deploySafe;
     uint256[] public privateKeyOwners;
+    mapping(address => uint256) ownersPK;
 
     // Setup gnosis safe with 3 owners, 1 threshold
     // TODO: make this function flexible
@@ -39,14 +41,18 @@ contract GnosisSafeHelper is Test, SigningUtils {
         return address(gnosisSafe);
     }
 
-    // TODO grab the pk from env file
     function initOnwers() private {
-        privateKeyOwners = new uint256[](5);
-        privateKeyOwners[0] = 0xA11CE;
-        privateKeyOwners[1] = 0xB11CD;
-        privateKeyOwners[2] = 0xD11CD;
-        privateKeyOwners[3] = 0xE11CD;
-        privateKeyOwners[4] = 0xF11CD;
+        privateKeyOwners = new uint256[](10);
+        for(uint256 i = 0; i< 10; i++) {
+            uint256 pk = i;
+            // Avoid deriving public key from 0x address
+            if (i == 0) {
+                pk = 0xaaa;
+            }
+            address publicKey = vm.addr(pk);
+            ownersPK[publicKey] = pk;
+            privateKeyOwners[i] = pk;
+        }
     }
 
     function newKeyperSafe(uint256 numberOwners, uint256 threshold) public returns (address) {
@@ -110,5 +116,54 @@ contract GnosisSafeHelper is Test, SigningUtils {
                     emptyData
                 );
         return defaultTx;
+    }
+
+    function enableModuleTx(address safe, address module) public returns (bool){
+        // Create enableModule calldata
+        bytes memory data = abi.encodeWithSignature(
+            "enableModule(address)",
+            address(module)
+        );
+
+        // Create enable module safe tx
+        Transaction memory mockTx = createDefaultTx(safe, data);
+
+        // Create encoded tx to be signed
+        uint256 nonce = gnosisSafe.nonce();
+        bytes32 enableModuleSafeTx = createSafeTxHash(mockTx, nonce);
+
+        address[] memory owners = gnosisSafe.getOwners();
+        uint256 threshold = gnosisSafe.getThreshold();
+
+        // Get pk for the signing threshold 
+        uint256[] memory privateKeySafeOwners = new uint256[](threshold);
+        for(uint256 i = 0; i< threshold; i++) {
+            privateKeySafeOwners[i] = ownersPK[owners[i]];
+        }
+
+        bytes memory signatures = signDigestTx(
+            privateKeySafeOwners,
+            enableModuleSafeTx
+        );
+
+        bool result = executeEnableModuleTx(mockTx, signatures);
+        return result;
+    }
+
+    function executeEnableModuleTx(Transaction memory mockTx, bytes memory signatures) internal returns (bool){
+        bool result = gnosisSafe.execTransaction(
+            mockTx.to,
+            mockTx.value,
+            mockTx.data,
+            mockTx.operation,
+            mockTx.safeTxGas,
+            mockTx.baseGas,
+            mockTx.gasPrice,
+            mockTx.gasToken,
+            payable(address(0)),
+            signatures
+        );
+
+        return result;
     }
 }

@@ -20,40 +20,7 @@ contract TestEnableModule is Test, SigningUtils, SignDigestHelper {
     }
 
     function testEnableKeyperModule() public {
-        // Create enableModule calldata
-        bytes memory data = abi.encodeWithSignature(
-            "enableModule(address)",
-            address(keyperModule)
-        );
-
-        // Create enable module safe tx
-        Transaction memory mockTx = gnosisHelper.createDefaultTx(gnosisSafeAddr, data);
-
-        // Create encoded tx to be signed
-        uint256 nonce = gnosisHelper.gnosisSafe().nonce();
-        bytes32 enableModuleSafeTx = gnosisHelper.createSafeTxHash(mockTx, nonce);
-        // Sign encoded tx with 1 owner
-        uint256[] memory privateKeyOwner = new uint256[](1);
-        privateKeyOwner[0] = gnosisHelper.privateKeyOwners(0);
-
-        bytes memory signatures = signDigestTx(
-            privateKeyOwner,
-            enableModuleSafeTx
-        );
-        // Exec tx
-        bool result = gnosisHelper.gnosisSafe().execTransaction(
-            mockTx.to,
-            mockTx.value,
-            mockTx.data,
-            mockTx.operation,
-            mockTx.safeTxGas,
-            mockTx.baseGas,
-            mockTx.gasPrice,
-            mockTx.gasToken,
-            payable(address(0)),
-            signatures
-        );
-
+        bool result = gnosisHelper.enableModuleTx(gnosisSafeAddr, address(keyperModule));
         assertEq(result, true);
         // Verify module has been enabled
         bool isKeyperModuleEnabled = gnosisHelper.gnosisSafe().isModuleEnabled(
