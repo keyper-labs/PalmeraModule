@@ -133,12 +133,14 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         bytes32 enableModuleSafeTx = createSafeTxHash(mockTx, nonce);
 
         address[] memory owners = gnosisSafe.getOwners();
+        // Order owners
+        address[] memory sortedOwners = sortAddresses(owners);
         uint256 threshold = gnosisSafe.getThreshold();
 
         // Get pk for the signing threshold 
         uint256[] memory privateKeySafeOwners = new uint256[](threshold);
         for(uint256 i = 0; i< threshold; i++) {
-            privateKeySafeOwners[i] = ownersPK[owners[i]];
+            privateKeySafeOwners[i] = ownersPK[sortedOwners[i]];
         }
 
         bytes memory signatures = signDigestTx(
@@ -146,11 +148,11 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
             enableModuleSafeTx
         );
 
-        bool result = executeEnableModuleTx(mockTx, signatures);
+        bool result = executeSafeTx(mockTx, signatures);
         return result;
     }
 
-    function executeEnableModuleTx(Transaction memory mockTx, bytes memory signatures) internal returns (bool){
+    function executeSafeTx(Transaction memory mockTx, bytes memory signatures) internal returns (bool){
         bool result = gnosisSafe.execTransaction(
             mockTx.to,
             mockTx.value,
@@ -164,6 +166,40 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
             signatures
         );
 
+        return result;
+    }
+
+    function createOrgTx(string memory orgName, address module) public returns (bool){
+        // Create enableModule calldata
+        bytes memory data = abi.encodeWithSignature(
+            "createOrg(string)",
+            orgName
+        );
+
+        // Create enable module safe tx
+        Transaction memory mockTx = createDefaultTx(module, data);
+
+        // Create encoded tx to be signed
+        uint256 nonce = gnosisSafe.nonce();
+        bytes32 enableModuleSafeTx = createSafeTxHash(mockTx, nonce);
+
+        address[] memory owners = gnosisSafe.getOwners();
+        // Order owners
+        address[] memory sortedOwners = sortAddresses(owners);
+        uint256 threshold = gnosisSafe.getThreshold();
+
+        // Get pk for the signing threshold 
+        uint256[] memory privateKeySafeOwners = new uint256[](threshold);
+        for(uint256 i = 0; i< threshold; i++) {
+            privateKeySafeOwners[i] = ownersPK[sortedOwners[i]];
+        }
+
+        bytes memory signatures = signDigestTx(
+            privateKeySafeOwners,
+            enableModuleSafeTx
+        );
+
+        bool result = executeSafeTx(mockTx, signatures);
         return result;
     }
 }

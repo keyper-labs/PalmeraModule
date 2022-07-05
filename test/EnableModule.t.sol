@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
-import "../src/SigningUtils.sol";
-import "./SignDigestHelper.t.sol";
 import "./GnosisSafeHelper.t.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 
-contract TestEnableModule is Test, SigningUtils, SignDigestHelper {
+contract TestEnableModule is Test {
     KeyperModule keyperModule;
     GnosisSafeHelper gnosisHelper;
     address gnosisSafeAddr;
@@ -35,5 +33,8 @@ contract TestEnableModule is Test, SigningUtils, SignDigestHelper {
         address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
         assertEq(owners.length, 4);
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), 2);
+        // Enable keyper module
+        bool result = gnosisHelper.enableModuleTx(keyperSafe, address(keyperModule));
+        assertEq(result, true);
     }
 }
