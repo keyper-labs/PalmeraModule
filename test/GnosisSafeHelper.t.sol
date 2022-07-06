@@ -18,7 +18,7 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         deploySafe.run();
         address gnosisSafeProxy = deploySafe.getProxyAddress();
         gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
-        initOnwers();
+        initOnwers(10);
 
         address[] memory owners = new address[](3);
         owners[0] = vm.addr(privateKeyOwners[0]);
@@ -41,9 +41,9 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         return address(gnosisSafe);
     }
 
-    function initOnwers() private {
-        privateKeyOwners = new uint256[](10);
-        for(uint256 i = 0; i< 10; i++) {
+    function initOnwers(uint256 numberOwners) private {
+        privateKeyOwners = new uint256[](numberOwners);
+        for (uint256 i = 0; i < numberOwners; i++) {
             uint256 pk = i;
             // Avoid deriving public key from 0x address
             if (i == 0) {
@@ -55,10 +55,16 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         }
     }
 
-    function newKeyperSafe(uint256 numberOwners, uint256 threshold) public returns (address) {
-        require(privateKeyOwners.length >= numberOwners, "not enough initialized owners");
+    function newKeyperSafe(uint256 numberOwners, uint256 threshold)
+        public
+        returns (address)
+    {
+        require(
+            privateKeyOwners.length >= numberOwners,
+            "not enough initialized owners"
+        );
         address[] memory owners = new address[](numberOwners);
-        for(uint256 i = 0; i< numberOwners; i++) {
+        for (uint256 i = 0; i < numberOwners; i++) {
             owners[i] = vm.addr(privateKeyOwners[i]);
         }
         bytes memory emptyData;
@@ -105,24 +111,30 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         return txHashed;
     }
 
-    function createDefaultTx(address to, bytes memory data) public pure returns (Transaction memory) {
-        bytes memory emptyData;
+    function createDefaultTx(address to, bytes memory data)
+        public
+        pure
+        returns (Transaction memory)
+    {
         Transaction memory defaultTx = Transaction(
-                    to,
-                    0 gwei,
-                    data,
-                    Enum.Operation(0),
-                    0,
-                    0,
-                    0,
-                    address(0),
-                    address(0),
-                    emptyData
-                );
+            to,
+            0 gwei,
+            data,
+            Enum.Operation(0),
+            0,
+            0,
+            0,
+            address(0),
+            address(0),
+            bytes("0x")
+        );
         return defaultTx;
     }
 
-    function enableModuleTx(address safe, address module) public returns (bool){
+    function enableModuleTx(address safe, address module)
+        public
+        returns (bool)
+    {
         // Create enableModule calldata
         bytes memory data = abi.encodeWithSignature(
             "enableModule(address)",
@@ -136,7 +148,10 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         return result;
     }
 
-    function executeSafeTx(Transaction memory mockTx, bytes memory signatures) internal returns (bool){
+    function executeSafeTx(Transaction memory mockTx, bytes memory signatures)
+        internal
+        returns (bool)
+    {
         bool result = gnosisSafe.execTransaction(
             mockTx.to,
             mockTx.value,
@@ -153,7 +168,10 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         return result;
     }
 
-    function createOrgTx(string memory orgName, address module) public returns (bool){
+    function createOrgTx(string memory orgName, address module)
+        public
+        returns (bool)
+    {
         // Create enableModule calldata
         bytes memory data = abi.encodeWithSignature(
             "createOrg(string)",
@@ -168,8 +186,22 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         return result;
     }
 
-    function createAddGroupTx(address org, address group, address parent, address admin, string memory name, address module) public returns (bool){
-        bytes memory data = abi.encodeWithSignature("addGroup(address,address,address,address,string)", org, group, parent, admin, name);
+    function createAddGroupTx(
+        address org,
+        address group,
+        address parent,
+        address admin,
+        string memory name,
+        address module
+    ) public returns (bool) {
+        bytes memory data = abi.encodeWithSignature(
+            "addGroup(address,address,address,address,string)",
+            org,
+            group,
+            parent,
+            admin,
+            name
+        );
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(module, data);
         // Sign tx
@@ -178,7 +210,10 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         return result;
     }
 
-    function encodeSignaturesModuleSafeTx(Transaction memory mockTx) public returns (bytes memory){
+    function encodeSignaturesModuleSafeTx(Transaction memory mockTx)
+        public
+        returns (bytes memory)
+    {
         // Create encoded tx to be signed
         uint256 nonce = gnosisSafe.nonce();
         bytes32 enableModuleSafeTx = createSafeTxHash(mockTx, nonce);
@@ -188,9 +223,9 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         address[] memory sortedOwners = sortAddresses(owners);
         uint256 threshold = gnosisSafe.getThreshold();
 
-        // Get pk for the signing threshold 
+        // Get pk for the signing threshold
         uint256[] memory privateKeySafeOwners = new uint256[](threshold);
-        for(uint256 i = 0; i< threshold; i++) {
+        for (uint256 i = 0; i < threshold; i++) {
             privateKeySafeOwners[i] = ownersPK[sortedOwners[i]];
         }
 

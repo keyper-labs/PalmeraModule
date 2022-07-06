@@ -9,8 +9,6 @@ abstract contract SignDigestHelper is Test {
     {
         bytes memory signatures;
         for (uint256 i = 0; i < _privateKeyOwners.length; i++) {
-            address add = vm.addr(_privateKeyOwners[i]);
-            console.log("signed by: ", add);
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(
                 _privateKeyOwners[i],
                 digest
