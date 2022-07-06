@@ -2,14 +2,14 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./SignDigestHelper.t.sol";
+import "./SignersHelper.t.sol";
 import "../script/DeploySafe.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
-contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
+contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     GnosisSafe public gnosisSafe;
     DeploySafe public deploySafe;
-    uint256[] public privateKeyOwners;
-    mapping(address => uint256) ownersPK;
+
 
     // Setup gnosis safe with 3 owners, 1 threshold
     // TODO: make this function flexible
@@ -39,20 +39,6 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         );
 
         return address(gnosisSafe);
-    }
-
-    function initOnwers(uint256 numberOwners) private {
-        privateKeyOwners = new uint256[](numberOwners);
-        for (uint256 i = 0; i < numberOwners; i++) {
-            uint256 pk = i;
-            // Avoid deriving public key from 0x address
-            if (i == 0) {
-                pk = 0xaaa;
-            }
-            address publicKey = vm.addr(pk);
-            ownersPK[publicKey] = pk;
-            privateKeyOwners[i] = pk;
-        }
     }
 
     function newKeyperSafe(uint256 numberOwners, uint256 threshold)
