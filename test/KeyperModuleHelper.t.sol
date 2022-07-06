@@ -6,7 +6,7 @@ import {KeyperModule} from "../src/KeyperModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
-contract KeyperModuleHelper is Test, SignDigestHelper,SignersHelper  {
+contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     KeyperModule keyper;
     GnosisSafe public gnosisSafe;
 
@@ -28,23 +28,35 @@ contract KeyperModuleHelper is Test, SignDigestHelper,SignersHelper  {
         gnosisSafe = GnosisSafe(payable(safe));
     }
 
-    function createKeyperTxHash(address org, address safe, address to, uint256 value, bytes memory data, Enum.Operation operation, uint256 nonce) public view returns (bytes32){
+    function createKeyperTxHash(
+        address org,
+        address safe,
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation,
+        uint256 nonce
+    ) public view returns (bytes32) {
         bytes32 txHashed = keyper.getTransactionHash(
-                    org,
-                    safe,
-                    to,
-                    value,
-                    data,
-                    operation,
-                    nonce
-                );
+            org,
+            safe,
+            to,
+            value,
+            data,
+            operation,
+            nonce
+        );
         return txHashed;
     }
 
-    function encodeSignaturesKeyperTx(address org, address safe, address to, uint256 value, bytes memory data, Enum.Operation operation)
-        public
-        returns (bytes memory)
-    {
+    function encodeSignaturesKeyperTx(
+        address org,
+        address safe,
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation
+    ) public returns (bytes memory) {
         // Create encoded tx to be signed
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
@@ -68,10 +80,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper,SignersHelper  {
             privateKeySafeOwners[i] = ownersPK[sortedOwners[i]];
         }
 
-        bytes memory signatures = signDigestTx(
-            privateKeySafeOwners,
-            txHashed
-        );
+        bytes memory signatures = signDigestTx(privateKeySafeOwners, txHashed);
 
         return signatures;
     }

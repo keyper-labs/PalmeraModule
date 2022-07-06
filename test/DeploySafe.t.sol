@@ -40,10 +40,7 @@ contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
         uint256[] memory privateKeyOwner = new uint256[](1);
         privateKeyOwner[0] = gnosisHelper.privateKeyOwners(0);
 
-        bytes memory signatures = signDigestTx(
-            privateKeyOwner,
-            transferSafeTx
-        );
+        bytes memory signatures = signDigestTx(privateKeyOwner, transferSafeTx);
         // Exec tx
         bool result = gnosisHelper.gnosisSafe().execTransaction(
             mockTx.to,
@@ -61,4 +58,3 @@ contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
         assertEq(gnosisSafeAddr.balance, 1.5 ether);
     }
 }
-

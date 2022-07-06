@@ -6,10 +6,14 @@ import "./SignersHelper.t.sol";
 import "../script/DeploySafe.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
-contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
+contract GnosisSafeHelper is
+    Test,
+    SigningUtils,
+    SignDigestHelper,
+    SignersHelper
+{
     GnosisSafe public gnosisSafe;
     DeploySafe public deploySafe;
-
 
     // Setup gnosis safe with 3 owners, 1 threshold
     // TODO: make this function flexible

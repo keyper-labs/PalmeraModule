@@ -29,14 +29,19 @@ contract TestKeyperSafe is Test, SigningUtils {
         keyperHelper = new KeyperModuleHelper();
         keyperHelper.initHelper(keyperModule, 10);
         // Enable keyper module
-        gnosisHelper.enableModuleTx(gnosisSafeAddr, address(keyperModule)); 
-        }
+        gnosisHelper.enableModuleTx(gnosisSafeAddr, address(keyperModule));
+    }
 
     function testCreateOrgFromSafe() public {
         // Create createOrg calldata
         bool result = gnosisHelper.createOrgTx("Main Org", keyperModuleAddr);
         assertEq(result, true);
-        (string memory name, address admin, address safe, address parent) = keyperModule.getOrg(gnosisSafeAddr);
+        (
+            string memory name,
+            address admin,
+            address safe,
+            address parent
+        ) = keyperModule.getOrg(gnosisSafeAddr);
         assertEq(name, "Main Org");
         assertEq(admin, gnosisSafeAddr);
         assertEq(safe, gnosisSafeAddr);
@@ -52,7 +57,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         vm.label(keyperSafes[orgName], orgName);
 
         // Create new safe with setup called while creating contract
-        address groupSafe = gnosisHelper.newKeyperSafe(4,2);
+        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         console.log("New group safe", groupSafe);
         address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
         assertEq(owners.length, 4);
@@ -68,7 +73,14 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Update gnosisSafe interface pointer from Org
         address orgAddr = keyperSafes[orgName];
         gnosisHelper.updateSafeInterface(orgAddr);
-        result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, orgAddr, orgAddr, groupName, keyperModuleAddr);
+        result = gnosisHelper.createAddGroupTx(
+            orgAddr,
+            groupSafe,
+            orgAddr,
+            orgAddr,
+            groupName,
+            keyperModuleAddr
+        );
         assertEq(result, true);
 
         // Send ETH to org&subgroup
@@ -78,9 +90,24 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Set keyperhelper gnosis safe to org
         keyperHelper.setGnosisSafe(orgAddr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(orgAddr, groupSafe,receiver, 2 gwei, emptyData, Enum.Operation(0));
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr,
+            groupSafe,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
         // Execute on behalf function
-        result = keyperModule.execTransactionOnBehalf(orgAddr, groupSafe,receiver, 2 gwei, emptyData, Enum.Operation(0), signatures);
+        result = keyperModule.execTransactionOnBehalf(
+            orgAddr,
+            groupSafe,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
         assertEq(result, true);
         assertEq(receiver.balance, 2 gwei);
     }

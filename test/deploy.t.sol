@@ -15,4 +15,3 @@ contract TestDeploy is Test {
         deploy.run();
     }
 }
-

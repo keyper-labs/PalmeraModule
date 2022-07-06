@@ -5,7 +5,6 @@ import {console} from "forge-std/console.sol";
 import {stdStorage, StdStorage, Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 
-
 contract KeyperModuleTest is Test, KeyperModule {
     KeyperModule keyperModule;
 
@@ -47,7 +46,10 @@ contract KeyperModuleTest is Test, KeyperModule {
         address admin;
         address safe;
         address parent;
-        (groupName, admin, safe, parent) = keyperModule.getGroupInfo(org1, groupA);
+        (groupName, admin, safe, parent) = keyperModule.getGroupInfo(
+            org1,
+            groupA
+        );
         assertEq(groupName, "GroupA");
         assertEq(safe, groupA);
         assertEq(admin, org1);

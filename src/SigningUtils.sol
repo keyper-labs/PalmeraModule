@@ -47,11 +47,7 @@ abstract contract SigningUtils {
     function createDigestExecTx(
         bytes32 domainSeparatorGnosis,
         Transaction memory safeTx
-    )
-        public
-        view
-        returns (bytes32)
-    {
+    ) public view returns (bytes32) {
         bytes32 digest = _hashTypedDataV4(
             domainSeparatorGnosis,
             keccak256(

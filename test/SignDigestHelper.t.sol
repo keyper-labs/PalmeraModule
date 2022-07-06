@@ -19,11 +19,15 @@ abstract contract SignDigestHelper is Test {
         return signatures;
     }
 
-    function sortAddresses (address [] memory addresses) public pure returns (address [] memory) {
+    function sortAddresses(address[] memory addresses)
+        public
+        pure
+        returns (address[] memory)
+    {
         for (uint256 i = addresses.length - 1; i > 0; i--)
             for (uint256 j = 0; j < i; j++)
-                if (addresses [i] < addresses [j])
-                    (addresses [i], addresses [j]) = (addresses [j], addresses [i]);
+                if (addresses[i] < addresses[j])
+                    (addresses[i], addresses[j]) = (addresses[j], addresses[i]);
 
         return addresses;
     }

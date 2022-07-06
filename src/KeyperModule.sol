@@ -19,9 +19,7 @@ interface GnosisSafe {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    )
-        external
-        returns (bool success);
+    ) external returns (bool success);
 
     /// @dev Allows to execute a Safe transaction confirmed by required number of owners and then pays the account that submitted the transaction.
     ///      Note: The fees are always transferred, even if the user transaction fails.
@@ -46,10 +44,7 @@ interface GnosisSafe {
         address gasToken,
         address payable refundReceiver,
         bytes memory signatures
-    )
-        external
-        payable
-        returns (bool success);
+    ) external payable returns (bool success);
 
     /// @dev Returns array of owners.
     /// @return Array of Safe owners.
@@ -68,14 +63,15 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     // keccak256(
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"
     // );
-    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
+    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
+        0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
     // keccak256(
     //     "KeyperTx(address org,address safe,address to,uint256 value,bytes data,uint8 operation,uint256 nonce)"
     // );
-    bytes32 private constant KEYPER_TX_TYPEHASH = 0xbb667b7bf67815e546e48fb8d0e6af5c31fe53b9967ed45225c9d55be21652da;
+    bytes32 private constant KEYPER_TX_TYPEHASH =
+        0xbb667b7bf67815e546e48fb8d0e6af5c31fe53b9967ed45225c9d55be21652da;
     using GnosisSafeMath for uint256;
-
 
     // Orgs -> Groups
     mapping(address => mapping(address => Group)) public groups;
@@ -126,7 +122,12 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     function getOrg(address _org)
         public
         view
-        returns (string memory, address, address, address)
+        returns (
+            string memory,
+            address,
+            address,
+            address
+        )
     {
         require(_org != address(0));
         if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
@@ -157,14 +158,12 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         address _parent,
         address _admin,
         string memory _name
-    )
-        public
-    {
+    ) public {
         if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
         if (orgs[_parent].safe == address(0)) {
             // Check within groups
             if (groups[_org][_parent].safe == address(0))
-            revert ParentNotRegistered();
+                revert ParentNotRegistered();
         }
         if (orgs[_admin].safe == address(0)) revert AdminNotRegistered();
         // check msg.sender is the admin of the _org
@@ -193,7 +192,12 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     function getGroupInfo(address _org, address _group)
         public
         view
-        returns (string memory, address, address, address)
+        returns (
+            string memory,
+            address,
+            address,
+            address
+        )
     {
         address groupSafe = groups[_org][_group].safe;
         if (groupSafe == address(0)) revert OrgNotRegistered();
@@ -207,11 +211,11 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     }
 
     // Check if _child address is part of the group
-    function isChild(address _org, address _parent, address _child)
-        public
-        view
-        returns (bool)
-    {
+    function isChild(
+        address _org,
+        address _parent,
+        address _child
+    ) public view returns (bool) {
         if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
         // Check within orgs first if parent is org
         if (_org == _parent) {
@@ -220,7 +224,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         }
         // Check within groups of the org
         if (groups[_org][_parent].safe == address(0))
-        revert ParentNotRegistered();
+            revert ParentNotRegistered();
         Group storage group = groups[_org][_parent];
         return group.childs[_child];
     }
@@ -236,7 +240,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         return false;
     }
 
-    // TODO remove org param 
+    // TODO remove org param
     function execTransactionOnBehalf(
         address org,
         address safe,
@@ -245,43 +249,46 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         bytes calldata data,
         Enum.Operation operation,
         bytes memory signatures
-    )
-        external
-        payable
-        returns (bool success)
-    {
+    ) external payable returns (bool success) {
         // Check org is admin of safe
         // TODO improve this check
         if (!isAdmin(org, safe)) revert NotAuthorizedExecOnBehalf();
         bytes32 txHash;
         // Use scope here to limit variable lifetime and prevent `stack too deep` errors
         {
-            bytes memory keyperTxHashData =
-                encodeTransactionData(
-                    // Keyper Info
-                    org,
-                    safe,
-                    // Transaction info
-                    to,
-                    value,
-                    data,
-                    operation,
-                    // Signature info
-                    nonce
-                );
+            bytes memory keyperTxHashData = encodeTransactionData(
+                // Keyper Info
+                org,
+                safe,
+                // Transaction info
+                to,
+                value,
+                data,
+                operation,
+                // Signature info
+                nonce
+            );
             // Increase nonce and execute transaction.
             nonce++;
             txHash = keccak256(keyperTxHashData);
             checkNSignatures(txHash, keyperTxHashData, signatures, org);
             // Execute transaction from safe
             GnosisSafe gnosisSafe = GnosisSafe(safe);
-            bool result = gnosisSafe.execTransactionFromModule(to, value, data, operation);
+            bool result = gnosisSafe.execTransactionFromModule(
+                to,
+                value,
+                data,
+                operation
+            );
             return result;
         }
     }
 
     function domainSeparator() public view returns (bytes32) {
-        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this));
+        return
+            keccak256(
+                abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)
+            );
     }
 
     /// @dev Returns the chain id used by this contract.
@@ -339,7 +346,11 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
                 assembly {
                     contractSignatureLen := mload(add(add(signatures, s), 0x20))
                 }
-                require(uint256(s).add(32).add(contractSignatureLen) <= signatures.length, "GS023");
+                require(
+                    uint256(s).add(32).add(contractSignatureLen) <=
+                        signatures.length,
+                    "GS023"
+                );
 
                 // Check signature
                 bytes memory contractSignature;
@@ -348,33 +359,56 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
                     // The signature data for contract signatures is appended to the concatenated signatures and the offset is stored in s
                     contractSignature := add(add(signatures, s), 0x20)
                 }
-                require(ISignatureValidator(currentOwner).isValidSignature(data, contractSignature) == EIP1271_MAGIC_VALUE, "GS024");
-            // }
-            // TODO: Identify this usecase
-            // else if (v == 1) {
-            //     // If v is 1 then it is an approved hash
-            //     // When handling approved hashes the address of the approver is encoded into r
-            //     currentOwner = address(uint160(uint256(r)));
-            //     // Hashes are automatically approved by the sender of the message or when they have been pre-approved via a separate transaction
-            //     require(msg.sender == currentOwner || approvedHashes[currentOwner][dataHash] != 0, "GS025");
-            // 
+                require(
+                    ISignatureValidator(currentOwner).isValidSignature(
+                        data,
+                        contractSignature
+                    ) == EIP1271_MAGIC_VALUE,
+                    "GS024"
+                );
+                // }
+                // TODO: Identify this usecase
+                // else if (v == 1) {
+                //     // If v is 1 then it is an approved hash
+                //     // When handling approved hashes the address of the approver is encoded into r
+                //     currentOwner = address(uint160(uint256(r)));
+                //     // Hashes are automatically approved by the sender of the message or when they have been pre-approved via a separate transaction
+                //     require(msg.sender == currentOwner || approvedHashes[currentOwner][dataHash] != 0, "GS025");
+                //
             } else if (v > 30) {
                 // If v > 30 then default va (27,28) has been adjusted for eth_sign flow
                 // To support eth_sign and similar we adjust v and hash the messageHash with the Ethereum message prefix before applying ecrecover
-                currentOwner = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)), v - 4, r, s);
+                currentOwner = ecrecover(
+                    keccak256(
+                        abi.encodePacked(
+                            "\x19Ethereum Signed Message:\n32",
+                            dataHash
+                        )
+                    ),
+                    v - 4,
+                    r,
+                    s
+                );
             } else {
                 // Default is the ecrecover flow with the provided data hash
                 // Use ecrecover with the messageHash for EOA signatures
                 currentOwner = ecrecover(dataHash, v, r, s);
             }
-            require(currentOwner > lastOwner && currentOwner != SENTINEL_OWNERS, "GS026");
+            require(
+                currentOwner > lastOwner && currentOwner != SENTINEL_OWNERS,
+                "GS026"
+            );
             // TODO change this logic, not optimized: Check current owner is part of the owners of the org safe
             require(isSafeOwner(gnosisSafe, currentOwner) != false, "GS026");
             lastOwner = currentOwner;
         }
     }
 
-    function isSafeOwner(GnosisSafe gnosisSafe, address signer) private view returns (bool) {
+    function isSafeOwner(GnosisSafe gnosisSafe, address signer)
+        private
+        view
+        returns (bool)
+    {
         address[] memory safeOwners = gnosisSafe.getOwners();
         for (uint256 i = 0; i < safeOwners.length; i++) {
             if (safeOwners[i] == signer) {
@@ -393,20 +427,25 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         Enum.Operation operation,
         uint256 _nonce
     ) public view returns (bytes memory) {
-        bytes32 keyperTxHash =
-            keccak256(
-                abi.encode(
-                    KEYPER_TX_TYPEHASH,
-                    org,
-                    safe,
-                    to,
-                    value,
-                    keccak256(data),
-                    operation,
-                    _nonce
-                )
+        bytes32 keyperTxHash = keccak256(
+            abi.encode(
+                KEYPER_TX_TYPEHASH,
+                org,
+                safe,
+                to,
+                value,
+                keccak256(data),
+                operation,
+                _nonce
+            )
+        );
+        return
+            abi.encodePacked(
+                bytes1(0x19),
+                bytes1(0x01),
+                domainSeparator(),
+                keyperTxHash
             );
-        return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), keyperTxHash);
     }
 
     function getTransactionHash(
@@ -418,6 +457,17 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         Enum.Operation operation,
         uint256 _nonce
     ) public view returns (bytes32) {
-        return keccak256(encodeTransactionData(org, safe, to, value, data, operation, _nonce));
+        return
+            keccak256(
+                encodeTransactionData(
+                    org,
+                    safe,
+                    to,
+                    value,
+                    data,
+                    operation,
+                    _nonce
+                )
+            );
     }
 }
