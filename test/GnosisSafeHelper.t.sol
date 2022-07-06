@@ -116,6 +116,7 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
         pure
         returns (Transaction memory)
     {
+        bytes memory emptyData;
         Transaction memory defaultTx = Transaction(
             to,
             0 gwei,
@@ -126,7 +127,7 @@ contract GnosisSafeHelper is Test, SigningUtils, SignDigestHelper {
             0,
             address(0),
             address(0),
-            bytes("0x")
+            emptyData
         );
         return defaultTx;
     }

@@ -3,11 +3,14 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./GnosisSafeHelper.t.sol";
+import "./KeyperModuleHelper.t.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 
 contract TestKeyperSafe is Test, SigningUtils {
     KeyperModule keyperModule;
     GnosisSafeHelper gnosisHelper;
+    KeyperModuleHelper keyperHelper;
+
     address gnosisSafeAddr;
     address keyperModuleAddr;
     // Helper mapping to keep track safes associated with a role
@@ -22,6 +25,9 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Init KeyperModule
         keyperModule = new KeyperModule();
         keyperModuleAddr = address(keyperModule);
+        // Init keyperModuleHelper
+        keyperHelper = new KeyperModuleHelper();
+        keyperHelper.initHelper(keyperModule, 10);
         // Enable keyper module
         gnosisHelper.enableModuleTx(gnosisSafeAddr, address(keyperModule)); 
         }
@@ -64,9 +70,18 @@ contract TestKeyperSafe is Test, SigningUtils {
         gnosisHelper.updateSafeInterface(orgAddr);
         result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, orgAddr, orgAddr, groupName, keyperModuleAddr);
         assertEq(result, true);
+
+        // Send ETH to org&subgroup
+        vm.deal(orgAddr, 100 gwei);
+        vm.deal(groupSafe, 100 gwei);
+        address receiver = address(0xABC);
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(orgAddr, groupSafe,receiver, 2 gwei, emptyData, Enum.Operation(0));
+        // Execute on behalf function
+        result = keyperModule.execTransactionOnBehalf(orgAddr, groupSafe,receiver, 2 gwei, emptyData, Enum.Operation(0), signatures);
+        assertEq(result, true);
+        assertEq(receiver.balance, 2 gwei);
     }
-
-    // function testAdminControlGroup() public {
-
-    // }
 }
