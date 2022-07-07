@@ -110,5 +110,28 @@ contract TestKeyperSafe is Test, SigningUtils {
         );
         assertEq(result, true);
         assertEq(receiver.balance, 2 gwei);
+
+        // Try onbehalf with incorrect signers
+        signatures = keyperHelper.encodeInvalidSignaturesKeyperTx(
+            orgAddr,
+            groupSafe,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+
+        vm.expectRevert("GS026");
+        // Execute invalid OnBehalf function
+        result = keyperModule.execTransactionOnBehalf(
+            orgAddr,
+            groupSafe,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        assertEq(result, false);
     }
 }

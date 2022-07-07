@@ -7,9 +7,7 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
 contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
-    KeyperModule keyper;
-    GnosisSafe public gnosisSafe;
-
+    
     struct KeyperTransaction {
         address org;
         address safe;
@@ -18,6 +16,9 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         bytes data;
         Enum.Operation operation;
     }
+
+    KeyperModule keyper;
+    GnosisSafe public gnosisSafe;
 
     function initHelper(KeyperModule _keyper, uint256 numberOwners) public {
         keyper = _keyper;
@@ -81,6 +82,38 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         }
 
         bytes memory signatures = signDigestTx(privateKeySafeOwners, txHashed);
+
+        return signatures;
+    }
+
+    function encodeInvalidSignaturesKeyperTx(
+        address org,
+        address safe,
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation
+    ) public returns (bytes memory) {
+        // Create encoded tx to be signed
+        uint256 nonce = keyper.nonce();
+        bytes32 txHashed = keyper.getTransactionHash(
+            org,
+            safe,
+            to,
+            value,
+            data,
+            operation,
+            nonce
+        );
+
+        uint256 threshold = gnosisSafe.getThreshold();
+        // Get invalid pk for the signing threshold
+        uint256[] memory invalidSafeOwnersPK = new uint256[](threshold);
+        for (uint256 i = 0; i < threshold; i++) {
+            invalidSafeOwnersPK[i] = invalidPrivateKeyOwners[i];
+        }
+
+        bytes memory signatures = signDigestTx(invalidSafeOwnersPK, txHashed);
 
         return signatures;
     }
