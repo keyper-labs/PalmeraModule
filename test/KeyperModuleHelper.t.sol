@@ -7,7 +7,6 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
 contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
-    
     struct KeyperTransaction {
         address org;
         address safe;

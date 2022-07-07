@@ -15,13 +15,11 @@ contract TestEnableModule is Test {
         gnosisSafeAddr = gnosisHelper.setupSafe();
         // Init KeyperModule
         keyperModule = new KeyperModule();
+        gnosisHelper.setKeyperModule(address(keyperModule));
     }
 
     function testEnableKeyperModule() public {
-        bool result = gnosisHelper.enableModuleTx(
-            gnosisSafeAddr,
-            address(keyperModule)
-        );
+        bool result = gnosisHelper.enableModuleTx(gnosisSafeAddr);
         assertEq(result, true);
         // Verify module has been enabled
         bool isKeyperModuleEnabled = gnosisHelper.gnosisSafe().isModuleEnabled(
@@ -32,7 +30,7 @@ contract TestEnableModule is Test {
 
     function testNewSafeWithKeyperModule() public {
         // Create new safe with setup called while creating contract
-        gnosisHelper.newKeyperSafe(4, 2, address(keyperModule));
+        gnosisHelper.newKeyperSafe(4, 2);
         address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
         assertEq(owners.length, 4);
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), 2);

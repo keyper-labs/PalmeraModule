@@ -14,6 +14,7 @@ contract GnosisSafeHelper is
 {
     GnosisSafe public gnosisSafe;
     DeploySafeFactory public safeFactory;
+    address private keyperModuleAddr;
 
     function setupSafe() public returns (address) {
         safeFactory = new DeploySafeFactory();
@@ -46,8 +47,12 @@ contract GnosisSafeHelper is
         return address(gnosisSafe);
     }
 
+    function setKeyperModule(address keyperModule) public {
+        keyperModuleAddr = keyperModule;
+    }
+
     // Create GnosisSafe with Keyper module enabled
-    function newKeyperSafe(uint256 numberOwners, uint256 threshold, address keyperModule)
+    function newKeyperSafe(uint256 numberOwners, uint256 threshold)
         public
         returns (address)
     {
@@ -55,13 +60,14 @@ contract GnosisSafeHelper is
             privateKeyOwners.length >= numberOwners,
             "not enough initialized owners"
         );
-        require (
+        require(
             countUsed + numberOwners <= privateKeyOwners.length,
             "No private keys available"
         );
+        require(keyperModuleAddr != address(0), "Keyper module not set");
         address[] memory owners = new address[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
-            owners[i] = vm.addr(privateKeyOwners[i+countUsed]);
+            owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
             countUsed++;
         }
         bytes memory emptyData;
@@ -81,15 +87,15 @@ contract GnosisSafeHelper is
         gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
 
         // Enable module
-        bool result = enableModuleTx(address(gnosisSafe), keyperModule);
+        bool result = enableModuleTx(address(gnosisSafe));
         require(result == true, "failed enable module");
         return address(gnosisSafe);
     }
 
     function testNewKeyperSafe() public {
         setupSafe();
-        address keyperModuleMock = address(0x678);
-        newKeyperSafe(4, 2, keyperModuleMock);
+        setKeyperModule(address(0x678));
+        newKeyperSafe(4, 2);
         address[] memory owners = gnosisSafe.getOwners();
         assertEq(owners.length, 4);
         assertEq(gnosisSafe.getThreshold(), 2);
@@ -141,14 +147,11 @@ contract GnosisSafeHelper is
         return defaultTx;
     }
 
-    function enableModuleTx(address safe, address module)
-        public
-        returns (bool)
-    {
+    function enableModuleTx(address safe) public returns (bool) {
         // Create enableModule calldata
         bytes memory data = abi.encodeWithSignature(
             "enableModule(address)",
-            address(module)
+            keyperModuleAddr
         );
 
         // Create enable module safe tx
@@ -178,10 +181,7 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createOrgTx(string memory orgName, address module)
-        public
-        returns (bool)
-    {
+    function createOrgTx(string memory orgName) public returns (bool) {
         // Create enableModule calldata
         bytes memory data = abi.encodeWithSignature(
             "createOrg(string)",
@@ -189,7 +189,7 @@ contract GnosisSafeHelper is
         );
 
         // Create module safe tx
-        Transaction memory mockTx = createDefaultTx(module, data);
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
@@ -201,8 +201,7 @@ contract GnosisSafeHelper is
         address group,
         address parent,
         address admin,
-        string memory name,
-        address module
+        string memory name
     ) public returns (bool) {
         bytes memory data = abi.encodeWithSignature(
             "addGroup(address,address,address,address,string)",
@@ -213,7 +212,7 @@ contract GnosisSafeHelper is
             name
         );
         // Create module safe tx
-        Transaction memory mockTx = createDefaultTx(module, data);
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
