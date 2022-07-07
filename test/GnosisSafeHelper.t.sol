@@ -46,7 +46,8 @@ contract GnosisSafeHelper is
         return address(gnosisSafe);
     }
 
-    function newKeyperSafe(uint256 numberOwners, uint256 threshold)
+    // Create GnosisSafe with Keyper module enabled
+    function newKeyperSafe(uint256 numberOwners, uint256 threshold, address keyperModule)
         public
         returns (address)
     {
@@ -79,7 +80,19 @@ contract GnosisSafeHelper is
         address gnosisSafeProxy = safeFactory.newSafeProxy(initializer);
         gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
 
+        // Enable module
+        bool result = enableModuleTx(address(gnosisSafe), keyperModule);
+        require(result == true, "failed enable module");
         return address(gnosisSafe);
+    }
+
+    function testNewKeyperSafe() public {
+        setupSafe();
+        address keyperModuleMock = address(0x678);
+        newKeyperSafe(4, 2, keyperModuleMock);
+        address[] memory owners = gnosisSafe.getOwners();
+        assertEq(owners.length, 4);
+        assertEq(gnosisSafe.getThreshold(), 2);
     }
 
     function updateSafeInterface(address safe) public {

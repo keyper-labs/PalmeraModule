@@ -15,26 +15,26 @@ contract TestKeyperSafe is Test, SigningUtils {
     address keyperModuleAddr;
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) keyperSafes;
+    string orgName = "Main Org";
 
     function setUp() public {
         // Init a new safe as main organization (3 owners, 1 threshold)
         gnosisHelper = new GnosisSafeHelper();
         gnosisSafeAddr = gnosisHelper.setupSafe();
-        // console.log("Main safe addres", gnosisSafeAddr);
 
         // Init KeyperModule
         keyperModule = new KeyperModule();
         keyperModuleAddr = address(keyperModule);
         // Init keyperModuleHelper
         keyperHelper = new KeyperModuleHelper();
-        keyperHelper.initHelper(keyperModule, 10);
+        keyperHelper.initHelper(keyperModule, 20);
         // Enable keyper module
         gnosisHelper.enableModuleTx(gnosisSafeAddr, address(keyperModule));
     }
 
     function testCreateOrgFromSafe() public {
         // Create createOrg calldata
-        bool result = gnosisHelper.createOrgTx("Main Org", keyperModuleAddr);
+        bool result = gnosisHelper.createOrgTx(orgName, keyperModuleAddr);
         assertEq(result, true);
         (
             string memory name,
@@ -42,34 +42,25 @@ contract TestKeyperSafe is Test, SigningUtils {
             address safe,
             address parent
         ) = keyperModule.getOrg(gnosisSafeAddr);
-        assertEq(name, "Main Org");
+        assertEq(name, orgName);
         assertEq(admin, gnosisSafeAddr);
         assertEq(safe, gnosisSafeAddr);
         assertEq(parent, address(0));
     }
 
     function testCreateGroupFromSafe() public {
-        // First safe as org
-        string memory orgName = "Main Org";
+        // Set initialsafe as org
         bool result = gnosisHelper.createOrgTx(orgName, keyperModuleAddr);
-        assertEq(result, true);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
         vm.label(keyperSafes[orgName], orgName);
 
         // Create new safe with setup called while creating contract
-        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
-        console.log("New group safe", groupSafe);
-        address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
-        assertEq(owners.length, 4);
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), 2);
-        // Enable keyper module
-        result = gnosisHelper.enableModuleTx(groupSafe, keyperModuleAddr);
-        assertEq(result, true);
-
-        // Create SubGroup calldata
+        address groupSafe = gnosisHelper.newKeyperSafe(4, 2, keyperModuleAddr);
+        // Create Group calldata
         string memory groupName = "GroupA";
         keyperSafes[groupName] = address(groupSafe);
         vm.label(keyperSafes[groupName], groupName);
+
         // Update gnosisSafe interface pointer from Org
         address orgAddr = keyperSafes[orgName];
         gnosisHelper.updateSafeInterface(orgAddr);
@@ -82,11 +73,36 @@ contract TestKeyperSafe is Test, SigningUtils {
             keyperModuleAddr
         );
         assertEq(result, true);
+    }
+
+    function testExecOnBehalf() public {
+        // Set initialsafe as org
+        bool result = gnosisHelper.createOrgTx(orgName, keyperModuleAddr);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+
+        // Create new safe with setup called while creating contract
+        address groupSafe = gnosisHelper.newKeyperSafe(4, 2, keyperModuleAddr);
+        // Create Group calldata
+        string memory groupName = "GroupA";
+        keyperSafes[groupName] = address(groupSafe);
+
+        // Update gnosisSafe interface pointer from Org
+        address orgAddr = keyperSafes[orgName];
+        gnosisHelper.updateSafeInterface(orgAddr);
+        result = gnosisHelper.createAddGroupTx(
+            orgAddr,
+            groupSafe,
+            orgAddr,
+            orgAddr,
+            groupName,
+            keyperModuleAddr
+        );
 
         // Send ETH to org&subgroup
         vm.deal(orgAddr, 100 gwei);
         vm.deal(groupSafe, 100 gwei);
         address receiver = address(0xABC);
+
         // Set keyperhelper gnosis safe to org
         keyperHelper.setGnosisSafe(orgAddr);
         bytes memory emptyData;
@@ -110,9 +126,39 @@ contract TestKeyperSafe is Test, SigningUtils {
         );
         assertEq(result, true);
         assertEq(receiver.balance, 2 gwei);
+    }
+
+    function testRevertExecOnBehalf() public {
+        // Set initialsafe as org
+        bool result = gnosisHelper.createOrgTx(orgName, keyperModuleAddr);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+
+        // Create new safe with setup called while creating contract
+        address groupSafe = gnosisHelper.newKeyperSafe(4, 2, keyperModuleAddr);
+        // Create Group calldata
+        string memory groupName = "GroupA";
+        keyperSafes[groupName] = address(groupSafe);
+
+        // Update gnosisSafe interface pointer from Org
+        address orgAddr = keyperSafes[orgName];
+        gnosisHelper.updateSafeInterface(orgAddr);
+        result = gnosisHelper.createAddGroupTx(
+            orgAddr,
+            groupSafe,
+            orgAddr,
+            orgAddr,
+            groupName,
+            keyperModuleAddr
+        );
+        // Send ETH to org&subgroup
+        vm.deal(orgAddr, 100 gwei);
+        vm.deal(groupSafe, 100 gwei);
+        address receiver = address(0xABC);
 
         // Try onbehalf with incorrect signers
-        signatures = keyperHelper.encodeInvalidSignaturesKeyperTx(
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeInvalidSignaturesKeyperTx(
             orgAddr,
             groupSafe,
             receiver,
