@@ -3,7 +3,7 @@ import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
-import "../script/DeploySafe.t.sol";
+import "../script/DeploySafeFactory.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
 contract GnosisSafeHelper is
@@ -13,23 +13,24 @@ contract GnosisSafeHelper is
     SignersHelper
 {
     GnosisSafe public gnosisSafe;
-    DeploySafe public deploySafe;
+    DeploySafeFactory public safeFactory;
 
-    // Setup gnosis safe with 3 owners, 1 threshold
-    // TODO: make this function flexible
     function setupSafe() public returns (address) {
-        deploySafe = new DeploySafe();
-        deploySafe.run();
-        address gnosisSafeProxy = deploySafe.getProxyAddress();
-        gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
+        safeFactory = new DeploySafeFactory();
+        safeFactory.run();
+
+        bytes memory emptyData;
+        address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
+        gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
         initOnwers(10);
 
+        // Setup gnosis safe with 3 owners, 1 threshold
         address[] memory owners = new address[](3);
         owners[0] = vm.addr(privateKeyOwners[0]);
         owners[1] = vm.addr(privateKeyOwners[1]);
         owners[2] = vm.addr(privateKeyOwners[2]);
-
-        bytes memory emptyData;
+        // Update privateKeyOwners used
+        updateCount(3);
 
         gnosisSafe.setup(
             owners,
@@ -53,9 +54,14 @@ contract GnosisSafeHelper is
             privateKeyOwners.length >= numberOwners,
             "not enough initialized owners"
         );
+        require (
+            countUsed + numberOwners <= privateKeyOwners.length,
+            "No private keys available"
+        );
         address[] memory owners = new address[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
-            owners[i] = vm.addr(privateKeyOwners[i]);
+            owners[i] = vm.addr(privateKeyOwners[i+countUsed]);
+            countUsed++;
         }
         bytes memory emptyData;
         bytes memory initializer = abi.encodeWithSignature(
@@ -70,7 +76,7 @@ contract GnosisSafeHelper is
             payable(address(0x0))
         );
 
-        address gnosisSafeProxy = deploySafe.newSafeProxy(initializer);
+        address gnosisSafeProxy = safeFactory.newSafeProxy(initializer);
         gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
 
         return address(gnosisSafe);

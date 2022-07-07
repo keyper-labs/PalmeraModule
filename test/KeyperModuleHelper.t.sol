@@ -29,27 +29,6 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         gnosisSafe = GnosisSafe(payable(safe));
     }
 
-    function createKeyperTxHash(
-        address org,
-        address safe,
-        address to,
-        uint256 value,
-        bytes memory data,
-        Enum.Operation operation,
-        uint256 nonce
-    ) public view returns (bytes32) {
-        bytes32 txHashed = keyper.getTransactionHash(
-            org,
-            safe,
-            to,
-            value,
-            data,
-            operation,
-            nonce
-        );
-        return txHashed;
-    }
-
     function encodeSignaturesKeyperTx(
         address org,
         address safe,
@@ -116,5 +95,26 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         bytes memory signatures = signDigestTx(invalidSafeOwnersPK, txHashed);
 
         return signatures;
+    }
+
+    function createKeyperTxHash(
+        address org,
+        address safe,
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation,
+        uint256 nonce
+    ) public view returns (bytes32) {
+        bytes32 txHashed = keyper.getTransactionHash(
+            org,
+            safe,
+            to,
+            value,
+            data,
+            operation,
+            nonce
+        );
+        return txHashed;
     }
 }

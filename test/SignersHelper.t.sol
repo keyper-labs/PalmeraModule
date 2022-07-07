@@ -10,6 +10,8 @@ contract SignersHelper is Test {
     uint256[] public invalidPrivateKeyOwners;
     // Address => PK (invalid)
     mapping(address => uint256) public invalidOwnersPK;
+    // CountUsed
+    uint256 public countUsed;
 
     function initOnwers(uint256 numberOwners) public {
         privateKeyOwners = new uint256[](numberOwners);
@@ -32,5 +34,9 @@ contract SignersHelper is Test {
             invalidOwnersPK[publicKey] = pk;
             invalidPrivateKeyOwners[i] = pk;
         }
+    }
+
+    function updateCount(uint256 used) public {
+        countUsed = used;
     }
 }
