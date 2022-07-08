@@ -4,7 +4,7 @@ import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
-import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
+import {GnosisSafe} from "../src/safeMod/GnosisSafe.sol";
 
 contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     struct KeyperTransaction {

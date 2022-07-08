@@ -7,6 +7,7 @@ import {ISignatureValidator} from "@safe-contracts/interfaces/ISignatureValidato
 import {ISignatureValidatorConstants} from "@safe-contracts/interfaces/ISignatureValidator.sol";
 import {console} from "forge-std/console.sol";
 import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
+import {GnosisSafeProxy} from "@safe-contracts/proxies/GnosisSafeProxy.sol";
 
 interface GnosisSafe {
     function execTransactionFromModule(
@@ -87,6 +88,26 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         uint256 baseGas;
         uint256 gasPrice;
         address gasToken;
+    }
+
+    /**
+     @notice Function executed when user creates a Gnosis Safe wallet via GnosisSafeProxyFactory::createProxyWithCallback
+             enalbing keyper module as the callback.
+     */
+    function proxyCreated(
+        GnosisSafeProxy proxy,
+        address singleton,
+        bytes calldata initializer,
+        uint256
+    ) external {
+        // Call enableKeyperModule on new created safe
+        bytes memory enableTx = abi.encodeWithSignature(
+            "enableKeyperModule(address)",
+            address(this)
+        );
+
+        // TODO Add some checks on singleton, initializer,
+        address(proxy).call(enableTx);
     }
 
     modifier onlyAdmin(address _group) {
