@@ -5,7 +5,7 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 import {SignatureDecoder} from "@safe-contracts/common/SignatureDecoder.sol";
 import {ISignatureValidator} from "@safe-contracts/interfaces/ISignatureValidator.sol";
 import {ISignatureValidatorConstants} from "@safe-contracts/interfaces/ISignatureValidator.sol";
-import {console} from "forge-std/console.sol";
+// import {console} from "forge-std/console.sol";
 import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {GnosisSafeProxy} from "@safe-contracts/proxies/GnosisSafeProxy.sol";
 
@@ -37,7 +37,6 @@ interface GnosisSafe {
 
 // TODO modifiers for auth calling the diff functions
 // TODO define how secure this setup should be: Calls only from Admin? Calls from safe contract (with multisig rule)
-// TODO update signers set
 contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     using GnosisSafeMath for uint256;
     string public constant NAME = "Keyper Module";
@@ -55,10 +54,12 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     bytes32 private constant KEYPER_TX_TYPEHASH =
         0xbb667b7bf67815e546e48fb8d0e6af5c31fe53b9967ed45225c9d55be21652da;
 
+    // Safe contracts
+    address public immutable masterCopy;
+    address public immutable proxyFactory;
+
     // Orgs -> Groups
     mapping(address => mapping(address => Group)) public groups;
-    // Safe -> full set of signers
-    // mapping(address => mapping(address => bool)) public signers;
 
     // Orgs info
     mapping(address => Group) public orgs;
@@ -90,6 +91,17 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         address gasToken;
     }
 
+    constructor(
+        address masterCopyAddress,
+        address proxyFactoryAddress
+    ) {
+        require(masterCopyAddress != address(0));
+        require(proxyFactoryAddress != address(0));
+
+        masterCopy = masterCopyAddress;
+        proxyFactory = proxyFactoryAddress;
+    }
+
     /**
      @notice Function executed when user creates a Gnosis Safe wallet via GnosisSafeProxyFactory::createProxyWithCallback
              enalbing keyper module as the callback.
@@ -100,6 +112,15 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         bytes calldata initializer,
         uint256
     ) external {
+
+        // Ensure correct factory and master copy
+        // require(msg.sender == proxyFactory, "Caller must be factory");
+        // console.log(msg.sender);
+        require(singleton == masterCopy, "Fake mastercopy used");
+
+        // Ensure initial calldata was a call to `GnosisSafe::setup`
+        require(bytes4(initializer[:4]) == bytes4(0xb63e800d), "Wrong initialization");
+
         // Call enableKeyperModule on new created safe
         bytes memory enableTx = abi.encodeWithSignature(
             "enableKeyperModule(address)",

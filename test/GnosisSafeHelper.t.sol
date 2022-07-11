@@ -15,11 +15,12 @@ contract GnosisSafeHelper is
     GnosisSafe public gnosisSafe;
     DeploySafeFactory public safeFactory;
     address private keyperModuleAddr;
+    address public gnosisMasterCopy;
 
     function setupSafe() public returns (address) {
         safeFactory = new DeploySafeFactory();
         safeFactory.run();
-
+        gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
         bytes memory emptyData;
         address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
         gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));

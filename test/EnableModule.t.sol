@@ -14,7 +14,9 @@ contract TestEnableModule is Test {
         gnosisHelper = new GnosisSafeHelper();
         gnosisSafeAddr = gnosisHelper.setupSafe();
         // Init KeyperModule
-        keyperModule = new KeyperModule();
+        address masterCopy = gnosisHelper.gnosisMasterCopy();
+        address safeFactory = address(gnosisHelper.safeFactory());
+        keyperModule = new KeyperModule(masterCopy, safeFactory);
         gnosisHelper.setKeyperModule(address(keyperModule));
     }
 
@@ -43,7 +45,6 @@ contract TestEnableModule is Test {
             address(keyperModule)
         );
         assertEq(isKeyperModuleEnabled, true);
-        // assertEq(keyperModule.)
     }
 
     // TODO check why the revert not working in testing but revert is happening without cheatcode

@@ -9,7 +9,7 @@ import {IProxyCreationCallback} from "@safe-contracts/proxies/IProxyCreationCall
 
 contract DeploySafeFactory is Script {
     GnosisSafeProxyFactory proxyFactory;
-    GnosisSafe gnosisSafeContract;
+    GnosisSafe public gnosisSafeContract;
     GnosisSafeProxy safeProxy;
 
     function run() public {

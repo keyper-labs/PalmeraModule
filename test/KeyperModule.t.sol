@@ -5,7 +5,7 @@ import {console} from "forge-std/console.sol";
 import {stdStorage, StdStorage, Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 
-contract KeyperModuleTest is Test, KeyperModule {
+contract KeyperModuleTest is Test {
     KeyperModule keyperModule;
 
     address org1 = address(0x1);
@@ -20,7 +20,8 @@ contract KeyperModuleTest is Test, KeyperModule {
         vm.label(org1, "Org 1");
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
-        keyperModule = new KeyperModule();
+        // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
+        keyperModule = new KeyperModule(address(0x112233), address(0x445566));
         rootOrgName = "Root Org";
     }
 

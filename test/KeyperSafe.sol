@@ -23,7 +23,9 @@ contract TestKeyperSafe is Test, SigningUtils {
         gnosisSafeAddr = gnosisHelper.setupSafe();
 
         // Init KeyperModule
-        keyperModule = new KeyperModule();
+        address masterCopy = gnosisHelper.gnosisMasterCopy();
+        address safeFactory = address(gnosisHelper.safeFactory());
+        keyperModule = new KeyperModule(masterCopy, safeFactory);
         keyperModuleAddr = address(keyperModule);
         // Init keyperModuleHelper
         keyperHelper = new KeyperModuleHelper();
