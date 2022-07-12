@@ -221,10 +221,10 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createOrgTx(string memory orgName) public returns (bool) {
+    function registerOrgTx(string memory orgName) public returns (bool) {
         // Create enableModule calldata
         bytes memory data = abi.encodeWithSignature(
-            "createOrg(string)",
+            "registerOrg(string)",
             orgName
         );
 

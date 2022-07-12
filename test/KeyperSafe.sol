@@ -36,9 +36,9 @@ contract TestKeyperSafe is Test, SigningUtils {
         gnosisHelper.enableModuleTx(gnosisSafeAddr);
     }
 
-    function testCreateOrgFromSafe() public {
-        // Create createOrg calldata
-        bool result = gnosisHelper.createOrgTx(orgName);
+    function testRegisterOrgFromSafe() public {
+        // Create registerOrg calldata
+        bool result = gnosisHelper.registerOrgTx(orgName);
         assertEq(result, true);
         (
             string memory name,
@@ -54,7 +54,7 @@ contract TestKeyperSafe is Test, SigningUtils {
 
     function testCreateGroupFromSafe() public {
         // Set initialsafe as org
-        bool result = gnosisHelper.createOrgTx(orgName);
+        bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
         vm.label(keyperSafes[orgName], orgName);
 
@@ -80,7 +80,7 @@ contract TestKeyperSafe is Test, SigningUtils {
 
     function testExecOnBehalf() public {
         // Set initialsafe as org
-        bool result = gnosisHelper.createOrgTx(orgName);
+        bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
         // Create new safe with setup called while creating contract
@@ -132,7 +132,7 @@ contract TestKeyperSafe is Test, SigningUtils {
 
     function testRevertExecOnBehalf() public {
         // Set initialsafe as org
-        bool result = gnosisHelper.createOrgTx(orgName);
+        bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
         // Create new safe with setup called while creating contract
@@ -190,7 +190,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     //  SubGroupA
     function setUpBaseOrgTree() public {
         // Set initialsafe as org
-        bool result = gnosisHelper.createOrgTx(orgName);
+        bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
         // Create new safe with setup called while creating contract
