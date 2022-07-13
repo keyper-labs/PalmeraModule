@@ -160,38 +160,33 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         rootOrg.safe = msg.sender;
     }
 
-    /// @notice Add a group to an organisation
-    /// @dev Call coming from the organisation safe
+    /// @notice Add a group to an organisation/group
+    /// @dev Call coming from the group safe
+    /// TODO add check that msg.sender is safe contract
     function addGroup(
-        address _org,
-        address _group,
-        address _parent,
-        address _admin,
-        string memory _name
+        address org,
+        address parent,
+        string memory name
     ) public {
-        if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
-        if (orgs[_parent].safe == address(0)) {
-            // Check within groups
-            if (groups[_org][_parent].safe == address(0))
+        if (orgs[org].safe == address(0)) revert OrgNotRegistered();
+        Group storage newGroup = groups[org][msg.sender];
+        // Add to org root
+        if (parent == org) {
+            newGroup.admin = orgs[org].admin;
+            Group storage parentOrg = orgs[org];
+            parentOrg.childs.push(msg.sender);
+        }
+        // Add to group 
+        else { 
+            if (groups[org][parent].safe == address(0))
                 revert ParentNotRegistered();
+            newGroup.admin = groups[org][parent].parent;
+            Group storage parentGroup = groups[org][parent];
+            parentGroup.childs.push(msg.sender);
         }
-        if (orgs[_admin].safe == address(0)) revert AdminNotRegistered();
-        // TODO change msg.sender check and add is validOwner function to check if the caller is an owner of the safe
-        // check msg.sender is the admin of the _org
-        if (msg.sender != _org) revert NotAuthorized();
-        Group storage group = groups[_org][_group];
-        group.name = _name;
-        group.admin = _admin;
-        group.parent = _parent;
-        group.safe = _group;
-        // Update child on parent
-        Group storage parentGroup = groups[_org][_parent];
-        parentGroup.childs.push(_group);
-        // Is parent an org? => need to update the org mapping info too
-        if (_org == _parent) {
-            Group storage org = orgs[_org];
-            org.childs.push(_group);
-        }
+        newGroup.parent = parent;
+        newGroup.safe = msg.sender;
+        newGroup.name = name;
     }
 
     /// @notice Add a group to an organisation.
@@ -236,6 +231,9 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
             groups[_org][_group].parent
         );
     }
+
+    ///@notice Get the group admin going through their parents
+    // function getGroupAdmin
 
     function getChilds(address _org, address _group) public view returns (address[] memory) {
         address groupSafe = groups[_org][_group].safe;

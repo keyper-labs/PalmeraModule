@@ -238,17 +238,13 @@ contract GnosisSafeHelper is
 
     function createAddGroupTx(
         address org,
-        address group,
         address parent,
-        address admin,
         string memory name
     ) public returns (bool) {
         bytes memory data = abi.encodeWithSignature(
-            "addGroup(address,address,address,address,string)",
+            "addGroup(address,address,string)",
             org,
-            group,
             parent,
-            admin,
             name
         );
         // Create module safe tx

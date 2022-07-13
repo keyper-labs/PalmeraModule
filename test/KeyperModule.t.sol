@@ -42,7 +42,9 @@ contract KeyperModuleTest is Test {
     function testAddGroup() public {
         vm.startPrank(org1);
         keyperModule.registerOrg(rootOrgName);
-        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
+        vm.stopPrank();
+        vm.startPrank(groupA);
+        keyperModule.addGroup(org1, org1, "GroupA");
         string memory groupName;
         address admin;
         address safe;
@@ -58,19 +60,10 @@ contract KeyperModuleTest is Test {
         assertEq(keyperModule.isChild(org1, org1, groupA), true);
     }
 
-    function testAddGroupNotAuthorized(address caller) public {
-        vm.startPrank(org1);
-        keyperModule.registerOrg(rootOrgName);
-        vm.stopPrank();
-        vm.startPrank(caller);
-        vm.expectRevert(KeyperModule.NotAuthorized.selector);
-        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
-    }
-
     function testExpectOrgNotRegistered() public {
         vm.startPrank(groupA);
         vm.expectRevert(KeyperModule.OrgNotRegistered.selector);
-        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
+        keyperModule.addGroup(org1, org1, "GroupA");
     }
 
     function testExpectParentNotRegistered() public {
@@ -79,35 +72,20 @@ contract KeyperModuleTest is Test {
         vm.stopPrank();
         vm.startPrank(groupA);
         vm.expectRevert(KeyperModule.ParentNotRegistered.selector);
-        keyperModule.addGroup(org1, groupA, org2, org1, "GroupA");
-    }
-
-    function testExpectAdminNotRegistered() public {
-        vm.startPrank(org1);
-        keyperModule.registerOrg(rootOrgName);
-        vm.stopPrank();
-        vm.startPrank(groupA);
-        vm.expectRevert(KeyperModule.AdminNotRegistered.selector);
-        keyperModule.addGroup(org1, groupA, org1, org2, "GroupA");
+        keyperModule.addGroup(org1, groupA, "GroupA");
     }
 
     function testAddSubGroup() public {
         vm.startPrank(org1);
         keyperModule.registerOrg(rootOrgName);
-        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
-        keyperModule.addGroup(org1, groupB, groupA, org1, "Group B");
+        vm.stopPrank();
+        vm.startPrank(groupA);
+        keyperModule.addGroup(org1, org1, "GroupA");
+        vm.stopPrank();
+        vm.startPrank(groupB);
+        keyperModule.addGroup(org1, groupA, "Group B");
         assertEq(keyperModule.isChild(org1, org1, groupA), true);
         assertEq(keyperModule.isChild(org1, groupA, groupB), true);
-    }
-
-    function testAddSubGroupNotAuthorized(address caller) public {
-        vm.startPrank(org1);
-        keyperModule.registerOrg(rootOrgName);
-        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
-        vm.stopPrank();
-        vm.startPrank(caller);
-        vm.expectRevert(KeyperModule.NotAuthorized.selector);
-        keyperModule.addGroup(org1, groupB, groupA, org1, "Group B");
     }
 
     // Test tree structure for groups
@@ -119,14 +97,20 @@ contract KeyperModuleTest is Test {
     function testTreeOrgs() public {
         vm.startPrank(org1);
         keyperModule.registerOrg(rootOrgName);
-        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
-        keyperModule.addGroup(org1, groupC, groupA, org1, "Group C");
+        vm.stopPrank();
+        vm.startPrank(groupA);
+        keyperModule.addGroup(org1, org1, "GroupA");
+        vm.stopPrank();
+        vm.startPrank(groupC);
+        keyperModule.addGroup(org1, groupA, "Group C");
         assertEq(keyperModule.isChild(org1, org1, groupA), true);
         assertEq(keyperModule.isChild(org1, groupA, groupC), true);
         vm.stopPrank();
         vm.startPrank(org2);
         keyperModule.registerOrg("RootOrg2");
-        keyperModule.addGroup(org2, groupB, org2, org2, "GroupB");
+        vm.stopPrank();
+        vm.startPrank(groupB);
+        keyperModule.addGroup(org2, org2, "GroupB");
         assertEq(keyperModule.isChild(org2, org2, groupB), true);
     }
 
@@ -134,6 +118,6 @@ contract KeyperModuleTest is Test {
     function testExecKeeperTransaction() public {
         vm.startPrank(org1);
         keyperModule.registerOrg(rootOrgName);
-        keyperModule.addGroup(org1, groupA, org1, org1, "GroupA");
+        keyperModule.addGroup(org1, org1, "GroupA");
     }
 }

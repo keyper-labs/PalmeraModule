@@ -65,12 +65,8 @@ contract TestKeyperSafe is Test, SigningUtils {
         keyperSafes[groupName] = address(groupSafe);
         vm.label(keyperSafes[groupName], groupName);
 
-        // Update gnosisSafe interface pointer from Org
         address orgAddr = keyperSafes[orgName];
-        gnosisHelper.updateSafeInterface(orgAddr);
         result = gnosisHelper.createAddGroupTx(
-            orgAddr,
-            groupSafe,
             orgAddr,
             orgAddr,
             groupName
@@ -89,12 +85,8 @@ contract TestKeyperSafe is Test, SigningUtils {
         string memory groupName = "GroupA";
         keyperSafes[groupName] = address(groupSafe);
 
-        // Update gnosisSafe interface pointer from Org
         address orgAddr = keyperSafes[orgName];
-        gnosisHelper.updateSafeInterface(orgAddr);
         result = gnosisHelper.createAddGroupTx(
-            orgAddr,
-            groupSafe,
             orgAddr,
             orgAddr,
             groupName
@@ -141,12 +133,8 @@ contract TestKeyperSafe is Test, SigningUtils {
         string memory groupName = "GroupA";
         keyperSafes[groupName] = address(groupSafe);
 
-        // Update gnosisSafe interface pointer from Org
         address orgAddr = keyperSafes[orgName];
-        gnosisHelper.updateSafeInterface(orgAddr);
         result = gnosisHelper.createAddGroupTx(
-            orgAddr,
-            groupSafe,
             orgAddr,
             orgAddr,
             groupName
@@ -199,12 +187,8 @@ contract TestKeyperSafe is Test, SigningUtils {
         string memory nameGroupA = "GroupA";
         keyperSafes[nameGroupA] = address(safeGroupA);
 
-        // Update gnosisSafe interface pointer from Org
         address orgAddr = keyperSafes[orgName];
-        gnosisHelper.updateSafeInterface(orgAddr);
         result = gnosisHelper.createAddGroupTx(
-            orgAddr,
-            safeGroupA,
             orgAddr,
             orgAddr,
             nameGroupA
@@ -216,12 +200,8 @@ contract TestKeyperSafe is Test, SigningUtils {
         string memory nameGroupB = "GroupB";
         keyperSafes[nameGroupB] = address(safeGroupB);
 
-        // Update gnosisSafe interface pointer from Org
         orgAddr = keyperSafes[orgName];
-        gnosisHelper.updateSafeInterface(orgAddr);
         result = gnosisHelper.createAddGroupTx(
-            orgAddr,
-            safeGroupB,
             orgAddr,
             orgAddr,
             nameGroupB
@@ -233,14 +213,10 @@ contract TestKeyperSafe is Test, SigningUtils {
         string memory nameSubGroupA = "SubGroupA";
         keyperSafes[nameSubGroupA] = address(safeSubGroupA);
 
-        // Update gnosisSafe interface pointer from Org
         orgAddr = keyperSafes[orgName];
-        gnosisHelper.updateSafeInterface(orgAddr);
         result = gnosisHelper.createAddGroupTx(
             orgAddr,
-            safeSubGroupA,
             safeGroupA,
-            orgAddr,
             nameSubGroupA
         );
     }
