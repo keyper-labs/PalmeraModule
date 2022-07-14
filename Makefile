@@ -33,3 +33,6 @@ snapshot :; forge clean && forge snapshot
 
 # Rename all instances of femplate with the new repo name
 rename :; chmod +x ./scripts/* && ./scripts/rename.sh
+
+# Generate typescript bindings
+ts-binding :; npx typechain --target ethers-v5 --out-dir out/types/ './out/**/*.json'
