@@ -5,7 +5,6 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 import {SignatureDecoder} from "@safe-contracts/common/SignatureDecoder.sol";
 import {ISignatureValidator} from "@safe-contracts/interfaces/ISignatureValidator.sol";
 import {ISignatureValidatorConstants} from "@safe-contracts/interfaces/ISignatureValidator.sol";
-// import {console} from "forge-std/console.sol";
 import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {GnosisSafeProxy} from "@safe-contracts/proxies/GnosisSafeProxy.sol";
 
@@ -75,7 +74,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     error NotAuthorized();
     error NotAuthorizedExecOnBehalf();
 
-    struct Group{
+    struct Group {
         string name;
         address admin;
         address safe;
@@ -126,8 +125,9 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
             address(this)
         );
 
-        // TODO Add some checks on singleton, initializer,
-        address(proxy).call(enableTx);
+        // External call safe as proxy address coming from gnosisFactory smart contract
+        (bool success, ) = address(proxy).call(enableTx);
+        require(success, "Enable module failed");
     }
 
     function getOrg(address _org)
@@ -176,8 +176,8 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
             Group storage parentOrg = orgs[org];
             parentOrg.childs.push(msg.sender);
         }
-        // Add to group 
-        else { 
+        // Add to group
+        else {
             if (groups[org][parent].safe == address(0))
                 revert ParentNotRegistered();
             newGroup.admin = groups[org][parent].parent;
@@ -191,10 +191,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
 
     /// @notice Add a group to an organisation.
     /// @dev Call has to be done from a safe transaction
-    function addGroupToOrg(
-        address org,
-        string memory name
-    ) public {
+    function addGroupToOrg(address org, string memory name) public {
         if (orgs[org].safe == address(0)) revert OrgNotRegistered();
         Group storage group = groups[org][msg.sender];
         group.name = name;
@@ -203,7 +200,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         group.safe = msg.sender;
         // Update the org mapping childs
         Group storage _org = orgs[org];
-            _org.childs.push(msg.sender);
+        _org.childs.push(msg.sender);
     }
 
     // returns
@@ -235,7 +232,11 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     ///@notice Get the group admin going through their parents
     // function getGroupAdmin
 
-    function getChilds(address _org, address _group) public view returns (address[] memory) {
+    function getChilds(address _org, address _group)
+        public
+        view
+        returns (address[] memory)
+    {
         address groupSafe = groups[_org][_group].safe;
         if (groupSafe == address(0)) revert OrgNotRegistered();
 
@@ -251,7 +252,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
         // Check within orgs first if parent is org
         if (_org == _parent) {
-            Group storage org = orgs[_org];
+            Group memory org = orgs[_org];
             for (uint256 i = 0; i < org.childs.length; i++) {
                 if (org.childs[i] == _child) return true;
             }
@@ -259,20 +260,37 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         // Check within groups of the org
         if (groups[_org][_parent].safe == address(0))
             revert ParentNotRegistered();
-        Group storage group = groups[_org][_parent];
+        Group memory group = groups[_org][_parent];
         for (uint256 i = 0; i < group.childs.length; i++) {
             if (group.childs[i] == _child) return true;
         }
         return false;
     }
 
-    // Check if an org is admin of the group
+    /// @notice Check if an org is admin of the group
     function isAdmin(address org, address safe) public view returns (bool) {
-        if (orgs[org].safe == address(0)) revert OrgNotRegistered();
+        if (orgs[org].safe == address(0)) return false;
         // Check group admin
-        Group storage group = groups[org][safe];
+        Group memory group = groups[org][safe];
         if (group.admin == org) {
             return true;
+        }
+        return false;
+    }
+
+    /// @notice Check if the group is a parent of another group
+    function isParent(
+        address org,
+        address parent,
+        address child
+    ) public view returns (bool) {
+        Group memory childGroup = groups[org][child];
+        address curentParent = childGroup.parent;
+        // TODO: probably more efficient to just create a parents mapping instead of this iterations
+        while (curentParent != address(0)) {
+            if (curentParent == parent) return true;
+            childGroup = groups[org][curentParent];
+            curentParent = childGroup.parent;
         }
         return false;
     }
@@ -290,15 +308,20 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         Enum.Operation operation,
         bytes memory signatures
     ) external payable returns (bool success) {
-        // Check msg.sender is either a safe or an owner of the safe
+        // Check msg.sender is an admin of the target safe
+        if (!isAdmin(msg.sender, safe)) {
+            // Check if it a then parent
+            if (!isParent(org, msg.sender, safe)) {
+                revert NotAuthorizedExecOnBehalf();
+            }
+        }
 
-        if (!isAdmin(org, safe)) revert NotAuthorizedExecOnBehalf();
         bytes32 txHash;
         // Use scope here to limit variable lifetime and prevent `stack too deep` errors
         {
             bytes memory keyperTxHashData = encodeTransactionData(
                 // Keyper Info
-                org,
+                msg.sender,
                 safe,
                 // Transaction info
                 to,
@@ -311,7 +334,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
             // Increase nonce and execute transaction.
             nonce++;
             txHash = keccak256(keyperTxHashData);
-            checkNSignatures(txHash, keyperTxHashData, signatures, org);
+            checkNSignatures(txHash, keyperTxHashData, signatures, msg.sender);
             // Execute transaction from safe
             GnosisSafe gnosisSafe = GnosisSafe(safe);
             bool result = gnosisSafe.execTransactionFromModule(

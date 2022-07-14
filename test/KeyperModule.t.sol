@@ -13,6 +13,7 @@ contract KeyperModuleTest is Test {
     address groupA = address(0xa);
     address groupB = address(0xb);
     address groupC = address(0xc);
+    address groupD = address(0xd);
     string rootOrgName;
 
     // Function called before each test is run
@@ -119,5 +120,31 @@ contract KeyperModuleTest is Test {
         vm.startPrank(org1);
         keyperModule.registerOrg(rootOrgName);
         keyperModule.addGroup(org1, org1, "GroupA");
+    }
+
+    // Test is Parent function
+    function testIsParent() public {
+        vm.startPrank(org1);
+        keyperModule.registerOrg(rootOrgName);
+        vm.stopPrank();
+        vm.startPrank(groupA);
+        keyperModule.addGroup(org1, org1, "GroupA");
+        vm.stopPrank();
+        vm.startPrank(groupB);
+        keyperModule.addGroup(org1, groupA, "groupB");
+        vm.stopPrank();
+        vm.startPrank(groupC);
+        keyperModule.addGroup(org1, groupB, "GroupC");
+        vm.stopPrank();
+        vm.startPrank(groupD);
+        keyperModule.addGroup(org1, groupC, "groupD");
+        assertEq(keyperModule.isParent(org1, org1, groupA), true);
+        assertEq(keyperModule.isParent(org1, groupA, groupB), true);
+        assertEq(keyperModule.isParent(org1, groupB, groupC), true);
+        assertEq(keyperModule.isParent(org1, groupC, groupD), true);
+        assertEq(keyperModule.isParent(org1, groupB, groupD), true);
+        assertEq(keyperModule.isParent(org1, groupA, groupD), true);
+        assertEq(keyperModule.isParent(org1, groupD, groupA), false);
+        assertEq(keyperModule.isParent(org1, groupB, groupA), false);
     }
 }

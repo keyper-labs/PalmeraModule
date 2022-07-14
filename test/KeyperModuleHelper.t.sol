@@ -28,6 +28,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         gnosisSafe = GnosisSafe(payable(safe));
     }
 
+    /// @notice Encode signatures for a keypertx
     function encodeSignaturesKeyperTx(
         address org,
         address safe,

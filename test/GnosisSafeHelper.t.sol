@@ -24,7 +24,7 @@ contract GnosisSafeHelper is
         bytes memory emptyData;
         address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
         gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
-        initOnwers(10);
+        initOnwers(30);
 
         // Setup gnosis safe with 3 owners, 1 threshold
         address[] memory owners = new address[](3);
