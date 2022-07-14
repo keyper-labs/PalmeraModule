@@ -309,11 +309,9 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         bytes memory signatures
     ) external payable returns (bool success) {
         // Check msg.sender is an admin of the target safe
-        if (!isAdmin(msg.sender, safe)) {
+        if (!isAdmin(msg.sender, safe) && !isParent(org, msg.sender, safe)) {
             // Check if it a then parent
-            if (!isParent(org, msg.sender, safe)) {
-                revert NotAuthorizedExecOnBehalf();
-            }
+            revert NotAuthorizedExecOnBehalf();
         }
 
         bytes32 txHash;
@@ -334,7 +332,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
             // Increase nonce and execute transaction.
             nonce++;
             txHash = keccak256(keyperTxHashData);
-            checkNSignatures(txHash, keyperTxHashData, signatures, msg.sender);
+            checkNSignatures(txHash, keyperTxHashData, signatures);
             // Execute transaction from safe
             GnosisSafe gnosisSafe = GnosisSafe(safe);
             bool result = gnosisSafe.execTransactionFromModule(
@@ -369,15 +367,14 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
      * @param dataHash Hash of the data (could be either a message hash or transaction hash)
      * @param data That should be signed (this is passed to an external validator contract)
      * @param signatures Signature data that should be verified. Can be ECDSA signature, contract signature (EIP-1271) or approved hash.
-     * @param org Org address
+     * @dev Call must come from a safe
      */
     function checkNSignatures(
         bytes32 dataHash,
         bytes memory data,
-        bytes memory signatures,
-        address org
+        bytes memory signatures
     ) public view {
-        GnosisSafe gnosisSafe = GnosisSafe(org);
+        GnosisSafe gnosisSafe = GnosisSafe(msg.sender);
         uint256 requiredSignatures = gnosisSafe.getThreshold();
         // Check that the provided signature data is not too short
         require(signatures.length >= requiredSignatures.mul(65), "GS020");

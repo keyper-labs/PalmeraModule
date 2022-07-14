@@ -65,6 +65,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         return signatures;
     }
 
+    /// @notice Sign keyperTx with invalid signatures (do not belong to any safe owner)
     function encodeInvalidSignaturesKeyperTx(
         address org,
         address safe,

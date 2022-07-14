@@ -16,6 +16,9 @@ contract TestKeyperSafe is Test, SigningUtils {
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) keyperSafes;
     string orgName = "Main Org";
+    string groupAName = "GroupA";
+    string groupBName = "GroupB";
+    string subGroupAName = "SubGroupA";
 
     function setUp() public {
         // Init a new safe as main organization (3 owners, 1 threshold)
@@ -61,7 +64,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Create new safe with setup called while creating contract
         address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         // Create Group calldata
-        string memory groupName = "GroupA";
+        string memory groupName = groupAName;
         keyperSafes[groupName] = address(groupSafe);
         vm.label(keyperSafes[groupName], groupName);
 
@@ -82,7 +85,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Create new safe with setup called while creating contract
         address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         // Create Group calldata
-        string memory groupName = "GroupA";
+        string memory groupName = groupAName;
         keyperSafes[groupName] = address(groupSafe);
 
         address orgAddr = keyperSafes[orgName];
@@ -123,7 +126,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         assertEq(receiver.balance, 2 gwei);
     }
 
-    function testRevertAdminExecOnBehalf() public {
+    function testRevertInvalidSignatureExecOnBehalf() public {
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
@@ -131,7 +134,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Create new safe with setup called while creating contract
         address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         // Create Group calldata
-        string memory groupName = "GroupA";
+        string memory groupName = groupAName;
         keyperSafes[groupName] = address(groupSafe);
 
         address orgAddr = keyperSafes[orgName];
@@ -186,7 +189,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Create new safe with setup called while creating contract
         address safeGroupA = gnosisHelper.newKeyperSafe(3, 1);
         // Create AddGroup calldata
-        string memory nameGroupA = "GroupA";
+        string memory nameGroupA = groupAName;
         keyperSafes[nameGroupA] = address(safeGroupA);
 
         address orgAddr = keyperSafes[orgName];
@@ -199,7 +202,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Create new safe with setup called while creating contract
         address safeGroupB = gnosisHelper.newKeyperSafe(2, 1);
         // Create AddGroup calldata
-        string memory nameGroupB = "GroupB";
+        string memory nameGroupB = groupBName;
         keyperSafes[nameGroupB] = address(safeGroupB);
 
         orgAddr = keyperSafes[orgName];
@@ -212,7 +215,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Create new safe with setup called while creating contract
         address safeSubGroupA = gnosisHelper.newKeyperSafe(2, 1);
         // Create AddGroup calldata
-        string memory nameSubGroupA = "SubGroupA";
+        string memory nameSubGroupA = subGroupAName;
         keyperSafes[nameSubGroupA] = address(safeSubGroupA);
 
         orgAddr = keyperSafes[orgName];
@@ -226,8 +229,8 @@ contract TestKeyperSafe is Test, SigningUtils {
     function testParentExecOnBehalf() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
-        address groupA = keyperSafes["GroupA"];
-        address subGroupA = keyperSafes["SubGroupA"];
+        address groupA = keyperSafes[groupAName];
+        address subGroupA = keyperSafes[subGroupAName];
 
         // Send ETH to group&subgroup
         vm.deal(groupA, 100 gwei);
@@ -260,4 +263,41 @@ contract TestKeyperSafe is Test, SigningUtils {
         assertEq(receiver.balance, 2 gwei);
     }
 
+    function testRevertParentExecOnBehalf() public {
+        setUpBaseOrgTree();
+        address orgAddr = keyperSafes[orgName];
+        address groupA = keyperSafes[groupAName];
+        address subGroupA = keyperSafes[subGroupAName];
+
+        // Send ETH to org&subgroup
+        vm.deal(orgAddr, 100 gwei);
+        vm.deal(groupA, 100 gwei);
+        address receiver = address(0xABC);
+
+        // Set keyperhelper gnosis safe to subGroupA
+        keyperHelper.setGnosisSafe(subGroupA);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            subGroupA,
+            groupA,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+
+        vm.expectRevert(KeyperModule.NotAuthorizedExecOnBehalf.selector);
+        // Execute OnBehalf function with a safe that is not authorized
+        vm.startPrank(subGroupA);
+        bool result = keyperModule.execTransactionOnBehalf(
+            orgAddr,
+            groupA,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        assertEq(result, false);
+    }
 }
