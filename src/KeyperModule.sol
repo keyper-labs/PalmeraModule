@@ -160,6 +160,15 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         rootOrg.safe = msg.sender;
     }
 
+    /// @notice check if the organisatino is registered
+    /// @param org address
+    function isOrgRegistered(address org) public view returns(bool) {
+        if (orgs[org].safe == address(0)) {
+            return false;
+        }
+        return true;
+    }
+
     /// @notice Add a group to an organisation/group
     /// @dev Call coming from the group safe
     /// TODO add check that msg.sender is safe contract
@@ -189,26 +198,8 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         newGroup.name = name;
     }
 
-    /// @notice Add a group to an organisation.
-    /// @dev Call has to be done from a safe transaction
-    function addGroupToOrg(address org, string memory name) public {
-        if (orgs[org].safe == address(0)) revert OrgNotRegistered();
-        Group storage group = groups[org][msg.sender];
-        group.name = name;
-        group.admin = org;
-        group.parent = org;
-        group.safe = msg.sender;
-        // Update the org mapping childs
-        Group storage _org = orgs[org];
-        _org.childs.push(msg.sender);
-    }
-
-    // returns
-    // name Group
-    // admin @
-    // safe @
-    // parent @
-    function getGroupInfo(address _org, address _group)
+    /// @notice Get all the information about a group
+    function getGroupInfo(address org, address group)
         public
         view
         returns (
@@ -218,61 +209,47 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
             address
         )
     {
-        address groupSafe = groups[_org][_group].safe;
+        address groupSafe = groups[org][group].safe;
         if (groupSafe == address(0)) revert OrgNotRegistered();
 
         return (
-            groups[_org][_group].name,
-            groups[_org][_group].admin,
-            groups[_org][_group].safe,
-            groups[_org][_group].parent
+            groups[org][group].name,
+            groups[org][group].admin,
+            groups[org][group].safe,
+            groups[org][group].parent
         );
     }
 
-    ///@notice Get the group admin going through their parents
-    // function getGroupAdmin
-
-    function getChilds(address _org, address _group)
-        public
-        view
-        returns (address[] memory)
-    {
-        address groupSafe = groups[_org][_group].safe;
-        if (groupSafe == address(0)) revert OrgNotRegistered();
-
-        return groups[_org][_group].childs;
-    }
-
-    // Check if _child address is part of the group
+    /// @notice Check if child address is part of the group within an organisation
     function isChild(
-        address _org,
-        address _parent,
-        address _child
+        address org,
+        address parent,
+        address child
     ) public view returns (bool) {
-        if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
-        // Check within orgs first if parent is org
-        if (_org == _parent) {
-            Group memory org = orgs[_org];
-            for (uint256 i = 0; i < org.childs.length; i++) {
-                if (org.childs[i] == _child) return true;
+        if (orgs[org].safe == address(0)) revert OrgNotRegistered();
+        // Check within orgs first if parent is an organisation
+        if (org == parent) {
+            Group memory organisation = orgs[org];
+            for (uint256 i = 0; i < organisation.childs.length; i++) {
+                if (organisation.childs[i] == child) return true;
             }
         }
         // Check within groups of the org
-        if (groups[_org][_parent].safe == address(0))
+        if (groups[org][parent].safe == address(0))
             revert ParentNotRegistered();
-        Group memory group = groups[_org][_parent];
+        Group memory group = groups[org][parent];
         for (uint256 i = 0; i < group.childs.length; i++) {
-            if (group.childs[i] == _child) return true;
+            if (group.childs[i] == child) return true;
         }
         return false;
     }
 
     /// @notice Check if an org is admin of the group
-    function isAdmin(address org, address safe) public view returns (bool) {
+    function isAdmin(address org, address group) public view returns (bool) {
         if (orgs[org].safe == address(0)) return false;
         // Check group admin
-        Group memory group = groups[org][safe];
-        if (group.admin == org) {
+        Group memory _group = groups[org][group];
+        if (_group.admin == org) {
             return true;
         }
         return false;

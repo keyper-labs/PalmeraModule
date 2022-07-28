@@ -5,3 +5,4 @@ broadcast/
 .env
 .vscode/
 package-lock.json
+types/
