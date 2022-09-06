@@ -34,8 +34,6 @@ interface GnosisSafe {
     function getThreshold() external view returns (uint256);
 }
 
-// TODO modifiers for auth calling the diff functions
-// TODO define how secure this setup should be: Calls only from Admin? Calls from safe contract (with multisig rule)
 contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     using GnosisSafeMath for uint256;
     string public constant NAME = "Keyper Module";
@@ -65,6 +63,13 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
 
     uint256 public nonce;
     address internal constant SENTINEL_OWNERS = address(0x1);
+
+    // Events
+    event OrganisationCreated(address indexed org, string name);
+
+    event GroupCreated(address indexed org, address indexed group, string name, address indexed admin, address parent);
+
+    event TxOnBehalfExecuted(address indexed org, address indexed executor, address indexed target, bool result);
 
     // Errors
     error OrgNotRegistered();
@@ -158,9 +163,11 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         rootOrg.admin = msg.sender;
         rootOrg.name = name;
         rootOrg.safe = msg.sender;
+
+        emit OrganisationCreated(msg.sender, name);
     }
 
-    /// @notice check if the organisatino is registered
+    /// @notice check if the organisation is registered
     /// @param org address
     function isOrgRegistered(address org) public view returns(bool) {
         if (orgs[org].safe == address(0)) {
@@ -171,7 +178,9 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
 
     /// @notice Add a group to an organisation/group
     /// @dev Call coming from the group safe
-    /// TODO add check that msg.sender is safe contract
+    /// @param org address of the organisation
+    /// @param parent address of the parent
+    /// @param name name of the group
     function addGroup(
         address org,
         address parent,
@@ -181,6 +190,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         Group storage newGroup = groups[org][msg.sender];
         // Add to org root
         if (parent == org) {
+            // By default Admin of the new group is the admin of the org
             newGroup.admin = orgs[org].admin;
             Group storage parentOrg = orgs[org];
             parentOrg.childs.push(msg.sender);
@@ -189,13 +199,15 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         else {
             if (groups[org][parent].safe == address(0))
                 revert ParentNotRegistered();
-            newGroup.admin = groups[org][parent].parent;
+            // By default Admin of the new group is the admin of the parent (TODO check this)
+            newGroup.admin = groups[org][parent].admin;
             Group storage parentGroup = groups[org][parent];
             parentGroup.childs.push(msg.sender);
         }
         newGroup.parent = parent;
         newGroup.safe = msg.sender;
         newGroup.name = name;
+        emit GroupCreated(org, msg.sender, name, newGroup.admin, parent);
     }
 
     /// @notice Get all the information about a group
@@ -318,6 +330,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
                 data,
                 operation
             );
+            emit TxOnBehalfExecuted(org, msg.sender, safe, result);
             return result;
         }
     }
