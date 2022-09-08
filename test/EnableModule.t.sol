@@ -37,21 +37,4 @@ contract TestEnableModule is Test {
         assertEq(owners.length, 4);
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), 2);
     }
-
-    function testNewSafeWithKeyperModuleOnSetup() public {
-         // Create new safe with setup called while creating contract
-        gnosisHelper.newKeyperSafeModuleEnabled(2, 2);
-        bool isKeyperModuleEnabled = gnosisHelper.gnosisSafe().isModuleEnabled(
-            address(keyperModule)
-        );
-        assertEq(isKeyperModuleEnabled, true);
-    }
-
-    // TODO check why the revert not working in testing but revert is happening without cheatcode
-    // function testRevertSetupKeyperModuleTwice() public {
-    //      // Create new safe with setup called while creating contract
-    //     gnosisHelper.newKeyperSafeModuleEnabled(2, 2);
-    //     vm.expectRevert("Keyper module can only by set once");
-    //     gnosisHelper.gnosisSafe().enableKeyperModule(address(0xa1a1));
-    // }
 }

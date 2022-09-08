@@ -4,7 +4,7 @@ import "../src/SigningUtils.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import "../script/DeploySafeFactory.t.sol";
-import {GnosisSafe} from "../src/safeMod/GnosisSafe.sol";
+import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
 // Helper contract handling deployment Gnosis Safe contracts
 contract GnosisSafeHelper is
@@ -95,45 +95,6 @@ contract GnosisSafeHelper is
         // Enable module
         bool result = enableModuleTx(address(gnosisSafe));
         require(result == true, "failed enable module");
-        return address(gnosisSafe);
-    }
-
-    // Create GnosisSafe with Keyper module enabled at safe creation
-    function newKeyperSafeModuleEnabled(uint256 numberOwners, uint256 threshold)
-        public
-        returns (address)
-    {
-        require(
-            privateKeyOwners.length >= numberOwners,
-            "not enough initialized owners"
-        );
-        require(
-            countUsed + numberOwners <= privateKeyOwners.length,
-            "No private keys available"
-        );
-        require(keyperModuleAddr != address(0), "Keyper module not set");
-        address[] memory owners = new address[](numberOwners);
-        for (uint256 i = 0; i < numberOwners; i++) {
-            owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
-            countUsed++;
-        }
-
-        bytes memory data;
-        bytes memory initializer = abi.encodeWithSignature(
-            "setup(address[],uint256,address,bytes,address,address,uint256,address)",
-            owners,
-            threshold,
-            address(0x0),
-            data,
-            address(0x0),
-            address(0x0),
-            uint256(0),
-            payable(address(0x0))
-        );
-
-        address gnosisSafeProxy = safeFactory.newSafeProxyWithCallback(initializer, keyperModuleAddr);
-        gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
-
         return address(gnosisSafe);
     }
 

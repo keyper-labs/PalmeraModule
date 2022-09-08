@@ -121,37 +121,6 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         }
     }
 
-    /**
-     @notice Function executed when user creates a Gnosis Safe wallet via GnosisSafeProxyFactory::createProxyWithCallback
-             enabling keyper module as the callback.
-     */
-    function proxyCreated(
-        IGnosisSafeProxy proxy,
-        address singleton,
-        bytes calldata initializer,
-        uint256
-    )
-        external
-    {
-        // Ensure correct factory and master copy
-        // require(msg.sender == proxyFactory, "Caller must be factory");
-        // console.log(msg.sender);
-        require(singleton == masterCopy, "Fake mastercopy used");
-
-        // Ensure initial calldata was a call to `GnosisSafe::setup`
-        require(
-            bytes4(initializer[:4]) == bytes4(0xb63e800d), "Wrong initialization"
-        );
-
-        // Call enableKeyperModule on new created safe
-        bytes memory enableTx =
-            abi.encodeWithSignature("enableKeyperModule(address)", address(this));
-
-        // External call safe as proxy address coming from gnosisFactory smart contract
-        (bool success,) = address(proxy).call(enableTx);
-        require(success, "Enable module failed");
-    }
-
     function getOrg(address _org)
         public
         view

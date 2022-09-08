@@ -4,7 +4,7 @@ import "forge-std/console.sol";
 
 import {GnosisSafeProxyFactory} from "@safe-contracts/proxies/GnosisSafeProxyFactory.sol";
 import {GnosisSafeProxy} from "@safe-contracts/proxies/GnosisSafeProxy.sol";
-import {GnosisSafe} from "../src/safeMod/GnosisSafe.sol";
+import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {IProxyCreationCallback} from "@safe-contracts/proxies/IProxyCreationCallback.sol";
 
 contract DeploySafeFactory is Script {
@@ -29,20 +29,6 @@ contract DeploySafeFactory is Script {
             address(gnosisSafeContract),
             initializer,
             nonce
-        );
-        return address(safeProxy);
-    }
-
-    function newSafeProxyWithCallback(bytes memory initializer, address proxyCreation)
-        public
-        returns (address)
-    {
-        uint256 nonce = uint256(keccak256(initializer));
-        safeProxy = proxyFactory.createProxyWithCallback(
-            address(gnosisSafeContract),
-            initializer,
-            nonce,
-            IProxyCreationCallback(proxyCreation)
         );
         return address(safeProxy);
     }
