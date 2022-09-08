@@ -1,6 +1,7 @@
 pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
+// Helper contract handling signers
 contract SignersHelper is Test {
     // Array private keys
     uint256[] public privateKeyOwners;

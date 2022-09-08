@@ -5,6 +5,7 @@ import "./SignersHelper.t.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {GnosisSafe} from "../src/safeMod/GnosisSafe.sol";
+import {DeploySafeFactory} from "../script/DeploySafeFactory.t.sol";
 
 contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     struct KeyperTransaction {
@@ -16,7 +17,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         Enum.Operation operation;
     }
 
-    KeyperModule keyper;
+    KeyperModule public keyper;
     GnosisSafe public gnosisSafe;
 
     function initHelper(KeyperModule _keyper, uint256 numberOwners) public {
@@ -117,5 +118,30 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
             nonce
         );
         return txHashed;
+    }
+
+    function createSafeProxy(uint256 numberOwners, uint256 threshold) public returns (address) {
+        require(
+            privateKeyOwners.length >= numberOwners,
+            "not enough initialized owners"
+        );
+        require(
+            countUsed + numberOwners <= privateKeyOwners.length,
+            "No private keys available"
+        );
+        DeploySafeFactory deploySafeFactory = new DeploySafeFactory();
+        deploySafeFactory.run();
+
+        address masterCopy = address(deploySafeFactory.gnosisSafeContract());
+        address safeFactory = address(deploySafeFactory.proxyFactory());
+        keyper = new KeyperModule(masterCopy, safeFactory);
+
+        require(address(keyper) != address(0), "Keyper module not deployed");
+        address[] memory owners = new address[](numberOwners);
+        for (uint256 i = 0; i < numberOwners; i++) {
+            owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
+            countUsed++;
+        }
+        return keyper.createSafeProxy(owners, threshold);
     }
 }

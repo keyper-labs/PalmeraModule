@@ -3,8 +3,10 @@ pragma solidity ^0.8.0;
 
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {SignatureDecoder} from "@safe-contracts/common/SignatureDecoder.sol";
-import {ISignatureValidator} from "@safe-contracts/interfaces/ISignatureValidator.sol";
-import {ISignatureValidatorConstants} from "@safe-contracts/interfaces/ISignatureValidator.sol";
+import {ISignatureValidator} from
+    "@safe-contracts/interfaces/ISignatureValidator.sol";
+import {ISignatureValidatorConstants} from
+    "@safe-contracts/interfaces/ISignatureValidator.sol";
 import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 
 contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
@@ -23,6 +25,9 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     bytes32 private constant KEYPER_TX_TYPEHASH =
         0xbb667b7bf67815e546e48fb8d0e6af5c31fe53b9967ed45225c9d55be21652da;
 
+    address public constant FALLBACK_HANDLER =
+        0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4;
+
     // Safe contracts
     address public immutable masterCopy;
     address public immutable proxyFactory;
@@ -39,9 +44,22 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     // Events
     event OrganisationCreated(address indexed org, string name);
 
-    event GroupCreated(address indexed org, address indexed group, string name, address indexed admin, address parent);
+    event GroupCreated(
+        address indexed org,
+        address indexed group,
+        string name,
+        address indexed admin,
+        address parent
+    );
 
-    event TxOnBehalfExecuted(address indexed org, address indexed executor, address indexed target, bool result);
+    event TxOnBehalfExecuted(
+        address indexed org,
+        address indexed executor,
+        address indexed target,
+        bool result
+    );
+
+    event ModuleEnabled(address indexed safe, address indexed module);
 
     // Errors
     error OrgNotRegistered();
@@ -50,6 +68,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     error AdminNotRegistered();
     error NotAuthorized();
     error NotAuthorizedExecOnBehalf();
+    error CreateSafeProxyFailed();
 
     struct Group {
         string name;
@@ -75,6 +94,33 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         proxyFactory = proxyFactoryAddress;
     }
 
+    function createSafeProxy(address[] memory owners, uint256 threshold)
+        external
+        returns (address safe)
+    {
+        bytes memory internalEnableModuleData =
+            abi.encodeWithSignature("internalEnableModule(address)", address(this));
+
+        bytes memory data = abi.encodeWithSignature(
+            "setup(address[],uint256,address,bytes,address,address,uint256,address)",
+            owners,
+            threshold,
+            this,
+            internalEnableModuleData,
+            FALLBACK_HANDLER,
+            address(0x0),
+            uint256(0),
+            payable(address(0x0))
+        );
+
+        IGnosisSafeProxy gnosisSafeProxy = IGnosisSafeProxy(proxyFactory);
+        try gnosisSafeProxy.createProxy(masterCopy, data) returns (address newSafe) {
+            return newSafe;
+        } catch {
+            revert CreateSafeProxyFailed();
+        }
+    }
+
     /**
      @notice Function executed when user creates a Gnosis Safe wallet via GnosisSafeProxyFactory::createProxyWithCallback
              enabling keyper module as the callback.
@@ -84,7 +130,9 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         address singleton,
         bytes calldata initializer,
         uint256
-    ) external {
+    )
+        external
+    {
         // Ensure correct factory and master copy
         // require(msg.sender == proxyFactory, "Caller must be factory");
         // console.log(msg.sender);
@@ -92,30 +140,22 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
 
         // Ensure initial calldata was a call to `GnosisSafe::setup`
         require(
-            bytes4(initializer[:4]) == bytes4(0xb63e800d),
-            "Wrong initialization"
+            bytes4(initializer[:4]) == bytes4(0xb63e800d), "Wrong initialization"
         );
 
         // Call enableKeyperModule on new created safe
-        bytes memory enableTx = abi.encodeWithSignature(
-            "enableKeyperModule(address)",
-            address(this)
-        );
+        bytes memory enableTx =
+            abi.encodeWithSignature("enableKeyperModule(address)", address(this));
 
         // External call safe as proxy address coming from gnosisFactory smart contract
-        (bool success, ) = address(proxy).call(enableTx);
+        (bool success,) = address(proxy).call(enableTx);
         require(success, "Enable module failed");
     }
 
     function getOrg(address _org)
         public
         view
-        returns (
-            string memory,
-            address,
-            address,
-            address
-        )
+        returns (string memory, address, address, address)
     {
         require(_org != address(0));
         if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
@@ -141,7 +181,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
 
     /// @notice check if the organisation is registered
     /// @param org address
-    function isOrgRegistered(address org) public view returns(bool) {
+    function isOrgRegistered(address org) public view returns (bool) {
         if (orgs[org].safe == address(0)) {
             return false;
         }
@@ -153,11 +193,9 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     /// @param org address of the organisation
     /// @param parent address of the parent
     /// @param name name of the group
-    function addGroup(
-        address org,
-        address parent,
-        string memory name
-    ) public {
+    function addGroup(address org, address parent, string memory name)
+        public
+    {
         if (orgs[org].safe == address(0)) revert OrgNotRegistered();
         Group storage newGroup = groups[org][msg.sender];
         // Add to org root
@@ -170,7 +208,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         // Add to group
         else {
             if (groups[org][parent].safe == address(0))
-                revert ParentNotRegistered();
+            revert ParentNotRegistered();
             // By default Admin of the new group is the admin of the parent (TODO check this)
             newGroup.admin = groups[org][parent].admin;
             Group storage parentGroup = groups[org][parent];
@@ -186,12 +224,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     function getGroupInfo(address org, address group)
         public
         view
-        returns (
-            string memory,
-            address,
-            address,
-            address
-        )
+        returns (string memory, address, address, address)
     {
         address groupSafe = groups[org][group].safe;
         if (groupSafe == address(0)) revert OrgNotRegistered();
@@ -205,11 +238,11 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     }
 
     /// @notice Check if child address is part of the group within an organisation
-    function isChild(
-        address org,
-        address parent,
-        address child
-    ) public view returns (bool) {
+    function isChild(address org, address parent, address child)
+        public
+        view
+        returns (bool)
+    {
         if (orgs[org].safe == address(0)) revert OrgNotRegistered();
         // Check within orgs first if parent is an organisation
         if (org == parent) {
@@ -219,8 +252,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
             }
         }
         // Check within groups of the org
-        if (groups[org][parent].safe == address(0))
-            revert ParentNotRegistered();
+        if (groups[org][parent].safe == address(0)) revert ParentNotRegistered();
         Group memory group = groups[org][parent];
         for (uint256 i = 0; i < group.childs.length; i++) {
             if (group.childs[i] == child) return true;
@@ -240,11 +272,11 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
     }
 
     /// @notice Check if the group is a parent of another group
-    function isParent(
-        address org,
-        address parent,
-        address child
-    ) public view returns (bool) {
+    function isParent(address org, address parent, address child)
+        public
+        view
+        returns (bool)
+    {
         Group memory childGroup = groups[org][child];
         address curentParent = childGroup.parent;
         // TODO: probably more efficient to just create a parents mapping instead of this iterations
@@ -268,7 +300,11 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         bytes calldata data,
         Enum.Operation operation,
         bytes memory signatures
-    ) external payable returns (bool success) {
+    )
+        external
+        payable
+        returns (bool success)
+    {
         // Check msg.sender is an admin of the target safe
         if (!isAdmin(msg.sender, safe) && !isParent(org, msg.sender, safe)) {
             // Check if it a then parent
@@ -296,12 +332,8 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
             checkNSignatures(txHash, keyperTxHashData, signatures);
             // Execute transaction from safe
             IGnosisSafe gnosisSafe = IGnosisSafe(safe);
-            bool result = gnosisSafe.execTransactionFromModule(
-                to,
-                value,
-                data,
-                operation
-            );
+            bool result =
+                gnosisSafe.execTransactionFromModule(to, value, data, operation);
             emit TxOnBehalfExecuted(org, msg.sender, safe, result);
             return result;
         }
@@ -335,7 +367,10 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         bytes32 dataHash,
         bytes memory data,
         bytes memory signatures
-    ) public view {
+    )
+        public
+        view
+    {
         IGnosisSafe gnosisSafe = IGnosisSafe(msg.sender);
         uint256 requiredSignatures = gnosisSafe.getThreshold();
         // Check that the provided signature data is not too short
@@ -369,8 +404,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
                     contractSignatureLen := mload(add(add(signatures, s), 0x20))
                 }
                 require(
-                    uint256(s)+ 32 + contractSignatureLen <=
-                        signatures.length,
+                    uint256(s) + 32 + contractSignatureLen <= signatures.length,
                     "GS023"
                 );
 
@@ -382,13 +416,10 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
                     contractSignature := add(add(signatures, s), 0x20)
                 }
                 require(
-                    ISignatureValidator(currentOwner).isValidSignature(
-                        data,
-                        contractSignature
-                    ) == EIP1271_MAGIC_VALUE,
+                    ISignatureValidator(currentOwner).isValidSignature(data, contractSignature)
+                        == EIP1271_MAGIC_VALUE,
                     "GS024"
-                );
-                // }
+                ); // }
                 // TODO: Identify this usecase
                 // else if (v == 1) {
                 //     // If v is 1 then it is an approved hash
@@ -396,17 +427,12 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
                 //     currentOwner = address(uint160(uint256(r)));
                 //     // Hashes are automatically approved by the sender of the message or when they have been pre-approved via a separate transaction
                 //     require(msg.sender == currentOwner || approvedHashes[currentOwner][dataHash] != 0, "GS025");
-                //
+            //
             } else if (v > 30) {
                 // If v > 30 then default va (27,28) has been adjusted for eth_sign flow
                 // To support eth_sign and similar we adjust v and hash the messageHash with the Ethereum message prefix before applying ecrecover
                 currentOwner = ecrecover(
-                    keccak256(
-                        abi.encodePacked(
-                            "\x19Ethereum Signed Message:\n32",
-                            dataHash
-                        )
-                    ),
+                    keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)),
                     v - 4,
                     r,
                     s
@@ -417,8 +443,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
                 currentOwner = ecrecover(dataHash, v, r, s);
             }
             require(
-                currentOwner > lastOwner && currentOwner != SENTINEL_OWNERS,
-                "GS026"
+                currentOwner > lastOwner && currentOwner != SENTINEL_OWNERS, "GS026"
             );
             // TODO change this logic, not optimized: Check current owner is part of the owners of the org safe
             require(isSafeOwner(gnosisSafe, currentOwner) != false, "GS026");
@@ -448,17 +473,14 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         bytes calldata data,
         Enum.Operation operation,
         uint256 _nonce
-    ) public view returns (bytes memory) {
+    )
+        public
+        view
+        returns (bytes memory)
+    {
         bytes32 keyperTxHash = keccak256(
             abi.encode(
-                KEYPER_TX_TYPEHASH,
-                org,
-                safe,
-                to,
-                value,
-                keccak256(data),
-                operation,
-                _nonce
+                KEYPER_TX_TYPEHASH, org, safe, to, value, keccak256(data), operation, _nonce
             )
         );
         return
@@ -478,7 +500,11 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         bytes calldata data,
         Enum.Operation operation,
         uint256 _nonce
-    ) public view returns (bytes32) {
+    )
+        public
+        view
+        returns (bytes32)
+    {
         return
             keccak256(
                 encodeTransactionData(
@@ -491,5 +517,14 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
                     _nonce
                 )
             );
+    }
+
+    function internalEnableModule(address module) external {
+        this.enableModule(module);
+    }
+
+    // Non-executed code, function called by the new safe
+    function enableModule(address module) external {
+        emit ModuleEnabled(address(this), module);
     }
 }

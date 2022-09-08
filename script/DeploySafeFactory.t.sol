@@ -8,10 +8,11 @@ import {GnosisSafe} from "../src/safeMod/GnosisSafe.sol";
 import {IProxyCreationCallback} from "@safe-contracts/proxies/IProxyCreationCallback.sol";
 
 contract DeploySafeFactory is Script {
-    GnosisSafeProxyFactory proxyFactory;
+    GnosisSafeProxyFactory public proxyFactory;
     GnosisSafe public gnosisSafeContract;
     GnosisSafeProxy safeProxy;
 
+    // Deploys a GnosisSafeProxyFactory and a modified GnosisSafe master copy
     function run() public {
         vm.startBroadcast();
         proxyFactory = new GnosisSafeProxyFactory();

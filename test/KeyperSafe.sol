@@ -4,7 +4,7 @@ import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
-import {KeyperModule} from "../src/KeyperModule.sol";
+import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
 
 contract TestKeyperSafe is Test, SigningUtils {
     KeyperModule keyperModule;
@@ -23,7 +23,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     function setUp() public {
         // Init a new safe as main organization (3 owners, 1 threshold)
         gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafe();
+        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
 
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
@@ -37,6 +37,17 @@ contract TestKeyperSafe is Test, SigningUtils {
         gnosisHelper.setKeyperModule(address(keyperModule));
         // Enable keyper module
         gnosisHelper.enableModuleTx(gnosisSafeAddr);
+    }
+
+    function testCreateSafeFromModule() public {
+        address newSafe = keyperHelper.createSafeProxy(4, 2);
+        assertFalse(newSafe == address(0));
+         // Verify newSafe has keyper modulle enabled
+        GnosisSafe safe = GnosisSafe(payable(newSafe));
+        bool isKeyperModuleEnabled = safe.isModuleEnabled(
+            address(keyperHelper.keyper())
+        );
+        assertEq(isKeyperModuleEnabled, true);
     }
 
     function testRegisterOrgFromSafe() public {

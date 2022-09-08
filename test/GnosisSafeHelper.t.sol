@@ -6,6 +6,7 @@ import "./SignersHelper.t.sol";
 import "../script/DeploySafeFactory.t.sol";
 import {GnosisSafe} from "../src/safeMod/GnosisSafe.sol";
 
+// Helper contract handling deployment Gnosis Safe contracts
 contract GnosisSafeHelper is
     Test,
     SigningUtils,
@@ -17,7 +18,11 @@ contract GnosisSafeHelper is
     address private keyperModuleAddr;
     address public gnosisMasterCopy;
 
-    function setupSafe() public returns (address) {
+    // Create new gnosis safe test environment
+    // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
+    // Init signers
+    // Deploy a new safe proxy
+    function setupSafeEnv() public returns (address) {
         safeFactory = new DeploySafeFactory();
         safeFactory.run();
         gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
@@ -133,7 +138,7 @@ contract GnosisSafeHelper is
     }
 
     function testNewKeyperSafe() public {
-        setupSafe();
+        setupSafeEnv();
         setKeyperModule(address(0x678));
         newKeyperSafe(4, 2);
         address[] memory owners = gnosisSafe.getOwners();
