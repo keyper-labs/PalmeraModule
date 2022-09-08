@@ -5,37 +5,9 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 import {SignatureDecoder} from "@safe-contracts/common/SignatureDecoder.sol";
 import {ISignatureValidator} from "@safe-contracts/interfaces/ISignatureValidator.sol";
 import {ISignatureValidatorConstants} from "@safe-contracts/interfaces/ISignatureValidator.sol";
-import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
-import {GnosisSafeProxy} from "@safe-contracts/proxies/GnosisSafeProxy.sol";
-
-interface GnosisSafe {
-    function execTransactionFromModule(
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation
-    ) external returns (bool success);
-
-    function execTransaction(
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation,
-        uint256 safeTxGas,
-        uint256 baseGas,
-        uint256 gasPrice,
-        address gasToken,
-        address payable refundReceiver,
-        bytes memory signatures
-    ) external payable returns (bool success);
-
-    function getOwners() external view returns (address[] memory);
-
-    function getThreshold() external view returns (uint256);
-}
+import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 
 contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
-    using GnosisSafeMath for uint256;
     string public constant NAME = "Keyper Module";
     string public constant VERSION = "0.1.0";
 
@@ -108,7 +80,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
              enabling keyper module as the callback.
      */
     function proxyCreated(
-        GnosisSafeProxy proxy,
+        IGnosisSafeProxy proxy,
         address singleton,
         bytes calldata initializer,
         uint256
@@ -323,7 +295,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
             txHash = keccak256(keyperTxHashData);
             checkNSignatures(txHash, keyperTxHashData, signatures);
             // Execute transaction from safe
-            GnosisSafe gnosisSafe = GnosisSafe(safe);
+            IGnosisSafe gnosisSafe = IGnosisSafe(safe);
             bool result = gnosisSafe.execTransactionFromModule(
                 to,
                 value,
@@ -364,10 +336,10 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         bytes memory data,
         bytes memory signatures
     ) public view {
-        GnosisSafe gnosisSafe = GnosisSafe(msg.sender);
+        IGnosisSafe gnosisSafe = IGnosisSafe(msg.sender);
         uint256 requiredSignatures = gnosisSafe.getThreshold();
         // Check that the provided signature data is not too short
-        require(signatures.length >= requiredSignatures.mul(65), "GS020");
+        require(signatures.length >= requiredSignatures * 65, "GS020");
         // There cannot be an owner with address 0.
         address lastOwner = address(0);
         address currentOwner;
@@ -385,10 +357,10 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
                 // Check that signature data pointer (s) is not pointing inside the static part of the signatures bytes
                 // This check is not completely accurate, since it is possible that more signatures than the threshold are send.
                 // Here we only check that the pointer is not pointing inside the part that is being processed
-                require(uint256(s) >= requiredSignatures.mul(65), "GS021");
+                require(uint256(s) >= requiredSignatures * 65, "GS021");
 
                 // Check that signature data pointer (s) is in bounds (points to the length of data -> 32 bytes)
-                require(uint256(s).add(32) <= signatures.length, "GS022");
+                require(uint256(s) + 32 <= signatures.length, "GS022");
 
                 // Check if the contract signature is in bounds: start of data is s + 32 and end is start + signature length
                 uint256 contractSignatureLen;
@@ -397,7 +369,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
                     contractSignatureLen := mload(add(add(signatures, s), 0x20))
                 }
                 require(
-                    uint256(s).add(32).add(contractSignatureLen) <=
+                    uint256(s)+ 32 + contractSignatureLen <=
                         signatures.length,
                     "GS023"
                 );
@@ -454,7 +426,7 @@ contract KeyperModule is SignatureDecoder, ISignatureValidatorConstants {
         }
     }
 
-    function isSafeOwner(GnosisSafe gnosisSafe, address signer)
+    function isSafeOwner(IGnosisSafe gnosisSafe, address signer)
         private
         view
         returns (bool)
