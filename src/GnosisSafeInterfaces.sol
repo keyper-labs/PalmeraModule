@@ -32,6 +32,14 @@ interface IGnosisSafe {
     function getOwners() external view returns (address[] memory);
 
     function getThreshold() external view returns (uint256);
+
+    function checkSignatures(
+        bytes32 dataHash,
+        bytes memory data,
+        bytes memory signatures
+    )
+        external
+        view;
 }
 
 interface IGnosisSafeProxy {
