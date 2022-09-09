@@ -12,7 +12,7 @@ contract DeploySafeFactory is Script {
     GnosisSafe public gnosisSafeContract;
     GnosisSafeProxy safeProxy;
 
-    // Deploys a GnosisSafeProxyFactory and a modified GnosisSafe master copy
+    // Deploys a GnosisSafeProxyFactory & GnosisSafe contract
     function run() public {
         vm.startBroadcast();
         proxyFactory = new GnosisSafeProxyFactory();
