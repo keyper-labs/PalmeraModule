@@ -4,8 +4,9 @@ import "../src/SigningUtils.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import "../script/DeploySafeFactory.t.sol";
-import {GnosisSafe} from "../src/safeMod/GnosisSafe.sol";
+import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
+// Helper contract handling deployment Gnosis Safe contracts
 contract GnosisSafeHelper is
     Test,
     SigningUtils,
@@ -17,7 +18,11 @@ contract GnosisSafeHelper is
     address private keyperModuleAddr;
     address public gnosisMasterCopy;
 
-    function setupSafe() public returns (address) {
+    // Create new gnosis safe test environment
+    // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
+    // Init signers
+    // Deploy a new safe proxy
+    function setupSafeEnv() public returns (address) {
         safeFactory = new DeploySafeFactory();
         safeFactory.run();
         gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
@@ -93,47 +98,8 @@ contract GnosisSafeHelper is
         return address(gnosisSafe);
     }
 
-    // Create GnosisSafe with Keyper module enabled at safe creation
-    function newKeyperSafeModuleEnabled(uint256 numberOwners, uint256 threshold)
-        public
-        returns (address)
-    {
-        require(
-            privateKeyOwners.length >= numberOwners,
-            "not enough initialized owners"
-        );
-        require(
-            countUsed + numberOwners <= privateKeyOwners.length,
-            "No private keys available"
-        );
-        require(keyperModuleAddr != address(0), "Keyper module not set");
-        address[] memory owners = new address[](numberOwners);
-        for (uint256 i = 0; i < numberOwners; i++) {
-            owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
-            countUsed++;
-        }
-
-        bytes memory data;
-        bytes memory initializer = abi.encodeWithSignature(
-            "setup(address[],uint256,address,bytes,address,address,uint256,address)",
-            owners,
-            threshold,
-            address(0x0),
-            data,
-            address(0x0),
-            address(0x0),
-            uint256(0),
-            payable(address(0x0))
-        );
-
-        address gnosisSafeProxy = safeFactory.newSafeProxyWithCallback(initializer, keyperModuleAddr);
-        gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
-
-        return address(gnosisSafe);
-    }
-
     function testNewKeyperSafe() public {
-        setupSafe();
+        setupSafeEnv();
         setKeyperModule(address(0x678));
         newKeyperSafe(4, 2);
         address[] memory owners = gnosisSafe.getOwners();
