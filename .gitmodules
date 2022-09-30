@@ -10,3 +10,6 @@
 [submodule "lib/solenv"]
 	path = lib/solenv
 	url = https://github.com/memester-xyz/solenv
+[submodule "lib/solmate"]
+	path = lib/solmate
+	url = https://github.com/transmissions11/solmate
