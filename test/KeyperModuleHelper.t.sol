@@ -120,7 +120,10 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         return txHashed;
     }
 
-    function createSafeProxy(uint256 numberOwners, uint256 threshold) public returns (address) {
+    function createSafeProxy(uint256 numberOwners, uint256 threshold)
+        public
+        returns (address)
+    {
         require(
             privateKeyOwners.length >= numberOwners,
             "not enough initialized owners"
@@ -134,7 +137,9 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
 
         address masterCopy = address(deploySafeFactory.gnosisSafeContract());
         address safeFactory = address(deploySafeFactory.proxyFactory());
-        keyper = new KeyperModule(masterCopy, safeFactory);
+        // TODO: rolesAuthority setup
+        address rolesAuthority = address(deploySafeFactory.proxyFactory());
+        keyper = new KeyperModule(masterCopy, safeFactory, rolesAuthority);
 
         require(address(keyper) != address(0), "Keyper module not deployed");
         address[] memory owners = new address[](numberOwners);

@@ -22,7 +22,11 @@ contract KeyperModuleTest is Test {
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
-        keyperModule = new KeyperModule(address(0x112233), address(0x445566));
+        keyperModule = new KeyperModule(
+            address(0x112233),
+            address(0x445566),
+            address(0xAEEF)
+        );
         rootOrgName = "Root Org";
     }
 

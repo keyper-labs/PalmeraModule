@@ -28,8 +28,13 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
-        // TODO init roles manager
-        keyperModule = new KeyperModule(masterCopy, safeFactory);
+        // TODO: rolesAuthority setup
+        address rolesAuthority = address(0xBAAF);
+        keyperModule = new KeyperModule(
+            masterCopy,
+            safeFactory,
+            rolesAuthority
+        );
         keyperModuleAddr = address(keyperModule);
         // Init keyperModuleHelper
         keyperHelper = new KeyperModuleHelper();

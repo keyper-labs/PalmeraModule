@@ -85,16 +85,18 @@ contract KeyperModule is Auth {
         address gasToken;
     }
 
-    constructor(address masterCopyAddress, address proxyFactoryAddress)
-        Auth(address(0), Authority(rolesAuthority))
-    {
+    constructor(
+        address masterCopyAddress,
+        address proxyFactoryAddress,
+        address authority
+    ) Auth(address(0), Authority(rolesAuthority)) {
         require(masterCopyAddress != address(0));
         require(proxyFactoryAddress != address(0));
-        // require(authority != address(0));
+        require(authority != address(0));
 
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
-        // rolesAuthority = authority;
+        rolesAuthority = authority;
     }
 
     function createSafeProxy(address[] memory owners, uint256 threshold)

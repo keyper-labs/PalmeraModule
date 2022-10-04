@@ -8,8 +8,13 @@ contract DeployModule is Script {
         Solenv.config();
         address masterCopy = vm.envAddress("MASTER_COPY_ADDRESS");
         address proxyFactory = vm.envAddress("PROXY_FACTORY_ADDRESS");
+        address rolesAuthority = address(0xBEEF);
         vm.startBroadcast();
-        KeyperModule keyperModule = new KeyperModule(masterCopy, proxyFactory);
+        KeyperModule keyperModule = new KeyperModule(
+            masterCopy,
+            proxyFactory,
+            rolesAuthority
+        );
         vm.stopBroadcast();
     }
 }
