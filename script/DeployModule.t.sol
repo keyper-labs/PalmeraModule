@@ -3,7 +3,7 @@ import "forge-std/Script.sol";
 import "src/KeyperModule.sol";
 import "@solenv/Solenv.sol";
 
-contract DeployModule is Script{
+contract DeployModule is Script {
     function run() public {
         Solenv.config();
         address masterCopy = vm.envAddress("MASTER_COPY_ADDRESS");

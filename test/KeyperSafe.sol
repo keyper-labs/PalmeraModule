@@ -28,6 +28,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
+        // TODO init roles manager
         keyperModule = new KeyperModule(masterCopy, safeFactory);
         keyperModuleAddr = address(keyperModule);
         // Init keyperModuleHelper
@@ -42,7 +43,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     function testCreateSafeFromModule() public {
         address newSafe = keyperHelper.createSafeProxy(4, 2);
         assertFalse(newSafe == address(0));
-         // Verify newSafe has keyper modulle enabled
+        // Verify newSafe has keyper modulle enabled
         GnosisSafe safe = GnosisSafe(payable(newSafe));
         bool isKeyperModuleEnabled = safe.isModuleEnabled(
             address(keyperHelper.keyper())
@@ -80,11 +81,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         vm.label(keyperSafes[groupName], groupName);
 
         address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(
-            orgAddr,
-            orgAddr,
-            groupName
-        );
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
         assertEq(result, true);
     }
 
@@ -100,11 +97,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         keyperSafes[groupName] = address(groupSafe);
 
         address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(
-            orgAddr,
-            orgAddr,
-            groupName
-        );
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
 
         // Send ETH to org&subgroup
         vm.deal(orgAddr, 100 gwei);
@@ -149,11 +142,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         keyperSafes[groupName] = address(groupSafe);
 
         address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(
-            orgAddr,
-            orgAddr,
-            groupName
-        );
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
         // Send ETH to org&subgroup
         vm.deal(orgAddr, 100 gwei);
         vm.deal(groupSafe, 100 gwei);
@@ -204,11 +193,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         keyperSafes[nameGroupA] = address(safeGroupA);
 
         address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(
-            orgAddr,
-            orgAddr,
-            nameGroupA
-        );
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, nameGroupA);
 
         // Create new safe with setup called while creating contract
         address safeGroupB = gnosisHelper.newKeyperSafe(2, 1);
@@ -217,11 +202,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         keyperSafes[nameGroupB] = address(safeGroupB);
 
         orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(
-            orgAddr,
-            orgAddr,
-            nameGroupB
-        );
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, nameGroupB);
 
         // Create new safe with setup called while creating contract
         address safeSubGroupA = gnosisHelper.newKeyperSafe(2, 1);

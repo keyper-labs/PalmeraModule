@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
-import {Auth} from "@solmate/auth/Auth.sol";
+import {Auth, Authority} from "@solmate/auth/Auth.sol";
 
 contract KeyperModule is Auth {
     string public constant NAME = "Keyper Module";
@@ -36,6 +36,9 @@ contract KeyperModule is Auth {
 
     uint256 public nonce;
     address internal constant SENTINEL_OWNERS = address(0x1);
+
+    // RoleAuthority
+    address public rolesAuthority;
 
     // Events
     event OrganisationCreated(address indexed org, string name);
@@ -82,12 +85,16 @@ contract KeyperModule is Auth {
         address gasToken;
     }
 
-    constructor(address masterCopyAddress, address proxyFactoryAddress) {
+    constructor(address masterCopyAddress, address proxyFactoryAddress)
+        Auth(address(0), Authority(rolesAuthority))
+    {
         require(masterCopyAddress != address(0));
         require(proxyFactoryAddress != address(0));
+        // require(authority != address(0));
 
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
+        // rolesAuthority = authority;
     }
 
     function createSafeProxy(address[] memory owners, uint256 threshold)
