@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
+import {Auth} from "@solmate/auth/Auth.sol";
 
-contract KeyperModule {
+contract KeyperModule is Auth {
     string public constant NAME = "Keyper Module";
     string public constant VERSION = "0.1.0";
 
@@ -93,8 +94,10 @@ contract KeyperModule {
         external
         returns (address safe)
     {
-        bytes memory internalEnableModuleData =
-            abi.encodeWithSignature("internalEnableModule(address)", address(this));
+        bytes memory internalEnableModuleData = abi.encodeWithSignature(
+            "internalEnableModule(address)",
+            address(this)
+        );
 
         bytes memory data = abi.encodeWithSignature(
             "setup(address[],uint256,address,bytes,address,address,uint256,address)",
@@ -109,7 +112,9 @@ contract KeyperModule {
         );
 
         IGnosisSafeProxy gnosisSafeProxy = IGnosisSafeProxy(proxyFactory);
-        try gnosisSafeProxy.createProxy(masterCopy, data) returns (address newSafe) {
+        try gnosisSafeProxy.createProxy(masterCopy, data) returns (
+            address newSafe
+        ) {
             return newSafe;
         } catch {
             revert CreateSafeProxyFailed();
@@ -119,7 +124,12 @@ contract KeyperModule {
     function getOrg(address _org)
         public
         view
-        returns (string memory, address, address, address)
+        returns (
+            string memory,
+            address,
+            address,
+            address
+        )
     {
         require(_org != address(0));
         if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
@@ -157,9 +167,11 @@ contract KeyperModule {
     /// @param org address of the organisation
     /// @param parent address of the parent
     /// @param name name of the group
-    function addGroup(address org, address parent, string memory name)
-        public
-    {
+    function addGroup(
+        address org,
+        address parent,
+        string memory name
+    ) public {
         if (orgs[org].safe == address(0)) revert OrgNotRegistered();
         Group storage newGroup = groups[org][msg.sender];
         // Add to org root
@@ -172,7 +184,7 @@ contract KeyperModule {
         // Add to group
         else {
             if (groups[org][parent].safe == address(0))
-            revert ParentNotRegistered();
+                revert ParentNotRegistered();
             // By default Admin of the new group is the admin of the parent (TODO check this)
             newGroup.admin = groups[org][parent].admin;
             Group storage parentGroup = groups[org][parent];
@@ -188,7 +200,12 @@ contract KeyperModule {
     function getGroupInfo(address org, address group)
         public
         view
-        returns (string memory, address, address, address)
+        returns (
+            string memory,
+            address,
+            address,
+            address
+        )
     {
         address groupSafe = groups[org][group].safe;
         if (groupSafe == address(0)) revert OrgNotRegistered();
@@ -202,11 +219,11 @@ contract KeyperModule {
     }
 
     /// @notice Check if child address is part of the group within an organisation
-    function isChild(address org, address parent, address child)
-        public
-        view
-        returns (bool)
-    {
+    function isChild(
+        address org,
+        address parent,
+        address child
+    ) public view returns (bool) {
         if (orgs[org].safe == address(0)) revert OrgNotRegistered();
         // Check within orgs first if parent is an organisation
         if (org == parent) {
@@ -216,7 +233,8 @@ contract KeyperModule {
             }
         }
         // Check within groups of the org
-        if (groups[org][parent].safe == address(0)) revert ParentNotRegistered();
+        if (groups[org][parent].safe == address(0))
+            revert ParentNotRegistered();
         Group memory group = groups[org][parent];
         for (uint256 i = 0; i < group.childs.length; i++) {
             if (group.childs[i] == child) return true;
@@ -236,11 +254,11 @@ contract KeyperModule {
     }
 
     /// @notice Check if the group is a parent of another group
-    function isParent(address org, address parent, address child)
-        public
-        view
-        returns (bool)
-    {
+    function isParent(
+        address org,
+        address parent,
+        address child
+    ) public view returns (bool) {
         Group memory childGroup = groups[org][child];
         address curentParent = childGroup.parent;
         // TODO: probably more efficient to just create a parents mapping instead of this iterations
@@ -264,15 +282,11 @@ contract KeyperModule {
         bytes calldata data,
         Enum.Operation operation,
         bytes memory signatures
-    )
-        external
-        payable
-        returns (bool success)
-    {
+    ) external payable returns (bool success) {
         // Check msg.sender is an admin of the target safe
         if (
-            !isAdmin(msg.sender, targetSafe)
-                && !isParent(org, msg.sender, targetSafe)
+            !isAdmin(msg.sender, targetSafe) &&
+            !isParent(org, msg.sender, targetSafe)
         ) {
             // Check if it a then parent
             revert NotAuthorizedExecOnBehalf();
@@ -299,11 +313,18 @@ contract KeyperModule {
             // TODO not sure about msg.sender => Maybe just check admin address
             // Init safe interface to get parent owners/threshold
             IGnosisSafe gnosisAdminSafe = IGnosisSafe(msg.sender);
-            gnosisAdminSafe.checkSignatures(txHash, keyperTxHashData, signatures);
+            gnosisAdminSafe.checkSignatures(
+                txHash,
+                keyperTxHashData,
+                signatures
+            );
             // Execute transaction from target safe
             IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
             bool result = gnosisTargetSafe.execTransactionFromModule(
-                to, value, data, operation
+                to,
+                value,
+                data,
+                operation
             );
             emit TxOnBehalfExecuted(org, msg.sender, targetSafe, result);
             return result;
@@ -353,14 +374,17 @@ contract KeyperModule {
         bytes calldata data,
         Enum.Operation operation,
         uint256 _nonce
-    )
-        public
-        view
-        returns (bytes memory)
-    {
+    ) public view returns (bytes memory) {
         bytes32 keyperTxHash = keccak256(
             abi.encode(
-                KEYPER_TX_TYPEHASH, org, safe, to, value, keccak256(data), operation, _nonce
+                KEYPER_TX_TYPEHASH,
+                org,
+                safe,
+                to,
+                value,
+                keccak256(data),
+                operation,
+                _nonce
             )
         );
         return
@@ -380,11 +404,7 @@ contract KeyperModule {
         bytes calldata data,
         Enum.Operation operation,
         uint256 _nonce
-    )
-        public
-        view
-        returns (bytes32)
-    {
+    ) public view returns (bytes32) {
         return
             keccak256(
                 encodeTransactionData(
