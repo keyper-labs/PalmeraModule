@@ -2,35 +2,17 @@
 pragma solidity ^0.8.15;
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Authority} from "@solmate/auth/Auth.sol";
+import {Constants} from "./Constants.sol";
 
-contract KeyperRoles is RolesAuthority {
-    address keyperModule;
-    uint8 internal constant ADMIN_ADD_OWNERS_ROLE = 0;
-    uint8 internal constant ADMIN_REMOVE_OWNERS_ROLE = 1;
-    bytes4 internal constant ADD_OWNER =
-        bytes4(
-            keccak256(
-                bytes(
-                    "addOwnerWithThreshold(address owner, uint256 _threshold)"
-                )
-            )
-        );
-    bytes4 internal constant REMOVE_OWNER =
-        bytes4(
-            keccak256(
-                bytes(
-                    "removeOwner(address prevOwner,address owner,uint256 _threshold)"
-                )
-            )
-        );
-
-    constructor() RolesAuthority(msg.sender, Authority(address(0))) {
-        setupRoles();
+contract KeyperRoles is RolesAuthority, Constants {
+    constructor(address keyperModule)
+        RolesAuthority(msg.sender, Authority(address(0)))
+    {
+        setupRoles(keyperModule);
     }
 
-    function setupRoles() internal {
-        /// Configure access control on Authority
-
+    /// Configure roles  access control on Authority
+    function setupRoles(address keyperModule) internal {
         /// Role 0 - AdminAddOwner
         /// Target contract: KeyperModule
         /// Auth function addOwnerWithThreshold
@@ -46,9 +28,7 @@ contract KeyperRoles is RolesAuthority {
             true
         );
 
-        /// Transfer ownership of authority to address null to ensure inmutability of roles
-        setOwner(address(0));
+        /// Transfer ownership of authority to keyper module
+        setOwner(keyperModule);
     }
-
-    function set
 }

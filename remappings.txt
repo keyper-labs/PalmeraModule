@@ -4,3 +4,4 @@ ds-test/=lib/forge-std/lib/ds-test/src/
 @openzeppelin=lib/openzeppelin-contracts/contracts
 @solmate=lib/solmate/src
 @solenv=lib/solenv/src/
+@create3=lib/create3-factory/src

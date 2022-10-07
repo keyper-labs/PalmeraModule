@@ -4,25 +4,12 @@ pragma solidity ^0.8.0;
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
+import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
+import {Constants} from "./Constants.sol";
 
-contract KeyperModule is Auth {
+contract KeyperModule is Auth, Constants {
     string public constant NAME = "Keyper Module";
-    string public constant VERSION = "0.1.0";
-
-    // keccak256(
-    //     "EIP712Domain(uint256 chainId,address verifyingContract)"
-    // );
-    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
-        0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
-
-    // keccak256(
-    //     "KeyperTx(address org,address safe,address to,uint256 value,bytes data,uint8 operation,uint256 nonce)"
-    // );
-    bytes32 private constant KEYPER_TX_TYPEHASH =
-        0xbb667b7bf67815e546e48fb8d0e6af5c31fe53b9967ed45225c9d55be21652da;
-
-    address public constant FALLBACK_HANDLER =
-        0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4;
+    string public constant VERSION = "0.2.0";
 
     // Safe contracts
     address public immutable masterCopy;
@@ -89,7 +76,7 @@ contract KeyperModule is Auth {
         address masterCopyAddress,
         address proxyFactoryAddress,
         address authority
-    ) Auth(address(0), Authority(rolesAuthority)) {
+    ) Auth(address(0), Authority(authority)) {
         require(masterCopyAddress != address(0));
         require(proxyFactoryAddress != address(0));
         require(authority != address(0));
@@ -154,10 +141,20 @@ contract KeyperModule is Auth {
     /// @dev Call has to be done from a safe transaction
     /// @param name of the org
     function registerOrg(string memory name) public {
+        // @TODO: Add check to verify call is coming from a safe
         Group storage rootOrg = orgs[msg.sender];
         rootOrg.admin = msg.sender;
         rootOrg.name = name;
         rootOrg.safe = msg.sender;
+
+        // Set org role to set admin role
+        RolesAuthority authority = RolesAuthority(rolesAuthority);
+        authority.setRoleCapability(
+            SAFE_SET_ROLE,
+            msg.sender,
+            SET_USER_ADMIN,
+            true
+        );
 
         emit OrganisationCreated(msg.sender, name);
     }
@@ -435,5 +432,16 @@ contract KeyperModule is Auth {
     // Non-executed code, function called by the new safe
     function enableModule(address module) external {
         emit ModuleEnabled(address(this), module);
+    }
+
+    // ROLES AUTH FUNCTIONS
+
+    /// @notice Give user admin role
+    /// @dev Call must come from the group safe
+    /// @param user User that will have the Admin role
+    function setUserAdmin(address user, bool enabled) public requiresAuth {
+        RolesAuthority authority = RolesAuthority(rolesAuthority);
+        authority.setUserRole(user, ADMIN_ADD_OWNERS_ROLE, enabled);
+        authority.setUserRole(user, ADMIN_REMOVE_OWNERS_ROLE, enabled);
     }
 }
