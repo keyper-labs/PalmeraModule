@@ -187,6 +187,7 @@ contract GnosisSafeHelper is
         return result;
     }
 
+    // TODO :Need to update this functio in order to setup correct roles in keyper roles
     function registerOrgTx(string memory orgName) public returns (bool) {
         // Create enableModule calldata
         bytes memory data = abi.encodeWithSignature(

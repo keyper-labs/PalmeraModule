@@ -5,8 +5,10 @@ import "../src/SigningUtils.sol";
 import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
 import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
+import {MockAuthority} from "@solmate/test/utils/mocks/MockAuthority.sol";
+import {Constants} from "../src/Constants.sol";
 
-contract TestKeyperSafe is Test, SigningUtils {
+contract TestKeyperSafe is Test, SigningUtils, Constants {
     KeyperModule keyperModule;
     GnosisSafeHelper gnosisHelper;
     KeyperModuleHelper keyperHelper;
@@ -19,6 +21,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     string groupAName = "GroupA";
     string groupBName = "GroupB";
     string subGroupAName = "SubGroupA";
+    MockAuthority mockKeyperRoles;
 
     function setUp() public {
         // Init a new safe as main organization (3 owners, 1 threshold)
@@ -28,12 +31,12 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
-        // TODO: rolesAuthority setup
-        address rolesAuthority = address(0xBAAF);
+        // TODO: rolesAuthority setup, Mock calls to auth
+        mockKeyperRoles = new MockAuthority(true);
         keyperModule = new KeyperModule(
             masterCopy,
             safeFactory,
-            rolesAuthority
+            address(mockKeyperRoles)
         );
         keyperModuleAddr = address(keyperModule);
         // Init keyperModuleHelper
@@ -91,6 +94,18 @@ contract TestKeyperSafe is Test, SigningUtils {
     }
 
     function testAdminExecOnBehalf() public {
+        // TODO review this call
+        vm.mockCall(
+            address(mockKeyperRoles),
+            abi.encodeWithSignature(
+                "setRoleCapability(uint8,address,bytes4,bool)",
+                SAFE_SET_ROLE,
+                address(gnosisHelper.gnosisSafe()),
+                SET_USER_ADMIN,
+                true
+            ),
+            abi.encode(true)
+        );
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());

@@ -6,6 +6,7 @@ import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Constants} from "./Constants.sol";
+import {console} from "forge-std/console.sol";
 
 contract KeyperModule is Auth, Constants {
     string public constant NAME = "Keyper Module";
