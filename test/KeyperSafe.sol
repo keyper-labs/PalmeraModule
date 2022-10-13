@@ -6,7 +6,6 @@ import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
 import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
 import {MockAuthority} from "@solmate/test/utils/mocks/MockAuthority.sol";
-import {Constants} from "../src/Constants.sol";
 
 contract TestKeyperSafe is Test, SigningUtils, Constants {
     KeyperModule keyperModule;
@@ -61,7 +60,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     function testRegisterOrgFromSafe() public {
         // Create registerOrg calldata
-        bool result = gnosisHelper.registerOrgTx(orgName);
+        bool result = gnosisHelper.registerOrgTx(
+            orgName,
+            address(mockKeyperRoles)
+        );
         assertEq(result, true);
         (
             string memory name,
@@ -77,7 +79,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     function testCreateGroupFromSafe() public {
         // Set initialsafe as org
-        bool result = gnosisHelper.registerOrgTx(orgName);
+        bool result = gnosisHelper.registerOrgTx(
+            orgName,
+            address(mockKeyperRoles)
+        );
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
         vm.label(keyperSafes[orgName], orgName);
 
@@ -94,18 +99,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     function testAdminExecOnBehalf() public {
-        // TODO review this call
-        vm.mockCall(
-            address(mockKeyperRoles),
-            abi.encodeWithSignature(
-                "setRoleCapability(uint8,address,bytes4,bool)",
-                SAFE_SET_ROLE,
-                address(gnosisHelper.gnosisSafe()),
-                SET_USER_ADMIN,
-                true
-            ),
-            abi.encode(true)
-        );
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());

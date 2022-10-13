@@ -15,13 +15,15 @@ contract KeyperRolesTest is Test, Constants {
     function setUp() public {
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
+        // Predict the future address of keyper module
         keyperModuleDeployed = factory.getDeployed(address(this), salt);
         console.log("Deployed", keyperModuleDeployed);
+        // Deployment with keyper module address
         keyperRoles = new KeyperRoles(keyperModuleDeployed);
 
         bytes memory args = abi.encode(
-            address(0xBEEF),
-            address(0xCAAF),
+            address(0xBEEF), //Master copy address does not matter
+            address(0xCAAF), // Same proxy factory
             address(keyperRoles)
         );
 

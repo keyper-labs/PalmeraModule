@@ -144,7 +144,6 @@ contract KeyperModuleTest is Test, Constants {
     }
 
     // Register org call with mocked call to KeyperRoles
-    // TODO : not working as registerOrg also checks contract ownership over authority
     function registerOrgWithRolesMocked(address org, string memory name)
         public
     {

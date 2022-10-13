@@ -5,13 +5,15 @@ import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import "../script/DeploySafeFactory.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
+import {Constants} from "../src/Constants.sol";
 
 // Helper contract handling deployment Gnosis Safe contracts
 contract GnosisSafeHelper is
     Test,
     SigningUtils,
     SignDigestHelper,
-    SignersHelper
+    SignersHelper,
+    Constants
 {
     GnosisSafe public gnosisSafe;
     DeploySafeFactory public safeFactory;
@@ -188,7 +190,10 @@ contract GnosisSafeHelper is
     }
 
     // TODO :Need to update this functio in order to setup correct roles in keyper roles
-    function registerOrgTx(string memory orgName) public returns (bool) {
+    function registerOrgTx(string memory orgName, address mockKeyperRoles)
+        public
+        returns (bool)
+    {
         // Create enableModule calldata
         bytes memory data = abi.encodeWithSignature(
             "registerOrg(string)",
@@ -199,6 +204,19 @@ contract GnosisSafeHelper is
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        // Mock setRoleCapability called to keyperRoles
+        vm.mockCall(
+            address(mockKeyperRoles),
+            abi.encodeWithSignature(
+                "setRoleCapability(uint8,address,bytes4,bool)",
+                SAFE_SET_ROLE,
+                address(gnosisSafe),
+                SET_USER_ADMIN,
+                true
+            ),
+            abi.encode(true)
+        );
+
         bool result = executeSafeTx(mockTx, signatures);
         return result;
     }
