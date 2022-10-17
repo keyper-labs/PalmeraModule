@@ -14,6 +14,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     address gnosisSafeAddr;
     address keyperModuleAddr;
+    // address public testAddress = address(0xBEFF);
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) keyperSafes;
     string orgName = "Main Org";
@@ -100,7 +101,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     function testAdminExecOnBehalf() public {
         // Set initialsafe as org
-        bool result = gnosisHelper.registerOrgTx(orgName);
+        bool result = gnosisHelper.registerOrgTx(
+            orgName, 
+            address(mockKeyperRoles)
+        );
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
         // Create new safe with setup called while creating contract
@@ -140,12 +144,16 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             signatures
         );
         assertEq(result, true);
+        console.log("receiver balance: ", receiver.balance);
         assertEq(receiver.balance, 2 gwei);
     }
 
     function testRevertInvalidSignatureExecOnBehalf() public {
         // Set initialsafe as org
-        bool result = gnosisHelper.registerOrgTx(orgName);
+        bool result = gnosisHelper.registerOrgTx(
+            orgName, 
+            address(mockKeyperRoles)
+        );
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
         // Create new safe with setup called while creating contract
@@ -196,7 +204,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     //  SubGroupA
     function setUpBaseOrgTree() public {
         // Set initialsafe as org
-        bool result = gnosisHelper.registerOrgTx(orgName);
+        bool result = gnosisHelper.registerOrgTx(
+            orgName,
+            address(mockKeyperRoles)
+        );
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
         // Create new safe with setup called while creating contract

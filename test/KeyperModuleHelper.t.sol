@@ -94,6 +94,8 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
             invalidSafeOwnersPK[i] = invalidPrivateKeyOwners[i];
         }
 
+        // console.log("invalidSafeOwnersPK index 1: ", invalidSafeOwnersPK[0]);
+
         bytes memory signatures = signDigestTx(invalidSafeOwnersPK, txHashed);
 
         return signatures;

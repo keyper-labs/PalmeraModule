@@ -4,6 +4,7 @@ import "../src/SigningUtils.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import "../script/DeploySafeFactory.t.sol";
+import {console} from "forge-std/console.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {Constants} from "../src/Constants.sol";
 
@@ -189,16 +190,21 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    // TODO :Need to update this functio in order to setup correct roles in keyper roles
+    // TODO :Need to update this function in order to setup correct roles in keyper roles
     function registerOrgTx(string memory orgName, address mockKeyperRoles)
         public
         returns (bool)
     {
+
+        console.log("org name ", orgName);
         // Create enableModule calldata
         bytes memory data = abi.encodeWithSignature(
             "registerOrg(string)",
             orgName
         );
+
+        console.log("MockKeyperRole address", address(mockKeyperRoles));
+        // console.logBytes(bytes(data));
 
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
