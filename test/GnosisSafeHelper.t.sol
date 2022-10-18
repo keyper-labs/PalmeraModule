@@ -7,6 +7,7 @@ import "../script/DeploySafeFactory.t.sol";
 import {console} from "forge-std/console.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {Constants} from "../src/Constants.sol";
+import {KeyperRoles} from "../src/KeyperRoles.sol";
 
 // Helper contract handling deployment Gnosis Safe contracts
 contract GnosisSafeHelper is
@@ -18,8 +19,14 @@ contract GnosisSafeHelper is
 {
     GnosisSafe public gnosisSafe;
     DeploySafeFactory public safeFactory;
+    // KeyperRoles public keyperRolesContract;
+    address public keyperRoles;
     address private keyperModuleAddr;
     address public gnosisMasterCopy;
+
+    function setKeyperRoles(address _keyperRoles) public {
+        keyperRoles = _keyperRoles;
+    }
 
     // Create new gnosis safe test environment
     // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
@@ -191,7 +198,8 @@ contract GnosisSafeHelper is
     }
 
     // TODO :Need to update this function in order to setup correct roles in keyper roles
-    function registerOrgTx(string memory orgName, address mockKeyperRoles)
+    // keyperRole Param deleted to test functionality with keyperRoles integrated
+    function registerOrgTx(string memory orgName)
         public
         returns (bool)
     {
@@ -203,24 +211,32 @@ contract GnosisSafeHelper is
             orgName
         );
 
-        console.log("MockKeyperRole address", address(mockKeyperRoles));
-        // console.logBytes(bytes(data));
+        KeyperRoles keyperRolesContract = KeyperRoles(keyperRoles);
+
+        console.log("KeyperRole address from gnosis helper", address(keyperRoles));
 
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         // Mock setRoleCapability called to keyperRoles
-        vm.mockCall(
-            address(mockKeyperRoles),
-            abi.encodeWithSignature(
-                "setRoleCapability(uint8,address,bytes4,bool)",
-                SAFE_SET_ROLE,
-                address(gnosisSafe),
-                SET_USER_ADMIN,
-                true
-            ),
-            abi.encode(true)
+        // vm.mockCall(
+        //     address(keyperRoles),
+        //     abi.encodeWithSignature(
+        //         "setRoleCapability(uint8,address,bytes4,bool)",
+        //         SAFE_SET_ROLE,
+        //         address(gnosisSafe),
+        //         SET_USER_ADMIN,
+        //         true
+        //     ),
+        //     abi.encode(true)
+        // );
+
+        keyperRolesContract.setRoleCapability(
+            SAFE_SET_ROLE,
+            address(gnosisSafe),
+            SET_USER_ADMIN,
+            true
         );
 
         bool result = executeSafeTx(mockTx, signatures);

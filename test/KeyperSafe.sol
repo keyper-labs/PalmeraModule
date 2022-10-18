@@ -5,50 +5,70 @@ import "../src/SigningUtils.sol";
 import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
 import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
-// import {MockAuthority} from "@solmate/test/utils/mocks/MockAuthority.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
+import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
+import {console} from "forge-std/console.sol";
 
 contract TestKeyperSafe is Test, SigningUtils, Constants {
     KeyperModule keyperModule;
     GnosisSafeHelper gnosisHelper;
     KeyperModuleHelper keyperHelper;
-    KeyperRoles keyperRoles;
 
     address gnosisSafeAddr;
     address keyperModuleAddr;
-    // address public testAddress = address(0xBEFF);
+    address keyperRolesDeployed;
+
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) keyperSafes;
     string orgName = "Main Org";
     string groupAName = "GroupA";
     string groupBName = "GroupB";
     string subGroupAName = "SubGroupA";
-    // MockAuthority mockKeyperRoles;
 
     function setUp() public {
+
+        CREATE3Factory factory = new CREATE3Factory();
+        bytes32 salt = keccak256(abi.encode(0xafff));
+        // Predict the future address of keyper roles
+        keyperRolesDeployed = factory.getDeployed(address(this), salt);
+        console.log("Deployed KeyperRoles contract", keyperRolesDeployed);
+        
         // Init a new safe as main organization (3 owners, 1 threshold)
         gnosisHelper = new GnosisSafeHelper();
         gnosisSafeAddr = gnosisHelper.setupSafeEnv();
+
+        // setting keyperRoles Address
+        gnosisHelper.setKeyperRoles(keyperRolesDeployed);
 
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
         // TODO: rolesAuthority setup, Mock calls to auth
         // mockKeyperRoles = new MockAuthority(true);
-        keyperRoles = new KeyperRoles();
         keyperModule = new KeyperModule(
             masterCopy,
             safeFactory,
-            address(mockKeyperRoles)
+            address(keyperRolesDeployed)
         );
         keyperModuleAddr = address(keyperModule);
         // Init keyperModuleHelper
         keyperHelper = new KeyperModuleHelper();
         keyperHelper.initHelper(keyperModule, 30);
         // Update gnosisHelper
-        gnosisHelper.setKeyperModule(address(keyperModule));
+        gnosisHelper.setKeyperModule(keyperModuleAddr);
         // Enable keyper module
         gnosisHelper.enableModuleTx(gnosisSafeAddr);
+
+        bytes memory args = abi.encode(
+            address(keyperModuleAddr)
+        );
+
+        bytes memory bytecode = abi.encodePacked(
+            vm.getCode("KeyperRoles.sol:KeyperRoles"),
+            args
+        );
+
+        factory.deploy(salt, bytecode);
     }
 
     function testCreateSafeFromModule() public {
@@ -65,10 +85,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function testRegisterOrgFromSafe() public {
         // Create registerOrg calldata
         bool result = gnosisHelper.registerOrgTx(
-            orgName,
-            address(mockKeyperRoles)
+            orgName
+            // address(keyperRolesDeployed)
         );
-        assertEq(result, true);
+        // console.log("Result ", result);
+        // assertEq(result, true);
         (
             string memory name,
             address admin,
@@ -84,8 +105,8 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function testCreateGroupFromSafe() public {
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(
-            orgName,
-            address(mockKeyperRoles)
+            orgName
+            // address(keyperRolesDeployed)
         );
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
         vm.label(keyperSafes[orgName], orgName);
@@ -105,8 +126,8 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function testAdminExecOnBehalf() public {
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(
-            orgName, 
-            address(mockKeyperRoles)
+            orgName 
+            // address(keyperRolesDeployed)
         );
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
@@ -154,8 +175,8 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function testRevertInvalidSignatureExecOnBehalf() public {
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(
-            orgName, 
-            address(mockKeyperRoles)
+            orgName
+            // address(keyperRolesDeployed)
         );
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
@@ -208,8 +229,8 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function setUpBaseOrgTree() public {
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(
-            orgName,
-            address(mockKeyperRoles)
+            orgName
+            // address(keyperRolesDeployed)
         );
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
