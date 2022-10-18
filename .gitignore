@@ -6,3 +6,4 @@ broadcast/
 .vscode/
 package-lock.json
 types/
+src/ZodiacRoleExample.sol

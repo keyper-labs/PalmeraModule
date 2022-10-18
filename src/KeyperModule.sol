@@ -7,8 +7,14 @@ import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Constants} from "./Constants.sol";
 import {console} from "forge-std/console.sol";
+import {KeyperRoles} from "./KeyperRoles.sol";
 
 contract KeyperModule is Auth, Constants {
+    // Inheritance done
+    // Constans are inherited on KeyperRoles
+
+    // KeyperRoles keyperRoles; 
+
     string public constant NAME = "Keyper Module";
     string public constant VERSION = "0.2.0";
 
@@ -77,14 +83,16 @@ contract KeyperModule is Auth, Constants {
         address masterCopyAddress,
         address proxyFactoryAddress,
         address authority
-    ) Auth(address(0), Authority(authority)) {
+    ) 
+    Auth(address(0), Authority(authority)) 
+    {
         require(masterCopyAddress != address(0));
         require(proxyFactoryAddress != address(0));
         require(authority != address(0));
 
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
-        rolesAuthority = authority;
+        rolesAuthority = authority; // MUST BE KEYPERROLES CONTRACT
     }
 
     function createSafeProxy(address[] memory owners, uint256 threshold)

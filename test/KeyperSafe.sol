@@ -5,12 +5,14 @@ import "../src/SigningUtils.sol";
 import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
 import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
-import {MockAuthority} from "@solmate/test/utils/mocks/MockAuthority.sol";
+// import {MockAuthority} from "@solmate/test/utils/mocks/MockAuthority.sol";
+import {KeyperRoles} from "../src/KeyperRoles.sol";
 
 contract TestKeyperSafe is Test, SigningUtils, Constants {
     KeyperModule keyperModule;
     GnosisSafeHelper gnosisHelper;
     KeyperModuleHelper keyperHelper;
+    KeyperRoles keyperRoles;
 
     address gnosisSafeAddr;
     address keyperModuleAddr;
@@ -21,7 +23,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     string groupAName = "GroupA";
     string groupBName = "GroupB";
     string subGroupAName = "SubGroupA";
-    MockAuthority mockKeyperRoles;
+    // MockAuthority mockKeyperRoles;
 
     function setUp() public {
         // Init a new safe as main organization (3 owners, 1 threshold)
@@ -32,7 +34,8 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
         // TODO: rolesAuthority setup, Mock calls to auth
-        mockKeyperRoles = new MockAuthority(true);
+        // mockKeyperRoles = new MockAuthority(true);
+        keyperRoles = new KeyperRoles();
         keyperModule = new KeyperModule(
             masterCopy,
             safeFactory,
