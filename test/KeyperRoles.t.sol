@@ -33,8 +33,6 @@ contract KeyperRolesTest is Test, Constants {
         );
 
         factory.deploy(salt, bytecode);
-        // console.log("OWWWNEER: ", keyperRoles.owner());
-        // console.log("Authority: ", address(keyperRoles.authority()));
     }
 
     function testRolesModulesSetup() public {

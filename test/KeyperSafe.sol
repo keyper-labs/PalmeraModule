@@ -7,12 +7,12 @@ import "./KeyperModuleHelper.t.sol";
 import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
-// import {console} from "forge-std/console.sol";
 
 contract TestKeyperSafe is Test, SigningUtils, Constants {
     KeyperModule keyperModule;
     GnosisSafeHelper gnosisHelper;
     KeyperModuleHelper keyperHelper;
+    KeyperRoles keyperRolesContract;
 
     address gnosisSafeAddr;
     address keyperModuleAddr;
@@ -31,8 +31,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bytes32 salt = keccak256(abi.encode(0xafff));
         // Predict the future address of keyper roles
         keyperRolesDeployed = factory.getDeployed(address(this), salt);
-        // console.log("The KeyperRoles Contract creator: ", msg.sender);
-        // console.log("Deployed KeyperRoles contract", keyperRolesDeployed);
         
         // Init a new safe as main organization (3 owners, 1 threshold)
         gnosisHelper = new GnosisSafeHelper();
@@ -69,15 +67,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             args
         );
 
-        factory.deploy(salt, bytecode);
-        // KeyperRoles KRContract = KeyperRoles(factory.deploy(salt, bytecode));
-
-        // console.log("doesRoleHaveCapability: ", KRContract.doesRoleHaveCapability(ADMIN_ADD_OWNERS_ROLE, keyperModuleAddr, ADD_OWNER));
-
-        // console.log("KeyperRoles OWNER: ", KRContract.owner());
-        // console.log("KeyperModule ADDRESS: ", keyperModuleAddr);
-        // console.log("KeyperModule OWNER: ", keyperModule.owner());
-        // console.log("GnosisHelper ADDRESS: ", address(gnosisSafeAddr));
+        keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
     }
 
     function testCreateSafeFromModule() public {
@@ -346,5 +336,20 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             signatures
         );
         assertEq(result, false);
+    }
+
+    function testAuthorityAddress() public {
+        assertEq(address(keyperModule.authority()), address(keyperRolesDeployed));
+    }
+
+    function testRevertAuthForRegisterOrgTx() public {
+        address caller = address(0x1);
+        vm.expectRevert(bytes("UNAUTHORIZED"));
+        keyperRolesContract.setRoleCapability(
+            ADMIN_ADD_OWNERS_ROLE,
+            caller,
+            ADD_OWNER,
+            true
+        );
     }
 }
