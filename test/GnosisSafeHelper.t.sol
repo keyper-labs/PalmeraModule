@@ -203,17 +203,19 @@ contract GnosisSafeHelper is
         public
         returns (bool)
     {
-
-        console.log("org name ", orgName);
+        // vm.startPrank(keyperModuleAddr);
+        // console.log("REGISTER CALLER!!!!: ", msg.sender);
+        // console.log("KM address: ", keyperModuleAddr);
+        // console.log("org name ", orgName);
         // Create enableModule calldata
         bytes memory data = abi.encodeWithSignature(
             "registerOrg(string)",
             orgName
         );
 
-        KeyperRoles keyperRolesContract = KeyperRoles(keyperRoles);
+        // KeyperRoles keyperRolesContract = KeyperRoles(keyperRoles);
 
-        console.log("KeyperRole address from gnosis helper", address(keyperRoles));
+        // console.log("KeyperRole address from gnosis helper", address(keyperRoles));
 
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
@@ -232,14 +234,16 @@ contract GnosisSafeHelper is
         //     abi.encode(true)
         // );
 
-        keyperRolesContract.setRoleCapability(
-            SAFE_SET_ROLE,
-            address(gnosisSafe),
-            SET_USER_ADMIN,
-            true
-        );
+        // keyperRolesContract.setRoleCapability(
+        //     SAFE_SET_ROLE,
+        //     address(gnosisSafe),
+        //     // msg.sender,
+        //     SET_USER_ADMIN,
+        //     true
+        // );
 
         bool result = executeSafeTx(mockTx, signatures);
+        // console.log("Result on registerOrgTx: ", result);
         return result;
     }
 
