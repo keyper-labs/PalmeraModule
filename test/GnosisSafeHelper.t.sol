@@ -4,7 +4,6 @@ import "../src/SigningUtils.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import "../script/DeploySafeFactory.t.sol";
-import {console} from "forge-std/console.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {Constants} from "../src/Constants.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
@@ -19,7 +18,7 @@ contract GnosisSafeHelper is
 {
     GnosisSafe public gnosisSafe;
     DeploySafeFactory public safeFactory;
-    // KeyperRoles public keyperRolesContract;
+
     address public keyperRoles;
     address private keyperModuleAddr;
     address public gnosisMasterCopy;
@@ -197,8 +196,7 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    // TODO :Need to update this function in order to setup correct roles in keyper roles
-    // keyperRole Param deleted to test functionality with keyperRoles integrated
+    /// @dev keyperRole Param deleted to test functionality with keyperRoles integrated
     function registerOrgTx(string memory orgName)
         public
         returns (bool)
@@ -214,19 +212,7 @@ contract GnosisSafeHelper is
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
-        // Mock setRoleCapability called to keyperRoles
-        // vm.mockCall(
-        //     address(keyperRoles),
-        //     abi.encodeWithSignature(
-        //         "setRoleCapability(uint8,address,bytes4,bool)",
-        //         SAFE_SET_ROLE,
-        //         address(gnosisSafe),
-        //         SET_USER_ADMIN,
-        //         true
-        //     ),
-        //     abi.encode(true)
-        // );
-
+        
         bool result = executeSafeTx(mockTx, signatures);
         return result;
     }

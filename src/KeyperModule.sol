@@ -10,11 +10,7 @@ import {console} from "forge-std/console.sol";
 import {KeyperRoles} from "./KeyperRoles.sol";
 
 contract KeyperModule is Auth, Constants {
-    // Inheritance done
-    // Constans are inherited on KeyperRoles
-
-    // KeyperRoles keyperRoles; 
-
+   
     string public constant NAME = "Keyper Module";
     string public constant VERSION = "0.2.0";
 
@@ -92,7 +88,7 @@ contract KeyperModule is Auth, Constants {
 
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
-        rolesAuthority = authority; // MUST BE KEYPERROLES CONTRACT
+        rolesAuthority = authority;
     }
 
     function createSafeProxy(address[] memory owners, uint256 threshold)

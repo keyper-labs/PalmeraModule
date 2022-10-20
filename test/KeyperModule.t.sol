@@ -5,7 +5,6 @@ import {console} from "forge-std/console.sol";
 import {stdStorage, StdStorage, Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {Constants} from "../src/Constants.sol";
-// import {MockAuthority} from "@solmate/test/utils/mocks/MockAuthority.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 
@@ -21,8 +20,6 @@ contract KeyperModuleTest is Test, Constants {
     address keyperModuleAddr;
     address keyperRolesDeployed;
     string rootOrgName;
-    // MockAuthority mockKeyperRoles;
-    
 
     // Function called before each test is run
     function setUp() public {
@@ -30,14 +27,10 @@ contract KeyperModuleTest is Test, Constants {
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
 
-        // We are not going to use mock calls anymore. KeyperRoles contract is integrated here
-        // mockKeyperRoles = new MockAuthority(true);
-
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
-        // Predict the future address of keyper module
+        // Predict the future address of keyper roles
         keyperRolesDeployed = factory.getDeployed(address(this), salt);
-        console.log("Deployed", keyperRolesDeployed);
 
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
         keyperModule = new KeyperModule(
@@ -45,7 +38,7 @@ contract KeyperModuleTest is Test, Constants {
             address(0x445566),
             address(keyperRolesDeployed)
         );
-        // mockKeyperRoles.setOwner(address(keyperModule));
+
         rootOrgName = "Root Org";
 
         keyperModuleAddr = address(keyperModule);
@@ -175,17 +168,6 @@ contract KeyperModuleTest is Test, Constants {
         public
     {
         vm.startPrank(org);
-        // vm.mockCall(
-        //     address(mockKeyperRoles),
-        //     abi.encodeWithSignature(
-        //         "setRoleCapability(uint8,address,bytes4,bool)",
-        //         SAFE_SET_ROLE,
-        //         org,
-        //         SET_USER_ADMIN,
-        //         true
-        //     ),
-        //     abi.encode(true)
-        // );
         keyperModule.registerOrg(name);
         vm.stopPrank();
     }
