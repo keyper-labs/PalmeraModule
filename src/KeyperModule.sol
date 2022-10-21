@@ -447,5 +447,29 @@ contract KeyperModule is Auth, Constants {
         RolesAuthority authority = RolesAuthority(rolesAuthority);
         authority.setUserRole(user, ADMIN_ADD_OWNERS_ROLE, enabled);
         authority.setUserRole(user, ADMIN_REMOVE_OWNERS_ROLE, enabled);
+        // TODO add info that user is admin of the specific safe (msg.sender)
+    }
+
+    /// @notice This function will allow UserAdmin to add owner and set a threshold without passing by
+    /// normal multisig check
+    /// @dev TODO: add additional check that the caller has the right over the target safe
+    function addOwnerWithThreshold(
+        address owner,
+        uint256 threshold,
+        address targetSafe
+    ) public requiresAuth {
+        bytes memory data = abi.encodeWithSelector(
+            IGnosisSafe.addOwnerWithThreshold.selector,
+            owner,
+            threshold
+        );
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
+        // Execute transaction from target safe
+        bool result = gnosisTargetSafe.execTransactionFromModule(
+            targetSafe, // TODO check this destination address
+            uint256(0),
+            data,
+            Enum.Operation.Call
+        );
     }
 }

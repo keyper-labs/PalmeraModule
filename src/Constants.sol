@@ -22,7 +22,9 @@ contract Constants {
     uint8 internal constant SAFE_SET_ROLE = 2;
 
     bytes4 internal constant ADD_OWNER =
-        bytes4(keccak256(bytes("addOwnerWithThreshold(address,uint256)")));
+        bytes4(
+            keccak256(bytes("addOwnerWithThreshold(address,uint256,address)"))
+        );
     bytes4 internal constant REMOVE_OWNER =
         bytes4(keccak256(bytes("removeOwner(address,address,uint256)")));
 

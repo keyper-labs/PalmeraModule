@@ -9,9 +9,7 @@ interface IGnosisSafe {
         uint256 value,
         bytes calldata data,
         Enum.Operation operation
-    )
-        external
-        returns (bool success);
+    ) external returns (bool success);
 
     function execTransaction(
         address to,
@@ -24,10 +22,9 @@ interface IGnosisSafe {
         address gasToken,
         address payable refundReceiver,
         bytes memory signatures
-    )
-        external
-        payable
-        returns (bool success);
+    ) external payable returns (bool success);
+
+    function addOwnerWithThreshold(address owner, uint256 _threshold) external;
 
     function getOwners() external view returns (address[] memory);
 
@@ -37,9 +34,7 @@ interface IGnosisSafe {
         bytes32 dataHash,
         bytes memory data,
         bytes memory signatures
-    )
-        external
-        view;
+    ) external view;
 }
 
 interface IGnosisSafeProxy {
@@ -58,7 +53,5 @@ interface IGnosisSafeProxy {
         address _singleton,
         bytes memory initializer,
         uint256 saltNonce
-    )
-        external
-        returns (address proxy);
+    ) external returns (address proxy);
 }

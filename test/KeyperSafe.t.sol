@@ -365,4 +365,32 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             true
         );
     }
+
+    function testAddOwnerWithThreshold() public {
+        bool result = gnosisHelper.registerOrgTx(orgName);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+        vm.label(keyperSafes[orgName], orgName);
+
+        address orgAddr = keyperSafes[orgName];
+        address userAdmin = address(0x123);
+        bool userEnabled = true;
+
+        vm.startPrank(orgAddr);
+        keyperModule.setUserAdmin(userAdmin, userEnabled);
+        vm.stopPrank();
+
+        address newOwner = address(0xaaaf);
+        // Check that we can call AddOwnerWithThreshold
+        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        vm.startPrank(userAdmin);
+        keyperModule.addOwnerWithThreshold(newOwner, threshold + 1, orgAddr);
+
+        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold + 1);
+
+        // TODO improve this assert with proper checking that newOwner is part of owners array
+        assertEq(gnosisHelper.gnosisSafe().getOwners().length, 4);
+    }
+
+    // TODO: Create another org (OrgB), set new userAdmin and try to call addOwnerWithThreshold on orgA
+    // this should work now. And will need to fail once we add the check
 }
