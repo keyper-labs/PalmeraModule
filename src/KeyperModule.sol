@@ -56,6 +56,7 @@ contract KeyperModule is Auth, Constants {
     error AdminNotRegistered();
     error NotAuthorized();
     error NotAuthorizedExecOnBehalf();
+    error NotAuthorizedAsNotAnAdmin();
     error CreateSafeProxyFailed();
 
     struct Group {
@@ -263,6 +264,15 @@ contract KeyperModule is Auth, Constants {
         return false;
     }
 
+    /// @notice Check if a user is an admin of the org
+    function isUserAdmin(address org, address user) public view returns (bool) {
+        Group memory _org = orgs[org];
+        if (_org.admin == user) {
+            return true;
+        }
+        return false;
+    }
+
     /// @notice Check if the group is a parent of another group
     function isParent(
         address org,
@@ -441,23 +451,28 @@ contract KeyperModule is Auth, Constants {
     // ROLES AUTH FUNCTIONS
 
     /// @notice Give user admin role
-    /// @dev Call must come from the group safe
+    /// @dev Call must come from the safe
     /// @param user User that will have the Admin role
     function setUserAdmin(address user, bool enabled) public requiresAuth {
         RolesAuthority authority = RolesAuthority(rolesAuthority);
         authority.setUserRole(user, ADMIN_ADD_OWNERS_ROLE, enabled);
         authority.setUserRole(user, ADMIN_REMOVE_OWNERS_ROLE, enabled);
-        // TODO add info that user is admin of the specific safe (msg.sender)
+        // Update user admin on org
+        Group storage org = orgs[msg.sender];
+        org.admin = user;
     }
 
-    /// @notice This function will allow UserAdmin to add owner and set a threshold without passing by
-    /// normal multisig check
-    /// @dev TODO: add additional check that the caller has the right over the target safe
+    /// @notice This function will allow UserAdmin to add owner and set a threshold without passing by normal multisig check
+    /// @dev For instance role
     function addOwnerWithThreshold(
         address owner,
         uint256 threshold,
         address targetSafe
     ) public requiresAuth {
+        // Check msg.sender is an user admin of the target safe
+        if (!isUserAdmin(targetSafe, msg.sender)) {
+            revert NotAuthorizedAsNotAnAdmin();
+        }
         bytes memory data = abi.encodeWithSelector(
             IGnosisSafe.addOwnerWithThreshold.selector,
             owner,
@@ -466,7 +481,7 @@ contract KeyperModule is Auth, Constants {
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
         // Execute transaction from target safe
         bool result = gnosisTargetSafe.execTransactionFromModule(
-            targetSafe, // TODO check this destination address
+            targetSafe,
             uint256(0),
             data,
             Enum.Operation.Call

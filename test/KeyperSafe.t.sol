@@ -380,7 +380,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         vm.stopPrank();
 
         address newOwner = address(0xaaaf);
-        // Check that we can call AddOwnerWithThreshold
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
         vm.startPrank(userAdmin);
         keyperModule.addOwnerWithThreshold(newOwner, threshold + 1, orgAddr);
