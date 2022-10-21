@@ -7,6 +7,7 @@ import "./KeyperModuleHelper.t.sol";
 import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
+import {console} from "forge-std/console.sol";
 
 contract TestKeyperSafe is Test, SigningUtils, Constants {
     KeyperModule keyperModule;
@@ -338,8 +339,30 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     function testSetUserAdmin() public {
-        bool result = gnosisHelper.registerOrgTx(   orgName);
+        bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
-        // Ongoing...
+        vm.label(keyperSafes[orgName], orgName);
+
+        // Create new safe with setup called while creating contract
+        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
+        // Create Group calldata
+        string memory groupName = groupAName;
+        keyperSafes[groupName] = address(groupSafe);
+        vm.label(keyperSafes[groupName], groupName);
+
+        address orgAddr = keyperSafes[orgName];
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
+
+        address userAdmin = address(0x123);
+        bool userEnabled = true;
+        
+        // vm.startPrank(groupSafe);
+        keyperModule.setUserAdmin(
+            userAdmin, 
+            userEnabled
+        );
+
+        assertEq(keyperRolesContract.doesUserHaveRole(userAdmin, ADMIN_ADD_OWNERS_ROLE), true);
+        assertEq(keyperRolesContract.doesUserHaveRole(userAdmin, ADMIN_REMOVE_OWNERS_ROLE), true);
     }
 }
