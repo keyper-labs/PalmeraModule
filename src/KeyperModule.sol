@@ -10,7 +10,6 @@ import {console} from "forge-std/console.sol";
 import {KeyperRoles} from "./KeyperRoles.sol";
 
 contract KeyperModule is Auth, Constants {
-   
     string public constant NAME = "Keyper Module";
     string public constant VERSION = "0.2.0";
 
@@ -79,9 +78,7 @@ contract KeyperModule is Auth, Constants {
         address masterCopyAddress,
         address proxyFactoryAddress,
         address authority
-    ) 
-    Auth(address(0), Authority(authority)) 
-    {
+    ) Auth(address(0), Authority(authority)) {
         require(masterCopyAddress != address(0));
         require(proxyFactoryAddress != address(0));
         require(authority != address(0));
@@ -154,9 +151,11 @@ contract KeyperModule is Auth, Constants {
 
         // Set org role to set admin role
         RolesAuthority authority = RolesAuthority(rolesAuthority);
+        authority.setUserRole(msg.sender, SAFE_SET_ROLE, true);
+
         authority.setRoleCapability(
             SAFE_SET_ROLE,
-            msg.sender,
+            address(this),
             SET_USER_ADMIN,
             true
         );

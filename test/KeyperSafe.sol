@@ -27,12 +27,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     string subGroupAName = "SubGroupA";
 
     function setUp() public {
-
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
         // Predict the future address of keyper roles
         keyperRolesDeployed = factory.getDeployed(address(this), salt);
-        
+
         // Init a new safe as main organization (3 owners, 1 threshold)
         gnosisHelper = new GnosisSafeHelper();
         gnosisSafeAddr = gnosisHelper.setupSafeEnv();
@@ -58,9 +57,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // Enable keyper module
         gnosisHelper.enableModuleTx(gnosisSafeAddr);
 
-        bytes memory args = abi.encode(
-            address(keyperModuleAddr)
-        );
+        bytes memory args = abi.encode(address(keyperModuleAddr));
 
         bytes memory bytecode = abi.encodePacked(
             vm.getCode("KeyperRoles.sol:KeyperRoles"),
@@ -324,7 +321,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     function testAuthorityAddress() public {
-        assertEq(address(keyperModule.authority()), address(keyperRolesDeployed));
+        assertEq(
+            address(keyperModule.authority()),
+            address(keyperRolesDeployed)
+        );
     }
 
     function testRevertAuthForRegisterOrgTx() public {
@@ -343,26 +343,26 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
         vm.label(keyperSafes[orgName], orgName);
 
-        // Create new safe with setup called while creating contract
-        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
-        // Create Group calldata
-        string memory groupName = groupAName;
-        keyperSafes[groupName] = address(groupSafe);
-        vm.label(keyperSafes[groupName], groupName);
-
         address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
-
         address userAdmin = address(0x123);
         bool userEnabled = true;
-        
-        // vm.startPrank(groupSafe);
-        keyperModule.setUserAdmin(
-            userAdmin, 
-            userEnabled
-        );
 
-        assertEq(keyperRolesContract.doesUserHaveRole(userAdmin, ADMIN_ADD_OWNERS_ROLE), true);
-        assertEq(keyperRolesContract.doesUserHaveRole(userAdmin, ADMIN_REMOVE_OWNERS_ROLE), true);
+        vm.startPrank(orgAddr);
+        keyperModule.setUserAdmin(userAdmin, userEnabled);
+
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                userAdmin,
+                ADMIN_ADD_OWNERS_ROLE
+            ),
+            true
+        );
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                userAdmin,
+                ADMIN_REMOVE_OWNERS_ROLE
+            ),
+            true
+        );
     }
 }

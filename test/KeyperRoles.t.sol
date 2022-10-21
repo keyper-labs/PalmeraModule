@@ -67,7 +67,7 @@ contract KeyperRolesTest is Test, Constants {
         assertEq(
             keyperRoles.doesRoleHaveCapability(
                 SAFE_SET_ROLE,
-                org1,
+                address(keyperModule),
                 SET_USER_ADMIN
             ),
             true
@@ -75,6 +75,6 @@ contract KeyperRolesTest is Test, Constants {
     }
 
     // function testSetUserAdmin() public {
-        
+
     // }
 }
