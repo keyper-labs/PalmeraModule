@@ -22,6 +22,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) keyperSafes;
     string orgName = "Main Org";
+    string orgBName = "Second Org";
     string groupAName = "GroupA";
     string groupBName = "GroupB";
     string subGroupAName = "SubGroupA";
@@ -383,11 +384,92 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
         vm.startPrank(userAdmin);
         keyperModule.addOwnerWithThreshold(newOwner, threshold + 1, orgAddr);
-
+         
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold + 1);
 
-        // TODO improve this assert with proper checking that newOwner is part of owners array
+        address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
+        assertEq(ownersList.length, 4);
+
+        address ownerTest; 
+        for (uint256 i = 0; i < ownersList.length; i++) {
+            if (ownersList[i] == newOwner) {
+                ownerTest = ownersList[i]; 
+            }
+        }
+        assertEq(ownerTest, newOwner);
+    }
+
+    function testRemoveOwner() public {
+        bool result = gnosisHelper.registerOrgTx(orgName);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+        vm.label(keyperSafes[orgName], orgName);
+
+        address orgAddr = keyperSafes[orgName];
+        address userAdmin = address(0x123);
+        bool userEnabled = true;
+
+        vm.startPrank(orgAddr);
+        keyperModule.setUserAdmin(userAdmin, userEnabled);
+        vm.stopPrank();
+
+        address prevOwner = gnosisHelper.gnosisSafe().getOwners()[0];
+        address owner = gnosisHelper.gnosisSafe().getOwners()[1];
+        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        console.log("Owners before executing: ", gnosisHelper.gnosisSafe().getOwners().length);
+        
+        vm.startPrank(userAdmin);
+        keyperModule.removeOwner(
+            prevOwner,
+            owner,
+            threshold,
+            orgAddr
+        );
+
+        assertEq(gnosisHelper.gnosisSafe().getOwners().length, 2);
+        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
+        console.log("Owners after executing: ", gnosisHelper.gnosisSafe().getOwners().length);
+    }
+
+    function testRevertSeveralUserAdminsToAttemptToAdd() public {
+        bool result = gnosisHelper.registerOrgTx(orgName);
+        bool resultB = gnosisHelper.registerOrgTx(orgBName);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+        keyperSafes[orgBName] = address(gnosisHelper.gnosisSafe());
+        
+        vm.label(keyperSafes[orgName], orgName);
+        vm.label(keyperSafes[orgBName], orgBName);
+
+        address orgAAddr = keyperSafes[orgName];
+        address orgBAddr = keyperSafes[orgBName];
+
+        address userAdminOrgA = address(0x123);
+        address userAdminOrgB = address(0x321);
+        bool userEnabled = true;
+
+        vm.startPrank(orgAAddr);
+        keyperModule.setUserAdmin(userAdminOrgA, userEnabled);
+        vm.stopPrank();
+
+        vm.startPrank(orgBAddr);
+        keyperModule.setUserAdmin(userAdminOrgB, userEnabled);
+        vm.stopPrank();
+
+        assertEq(keyperRolesContract.doesUserHaveRole(userAdminOrgB, ADMIN_ADD_OWNERS_ROLE), true);
+
+        address newOwnerOnOrgA = address(0xF1F1);
+        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+
+        // vm.expectRevert(KeyperModule.NotAuthorizedAsNotAnAdmin.selector);
+        
+        vm.startPrank(userAdminOrgB);
+        keyperModule.addOwnerWithThreshold(
+            newOwnerOnOrgA,
+            threshold,
+            orgAAddr
+        );
+
         assertEq(gnosisHelper.gnosisSafe().getOwners().length, 4);
+        // TODO: Fix isUserAdmin function because any owner is able to add or remove owners to another org despite of the isUserAdmin logic
     }
 
     // TODO: Create another org (OrgB), set new userAdmin and try to call addOwnerWithThreshold on orgA

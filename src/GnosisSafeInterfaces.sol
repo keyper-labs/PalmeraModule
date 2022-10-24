@@ -26,6 +26,8 @@ interface IGnosisSafe {
 
     function addOwnerWithThreshold(address owner, uint256 _threshold) external;
 
+    function removeOwner(address prevOwner, address owner, uint256 _threshold) external;
+
     function getOwners() external view returns (address[] memory);
 
     function getThreshold() external view returns (uint256);

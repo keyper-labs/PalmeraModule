@@ -57,6 +57,7 @@ contract KeyperModule is Auth, Constants {
     error NotAuthorized();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedAsNotAnAdmin();
+    error ownerNotFound();
     error CreateSafeProxyFailed();
 
     struct Group {
@@ -266,6 +267,7 @@ contract KeyperModule is Auth, Constants {
 
     /// @notice Check if a user is an admin of the org
     function isUserAdmin(address org, address user) public view returns (bool) {
+        // TODO: Check if this logic is working well
         Group memory _org = orgs[org];
         if (_org.admin == user) {
             return true;
@@ -479,6 +481,37 @@ contract KeyperModule is Auth, Constants {
             threshold
         );
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
+        // Execute transaction from target safe
+        bool result = gnosisTargetSafe.execTransactionFromModule(
+            targetSafe,
+            uint256(0),
+            data,
+            Enum.Operation.Call
+        );
+    }
+
+    /// @notice This function will allow UserAdmin to remove an owner
+    /// @dev For instance role
+    function removeOwner(
+        address prevOwner,
+        address owner,
+        uint256 threshold,
+        address targetSafe
+    ) public requiresAuth {
+        // Check msg.sender is an user admin of the target safe
+        if (!isUserAdmin(targetSafe, msg.sender)) {
+            revert NotAuthorizedAsNotAnAdmin();
+        }
+
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
+        
+        bytes memory data = abi.encodeWithSelector(
+            IGnosisSafe.removeOwner.selector, 
+            prevOwner,
+            owner,
+            threshold
+        );
+        
         // Execute transaction from target safe
         bool result = gnosisTargetSafe.execTransactionFromModule(
             targetSafe,

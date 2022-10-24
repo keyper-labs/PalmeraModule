@@ -26,8 +26,8 @@ contract Constants {
             keccak256(bytes("addOwnerWithThreshold(address,uint256,address)"))
         );
     bytes4 internal constant REMOVE_OWNER =
-        bytes4(keccak256(bytes("removeOwner(address,address,uint256)")));
+        bytes4(keccak256(bytes("removeOwner(address,address,uint256,address)")));
 
     bytes4 internal constant SET_USER_ADMIN =
-        bytes4(keccak256(bytes("setUserAdmin(address,bool)")));
+        bytes4(keccak256(bytes("setUserAdmin(address,bool)"))); //TODO: This function could be the one to modify to fix the isUserAdmin fucntionality
 }
