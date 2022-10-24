@@ -5,6 +5,10 @@ import {Authority} from "@solmate/auth/Auth.sol";
 import {Constants} from "./Constants.sol";
 
 contract KeyperRoles is RolesAuthority, Constants {
+
+    string public constant NAME = "Keyper Roles";
+    string public constant VERSION = "0.2.0";
+
     constructor(address keyperModule)
         RolesAuthority(msg.sender, Authority(address(0)))
     {

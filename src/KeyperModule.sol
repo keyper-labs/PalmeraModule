@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.15;
 
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
@@ -10,10 +10,11 @@ import {console} from "forge-std/console.sol";
 import {KeyperRoles} from "./KeyperRoles.sol";
 
 contract KeyperModule is Auth, Constants {
+    /// @dev Definition of Safe module
     string public constant NAME = "Keyper Module";
     string public constant VERSION = "0.2.0";
 
-    // Safe contracts
+    /// @dev Safe contracts
     address public immutable masterCopy;
     address public immutable proxyFactory;
 
@@ -504,14 +505,14 @@ contract KeyperModule is Auth, Constants {
         }
 
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
-        
+
         bytes memory data = abi.encodeWithSelector(
-            IGnosisSafe.removeOwner.selector, 
+            IGnosisSafe.removeOwner.selector,
             prevOwner,
             owner,
             threshold
         );
-        
+
         // Execute transaction from target safe
         bool result = gnosisTargetSafe.execTransactionFromModule(
             targetSafe,

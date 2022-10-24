@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
-contract Constants {
+abstract contract Constants {
     // keccak256(
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"
     // );
@@ -26,7 +26,9 @@ contract Constants {
             keccak256(bytes("addOwnerWithThreshold(address,uint256,address)"))
         );
     bytes4 internal constant REMOVE_OWNER =
-        bytes4(keccak256(bytes("removeOwner(address,address,uint256,address)")));
+        bytes4(
+            keccak256(bytes("removeOwner(address,address,uint256,address)"))
+        );
 
     bytes4 internal constant SET_USER_ADMIN =
         bytes4(keccak256(bytes("setUserAdmin(address,bool)"))); //TODO: This function could be the one to modify to fix the isUserAdmin fucntionality
