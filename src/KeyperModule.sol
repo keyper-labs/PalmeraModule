@@ -268,7 +268,7 @@ contract KeyperModule is Auth, Constants {
 
     /// @notice Check if a user is an admin of the org
     function isUserAdmin(address org, address user) public view returns (bool) {
-        // TODO: Check if this logic is working well
+        
         Group memory _org = orgs[org];
         if (_org.admin == user) {
             return true;
