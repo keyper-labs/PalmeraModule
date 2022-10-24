@@ -9,14 +9,20 @@ contract KeyperRoles is RolesAuthority, Constants {
     string public constant NAME = "Keyper Roles";
     string public constant VERSION = "0.2.0";
 
+    /// @dev Event when a new keyperModule is setting up
+    event KeyperModuleSetup(address keyperModule, address caller);
+
     constructor(address keyperModule)
-        RolesAuthority(msg.sender, Authority(address(0)))
+        RolesAuthority(_msgSender(), Authority(address(0)))
     {
         setupRoles(keyperModule);
     }
 
     /// Configure roles  access control on Authority
-    function setupRoles(address keyperModule) internal {
+    function setupRoles(address keyperModule)
+        internal
+        validAddress(keyperModule)
+    {
         /// Role 0 - AdminAddOwner
         /// Target contract: KeyperModule
         /// Auth function addOwnerWithThreshold
@@ -31,5 +37,6 @@ contract KeyperRoles is RolesAuthority, Constants {
 
         /// Transfer ownership of authority to keyper module
         setOwner(keyperModule);
+        emit KeyperModuleSetup(keyperModule, _msgSender());
     }
 }

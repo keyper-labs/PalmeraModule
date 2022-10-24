@@ -16,6 +16,8 @@ update:; forge update
 # Builds
 build:; forge build
 
+build-size-report :; forge build --sizes
+
 # chmod scripts
 scripts :; chmod +x ./scripts/*
 
