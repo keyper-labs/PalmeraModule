@@ -27,10 +27,8 @@ contract KeyperRolesTest is Test, Constants {
             address(keyperRoles)
         );
 
-        bytes memory bytecode = abi.encodePacked(
-            vm.getCode("KeyperModule.sol:KeyperModule"),
-            args
-        );
+        bytes memory bytecode =
+            abi.encodePacked(vm.getCode("KeyperModule.sol:KeyperModule"), args);
 
         factory.deploy(salt, bytecode);
     }
@@ -39,17 +37,13 @@ contract KeyperRolesTest is Test, Constants {
         // Check KeyperModule has role capabilites
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                ADMIN_ADD_OWNERS_ROLE,
-                keyperModuleDeployed,
-                ADD_OWNER
+                ADMIN_ADD_OWNERS_ROLE, keyperModuleDeployed, ADD_OWNER
             ),
             true
         );
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                ADMIN_REMOVE_OWNERS_ROLE,
-                keyperModuleDeployed,
-                REMOVE_OWNER
+                ADMIN_REMOVE_OWNERS_ROLE, keyperModuleDeployed, REMOVE_OWNER
             ),
             true
         );
@@ -66,9 +60,7 @@ contract KeyperRolesTest is Test, Constants {
         // Check Role
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                SAFE_SET_ROLE,
-                address(keyperModule),
-                SET_USER_ADMIN
+                SAFE_SET_ROLE, address(keyperModule), SET_USER_ADMIN
             ),
             true
         );

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
+
 import "forge-std/Test.sol";
 
 abstract contract SignDigestHelper is Test {
@@ -9,10 +10,8 @@ abstract contract SignDigestHelper is Test {
     {
         bytes memory signatures;
         for (uint256 i = 0; i < _privateKeyOwners.length; i++) {
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-                _privateKeyOwners[i],
-                digest
-            );
+            (uint8 v, bytes32 r, bytes32 s) =
+                vm.sign(_privateKeyOwners[i], digest);
             signatures = abi.encodePacked(signatures, r, s, v);
         }
 
@@ -24,10 +23,13 @@ abstract contract SignDigestHelper is Test {
         pure
         returns (address[] memory)
     {
-        for (uint256 i = addresses.length - 1; i > 0; i--)
-            for (uint256 j = 0; j < i; j++)
-                if (addresses[i] < addresses[j])
+        for (uint256 i = addresses.length - 1; i > 0; i--) {
+            for (uint256 j = 0; j < i; j++) {
+                if (addresses[i] < addresses[j]) {
                     (addresses[i], addresses[j]) = (addresses[j], addresses[i]);
+                }
+            }
+        }
 
         return addresses;
     }

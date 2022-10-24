@@ -43,14 +43,10 @@ contract KeyperModuleTest is Test, Constants {
 
         keyperModuleAddr = address(keyperModule);
 
-        bytes memory args = abi.encode(
-            address(keyperModuleAddr)
-        );
+        bytes memory args = abi.encode(address(keyperModuleAddr));
 
-        bytes memory bytecode = abi.encodePacked(
-            vm.getCode("KeyperRoles.sol:KeyperRoles"),
-            args
-        );
+        bytes memory bytecode =
+            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
 
         factory.deploy(salt, bytecode);
     }
@@ -76,10 +72,8 @@ contract KeyperModuleTest is Test, Constants {
         address admin;
         address safe;
         address parent;
-        (groupName, admin, safe, parent) = keyperModule.getGroupInfo(
-            org1,
-            groupA
-        );
+        (groupName, admin, safe, parent) =
+            keyperModule.getGroupInfo(org1, groupA);
         assertEq(groupName, "GroupA");
         assertEq(safe, groupA);
         assertEq(admin, org1);
@@ -164,9 +158,7 @@ contract KeyperModuleTest is Test, Constants {
     }
 
     // Register org call with mocked call to KeyperRoles
-    function registerOrgWithRoles(address org, string memory name)
-        public
-    {
+    function registerOrgWithRoles(address org, string memory name) public {
         vm.startPrank(org);
         keyperModule.registerOrg(name);
         vm.stopPrank();

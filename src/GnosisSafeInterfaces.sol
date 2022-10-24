@@ -24,13 +24,11 @@ interface IGnosisSafe {
         bytes memory signatures
     ) external payable returns (bool success);
 
-    function addOwnerWithThreshold(address owner, uint256 _threshold) external;
+    function addOwnerWithThreshold(address owner, uint256 _threshold)
+        external;
 
-    function removeOwner(
-        address prevOwner,
-        address owner,
-        uint256 _threshold
-    ) external;
+    function removeOwner(address prevOwner, address owner, uint256 _threshold)
+        external;
 
     function getOwners() external view returns (address[] memory);
 

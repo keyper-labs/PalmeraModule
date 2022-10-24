@@ -4,11 +4,8 @@
 
 all: clean install update build
 
-# Install proper solc version.
-solc:; nix-env -f https://github.com/dapphub/dapptools/archive/master.tar.gz -iA solc-static-versions.solc_0_8_13
-
 # Clean the repo
-clean  :; forge clean
+clean :; forge clean
 
 # Install the Modules
 install :; forge install
@@ -17,16 +14,22 @@ install :; forge install
 update:; forge update
 
 # Builds
-build  :; forge build
+build:; forge build
 
 # chmod scripts
 scripts :; chmod +x ./scripts/*
 
 # Tests
-test :; forge clean && forge test --optimize --optimizer-runs 1000000 -v # --ffi # enable if you need the `ffi` cheat code on HEVM
+# enable if you need the `ffi` cheat code on HEVM
+test :; forge test
 
-# Lints
-lint :; prettier --write src/**/*.sol && prettier --write src/*.sol
+coverage :; forge coverage -vvv
+
+test-gas-report :; forge test --gas-report -vvv
+
+# Forge Formatter
+check :; forge fmt --check
+format :; forge fmt
 
 # Generate Gas Snapshots
 snapshot :; forge clean && forge snapshot
@@ -40,4 +43,5 @@ ts-binding :; npx typechain --target ethers-v5 --out-dir out/types/ './out/**/*.
 # Deploy module
 deploy-module :; source .env && forge script script/DeployModule.t.sol:DeployModule --rpc-url ${GOERLI_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_KEY} -vvvv
 
+# Deploy New Safe
 deploy-new-safe :; source .env && forge script script/DeployKeyperSafe.t.sol:DeployKeyperSafe --rpc-url ${GOERLI_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast -vvvv
