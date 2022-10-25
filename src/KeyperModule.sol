@@ -6,10 +6,11 @@ import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Constants} from "./Constants.sol";
+import {BlacklistHelper} from "./BlacklistHelper.sol";
 import {console} from "forge-std/console.sol";
 import {KeyperRoles} from "./KeyperRoles.sol";
 
-contract KeyperModule is Auth, Constants {
+contract KeyperModule is Auth, Constants, BlacklistHelper {
     /// @dev Definition of Safe module
     string public constant NAME = "Keyper Module";
     string public constant VERSION = "0.2.0";
@@ -58,7 +59,7 @@ contract KeyperModule is Auth, Constants {
     error NotAuthorized();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedAsNotAnAdmin();
-    error ownerNotFound();
+    error OwnerNotFound();
     error CreateSafeProxyFailed();
 
     struct Group {
@@ -256,7 +257,6 @@ contract KeyperModule is Auth, Constants {
         view
         returns (bool)
     {
-        // TODO: Check if this logic is working well
         Group memory _org = orgs[org];
         if (_org.admin == user) {
             return true;
