@@ -16,12 +16,13 @@ update:; forge update
 # Builds
 build:; forge build
 
+build-size-report :; forge build --sizes
+
 # chmod scripts
 scripts :; chmod +x ./scripts/*
 
 # Tests
-# enable if you need the `ffi` cheat code on HEVM
-test :; forge test
+test :; forge test -vvv
 
 coverage :; forge coverage -vvv
 

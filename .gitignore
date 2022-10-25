@@ -7,3 +7,4 @@ broadcast/
 package-lock.json
 types/
 .lcov.info
+.atcrc

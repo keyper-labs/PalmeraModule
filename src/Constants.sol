@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
-abstract contract Constants {
+import {Context} from "@openzeppelin/utils/Context.sol";
+
+abstract contract Constants is Context {
     // keccak256(
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"
     // );

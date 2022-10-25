@@ -19,13 +19,13 @@ git submodule update --init --recursive
 
 ### Compile contracts
 ```
-forge build
+forge build or make build
 ```
 
 ### Run tests
 To run the tests using the local VM (anvil)
 ```
-forge test
+forge test or make test-gas-report
 ```
 
 ### Deploy contracts
@@ -38,7 +38,7 @@ Execute the command `deploy-module` located in the Makefile
 
 Execute the command `deploy-new-safe` located in the Makefile
 
-## Setting up a DAO 
+## Setting up a DAO
 All the following calls have to be executed from a safe using safe execTransation function. Check documentation https://safe-docs.dev.gnosisdev.com/safe/docs/contracts_tx_execution/
 # Register main organisation
 
@@ -64,7 +64,7 @@ Groups/Safe relationship
 Validate transfer rules - execTransactionFromModule:
 - Safe signers can execute transactions if threshold met (normal safe verification)
 - Safe group signers can execute transactions in behalf of any child safe
-    - Group threshold kept 
+    - Group threshold kept
 
 Setup groups rules:
 - Root admin has full control over all groups (or over all groups that he is a designed admin?)
