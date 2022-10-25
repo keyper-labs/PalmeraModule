@@ -6,10 +6,11 @@ import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Constants} from "./Constants.sol";
+import {BlacklistHelper} from "./BlacklistHelper.sol";
 import {console} from "forge-std/console.sol";
 import {KeyperRoles} from "./KeyperRoles.sol";
 
-contract KeyperModule is Auth, Constants {
+contract KeyperModule is Auth, Constants, BlacklistHelper {
     /// @dev Definition of Safe module
     string public constant NAME = "Keyper Module";
     string public constant VERSION = "0.2.0";
@@ -58,7 +59,7 @@ contract KeyperModule is Auth, Constants {
     error NotAuthorized();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedAsNotAnAdmin();
-    error ownerNotFound();
+    error OwnerNotFound();
     error CreateSafeProxyFailed();
 
     struct Group {
@@ -96,8 +97,7 @@ contract KeyperModule is Auth, Constants {
         returns (address safe)
     {
         bytes memory internalEnableModuleData = abi.encodeWithSignature(
-            "internalEnableModule(address)",
-            address(this)
+            "internalEnableModule(address)", address(this)
         );
 
         bytes memory data = abi.encodeWithSignature(
@@ -125,12 +125,7 @@ contract KeyperModule is Auth, Constants {
     function getOrg(address _org)
         public
         view
-        returns (
-            string memory,
-            address,
-            address,
-            address
-        )
+        returns (string memory, address, address, address)
     {
         require(_org != address(0));
         if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
@@ -157,10 +152,7 @@ contract KeyperModule is Auth, Constants {
         authority.setUserRole(msg.sender, SAFE_SET_ROLE, true);
 
         authority.setRoleCapability(
-            SAFE_SET_ROLE,
-            address(this),
-            SET_USER_ADMIN,
-            true
+            SAFE_SET_ROLE, address(this), SET_USER_ADMIN, true
         );
 
         emit OrganisationCreated(msg.sender, name);
@@ -180,11 +172,7 @@ contract KeyperModule is Auth, Constants {
     /// @param org address of the organisation
     /// @param parent address of the parent
     /// @param name name of the group
-    function addGroup(
-        address org,
-        address parent,
-        string memory name
-    ) public {
+    function addGroup(address org, address parent, string memory name) public {
         if (orgs[org].safe == address(0)) revert OrgNotRegistered();
         Group storage newGroup = groups[org][msg.sender];
         // Add to org root
@@ -196,8 +184,9 @@ contract KeyperModule is Auth, Constants {
         }
         // Add to group
         else {
-            if (groups[org][parent].safe == address(0))
+            if (groups[org][parent].safe == address(0)) {
                 revert ParentNotRegistered();
+            }
             // By default Admin of the new group is the admin of the parent (TODO check this)
             newGroup.admin = groups[org][parent].admin;
             Group storage parentGroup = groups[org][parent];
@@ -213,12 +202,7 @@ contract KeyperModule is Auth, Constants {
     function getGroupInfo(address org, address group)
         public
         view
-        returns (
-            string memory,
-            address,
-            address,
-            address
-        )
+        returns (string memory, address, address, address)
     {
         address groupSafe = groups[org][group].safe;
         if (groupSafe == address(0)) revert OrgNotRegistered();
@@ -232,11 +216,11 @@ contract KeyperModule is Auth, Constants {
     }
 
     /// @notice Check if child address is part of the group within an organisation
-    function isChild(
-        address org,
-        address parent,
-        address child
-    ) public view returns (bool) {
+    function isChild(address org, address parent, address child)
+        public
+        view
+        returns (bool)
+    {
         if (orgs[org].safe == address(0)) revert OrgNotRegistered();
         // Check within orgs first if parent is an organisation
         if (org == parent) {
@@ -246,8 +230,9 @@ contract KeyperModule is Auth, Constants {
             }
         }
         // Check within groups of the org
-        if (groups[org][parent].safe == address(0))
+        if (groups[org][parent].safe == address(0)) {
             revert ParentNotRegistered();
+        }
         Group memory group = groups[org][parent];
         for (uint256 i = 0; i < group.childs.length; i++) {
             if (group.childs[i] == child) return true;
@@ -267,8 +252,11 @@ contract KeyperModule is Auth, Constants {
     }
 
     /// @notice Check if a user is an admin of the org
-    function isUserAdmin(address org, address user) public view returns (bool) {
-        
+    function isUserAdmin(address org, address user)
+        public
+        view
+        returns (bool)
+    {
         Group memory _org = orgs[org];
         if (_org.admin == user) {
             return true;
@@ -277,11 +265,11 @@ contract KeyperModule is Auth, Constants {
     }
 
     /// @notice Check if the group is a parent of another group
-    function isParent(
-        address org,
-        address parent,
-        address child
-    ) public view returns (bool) {
+    function isParent(address org, address parent, address child)
+        public
+        view
+        returns (bool)
+    {
         Group memory childGroup = groups[org][child];
         address curentParent = childGroup.parent;
         // TODO: probably more efficient to just create a parents mapping instead of this iterations
@@ -308,8 +296,8 @@ contract KeyperModule is Auth, Constants {
     ) external payable returns (bool success) {
         // Check msg.sender is an admin of the target safe
         if (
-            !isAdmin(msg.sender, targetSafe) &&
-            !isParent(org, msg.sender, targetSafe)
+            !isAdmin(msg.sender, targetSafe)
+                && !isParent(org, msg.sender, targetSafe)
         ) {
             // Check if it a then parent
             revert NotAuthorizedExecOnBehalf();
@@ -337,17 +325,12 @@ contract KeyperModule is Auth, Constants {
             // Init safe interface to get parent owners/threshold
             IGnosisSafe gnosisAdminSafe = IGnosisSafe(msg.sender);
             gnosisAdminSafe.checkSignatures(
-                txHash,
-                keyperTxHashData,
-                signatures
+                txHash, keyperTxHashData, signatures
             );
             // Execute transaction from target safe
             IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
             bool result = gnosisTargetSafe.execTransactionFromModule(
-                to,
-                value,
-                data,
-                operation
+                to, value, data, operation
             );
             emit TxOnBehalfExecuted(org, msg.sender, targetSafe, result);
             return result;
@@ -355,10 +338,9 @@ contract KeyperModule is Auth, Constants {
     }
 
     function domainSeparator() public view returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)
-            );
+        return keccak256(
+            abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)
+        );
     }
 
     /// @dev Returns the chain id used by this contract.
@@ -410,13 +392,9 @@ contract KeyperModule is Auth, Constants {
                 _nonce
             )
         );
-        return
-            abi.encodePacked(
-                bytes1(0x19),
-                bytes1(0x01),
-                domainSeparator(),
-                keyperTxHash
-            );
+        return abi.encodePacked(
+            bytes1(0x19), bytes1(0x01), domainSeparator(), keyperTxHash
+        );
     }
 
     function getTransactionHash(
@@ -428,18 +406,9 @@ contract KeyperModule is Auth, Constants {
         Enum.Operation operation,
         uint256 _nonce
     ) public view returns (bytes32) {
-        return
-            keccak256(
-                encodeTransactionData(
-                    org,
-                    safe,
-                    to,
-                    value,
-                    data,
-                    operation,
-                    _nonce
-                )
-            );
+        return keccak256(
+            encodeTransactionData(org, safe, to, value, data, operation, _nonce)
+        );
     }
 
     function internalEnableModule(address module) external {
@@ -477,17 +446,12 @@ contract KeyperModule is Auth, Constants {
             revert NotAuthorizedAsNotAnAdmin();
         }
         bytes memory data = abi.encodeWithSelector(
-            IGnosisSafe.addOwnerWithThreshold.selector,
-            owner,
-            threshold
+            IGnosisSafe.addOwnerWithThreshold.selector, owner, threshold
         );
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
         // Execute transaction from target safe
         bool result = gnosisTargetSafe.execTransactionFromModule(
-            targetSafe,
-            uint256(0),
-            data,
-            Enum.Operation.Call
+            targetSafe, uint256(0), data, Enum.Operation.Call
         );
     }
 
@@ -507,18 +471,12 @@ contract KeyperModule is Auth, Constants {
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
 
         bytes memory data = abi.encodeWithSelector(
-            IGnosisSafe.removeOwner.selector,
-            prevOwner,
-            owner,
-            threshold
+            IGnosisSafe.removeOwner.selector, prevOwner, owner, threshold
         );
 
         // Execute transaction from target safe
         bool result = gnosisTargetSafe.execTransactionFromModule(
-            targetSafe,
-            uint256(0),
-            data,
-            Enum.Operation.Call
+            targetSafe, uint256(0), data, Enum.Operation.Call
         );
     }
 }

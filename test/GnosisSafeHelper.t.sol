@@ -1,4 +1,5 @@
 pragma solidity ^0.8.0;
+
 import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./SignDigestHelper.t.sol";
@@ -164,10 +165,8 @@ contract GnosisSafeHelper is
 
     function enableModuleTx(address safe) public returns (bool) {
         // Create enableModule calldata
-        bytes memory data = abi.encodeWithSignature(
-            "enableModule(address)",
-            keyperModuleAddr
-        );
+        bytes memory data =
+            abi.encodeWithSignature("enableModule(address)", keyperModuleAddr);
 
         // Create enable module safe tx
         Transaction memory mockTx = createDefaultTx(safe, data);
@@ -197,36 +196,26 @@ contract GnosisSafeHelper is
     }
 
     /// @dev keyperRole Param deleted to test functionality with keyperRoles integrated
-    function registerOrgTx(string memory orgName)
-        public
-        returns (bool)
-    {
-        
+    function registerOrgTx(string memory orgName) public returns (bool) {
         // Create enableModule calldata
-        bytes memory data = abi.encodeWithSignature(
-            "registerOrg(string)",
-            orgName
-        );
+        bytes memory data =
+            abi.encodeWithSignature("registerOrg(string)", orgName);
 
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
-        
+
         bool result = executeSafeTx(mockTx, signatures);
         return result;
     }
 
-    function createAddGroupTx(
-        address org,
-        address parent,
-        string memory name
-    ) public returns (bool) {
+    function createAddGroupTx(address org, address parent, string memory name)
+        public
+        returns (bool)
+    {
         bytes memory data = abi.encodeWithSignature(
-            "addGroup(address,address,string)",
-            org,
-            parent,
-            name
+            "addGroup(address,address,string)", org, parent, name
         );
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
@@ -255,10 +244,8 @@ contract GnosisSafeHelper is
             privateKeySafeOwners[i] = ownersPK[sortedOwners[i]];
         }
 
-        bytes memory signatures = signDigestTx(
-            privateKeySafeOwners,
-            enableModuleSafeTx
-        );
+        bytes memory signatures =
+            signDigestTx(privateKeySafeOwners, enableModuleSafeTx);
 
         return signatures;
     }
