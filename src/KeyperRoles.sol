@@ -4,8 +4,9 @@ pragma solidity ^0.8.15;
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Authority} from "@solmate/auth/Auth.sol";
 import {Constants} from "./Constants.sol";
+import {BlacklistHelper} from "./BlacklistHelper.sol";
 
-contract KeyperRoles is RolesAuthority, Constants {
+contract KeyperRoles is RolesAuthority, Constants, BlacklistHelper {
     string public constant NAME = "Keyper Roles";
     string public constant VERSION = "0.2.0";
 

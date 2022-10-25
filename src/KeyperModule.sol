@@ -7,10 +7,11 @@ import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Constants} from "./Constants.sol";
+import {BlacklistHelper} from "./BlacklistHelper.sol";
 import {console} from "forge-std/console.sol";
 import {KeyperRoles} from "./KeyperRoles.sol";
 
-contract KeyperModule is Auth, Constants {
+contract KeyperModule is Auth, Constants, BlacklistHelper {
     using GnosisSafeMath for uint256;
     /// @dev Definition of Safe module
 

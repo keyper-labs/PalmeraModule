@@ -31,10 +31,4 @@ abstract contract Constants is Context {
 
     bytes4 internal constant SET_USER_ADMIN =
         bytes4(keccak256(bytes("setUserAdmin(address,bool)"))); //TODO: This function could be the one to modify to fix the isUserAdmin fucntionality
-
-    // modifier to check if the sender is different as the address(0)
-    modifier validAddress(address _address) {
-        require(_address != address(0), "Must be not Zero Address");
-        _;
-    }
 }
