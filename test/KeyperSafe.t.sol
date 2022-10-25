@@ -381,35 +381,24 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address prevOwner = gnosisHelper.gnosisSafe().getOwners()[0];
         address owner = gnosisHelper.gnosisSafe().getOwners()[1];
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        console.log(
-            "Owners before executing: ",
-            gnosisHelper.gnosisSafe().getOwners().length
-        );
+
+        assertEq(gnosisHelper.gnosisSafe().getOwners().length, 3);
 
         vm.startPrank(userAdmin);
         keyperModule.removeOwner(prevOwner, owner, threshold, orgAddr);
 
         assertEq(gnosisHelper.gnosisSafe().getOwners().length, 2);
+        assertEq(gnosisHelper.gnosisSafe().isOwner(owner), false);
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
-        console.log(
-            "Owners after executing: ",
-            gnosisHelper.gnosisSafe().getOwners().length
-        );
     }
 
     function testRevertSeveralUserAdminsToAttemptToAdd() public {
-        address userAdminOrgA = address(0x123);
-        address userAdminOrgB = address(0x321);
-
-        vm.startPrank(userAdminOrgA);
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
-        vm.stopPrank();
 
-        vm.startPrank(userAdminOrgB);
+        address newSafe = gnosisHelper.newKeyperSafe(4, 2);
         result = gnosisHelper.registerOrgTx(orgBName);
-        // keyperSafes[orgBName] = address(gnosisHelper.gnosisSafe());
-        vm.stopPrank();
+        keyperSafes[orgBName] = address(gnosisHelper.gnosisSafe());
 
         vm.label(keyperSafes[orgName], orgName);
         vm.label(keyperSafes[orgBName], orgBName);
@@ -419,15 +408,15 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         bool userEnabled = true;
 
-        address userAdminOrgA2 = address(0x123);
-        address userAdminOrgB2 = address(0x321);
+        address userAdminOrgA = address(0x123);
+        address userAdminOrgB = address(0x321);
 
         vm.startPrank(orgAAddr);
-        keyperModule.setUserAdmin(userAdminOrgA2, userEnabled);
+        keyperModule.setUserAdmin(userAdminOrgA, userEnabled);
         vm.stopPrank();
 
         vm.startPrank(orgBAddr);
-        keyperModule.setUserAdmin(userAdminOrgB2, userEnabled);
+        keyperModule.setUserAdmin(userAdminOrgB, userEnabled);
         vm.stopPrank();
 
         assertEq(
@@ -446,6 +435,40 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         keyperModule.addOwnerWithThreshold(newOwnerOnOrgA, threshold, orgAAddr);
     }
 
-    // TODO: Create another org (OrgB), set new userAdmin and try to call addOwnerWithThreshold on orgA
-    // TODO: The OrgB is the address(0), we need to set a safe address to complete the test properly. Still it works.
+    function testRevertSeveralUserAdminsToAttemptToRemove() public {
+        bool result = gnosisHelper.registerOrgTx(orgName);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+
+        address newSafe = gnosisHelper.newKeyperSafe(4, 2);
+        result = gnosisHelper.registerOrgTx(orgBName);
+        keyperSafes[orgBName] = address(gnosisHelper.gnosisSafe());
+
+        vm.label(keyperSafes[orgName], orgName);
+        vm.label(keyperSafes[orgBName], orgBName);
+
+        address orgAAddr = keyperSafes[orgName];
+        address orgBAddr = keyperSafes[orgBName];
+
+        bool userEnabled = true;
+
+        address userAdminOrgA = address(0x123);
+        address userAdminOrgB = address(0x321);
+
+        vm.startPrank(orgAAddr);
+        keyperModule.setUserAdmin(userAdminOrgA, userEnabled);
+        vm.stopPrank();
+
+        vm.startPrank(orgBAddr);
+        keyperModule.setUserAdmin(userAdminOrgB, userEnabled);
+        vm.stopPrank();
+
+        address prevOwnerToRemoveOnOrgA = gnosisHelper.gnosisSafe().getOwners()[0];
+        address ownerToRemove = gnosisHelper.gnosisSafe().getOwners()[1];
+        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+
+        vm.expectRevert(KeyperModule.NotAuthorizedAsNotAnAdmin.selector);
+
+        vm.startPrank(userAdminOrgB);
+        keyperModule.removeOwner(prevOwnerToRemoveOnOrgA, ownerToRemove, threshold, orgAAddr);
+    }
 }

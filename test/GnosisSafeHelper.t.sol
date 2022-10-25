@@ -195,7 +195,6 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    /// @dev keyperRole Param deleted to test functionality with keyperRoles integrated
     function registerOrgTx(string memory orgName) public returns (bool) {
         // Create enableModule calldata
         bytes memory data =
