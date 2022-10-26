@@ -391,7 +391,8 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         vm.startPrank(userAdmin);
         keyperModule.removeOwner(prevOwner, owner, threshold, orgAddr);
 
-        address[] memory postRemoveOwnersList = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory postRemoveOwnersList =
+            gnosisHelper.gnosisSafe().getOwners();
 
         assertEq(postRemoveOwnersList.length, ownersList.length - 1);
         assertEq(gnosisHelper.gnosisSafe().isOwner(owner), false);

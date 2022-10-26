@@ -102,7 +102,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         external
         returns (address safe)
     {
-        
         bytes memory internalEnableModuleData = abi.encodeWithSignature(
             "internalEnableModule(address)", address(this)
         );

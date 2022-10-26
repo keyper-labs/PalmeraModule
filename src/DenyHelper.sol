@@ -2,7 +2,6 @@
 pragma solidity ^0.8.15;
 
 abstract contract DenyHelper {
-
     /// @dev Wallet Sentinel
     address internal constant SENTINEL_WALLETS = address(0x1);
 
@@ -28,7 +27,9 @@ abstract contract DenyHelper {
 
     /// @dev Modifier for Valid if wallet is Zero Address or Not
     modifier validAddress(address to) {
-        if (to == address(0) || to == SENTINEL_WALLETS) revert("Invalid address (Address Zero)");
+        if (to == address(0) || to == SENTINEL_WALLETS) {
+            revert("Invalid address (Address Zero)");
+        }
         _;
     }
 
@@ -132,11 +133,7 @@ abstract contract DenyHelper {
         return result;
     }
 
-    function getAllDenied()
-        public
-        view
-        returns (address[] memory result)
-    {
+    function getAllDenied() public view returns (address[] memory result) {
         result = new address[](deniedCount);
         address currentWallet = denied[SENTINEL_WALLETS];
         uint256 i = 0;

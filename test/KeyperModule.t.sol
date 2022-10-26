@@ -11,7 +11,7 @@ import {KeyperRoles} from "../src/KeyperRoles.sol";
 contract KeyperModuleTest is Test, Constants {
     KeyperModule keyperModule;
 
-    address org1 = address(0x1);
+    address org1 = address(0x3);
     address org2 = address(0x2);
     address groupA = address(0xa);
     address groupB = address(0xb);
