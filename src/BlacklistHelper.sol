@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
-abstract contract BlacklistHelper {
+/// @dev abstract contract condition removed temporary for testing purposes for this contract itself
+contract BlacklistHelper {
     /// @dev Wallet Sentinal
     address internal constant SENTINEL_WALLETS = address(0x1);
 
     /// @dev Counters
-    uint256 internal whitelistedCount;
-    uint256 internal blacklistedCount;
+    uint256 public whitelistedCount;
+    uint256 public blacklistedCount;
 
     /// @dev Listed info
     mapping(address => address) internal whitelisted;
@@ -20,6 +21,8 @@ abstract contract BlacklistHelper {
     event DropFromBlacklist(address indexed user);
 
     /// @dev Errors
+    error zeroAddressProvided();
+    error invalidAddressProvided();
     error userAlreadyOnWhitelist();
     error userAlreadyOnBlacklist();
 
@@ -46,14 +49,14 @@ abstract contract BlacklistHelper {
     /// @dev Funtion to Add Wallet to Whitelist based on Approach of Safe Contract - Owner Manager
     /// @param user Array of Address of the Wallet to be added to Whitelist
     function addToWhiteList(address[] memory user) external {
-        if (user.length == 0) revert("Invalid wallet (Array Zero)");
+        if (user.length == 0) revert zeroAddressProvided();
         address currentWallet = SENTINEL_WALLETS;
         for (uint256 i = 0; i < user.length; i++) {
             address wallet = user[i];
             if (
                 wallet == address(0) || wallet == SENTINEL_WALLETS
                     || wallet == address(this) || currentWallet == wallet
-            ) revert("Invalid wallet provided");
+            ) revert invalidAddressProvided();
             // Avoid duplicate wallet
             if (whitelisted[wallet] != address(0)) {
                 revert userAlreadyOnWhitelist();
@@ -68,14 +71,36 @@ abstract contract BlacklistHelper {
     }
 
     function addToBlackList(address[] memory user) external {
+        if (user.length == 0) revert zeroAddressProvided();
+        address currentWallet = SENTINEL_WALLETS;
+        for (uint256 i = 0; i < user.length; i++) {
+            address wallet = user[i];
+            if (
+                wallet == address(0) || wallet == SENTINEL_WALLETS
+                    || wallet == address(this) || currentWallet == wallet
+            ) revert invalidAddressProvided();
+            // Avoid duplicate wallet
+            if (blacklisted[wallet] != address(0)) {
+                revert userAlreadyOnBlacklist();
+            }
+            // Add wallet to whitelist
+            blacklisted[currentWallet] = wallet;
+            currentWallet = wallet;
+        }
+        blacklisted[currentWallet] = SENTINEL_WALLETS;
+        blacklistedCount += user.length;
         emit AddToBlacklist(user);
     }
 
-    function DropFromWhiteList(address user) external validAddress(user) {
+    function dropFromWhiteList(address user) external validAddress(user) {
+        address prevUser = getPrevUser(user);
+        whitelisted[prevUser] = whitelisted[user];
+        whitelisted[user] = address(0);
+        whitelistedCount--;
         emit DropFromWhitelist(user);
     }
 
-    /// @dev Funtion to Drop Wallet from Blacklisted based on Approach of Safe Contract - Owner Manager
+    /// @dev Function to Drop Wallet from Blacklisted based on Approach of Safe Contract - Owner Manager
     /// @param user Array of Address of the Wallet to be dropped to Blacklist
     function dropFromBlacklist(address user) external validAddress(user) {
         address prevUser = getPrevUser(user);
@@ -127,7 +152,8 @@ abstract contract BlacklistHelper {
     /// @dev Function to get the Previous User of the Wallet
     /// @param user Address of the Wallet
     function getPrevUser(address user)
-        internal
+        public
+        /// originally internal
         view
         returns (address prevUser)
     {
