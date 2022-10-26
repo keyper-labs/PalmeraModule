@@ -28,7 +28,7 @@ contract BlacklistHelper {
 
     /// @dev Modifier for Valid if wallet is Zero Address or Not
     modifier validAddress(address to) {
-        if (to == address(0)) revert("Invalid address (Address Zero)");
+        if (to == address(0) || to == SENTINEL_WALLETS) revert("Invalid address (Address Zero)");
         _;
     }
 
