@@ -15,20 +15,20 @@ contract KeyperRolesTest is Test, Constants {
     function setUp() public {
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
+        // Predict the future address of keyper module
         keyperModuleDeployed = factory.getDeployed(address(this), salt);
         console.log("Deployed", keyperModuleDeployed);
+        // Deployment with keyper module address
         keyperRoles = new KeyperRoles(keyperModuleDeployed);
 
         bytes memory args = abi.encode(
-            address(0xBEEF),
-            address(0xCAAF),
+            address(0xBEEF), //Master copy address does not matter
+            address(0xCAAF), // Same proxy factory
             address(keyperRoles)
         );
 
-        bytes memory bytecode = abi.encodePacked(
-            vm.getCode("KeyperModule.sol:KeyperModule"),
-            args
-        );
+        bytes memory bytecode =
+            abi.encodePacked(vm.getCode("KeyperModule.sol:KeyperModule"), args);
 
         factory.deploy(salt, bytecode);
     }
@@ -37,17 +37,13 @@ contract KeyperRolesTest is Test, Constants {
         // Check KeyperModule has role capabilites
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                ADMIN_ADD_OWNERS_ROLE,
-                keyperModuleDeployed,
-                ADD_OWNER
+                ADMIN_ADD_OWNERS_ROLE, keyperModuleDeployed, ADD_OWNER
             ),
             true
         );
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                ADMIN_REMOVE_OWNERS_ROLE,
-                keyperModuleDeployed,
-                REMOVE_OWNER
+                ADMIN_REMOVE_OWNERS_ROLE, keyperModuleDeployed, REMOVE_OWNER
             ),
             true
         );
@@ -64,15 +60,9 @@ contract KeyperRolesTest is Test, Constants {
         // Check Role
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                SAFE_SET_ROLE,
-                org1,
-                SET_USER_ADMIN
+                SAFE_SET_ROLE, address(keyperModule), SET_USER_ADMIN
             ),
             true
         );
     }
-
-    // function testSetUserAdmin() public {
-    //     // Register Org
-    // }
 }

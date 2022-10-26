@@ -1,0 +1,40 @@
+on: [push]
+
+name: test
+
+jobs:
+  check:
+    name: Foundry project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Set Env Vars
+        env:
+          MASTER_COPY_ADDRESS: "0xd4a1E956fFe2D07CD71c8fABf538f2BfC0e3899B"
+          PROXY_FACTORY_ADDRESS: "0xEAb613456d3efD309101BB02872BEdCecE2879E2"
+          KEYPER_MODULE_ADDRESS: "0xc74f6cAFb3e89006FE9c0E8Be8Dc06888e178F1b"
+          OWNER_1: "0x9CDd325E49A6a8a82288fdC3B6C14b25221D1Cfa"
+          OWNER_2: "0xEd4AD3605740D6a9232e05F4d8A2b3377f81a8AA"
+          THRESHOLD: 1
+        run: |
+          touch .env
+          echo "MASTER_COPY_ADDRESS=$MASTER_COPY_ADDRESS" >> .env
+          echo "PROXY_FACTORY_ADDRESS=$PROXY_FACTORY_ADDRESS" >> .env
+          echo "KEYPER_MODULE_ADDRESS=$KEYPER_MODULE_ADDRESS" >> .env
+          echo "OWNER_1=$OWNER_1" >> .env
+          echo "OWNER_2=$OWNER_2" >> .env
+          echo "THRESHOLD=$THRESHOLD" >> .env
+
+      - name: Run tests
+        run: forge test -vvv --gas-report
+
+      - name: Run coverage
+        run: forge coverage

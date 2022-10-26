@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
-contract Constants {
+import {Context} from "@openzeppelin/utils/Context.sol";
+
+abstract contract Constants is Context {
     // keccak256(
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"
     // );
@@ -21,23 +23,12 @@ contract Constants {
     uint8 internal constant ADMIN_REMOVE_OWNERS_ROLE = 1;
     uint8 internal constant SAFE_SET_ROLE = 2;
 
-    bytes4 internal constant ADD_OWNER =
-        bytes4(
-            keccak256(
-                bytes(
-                    "addOwnerWithThreshold(address owner, uint256 _threshold)"
-                )
-            )
-        );
+    bytes4 internal constant ADD_OWNER = bytes4(
+        keccak256(bytes("addOwnerWithThreshold(address,uint256,address)"))
+    );
     bytes4 internal constant REMOVE_OWNER =
-        bytes4(
-            keccak256(
-                bytes(
-                    "removeOwner(address prevOwner,address owner,uint256 _threshold)"
-                )
-            )
-        );
+        bytes4(keccak256(bytes("removeOwner(address,address,uint256,address)")));
 
     bytes4 internal constant SET_USER_ADMIN =
-        bytes4(keccak256(bytes("setUserAdmin(address user)")));
+        bytes4(keccak256(bytes("setUserAdmin(address,bool)")));
 }

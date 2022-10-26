@@ -1,4 +1,5 @@
 pragma solidity ^0.8.0;
+
 import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
@@ -41,13 +42,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
-            org,
-            safe,
-            to,
-            value,
-            data,
-            operation,
-            nonce
+            org, safe, to, value, data, operation, nonce
         );
 
         address[] memory owners = gnosisSafe.getOwners();
@@ -78,13 +73,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
-            org,
-            safe,
-            to,
-            value,
-            data,
-            operation,
-            nonce
+            org, safe, to, value, data, operation, nonce
         );
 
         uint256 threshold = gnosisSafe.getThreshold();
@@ -109,13 +98,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         uint256 nonce
     ) public view returns (bytes32) {
         bytes32 txHashed = keyper.getTransactionHash(
-            org,
-            safe,
-            to,
-            value,
-            data,
-            operation,
-            nonce
+            org, safe, to, value, data, operation, nonce
         );
         return txHashed;
     }
