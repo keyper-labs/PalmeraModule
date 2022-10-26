@@ -348,13 +348,15 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address newOwner = address(0xaaaf);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
+        address[] memory prevOwnersList = gnosisHelper.gnosisSafe().getOwners();
+
         vm.startPrank(userAdmin);
         keyperModule.addOwnerWithThreshold(newOwner, threshold + 1, orgAddr);
 
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold + 1);
 
         address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
-        assertEq(ownersList.length, 4);
+        assertEq(ownersList.length, prevOwnersList.length + 1);
 
         address ownerTest;
         for (uint256 i = 0; i < ownersList.length; i++) {
@@ -378,16 +380,20 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         keyperModule.setUserAdmin(userAdmin, userEnabled);
         vm.stopPrank();
 
-        address prevOwner = gnosisHelper.gnosisSafe().getOwners()[0];
-        address owner = gnosisHelper.gnosisSafe().getOwners()[1];
+        address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
+
+        address prevOwner = ownersList[0];
+        address owner = ownersList[1];
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
-        assertEq(gnosisHelper.gnosisSafe().getOwners().length, 3);
+        assertEq(ownersList.length, 3);
 
         vm.startPrank(userAdmin);
         keyperModule.removeOwner(prevOwner, owner, threshold, orgAddr);
 
-        assertEq(gnosisHelper.gnosisSafe().getOwners().length, 2);
+        address[] memory postRemoveOwnersList = gnosisHelper.gnosisSafe().getOwners();
+
+        assertEq(postRemoveOwnersList.length, ownersList.length - 1);
         assertEq(gnosisHelper.gnosisSafe().isOwner(owner), false);
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
     }
@@ -462,13 +468,16 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         keyperModule.setUserAdmin(userAdminOrgB, userEnabled);
         vm.stopPrank();
 
-        address prevOwnerToRemoveOnOrgA = gnosisHelper.gnosisSafe().getOwners()[0];
+        address prevOwnerToRemoveOnOrgA =
+            gnosisHelper.gnosisSafe().getOwners()[0];
         address ownerToRemove = gnosisHelper.gnosisSafe().getOwners()[1];
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
         vm.expectRevert(KeyperModule.NotAuthorizedAsNotAnAdmin.selector);
 
         vm.startPrank(userAdminOrgB);
-        keyperModule.removeOwner(prevOwnerToRemoveOnOrgA, ownerToRemove, threshold, orgAAddr);
+        keyperModule.removeOwner(
+            prevOwnerToRemoveOnOrgA, ownerToRemove, threshold, orgAAddr
+        );
     }
 }
