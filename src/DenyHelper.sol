@@ -15,8 +15,8 @@ abstract contract DenyHelper {
     mapping(address => address) internal denied;
 
     /// @dev Events
-    event AddedToTheAllowedList(address[] user);
-    event AddedToTheDeniedList(address[] user);
+    event AddedToTheAllowedList(address[] users);
+    event AddedToTheDeniedList(address[] users);
     event DroppedFromAllowedList(address indexed user);
     event DroppedFromDeniedList(address indexed user);
 
@@ -47,12 +47,12 @@ abstract contract DenyHelper {
     constructor() {}
 
     /// @dev Funtion to Add Wallet to allowedList based on Approach of Safe Contract - Owner Manager
-    /// @param user Array of Address of the Wallet to be added to allowedList
-    function addToAllowedList(address[] memory user) public {
-        if (user.length == 0) revert zeroAddressProvided();
+    /// @param users Array of Address of the Wallet to be added to allowedList
+    function addToAllowedList(address[] memory users) public {
+        if (users.length == 0) revert zeroAddressProvided();
         address currentWallet = SENTINEL_WALLETS;
-        for (uint256 i = 0; i < user.length; i++) {
-            address wallet = user[i];
+        for (uint256 i = 0; i < users.length; i++) {
+            address wallet = users[i];
             if (
                 wallet == address(0) || wallet == SENTINEL_WALLETS
                     || wallet == address(this) || currentWallet == wallet
@@ -66,15 +66,15 @@ abstract contract DenyHelper {
             currentWallet = wallet;
         }
         allowed[currentWallet] = SENTINEL_WALLETS;
-        allowedCount += user.length;
-        emit AddedToTheAllowedList(user);
+        allowedCount += users.length;
+        emit AddedToTheAllowedList(users);
     }
 
-    function addToDeniedList(address[] memory user) external {
-        if (user.length == 0) revert zeroAddressProvided();
+    function addToDeniedList(address[] memory users) external {
+        if (users.length == 0) revert zeroAddressProvided();
         address currentWallet = SENTINEL_WALLETS;
-        for (uint256 i = 0; i < user.length; i++) {
-            address wallet = user[i];
+        for (uint256 i = 0; i < users.length; i++) {
+            address wallet = users[i];
             if (
                 wallet == address(0) || wallet == SENTINEL_WALLETS
                     || wallet == address(this) || currentWallet == wallet
@@ -83,13 +83,13 @@ abstract contract DenyHelper {
             if (denied[wallet] != address(0)) {
                 revert userAlreadyOnDeniedList();
             }
-            // Add wallet to allowedList
+            // Add wallet to deniedList
             denied[currentWallet] = wallet;
             currentWallet = wallet;
         }
         denied[currentWallet] = SENTINEL_WALLETS;
-        deniedCount += user.length;
-        emit AddedToTheDeniedList(user);
+        deniedCount += users.length;
+        emit AddedToTheDeniedList(users);
     }
 
     function dropFromAllowedList(address user) external validAddress(user) {
