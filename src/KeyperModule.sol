@@ -102,18 +102,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         external
         returns (address safe)
     {
-        /// Validate that threshold is smaller than number of added owners.
-        if (threshold >= owners.length) revert("GS201");
-        /// There has to be at least one Safe owner.
-        if (threshold < 1) revert("GS202");
-        for (uint256 i = 0; i < owners.length; i++) {
-            /// Owner address cannot be null.
-            address owner = owners[i];
-            if (
-                owner == address(0) && owner == SENTINEL_OWNERS
-                    && owner == address(this)
-            ) revert("GS203");
-        }
+        
         bytes memory internalEnableModuleData = abi.encodeWithSignature(
             "internalEnableModule(address)", address(this)
         );
