@@ -38,7 +38,6 @@ contract DenyHelperTest is Test {
         factory.deploy(salt, bytecode);
     }
 
-    // It should add owners to
     function testAddToAllowedList() public {
         listOfOwners();
         keyperModule.addToAllowedList(owners);
