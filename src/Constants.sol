@@ -30,5 +30,5 @@ abstract contract Constants is Context {
         bytes4(keccak256(bytes("removeOwner(address,address,uint256,address)")));
 
     bytes4 internal constant SET_USER_ADMIN =
-        bytes4(keccak256(bytes("setUserAdmin(address,bool)"))); //TODO: This function could be the one to modify to fix the isUserAdmin fucntionality
+        bytes4(keccak256(bytes("setUserAdmin(address,bool)")));
 }
