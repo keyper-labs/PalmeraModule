@@ -4,11 +4,39 @@ pragma solidity ^0.8.13;
 import {console} from "forge-std/console.sol";
 import {Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
+import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
+import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 
 contract DenyHelperTest is Test {
     KeyperModule public keyperModule;
+
+    address public keyperModuleAddr;
+    address public keyperRolesDeployed;
     address[] public owners = new address[](5);
+
+    function setUp() public {
+        CREATE3Factory factory = new CREATE3Factory();
+        bytes32 salt = keccak256(abi.encode(0xafff));
+        // Predict the future address of keyper roles
+        keyperRolesDeployed = factory.getDeployed(address(this), salt);
+
+        // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
+        keyperModule = new KeyperModule(
+            address(0x112233),
+            address(0x445566),
+            address(keyperRolesDeployed)
+        );
+
+        keyperModuleAddr = address(keyperModule);
+
+        bytes memory args = abi.encode(address(keyperModuleAddr));
+
+        bytes memory bytecode =
+            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
+
+        factory.deploy(salt, bytecode);
+    }
 
     // It should add owners to
     function testAddToAllowedList() public {
