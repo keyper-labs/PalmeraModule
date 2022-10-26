@@ -65,8 +65,4 @@ contract KeyperRolesTest is Test, Constants {
             true
         );
     }
-
-    // function testSetUserAdmin() public {
-
-    // }
 }
