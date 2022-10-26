@@ -6,3 +6,5 @@ broadcast/
 .vscode/
 package-lock.json
 types/
+.lcov.info
+.atcrc

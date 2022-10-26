@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
+
 import "forge-std/Test.sol";
 import "./GnosisSafeHelper.t.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
@@ -16,7 +17,13 @@ contract TestEnableModule is Test {
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
-        keyperModule = new KeyperModule(masterCopy, safeFactory);
+        // TODO Init KeyperRoles properly
+        address rolesAuthority = address(0xBEEF);
+        keyperModule = new KeyperModule(
+            masterCopy,
+            safeFactory,
+            rolesAuthority
+        );
         gnosisHelper.setKeyperModule(address(keyperModule));
     }
 
@@ -24,9 +31,8 @@ contract TestEnableModule is Test {
         bool result = gnosisHelper.enableModuleTx(gnosisSafeAddr);
         assertEq(result, true);
         // Verify module has been enabled
-        bool isKeyperModuleEnabled = gnosisHelper.gnosisSafe().isModuleEnabled(
-            address(keyperModule)
-        );
+        bool isKeyperModuleEnabled =
+            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
     }
 

@@ -1,42 +1,46 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.15;
 
 import {Enum} from "@safe-contracts/common/Enum.sol";
+import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
+import {Auth, Authority} from "@solmate/auth/Auth.sol";
+import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
+import {Constants} from "./Constants.sol";
+import {DenyHelper} from "./DenyHelper.sol";
+import {console} from "forge-std/console.sol";
+import {KeyperRoles} from "./KeyperRoles.sol";
 
-contract KeyperModule {
+contract KeyperModule is Auth, Constants, DenyHelper {
+    using GnosisSafeMath for uint256;
+    /// @dev Definition of Safe module
+
     string public constant NAME = "Keyper Module";
-    string public constant VERSION = "0.1.0";
-
-    // keccak256(
-    //     "EIP712Domain(uint256 chainId,address verifyingContract)"
-    // );
-    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
-        0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
-
-    // keccak256(
-    //     "KeyperTx(address org,address safe,address to,uint256 value,bytes data,uint8 operation,uint256 nonce)"
-    // );
-    bytes32 private constant KEYPER_TX_TYPEHASH =
-        0xbb667b7bf67815e546e48fb8d0e6af5c31fe53b9967ed45225c9d55be21652da;
-
-    address public constant FALLBACK_HANDLER =
-        0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4;
-
-    // Safe contracts
+    string public constant VERSION = "0.2.0";
+    /// @dev Control Nonce of the module
+    uint256 public nonce;
+    /// @dev Safe contracts
     address public immutable masterCopy;
     address public immutable proxyFactory;
-
-    // Orgs -> Groups
-    mapping(address => mapping(address => Group)) public groups;
-
-    // Orgs info
-    mapping(address => Group) public orgs;
-
-    uint256 public nonce;
     address internal constant SENTINEL_OWNERS = address(0x1);
+    /// @dev RoleAuthority
+    address public rolesAuthority;
+    /// @devStruct for Group
 
-    // Events
+    struct Group {
+        string name;
+        address admin;
+        address safe;
+        address[] childs;
+        address parent;
+    }
+    /// @dev Orgs -> Groups
+
+    mapping(address => mapping(address => Group)) public groups;
+    /// @dev Orgs info
+    mapping(address => Group) public orgs;
+    /// @dev Events
+
     event OrganisationCreated(address indexed org, string name);
 
     event GroupCreated(
@@ -56,45 +60,51 @@ contract KeyperModule {
 
     event ModuleEnabled(address indexed safe, address indexed module);
 
-    // Errors
+    /// @dev Errors
     error OrgNotRegistered();
     error GroupNotRegistered();
     error ParentNotRegistered();
     error AdminNotRegistered();
     error NotAuthorized();
     error NotAuthorizedExecOnBehalf();
+    error NotAuthorizedAsNotAnAdmin();
+    error OwnerNotFound();
+    error OwnerAlreadyExists();
     error CreateSafeProxyFailed();
+    error ZeroAddress();
+    error InvalidThreshold();
+    error TxExecutionModuleFaild();
 
-    struct Group {
-        string name;
-        address admin;
-        address safe;
-        address[] childs;
-        address parent;
+    /// @dev Modifier for Validate if Org Exist or Not
+    modifier OrgRegistered(address org) {
+        if (org == address(0) || orgs[org].safe == address(0)) {
+            revert OrgNotRegistered();
+        }
+        _;
     }
 
-    struct TransactionHelper {
-        Enum.Operation operation;
-        uint256 safeTxGas;
-        uint256 baseGas;
-        uint256 gasPrice;
-        address gasToken;
-    }
-
-    constructor(address masterCopyAddress, address proxyFactoryAddress) {
-        require(masterCopyAddress != address(0));
-        require(proxyFactoryAddress != address(0));
+    constructor(
+        address masterCopyAddress,
+        address proxyFactoryAddress,
+        address authority
+    ) Auth(address(0), Authority(authority)) {
+        if (
+            masterCopyAddress == address(0) || proxyFactoryAddress == address(0)
+                || authority == address(0)
+        ) revert ZeroAddress();
 
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
+        rolesAuthority = authority;
     }
 
     function createSafeProxy(address[] memory owners, uint256 threshold)
         external
         returns (address safe)
     {
-        bytes memory internalEnableModuleData =
-            abi.encodeWithSignature("internalEnableModule(address)", address(this));
+        bytes memory internalEnableModuleData = abi.encodeWithSignature(
+            "internalEnableModule(address)", address(this)
+        );
 
         bytes memory data = abi.encodeWithSignature(
             "setup(address[],uint256,address,bytes,address,address,uint256,address)",
@@ -109,147 +119,13 @@ contract KeyperModule {
         );
 
         IGnosisSafeProxy gnosisSafeProxy = IGnosisSafeProxy(proxyFactory);
-        try gnosisSafeProxy.createProxy(masterCopy, data) returns (address newSafe) {
+        try gnosisSafeProxy.createProxy(masterCopy, data) returns (
+            address newSafe
+        ) {
             return newSafe;
         } catch {
             revert CreateSafeProxyFailed();
         }
-    }
-
-    function getOrg(address _org)
-        public
-        view
-        returns (string memory, address, address, address)
-    {
-        require(_org != address(0));
-        if (orgs[_org].safe == address(0)) revert OrgNotRegistered();
-        return (
-            orgs[_org].name,
-            orgs[_org].admin,
-            orgs[_org].safe,
-            orgs[_org].parent
-        );
-    }
-
-    /// @notice Register an organisatin
-    /// @dev Call has to be done from a safe transaction
-    /// @param name of the org
-    function registerOrg(string memory name) public {
-        Group storage rootOrg = orgs[msg.sender];
-        rootOrg.admin = msg.sender;
-        rootOrg.name = name;
-        rootOrg.safe = msg.sender;
-
-        emit OrganisationCreated(msg.sender, name);
-    }
-
-    /// @notice check if the organisation is registered
-    /// @param org address
-    function isOrgRegistered(address org) public view returns (bool) {
-        if (orgs[org].safe == address(0)) {
-            return false;
-        }
-        return true;
-    }
-
-    /// @notice Add a group to an organisation/group
-    /// @dev Call coming from the group safe
-    /// @param org address of the organisation
-    /// @param parent address of the parent
-    /// @param name name of the group
-    function addGroup(address org, address parent, string memory name)
-        public
-    {
-        if (orgs[org].safe == address(0)) revert OrgNotRegistered();
-        Group storage newGroup = groups[org][msg.sender];
-        // Add to org root
-        if (parent == org) {
-            // By default Admin of the new group is the admin of the org
-            newGroup.admin = orgs[org].admin;
-            Group storage parentOrg = orgs[org];
-            parentOrg.childs.push(msg.sender);
-        }
-        // Add to group
-        else {
-            if (groups[org][parent].safe == address(0))
-            revert ParentNotRegistered();
-            // By default Admin of the new group is the admin of the parent (TODO check this)
-            newGroup.admin = groups[org][parent].admin;
-            Group storage parentGroup = groups[org][parent];
-            parentGroup.childs.push(msg.sender);
-        }
-        newGroup.parent = parent;
-        newGroup.safe = msg.sender;
-        newGroup.name = name;
-        emit GroupCreated(org, msg.sender, name, newGroup.admin, parent);
-    }
-
-    /// @notice Get all the information about a group
-    function getGroupInfo(address org, address group)
-        public
-        view
-        returns (string memory, address, address, address)
-    {
-        address groupSafe = groups[org][group].safe;
-        if (groupSafe == address(0)) revert OrgNotRegistered();
-
-        return (
-            groups[org][group].name,
-            groups[org][group].admin,
-            groups[org][group].safe,
-            groups[org][group].parent
-        );
-    }
-
-    /// @notice Check if child address is part of the group within an organisation
-    function isChild(address org, address parent, address child)
-        public
-        view
-        returns (bool)
-    {
-        if (orgs[org].safe == address(0)) revert OrgNotRegistered();
-        // Check within orgs first if parent is an organisation
-        if (org == parent) {
-            Group memory organisation = orgs[org];
-            for (uint256 i = 0; i < organisation.childs.length; i++) {
-                if (organisation.childs[i] == child) return true;
-            }
-        }
-        // Check within groups of the org
-        if (groups[org][parent].safe == address(0)) revert ParentNotRegistered();
-        Group memory group = groups[org][parent];
-        for (uint256 i = 0; i < group.childs.length; i++) {
-            if (group.childs[i] == child) return true;
-        }
-        return false;
-    }
-
-    /// @notice Check if an org is admin of the group
-    function isAdmin(address org, address group) public view returns (bool) {
-        if (orgs[org].safe == address(0)) return false;
-        // Check group admin
-        Group memory _group = groups[org][group];
-        if (_group.admin == org) {
-            return true;
-        }
-        return false;
-    }
-
-    /// @notice Check if the group is a parent of another group
-    function isParent(address org, address parent, address child)
-        public
-        view
-        returns (bool)
-    {
-        Group memory childGroup = groups[org][child];
-        address curentParent = childGroup.parent;
-        // TODO: probably more efficient to just create a parents mapping instead of this iterations
-        while (curentParent != address(0)) {
-            if (curentParent == parent) return true;
-            childGroup = groups[org][curentParent];
-            curentParent = childGroup.parent;
-        }
-        return false;
     }
 
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
@@ -264,67 +140,361 @@ contract KeyperModule {
         bytes calldata data,
         Enum.Operation operation,
         bytes memory signatures
-    )
-        external
-        payable
-        returns (bool success)
-    {
-        // Check msg.sender is an admin of the target safe
-        if (
-            !isAdmin(msg.sender, targetSafe)
-                && !isParent(org, msg.sender, targetSafe)
-        ) {
-            // Check if it a then parent
-            revert NotAuthorizedExecOnBehalf();
+    ) external payable returns (bool success) {
+        if (org == address(0) || targetSafe == address(0) || to == address(0)) {
+            revert ZeroAddress();
         }
 
-        bytes32 txHash;
-        // Use scope here to limit variable lifetime and prevent `stack too deep` errors
+        address caller = _msgSender();
+        /// Check _msgSender() is an admin of the target safe
+        if (!isAdmin(caller, targetSafe) && !isParent(org, caller, targetSafe))
         {
-            bytes memory keyperTxHashData = encodeTransactionData(
-                // Keyper Info
-                msg.sender,
-                targetSafe,
-                // Transaction info
-                to,
-                value,
-                data,
-                operation,
-                // Signature info
-                nonce
-            );
-            // Increase nonce and execute transaction.
-            nonce++;
-            txHash = keccak256(keyperTxHashData);
-            // TODO not sure about msg.sender => Maybe just check admin address
-            // Init safe interface to get parent owners/threshold
-            IGnosisSafe gnosisAdminSafe = IGnosisSafe(msg.sender);
-            gnosisAdminSafe.checkSignatures(txHash, keyperTxHashData, signatures);
-            // Execute transaction from target safe
-            IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
-            bool result = gnosisTargetSafe.execTransactionFromModule(
-                to, value, data, operation
-            );
-            emit TxOnBehalfExecuted(org, msg.sender, targetSafe, result);
-            return result;
+            revert NotAuthorizedExecOnBehalf();
         }
+        bytes memory keyperTxHashData = encodeTransactionData(
+            /// Keyper Info
+            caller,
+            targetSafe,
+            /// Transaction info
+            to,
+            value,
+            data,
+            operation,
+            /// Signature info
+            nonce
+        );
+        /// Increase nonce and execute transaction.
+        nonce++;
+        /// TODO not sure about caller => Maybe just check admin address
+        /// Init safe interface to get parent owners/threshold
+        IGnosisSafe gnosisAdminSafe = IGnosisSafe(caller);
+        gnosisAdminSafe.checkSignatures(
+            keccak256(keyperTxHashData), keyperTxHashData, signatures
+        );
+        /// Execute transaction from target safe
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
+        bool result = gnosisTargetSafe.execTransactionFromModule(
+            to, value, data, operation
+        );
+        emit TxOnBehalfExecuted(org, caller, targetSafe, result);
+        return result;
+    }
+
+    function internalEnableModule(address module)
+        external
+        validAddress(module)
+    {
+        this.enableModule(module);
+    }
+
+    /// @dev Non-executed code, function called by the new safe
+    function enableModule(address module) external validAddress(module) {
+        emit ModuleEnabled(address(this), module);
+    }
+
+    /// @notice This function will allow UserAdmin to add owner and set a threshold without passing by normal multisig check
+    /// @dev For instance role
+    function addOwnerWithThreshold(
+        address owner,
+        uint256 threshold,
+        address targetSafe
+    ) public requiresAuth {
+        /// Check _msgSender() is an user admin of the target safe
+        if (!isUserAdmin(targetSafe, _msgSender())) {
+            revert NotAuthorizedAsNotAnAdmin();
+        }
+
+        /// If the owner is already an owner
+        if (isSafeOwner(IGnosisSafe(targetSafe), owner)) {
+            revert OwnerAlreadyExists();
+        }
+
+        /// if threshold is invalid
+        if (
+            threshold < 1
+                || threshold > (IGnosisSafe(targetSafe).getOwners().length.add(1))
+        ) {
+            revert InvalidThreshold();
+        }
+
+        bytes memory data = abi.encodeWithSelector(
+            IGnosisSafe.addOwnerWithThreshold.selector, owner, threshold
+        );
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
+        /// Execute transaction from target safe
+        bool result = gnosisTargetSafe.execTransactionFromModule(
+            targetSafe, uint256(0), data, Enum.Operation.Call
+        );
+        if (!result) revert TxExecutionModuleFaild();
+    }
+
+    /// @notice This function will allow UserAdmin to remove an owner
+    /// @dev For instance role
+    function removeOwner(
+        address prevOwner,
+        address owner,
+        uint256 threshold,
+        address targetSafe
+    ) public requiresAuth {
+        if (
+            prevOwner == address(0) || targetSafe == address(0)
+                || owner == address(0)
+        ) revert ZeroAddress();
+        /// Check _msgSender() is an user admin of the target safe
+        if (!isUserAdmin(targetSafe, _msgSender())) {
+            revert NotAuthorizedAsNotAnAdmin();
+        }
+
+        /// if Owner Not found
+        if (!isSafeOwner(IGnosisSafe(targetSafe), owner)) {
+            revert OwnerNotFound();
+        }
+
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
+
+        bytes memory data = abi.encodeWithSelector(
+            IGnosisSafe.removeOwner.selector, prevOwner, owner, threshold
+        );
+
+        /// Execute transaction from target safe
+        bool result = gnosisTargetSafe.execTransactionFromModule(
+            targetSafe, uint256(0), data, Enum.Operation.Call
+        );
+        if (!result) revert TxExecutionModuleFaild();
+    }
+
+    /// @notice Give user admin role
+    /// @dev Call must come from the safe
+    /// @param user User that will have the Admin role
+    function setUserAdmin(address user, bool enabled)
+        external
+        validAddress(user)
+        requiresAuth
+    {
+        RolesAuthority authority = RolesAuthority(rolesAuthority);
+        authority.setUserRole(user, ADMIN_ADD_OWNERS_ROLE, enabled);
+        authority.setUserRole(user, ADMIN_REMOVE_OWNERS_ROLE, enabled);
+        /// Update user admin on org
+        Group storage org = orgs[_msgSender()];
+        org.admin = user;
+    }
+
+    function getOrg(address _org)
+        public
+        view
+        OrgRegistered(_org)
+        returns (string memory, address, address, address)
+    {
+        return (
+            orgs[_org].name,
+            orgs[_org].admin,
+            orgs[_org].safe,
+            orgs[_org].parent
+        );
+    }
+
+    /// @notice Register an organisatin
+    /// @dev Call has to be done from a safe transaction
+    /// @param name of the org
+    function registerOrg(string memory name) public {
+        /// TODO: Add check to verify call is coming from a safe
+        address caller = _msgSender();
+        Group storage rootOrg = orgs[caller];
+        rootOrg.admin = caller;
+        rootOrg.name = name;
+        rootOrg.safe = caller;
+
+        /// Set org role to set admin role
+        RolesAuthority authority = RolesAuthority(rolesAuthority);
+        authority.setUserRole(caller, SAFE_SET_ROLE, true);
+
+        authority.setRoleCapability(
+            SAFE_SET_ROLE, address(this), SET_USER_ADMIN, true
+        );
+
+        emit OrganisationCreated(caller, name);
+    }
+
+    /// @notice Add a group to an organisation/group
+    /// @dev Call coming from the group safe
+    /// @param org address of the organisation
+    /// @param parent address of the parent
+    /// @param name name of the group
+    function addGroup(address org, address parent, string memory name)
+        public
+        OrgRegistered(org)
+        validAddress(parent)
+    {
+        address caller = _msgSender();
+        Group storage newGroup = groups[org][caller];
+        /// Add to org root
+        if (parent == org) {
+            ///  By default Admin of the new group is the admin of the org
+            newGroup.admin = orgs[org].admin;
+            Group storage parentOrg = orgs[org];
+            parentOrg.childs.push(caller);
+        }
+        /// Add to group
+        else {
+            if (groups[org][parent].safe == address(0)) {
+                revert ParentNotRegistered();
+            }
+
+            /// By default Admin of the new group is the admin of the parent (TODO check this)
+            newGroup.admin = groups[org][parent].admin;
+            Group storage parentGroup = groups[org][parent];
+            parentGroup.childs.push(caller);
+        }
+        newGroup.parent = parent;
+        newGroup.safe = caller;
+        newGroup.name = name;
+        emit GroupCreated(org, caller, name, newGroup.admin, parent);
+    }
+
+    /// @notice Get all the information about a group
+    function getGroupInfo(address org, address group)
+        public
+        view
+        OrgRegistered(org)
+        validAddress(group)
+        returns (string memory, address, address, address)
+    {
+        address groupSafe = groups[org][group].safe;
+        if (groupSafe == address(0)) revert OrgNotRegistered();
+        return (
+            groups[org][group].name,
+            groups[org][group].admin,
+            groups[org][group].safe,
+            groups[org][group].parent
+        );
+    }
+
+    /// @notice check if the organisation is registered
+    /// @param org address
+    function isOrgRegistered(address org) public view returns (bool) {
+        if (orgs[org].safe == address(0)) return false;
+        return true;
+    }
+
+    /// @notice Check if child address is part of the group within an organisation
+    function isChild(address org, address parent, address child)
+        public
+        view
+        returns (bool)
+    {
+        /// Check within orgs first if parent is an organisation
+        if (org == parent) {
+            Group memory organisation = orgs[org];
+            for (uint256 i = 0; i < organisation.childs.length; i++) {
+                if (organisation.childs[i] == child) return true;
+            }
+        }
+        /// Check within groups of the org
+        if (groups[org][parent].safe == address(0)) {
+            revert ParentNotRegistered();
+        }
+        Group memory group = groups[org][parent];
+        for (uint256 i = 0; i < group.childs.length; i++) {
+            if (group.childs[i] == child) return true;
+        }
+        return false;
+    }
+
+    /// @notice Check if an org is admin of the group
+    function isAdmin(address org, address group) public view returns (bool) {
+        if (orgs[org].safe == address(0)) return false;
+        /// Check group admin
+        Group memory _group = groups[org][group];
+        if (_group.admin == org) {
+            return true;
+        }
+        return false;
+    }
+
+    /// @notice Check if a user is an admin of the org
+    function isUserAdmin(address org, address user)
+        public
+        view
+        returns (bool)
+    {
+        Group memory _org = orgs[org];
+        if (_org.admin == user) {
+            return true;
+        }
+        return false;
+    }
+
+    /// @notice Check if the group is a parent of another group
+    function isParent(address org, address parent, address child)
+        public
+        view
+        returns (bool)
+    {
+        Group memory childGroup = groups[org][child];
+        address curentParent = childGroup.parent;
+        /// TODO: probably more efficient to just create a parents mapping instead of this iterations
+        while (curentParent != address(0)) {
+            if (curentParent == parent) return true;
+            childGroup = groups[org][curentParent];
+            curentParent = childGroup.parent;
+        }
+        return false;
     }
 
     function domainSeparator() public view returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)
-            );
+        return keccak256(
+            abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)
+        );
     }
 
     /// @dev Returns the chain id used by this contract.
     function getChainId() public view returns (uint256) {
         uint256 id;
-        // solhint-disable-next-line no-inline-assembly
+        /// solhint-disable-next-line no-inline-assembly
         assembly {
             id := chainid()
         }
         return id;
+    }
+
+    function encodeTransactionData(
+        address org,
+        address safe,
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation,
+        uint256 _nonce
+    ) public view returns (bytes memory) {
+        bytes32 keyperTxHash = keccak256(
+            abi.encode(
+                KEYPER_TX_TYPEHASH,
+                org,
+                safe,
+                to,
+                value,
+                keccak256(data),
+                operation,
+                _nonce
+            )
+        );
+        return abi.encodePacked(
+            bytes1(0x19), bytes1(0x01), domainSeparator(), keyperTxHash
+        );
+    }
+
+    function getTransactionHash(
+        address org,
+        address safe,
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation,
+        uint256 _nonce
+    ) public view returns (bytes32) {
+        return keccak256(
+            encodeTransactionData(org, safe, to, value, data, operation, _nonce)
+        );
     }
 
     /// @notice Check if the signer is an owner of the safe
@@ -343,68 +513,5 @@ contract KeyperModule {
             }
         }
         return false;
-    }
-
-    function encodeTransactionData(
-        address org,
-        address safe,
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation,
-        uint256 _nonce
-    )
-        public
-        view
-        returns (bytes memory)
-    {
-        bytes32 keyperTxHash = keccak256(
-            abi.encode(
-                KEYPER_TX_TYPEHASH, org, safe, to, value, keccak256(data), operation, _nonce
-            )
-        );
-        return
-            abi.encodePacked(
-                bytes1(0x19),
-                bytes1(0x01),
-                domainSeparator(),
-                keyperTxHash
-            );
-    }
-
-    function getTransactionHash(
-        address org,
-        address safe,
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation,
-        uint256 _nonce
-    )
-        public
-        view
-        returns (bytes32)
-    {
-        return
-            keccak256(
-                encodeTransactionData(
-                    org,
-                    safe,
-                    to,
-                    value,
-                    data,
-                    operation,
-                    _nonce
-                )
-            );
-    }
-
-    function internalEnableModule(address module) external {
-        this.enableModule(module);
-    }
-
-    // Non-executed code, function called by the new safe
-    function enableModule(address module) external {
-        emit ModuleEnabled(address(this), module);
     }
 }

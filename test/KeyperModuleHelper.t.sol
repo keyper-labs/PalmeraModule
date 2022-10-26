@@ -1,4 +1,5 @@
 pragma solidity ^0.8.0;
+
 import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
@@ -41,13 +42,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
-            org,
-            safe,
-            to,
-            value,
-            data,
-            operation,
-            nonce
+            org, safe, to, value, data, operation, nonce
         );
 
         address[] memory owners = gnosisSafe.getOwners();
@@ -78,13 +73,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
-            org,
-            safe,
-            to,
-            value,
-            data,
-            operation,
-            nonce
+            org, safe, to, value, data, operation, nonce
         );
 
         uint256 threshold = gnosisSafe.getThreshold();
@@ -109,18 +98,15 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         uint256 nonce
     ) public view returns (bytes32) {
         bytes32 txHashed = keyper.getTransactionHash(
-            org,
-            safe,
-            to,
-            value,
-            data,
-            operation,
-            nonce
+            org, safe, to, value, data, operation, nonce
         );
         return txHashed;
     }
 
-    function createSafeProxy(uint256 numberOwners, uint256 threshold) public returns (address) {
+    function createSafeProxy(uint256 numberOwners, uint256 threshold)
+        public
+        returns (address)
+    {
         require(
             privateKeyOwners.length >= numberOwners,
             "not enough initialized owners"
@@ -134,7 +120,9 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
 
         address masterCopy = address(deploySafeFactory.gnosisSafeContract());
         address safeFactory = address(deploySafeFactory.proxyFactory());
-        keyper = new KeyperModule(masterCopy, safeFactory);
+        // TODO: rolesAuthority setup
+        address rolesAuthority = address(deploySafeFactory.proxyFactory());
+        keyper = new KeyperModule(masterCopy, safeFactory, rolesAuthority);
 
         require(address(keyper) != address(0), "Keyper module not deployed");
         address[] memory owners = new address[](numberOwners);

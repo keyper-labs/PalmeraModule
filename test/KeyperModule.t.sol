@@ -4,16 +4,21 @@ pragma solidity ^0.8.13;
 import {console} from "forge-std/console.sol";
 import {stdStorage, StdStorage, Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
+import {Constants} from "../src/Constants.sol";
+import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
+import {KeyperRoles} from "../src/KeyperRoles.sol";
 
-contract KeyperModuleTest is Test {
+contract KeyperModuleTest is Test, Constants {
     KeyperModule keyperModule;
 
-    address org1 = address(0x1);
+    address org1 = address(0x3);
     address org2 = address(0x2);
     address groupA = address(0xa);
     address groupB = address(0xb);
     address groupC = address(0xc);
     address groupD = address(0xd);
+    address keyperModuleAddr;
+    address keyperRolesDeployed;
     string rootOrgName;
 
     // Function called before each test is run
@@ -21,14 +26,33 @@ contract KeyperModuleTest is Test {
         vm.label(org1, "Org 1");
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
+
+        CREATE3Factory factory = new CREATE3Factory();
+        bytes32 salt = keccak256(abi.encode(0xafff));
+        // Predict the future address of keyper roles
+        keyperRolesDeployed = factory.getDeployed(address(this), salt);
+
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
-        keyperModule = new KeyperModule(address(0x112233), address(0x445566));
+        keyperModule = new KeyperModule(
+            address(0x112233),
+            address(0x445566),
+            address(keyperRolesDeployed)
+        );
+
         rootOrgName = "Root Org";
+
+        keyperModuleAddr = address(keyperModule);
+
+        bytes memory args = abi.encode(address(keyperModuleAddr));
+
+        bytes memory bytecode =
+            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
+
+        factory.deploy(salt, bytecode);
     }
 
     function testCreateRootOrg() public {
-        vm.startPrank(org1);
-        keyperModule.registerOrg(rootOrgName);
+        registerOrgWithRoles(org1, rootOrgName);
         string memory orgname;
         address admin;
         address safe;
@@ -41,19 +65,15 @@ contract KeyperModuleTest is Test {
     }
 
     function testAddGroup() public {
-        vm.startPrank(org1);
-        keyperModule.registerOrg(rootOrgName);
-        vm.stopPrank();
+        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(groupA);
         keyperModule.addGroup(org1, org1, "GroupA");
         string memory groupName;
         address admin;
         address safe;
         address parent;
-        (groupName, admin, safe, parent) = keyperModule.getGroupInfo(
-            org1,
-            groupA
-        );
+        (groupName, admin, safe, parent) =
+            keyperModule.getGroupInfo(org1, groupA);
         assertEq(groupName, "GroupA");
         assertEq(safe, groupA);
         assertEq(admin, org1);
@@ -68,18 +88,14 @@ contract KeyperModuleTest is Test {
     }
 
     function testExpectParentNotRegistered() public {
-        vm.startPrank(org1);
-        keyperModule.registerOrg(rootOrgName);
-        vm.stopPrank();
+        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(groupA);
         vm.expectRevert(KeyperModule.ParentNotRegistered.selector);
         keyperModule.addGroup(org1, groupA, "GroupA");
     }
 
     function testAddSubGroup() public {
-        vm.startPrank(org1);
-        keyperModule.registerOrg(rootOrgName);
-        vm.stopPrank();
+        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(groupA);
         keyperModule.addGroup(org1, org1, "GroupA");
         vm.stopPrank();
@@ -96,9 +112,7 @@ contract KeyperModuleTest is Test {
     //                |
     //              groupC
     function testTreeOrgs() public {
-        vm.startPrank(org1);
-        keyperModule.registerOrg(rootOrgName);
-        vm.stopPrank();
+        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(groupA);
         keyperModule.addGroup(org1, org1, "GroupA");
         vm.stopPrank();
@@ -107,9 +121,7 @@ contract KeyperModuleTest is Test {
         assertEq(keyperModule.isChild(org1, org1, groupA), true);
         assertEq(keyperModule.isChild(org1, groupA, groupC), true);
         vm.stopPrank();
-        vm.startPrank(org2);
-        keyperModule.registerOrg("RootOrg2");
-        vm.stopPrank();
+        registerOrgWithRoles(org2, "RootOrg2");
         vm.startPrank(groupB);
         keyperModule.addGroup(org2, org2, "GroupB");
         assertEq(keyperModule.isChild(org2, org2, groupB), true);
@@ -117,16 +129,13 @@ contract KeyperModuleTest is Test {
 
     // Test transaction execution
     function testExecKeeperTransaction() public {
-        vm.startPrank(org1);
-        keyperModule.registerOrg(rootOrgName);
+        registerOrgWithRoles(org1, rootOrgName);
         keyperModule.addGroup(org1, org1, "GroupA");
     }
 
     // Test is Parent function
     function testIsParent() public {
-        vm.startPrank(org1);
-        keyperModule.registerOrg(rootOrgName);
-        vm.stopPrank();
+        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(groupA);
         keyperModule.addGroup(org1, org1, "GroupA");
         vm.stopPrank();
@@ -146,5 +155,12 @@ contract KeyperModuleTest is Test {
         assertEq(keyperModule.isParent(org1, groupA, groupD), true);
         assertEq(keyperModule.isParent(org1, groupD, groupA), false);
         assertEq(keyperModule.isParent(org1, groupB, groupA), false);
+    }
+
+    // Register org call with mocked call to KeyperRoles
+    function registerOrgWithRoles(address org, string memory name) public {
+        vm.startPrank(org);
+        keyperModule.registerOrg(name);
+        vm.stopPrank();
     }
 }
