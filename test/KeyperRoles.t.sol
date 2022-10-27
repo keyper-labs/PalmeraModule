@@ -6,10 +6,16 @@ import {Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {Constants} from "../src/Constants.sol";
+import {Address} from "@openzeppelin/utils/Address.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
+import "./GnosisSafeHelper.t.sol";
 
 contract KeyperRolesTest is Test, Constants {
-    KeyperRoles keyperRoles;
+	using Address for address;
+
+	GnosisSafeHelper gnosisHelper;
+	KeyperRoles keyperRoles;
+    address gnosisSafeAddr;
     address keyperModuleDeployed;
 
     function setUp() public {
@@ -17,7 +23,7 @@ contract KeyperRolesTest is Test, Constants {
         bytes32 salt = keccak256(abi.encode(0xafff));
         // Predict the future address of keyper module
         keyperModuleDeployed = factory.getDeployed(address(this), salt);
-        console.log("Deployed", keyperModuleDeployed);
+        // console.log("Deployed", keyperModuleDeployed);
         // Deployment with keyper module address
         keyperRoles = new KeyperRoles(keyperModuleDeployed);
 
@@ -31,6 +37,9 @@ contract KeyperRolesTest is Test, Constants {
             abi.encodePacked(vm.getCode("KeyperModule.sol:KeyperModule"), args);
 
         factory.deploy(salt, bytecode);
+
+		gnosisHelper = new GnosisSafeHelper();
+        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
     }
 
     function testRolesModulesSetup() public {
@@ -52,7 +61,7 @@ contract KeyperRolesTest is Test, Constants {
     }
 
     function testSetSafeRoleOnOrgRegister() public {
-        address org1 = address(0x1);
+        address org1 = gnosisSafeAddr;
         vm.startPrank(org1);
 
         KeyperModule keyperModule = KeyperModule(keyperModuleDeployed);

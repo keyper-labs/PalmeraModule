@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
+import {Address} from "@openzeppelin/utils/Address.sol";
+
 abstract contract DenyHelper {
+    using Address for address;
     /// @dev Wallet Sentinel
+
     address internal constant SENTINEL_WALLETS = address(0x1);
 
     /// @dev Counters
@@ -44,8 +48,6 @@ abstract contract DenyHelper {
         if (isDenied(_user)) revert("Address is denied");
         _;
     }
-
-    constructor() {}
 
     /// @dev Funtion to Add Wallet to allowedList based on Approach of Safe Contract - Owner Manager
     /// @param users Array of Address of the Wallet to be added to allowedList

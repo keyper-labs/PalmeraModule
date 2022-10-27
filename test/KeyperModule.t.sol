@@ -7,22 +7,33 @@ import {KeyperModule} from "../src/KeyperModule.sol";
 import {Constants} from "../src/Constants.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
+import "./GnosisSafeHelper.t.sol";
 
 contract KeyperModuleTest is Test, Constants {
+    GnosisSafeHelper gnosisHelper;
     KeyperModule keyperModule;
 
-    address org1 = address(0x3);
-    address org2 = address(0x2);
-    address groupA = address(0xa);
-    address groupB = address(0xb);
-    address groupC = address(0xc);
-    address groupD = address(0xd);
+    address org1;
+    address org2;
+    address groupA;
+    address groupB;
+    address groupC;
+    address groupD;
     address keyperModuleAddr;
     address keyperRolesDeployed;
     string rootOrgName;
 
     // Function called before each test is run
     function setUp() public {
+		// Setup Gnosis Helper
+		gnosisHelper = new GnosisSafeHelper();
+		// Setup of all Safe for Testing
+		org1 = gnosisHelper.setupSeveralSafeEnv();
+    	org2 = gnosisHelper.setupSeveralSafeEnv();
+    	groupA = gnosisHelper.setupSeveralSafeEnv();
+    	groupB = gnosisHelper.setupSeveralSafeEnv();
+    	groupC = gnosisHelper.setupSeveralSafeEnv();
+    	groupD = gnosisHelper.setupSeveralSafeEnv();
         vm.label(org1, "Org 1");
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");

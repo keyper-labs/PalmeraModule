@@ -6,7 +6,7 @@ libs = ['lib']
 solc_version = '0.8.15'
 ffi = true
 optimizer = true
-optimizer_runs = 999
+optimizer_runs = 100000
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 # Gas Report

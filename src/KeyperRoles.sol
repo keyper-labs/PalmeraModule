@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Authority} from "@solmate/auth/Auth.sol";
 import {Constants} from "./Constants.sol";
-import {DenyHelper} from "./DenyHelper.sol";
+import {DenyHelper, Address} from "./DenyHelper.sol";
 
 contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
     string public constant NAME = "Keyper Roles";
@@ -12,6 +12,9 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
 
     /// @dev Event when a new keyperModule is setting up
     event KeyperModuleSetup(address keyperModule, address caller);
+
+    /// @dev Errors
+    error invalidKeyperModule();
 
     constructor(address keyperModule)
         RolesAuthority(_msgSender(), Authority(address(0)))
@@ -39,5 +42,25 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         /// Transfer ownership of authority to keyper module
         setOwner(keyperModule);
         emit KeyperModuleSetup(keyperModule, _msgSender());
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                       USER ROLE (OVERRIDE) ASSIGNMENT LOGIC
+    //////////////////////////////////////////////////////////////*/
+
+    function setUserRole(address user, uint8 role, bool enabled)
+        public
+        virtual
+        override
+        requiresAuth
+        Denied(user)
+    {
+        if (enabled) {
+            getUserRoles[user] |= bytes32(1 << role);
+        } else {
+            getUserRoles[user] &= ~bytes32(1 << role);
+        }
+
+        emit UserRoleUpdated(user, role, enabled);
     }
 }
