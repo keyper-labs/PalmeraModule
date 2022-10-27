@@ -11,10 +11,10 @@ import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import "./GnosisSafeHelper.t.sol";
 
 contract KeyperRolesTest is Test, Constants {
-	using Address for address;
+    using Address for address;
 
-	GnosisSafeHelper gnosisHelper;
-	KeyperRoles keyperRoles;
+    GnosisSafeHelper gnosisHelper;
+    KeyperRoles keyperRoles;
     address gnosisSafeAddr;
     address keyperModuleDeployed;
 
@@ -38,7 +38,7 @@ contract KeyperRolesTest is Test, Constants {
 
         factory.deploy(salt, bytecode);
 
-		gnosisHelper = new GnosisSafeHelper();
+        gnosisHelper = new GnosisSafeHelper();
         gnosisSafeAddr = gnosisHelper.setupSafeEnv();
     }
 

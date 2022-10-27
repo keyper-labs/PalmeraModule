@@ -25,15 +25,15 @@ contract KeyperModuleTest is Test, Constants {
 
     // Function called before each test is run
     function setUp() public {
-		// Setup Gnosis Helper
-		gnosisHelper = new GnosisSafeHelper();
-		// Setup of all Safe for Testing
-		org1 = gnosisHelper.setupSeveralSafeEnv();
-    	org2 = gnosisHelper.setupSeveralSafeEnv();
-    	groupA = gnosisHelper.setupSeveralSafeEnv();
-    	groupB = gnosisHelper.setupSeveralSafeEnv();
-    	groupC = gnosisHelper.setupSeveralSafeEnv();
-    	groupD = gnosisHelper.setupSeveralSafeEnv();
+        // Setup Gnosis Helper
+        gnosisHelper = new GnosisSafeHelper();
+        // Setup of all Safe for Testing
+        org1 = gnosisHelper.setupSeveralSafeEnv();
+        org2 = gnosisHelper.setupSeveralSafeEnv();
+        groupA = gnosisHelper.setupSeveralSafeEnv();
+        groupB = gnosisHelper.setupSeveralSafeEnv();
+        groupC = gnosisHelper.setupSeveralSafeEnv();
+        groupD = gnosisHelper.setupSeveralSafeEnv();
         vm.label(org1, "Org 1");
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
@@ -141,7 +141,7 @@ contract KeyperModuleTest is Test, Constants {
     // Test transaction execution
     function testExecKeeperTransaction() public {
         registerOrgWithRoles(org1, rootOrgName);
-		vm.startPrank(org1);
+        vm.startPrank(org1);
         keyperModule.addGroup(org1, org1, "GroupA");
     }
 

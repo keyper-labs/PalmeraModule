@@ -305,9 +305,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @dev Call has to be done from a safe transaction
     /// @param name of the org
     function registerOrg(string memory name)
-		public
-		IsGnosisSafe(_msgSender())
-	{
+        public
+        IsGnosisSafe(_msgSender())
+    {
         address caller = _msgSender();
         Group storage rootOrg = orgs[caller];
         rootOrg.admin = caller;
@@ -335,7 +335,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         OrgRegistered(org)
         validAddress(parent)
         Denied(parent)
-		IsGnosisSafe(_msgSender())
+        IsGnosisSafe(_msgSender())
     {
         address caller = _msgSender();
         if (isChild(org, parent, caller)) revert ChildAlreadyExist();

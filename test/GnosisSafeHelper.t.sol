@@ -24,7 +24,7 @@ contract GnosisSafeHelper is
     address private keyperModuleAddr;
     address public gnosisMasterCopy;
 
-	uint256 public salt;
+    uint256 public salt;
 
     function setKeyperRoles(address _keyperRoles) public {
         keyperRoles = _keyperRoles;
@@ -65,7 +65,7 @@ contract GnosisSafeHelper is
         return address(gnosisSafe);
     }
 
-	    // Create new gnosis safe test environment
+    // Create new gnosis safe test environment
     // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
     // Init signers
     // Deploy a new safe proxy
@@ -73,7 +73,7 @@ contract GnosisSafeHelper is
         safeFactory = new DeploySafeFactory();
         safeFactory.run();
         gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
-		salt++;
+        salt++;
         bytes memory emptyData = abi.encodePacked(salt);
         address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
         gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
