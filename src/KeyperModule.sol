@@ -155,6 +155,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (org == address(0) || targetSafe == address(0) || to == address(0)) {
             revert ZeroAddress();
         }
+        if (!isSafe(targetSafe)) {
+            revert InvalidGnosisSafe();
+        }
         address caller = _msgSender();
         /// Check caller is an admin of the target safe
         if (!isAdmin(caller, targetSafe) && !isParent(org, caller, targetSafe))
@@ -210,7 +213,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address owner,
         uint256 threshold,
         address targetSafe
-    ) public requiresAuth Denied(owner) {
+    ) public requiresAuth Denied(owner) IsGnosisSafe(targetSafe) {
         /// Check _msgSender() is an user admin of the target safe
         if (!isUserAdmin(targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotAnAdmin();
@@ -247,7 +250,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address owner,
         uint256 threshold,
         address targetSafe
-    ) public requiresAuth {
+    ) public requiresAuth IsGnosisSafe(targetSafe) {
         /// Check _msgSender() is an user admin of the target safe
         if (!isUserAdmin(targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotAnAdmin();
