@@ -103,9 +103,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
                 || authority == address(0)
         ) revert ZeroAddressProvided();
 
-        if (
-            !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
-        ) revert InvalidAddressProvided();
+        // if (
+        //     !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
+        // ) revert InvalidAddressProvided();
 
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
