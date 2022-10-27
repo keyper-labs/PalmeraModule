@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Authority} from "@solmate/auth/Auth.sol";
 import {Constants} from "./Constants.sol";
-import {DenyHelper, Address} from "./DenyHelper.sol";
+import {DenyHelper} from "./DenyHelper.sol";
 
 contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
     string public constant NAME = "Keyper Roles";

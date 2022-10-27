@@ -72,7 +72,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     error OwnerNotFound();
     error OwnerAlreadyExists();
     error CreateSafeProxyFailed();
-    error ZeroAddress();
     error InvalidThreshold();
     error TxExecutionModuleFaild();
     error ChildAlreadyExist();
@@ -102,7 +101,11 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (
             masterCopyAddress == address(0) || proxyFactoryAddress == address(0)
                 || authority == address(0)
-        ) revert ZeroAddress();
+        ) revert ZeroAddressProvided();
+
+        if (
+            !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
+        ) revert InvalidAddressProvided();
 
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
@@ -153,7 +156,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         bytes memory signatures
     ) external payable Denied(to) returns (bool result) {
         if (org == address(0) || targetSafe == address(0) || to == address(0)) {
-            revert ZeroAddress();
+            revert ZeroAddressProvided();
         }
         if (!isSafe(targetSafe)) {
             revert InvalidGnosisSafe();
