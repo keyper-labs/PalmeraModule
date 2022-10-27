@@ -60,7 +60,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address indexed childRemoved
     );
 
-    event ParentRemoved(
+    event GroupRemoved(
         address indexed org,
         address indexed group,
         address parentRemoved,
@@ -434,7 +434,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @dev Call coming from the safe of the Org for exclude a parent
     /// @param org address of the organisation
     /// @param parent address of the parent
-    function removeParent(address org, address parent)
+    function removeGroup(address org, address parent)
         public
         OrgRegistered(org)
         validAddress(parent)
@@ -469,7 +469,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             Group storage childGroup = groups[org][childs[i]];
             childGroup.parent = address(0);
         }
-        emit ParentRemoved(org, caller, parent, parentName, childs);
+        emit GroupRemoved(org, caller, parent, parentName, childs);
     }
 
     /// @notice Get all the information about a group
