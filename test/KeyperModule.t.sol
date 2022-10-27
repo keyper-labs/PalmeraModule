@@ -141,6 +141,7 @@ contract KeyperModuleTest is Test, Constants {
     // Test transaction execution
     function testExecKeeperTransaction() public {
         registerOrgWithRoles(org1, rootOrgName);
+		vm.startPrank(org1);
         keyperModule.addGroup(org1, org1, "GroupA");
     }
 

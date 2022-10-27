@@ -335,7 +335,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         OrgRegistered(org)
         validAddress(parent)
         Denied(parent)
-		// IsGnosisSafe(_msgSender())
+		IsGnosisSafe(_msgSender())
     {
         address caller = _msgSender();
         if (isChild(org, parent, caller)) revert ChildAlreadyExist();
