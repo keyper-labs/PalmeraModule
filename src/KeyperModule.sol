@@ -52,6 +52,22 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address parent
     );
 
+    event ChildRemoved(
+        address indexed org,
+        address indexed group,
+        address parent,
+        string name,
+        address indexed childRemoved
+    );
+
+    event ParentRemoved(
+        address indexed org,
+        address indexed group,
+        address parentRemoved,
+        string name,
+        address[] childReleased
+    );
+
     event TxOnBehalfExecuted(
         address indexed org,
         address indexed executor,
@@ -76,6 +92,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     error TxExecutionModuleFaild();
     error ChildAlreadyExist();
     error InvalidGnosisSafe();
+    error ChildNotFound();
 
     /// @dev Modifier for Validate if Org Exist or Not
     modifier OrgRegistered(address org) {
@@ -364,6 +381,95 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         newGroup.safe = caller;
         newGroup.name = name;
         emit GroupCreated(org, caller, name, newGroup.admin, parent);
+    }
+
+    /// @notice Remove Childs from an organisation/Group
+    /// @dev Call coming from the safe of the Gorup for exclude a child
+    /// @param org address of the organisation
+    /// @param parent address of the parent
+    /// @param child address of the child
+    function removeChild(address org, address parent, address child)
+        public
+        OrgRegistered(org)
+        validAddress(parent)
+        validAddress(child)
+        IsGnosisSafe(_msgSender())
+    {
+        address caller = _msgSender();
+        if (!isChild(org, parent, child)) revert ChildNotFound();
+        Group storage parentGroup = groups[org][parent];
+        if (caller != parentGroup.safe) revert NotAuthorized();
+        if (parentGroup.safe == child) revert NotAuthorizedAsNotAnAdmin();
+        string memory parentName = parentGroup.name;
+        /// Remove to org root
+        if (parent == org) {
+            ///  By default Admin of the new group is the admin of the org
+            Group storage parentOrg = orgs[org];
+            for (uint256 i = 0; i < parentOrg.childs.length; i++) {
+                if (parentOrg.childs[i] == child) {
+                    parentOrg.childs[i] =
+                        parentOrg.childs[parentOrg.childs.length - 1];
+                    parentOrg.childs.pop();
+                    break;
+                }
+            }
+        } else {
+            /// Remove child from parent
+            for (uint256 i = 0; i < parentGroup.childs.length; i++) {
+                if (parentGroup.childs[i] == child) {
+                    parentGroup.childs[i] =
+                        parentGroup.childs[parentGroup.childs.length - 1];
+                    parentGroup.childs.pop();
+                    break;
+                }
+            }
+        }
+        /// Remove parent from child
+        Group storage childGroup = groups[org][child];
+        childGroup.parent = address(0);
+        emit ChildRemoved(org, caller, parent, parentName, child);
+    }
+
+    /// @notice Remove Parent from an organisation/Group
+    /// @dev Call coming from the safe of the Org for exclude a parent
+    /// @param org address of the organisation
+    /// @param parent address of the parent
+    function removeParent(address org, address parent)
+        public
+        OrgRegistered(org)
+        validAddress(parent)
+        IsGnosisSafe(_msgSender())
+    {
+        address caller = _msgSender();
+        Group storage parentGroup = groups[org][parent];
+        if (parentGroup.safe == address(0)) {
+            revert ParentNotRegistered();
+        }
+        if (caller != parentGroup.safe) revert NotAuthorized();
+        string memory parentName = parentGroup.name;
+        address[] memory childs = parentGroup.childs;
+        /// Remove to org root
+        if (parent == org) {
+            ///  By default Admin of the new group is the admin of the org
+            Group storage parentOrg = orgs[org];
+            parentOrg.parent = address(0);
+        } else {
+            /// Remove parent from child
+            Group memory removedGroup = Group({
+                name: "",
+                parent: address(0),
+                safe: address(0),
+                admin: address(0),
+                childs: new address[](0)
+            });
+            groups[org][parent] = removedGroup;
+        }
+        for (uint256 i = 0; i <= childs.length; i++) {
+            /// Remove parent from child
+            Group storage childGroup = groups[org][childs[i]];
+            childGroup.parent = address(0);
+        }
+        emit ParentRemoved(org, caller, parent, parentName, childs);
     }
 
     /// @notice Get all the information about a group
