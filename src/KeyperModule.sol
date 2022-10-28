@@ -353,6 +353,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @param org address of the organisation
     /// @param parent address of the parent
     /// @param name name of the group
+	/// TODO: how avoid any safe adding in the org or group?
     function addGroup(address org, address parent, string memory name)
         public
         OrgRegistered(org)
