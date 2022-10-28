@@ -6,8 +6,11 @@ import {Address} from "@openzeppelin/utils/Address.sol";
 abstract contract DenyHelper {
     using Address for address;
     /// @dev Wallet Sentinel
-
     address internal constant SENTINEL_WALLETS = address(0x1);
+
+	/// @dev Deny/Allowlist Flags
+	bool public allowFeature;
+	bool public denyFeature;
 
     /// @dev Counters
     uint256 public allowedCount;
@@ -28,25 +31,29 @@ abstract contract DenyHelper {
     error InvalidAddressProvided();
     error UserAlreadyOnAllowedList();
     error UserAlreadyOnDeniedList();
+	error AddresNotAllowed();
+	error AddressDenied();
 
     /// @dev Modifier for Valid if wallet is Zero Address or Not
     modifier validAddress(address to) {
         if (to == address(0) || to == SENTINEL_WALLETS) {
-            revert("Invalid address (Address Zero)");
+            revert InvalidAddressProvided();
         }
-        _;
-    }
-
-    /// @dev Modifier for Valid if wallet is Allowed or Not
-    modifier Allowed(address _user) {
-        if (!isAllowed(_user)) revert("Address is not allowed");
         _;
     }
 
     /// @dev Modifier for Valid if wallet is Denied or Not
     modifier Denied(address _user) {
-        if (isDenied(_user)) revert("Address is denied");
-        _;
+		if (allowFeature) {
+			if (isAllowed(_user)) revert AddresNotAllowed();
+        	_;
+		} else if (denyFeature) {
+		    if (isDenied(_user)) revert AddressDenied();
+        	_;
+		} else {
+			_;
+		}
+
     }
 
     /// @dev Funtion to Add Wallet to allowedList based on Approach of Safe Contract - Owner Manager
@@ -112,6 +119,18 @@ abstract contract DenyHelper {
         deniedCount--;
         emit DroppedFromDeniedList(user);
     }
+
+	/// @dev Method to Enable Allowlist
+	function enableAllowlist() external {
+		allowFeature = true;
+		denyFeature = false;
+	}
+
+	/// @dev Method to Enable Allowlist
+	function enableDenylist() external {
+		denyFeature = true;
+		allowFeature = false;
+	}
 
     function isAllowed(address wallet) public view returns (bool) {
         return wallet != SENTINEL_WALLETS && allowed[wallet] != address(0)
