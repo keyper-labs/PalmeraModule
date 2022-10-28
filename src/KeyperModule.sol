@@ -398,13 +398,13 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address caller = _msgSender();
         if (!isChild(org, parent, child)) revert ChildNotFound();
         Group storage parentGroup = groups[org][parent];
-        if (caller != parentGroup.safe) revert NotAuthorized();
         if (parentGroup.safe == child) revert NotAuthorizedAsNotAnAdmin();
         string memory parentName = parentGroup.name;
         /// Remove to org root
         if (parent == org) {
             ///  By default Admin of the new group is the admin of the org
             Group storage parentOrg = orgs[org];
+            if (caller != parentOrg.safe) revert NotAuthorized();
             for (uint256 i = 0; i < parentOrg.childs.length; i++) {
                 if (parentOrg.childs[i] == child) {
                     parentOrg.childs[i] =
@@ -415,6 +415,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             }
         } else {
             /// Remove child from parent
+            if (caller != parentGroup.parent) revert NotAuthorized();
             for (uint256 i = 0; i < parentGroup.childs.length; i++) {
                 if (parentGroup.childs[i] == child) {
                     parentGroup.childs[i] =
@@ -445,16 +446,17 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (parentGroup.safe == address(0)) {
             revert ParentNotRegistered();
         }
-        if (caller != parentGroup.safe) revert NotAuthorized();
         string memory parentName = parentGroup.name;
         address[] memory childs = parentGroup.childs;
         /// Remove to org root
         if (parent == org) {
             ///  By default Admin of the new group is the admin of the org
             Group storage parentOrg = orgs[org];
+            if (caller != parentOrg.safe) revert NotAuthorized();
             parentOrg.parent = address(0);
         } else {
             /// Remove parent from child
+            if (caller != parentGroup.parent) revert NotAuthorized();
             Group memory removedGroup = Group({
                 name: "",
                 parent: address(0),
