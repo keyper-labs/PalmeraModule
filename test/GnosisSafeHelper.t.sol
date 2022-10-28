@@ -24,7 +24,7 @@ contract GnosisSafeHelper is
     address private keyperModuleAddr;
     address public gnosisMasterCopy;
 
-    uint256 public salt;
+    uint256 public saltSeveral;
 
     function setKeyperRoles(address _keyperRoles) public {
         keyperRoles = _keyperRoles;
@@ -34,46 +34,10 @@ contract GnosisSafeHelper is
     // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
     // Init signers
     // Deploy a new safe proxy
-    function setupSafeEnv() public returns (address) {
+    function setupSafeEnv(uint256 salt) public returns (address) {
         safeFactory = new DeploySafeFactory();
         safeFactory.run();
         gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
-        bytes memory emptyData;
-        address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
-        gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
-        initOnwers(30);
-
-        // Setup gnosis safe with 3 owners, 1 threshold
-        address[] memory owners = new address[](3);
-        owners[0] = vm.addr(privateKeyOwners[0]);
-        owners[1] = vm.addr(privateKeyOwners[1]);
-        owners[2] = vm.addr(privateKeyOwners[2]);
-        // Update privateKeyOwners used
-        updateCount(3);
-
-        gnosisSafe.setup(
-            owners,
-            uint256(1),
-            address(0x0),
-            emptyData,
-            address(0x0),
-            address(0x0),
-            uint256(0),
-            payable(address(0x0))
-        );
-
-        return address(gnosisSafe);
-    }
-
-    // Create new gnosis safe test environment
-    // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
-    // Init signers
-    // Deploy a new safe proxy
-    function setupSeveralSafeEnv() public returns (address) {
-        safeFactory = new DeploySafeFactory();
-        safeFactory.run();
-        gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
-        salt++;
         bytes memory emptyData = abi.encodePacked(salt);
         address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
         gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
@@ -147,7 +111,7 @@ contract GnosisSafeHelper is
     }
 
     function testNewKeyperSafe() public {
-        setupSafeEnv();
+        setupSafeEnv(0);
         setKeyperModule(address(0x678));
         newKeyperSafe(4, 2);
         address[] memory owners = gnosisSafe.getOwners();

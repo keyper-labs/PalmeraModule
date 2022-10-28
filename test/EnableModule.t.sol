@@ -13,7 +13,7 @@ contract TestEnableModule is Test {
     function setUp() public {
         // Init new safe
         gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
+        gnosisSafeAddr = gnosisHelper.setupSafeEnv(0);
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());

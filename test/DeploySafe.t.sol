@@ -13,7 +13,7 @@ contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
     // Init new safe
     function setUp() public {
         gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
+        gnosisSafeAddr = gnosisHelper.setupSafeEnv(0);
     }
 
     function testTransferFundsSafe() public {

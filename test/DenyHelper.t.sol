@@ -162,9 +162,16 @@ contract DenyHelperTest is Test {
         assertEq(keyperModule.getPrevUser(owners[0], false), address(0x1));
     }
 
-    function testGetAllDenied() public {
-        listOfOwners();
-        keyperModule.addToDeniedList(owners);
+    function testEnableAllowlist() public {
+        keyperModule.enableAllowlist();
+        assertEq(keyperModule.allowFeature(), true);
+        assertEq(keyperModule.denyFeature(), false);
+    }
+
+    function testEnableDenylist() public {
+        keyperModule.enableDenylist();
+        assertEq(keyperModule.allowFeature(), false);
+        assertEq(keyperModule.denyFeature(), true);
     }
 
     function listOfOwners() internal {

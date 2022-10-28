@@ -36,7 +36,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         // Init a new safe as main organization (3 owners, 1 threshold)
         gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
+        gnosisSafeAddr = gnosisHelper.setupSafeEnv(0);
 
         // setting keyperRoles Address
         gnosisHelper.setKeyperRoles(keyperRolesDeployed);
@@ -480,5 +480,35 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         keyperModule.removeOwner(
             prevOwnerToRemoveOnOrgA, ownerToRemove, threshold, orgAAddr
         );
+    }
+
+    // function testRemoveChild() public {
+    //     // Set initialsafe as org
+    //     bool result = gnosisHelper.registerOrgTx(orgName);
+    //     keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+    //     vm.label(keyperSafes[orgName], orgName);
+
+    //     // Create new safe with setup called while creating contract
+    //     address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
+    //     // Create Group calldata
+    //     string memory groupName = groupAName;
+    //     keyperSafes[groupName] = address(groupSafe);
+    //     vm.label(keyperSafes[groupName], groupName);
+
+    //     address orgAddr = keyperSafes[orgName];
+    //     result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
+    // }
+
+    function testRemoveGroup() public {
+        setUpBaseOrgTree();
+        address orgAddr = keyperSafes[orgName];
+        address groupA = keyperSafes[groupAName];
+        address groupB = keyperSafes[groupBName];
+
+        // assertEq(keyperModule.groups[orgAddr][orgAddr].admin, orgAddr);
+
+        // console.log("admin del grupo: ", keyperModule.groups[orgAddr][orgAddr].admin);
+
+        // keyperModule.removeGroup(orgAddr, orgAddr);
     }
 }
