@@ -45,7 +45,7 @@ abstract contract DenyHelper {
 
     /// @dev Modifier for Valid if wallet is Denied or Not
     modifier Denied(address _user) {
-        if (!isDenied(_user)) revert("Address is denied");
+        if (isDenied(_user)) revert("Address is denied");
         _;
     }
 
