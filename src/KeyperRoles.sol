@@ -19,22 +19,20 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         setupRoles(keyperModule);
     }
 
-    /// Configure roles  access control on Authority
+    /// Configure roles access control on Authority
     function setupRoles(address keyperModule)
         internal
         validAddress(keyperModule)
     {
-        /// Role 0 - AdminAddOwner
+        /// Role 0 - SAFE_LEAD
         /// Target contract: KeyperModule
         /// Auth function addOwnerWithThreshold
-        setRoleCapability(ADMIN_ADD_OWNERS_ROLE, keyperModule, ADD_OWNER, true);
+        setRoleCapability(SAFE_LEAD, keyperModule, ADD_OWNER, true);
 
-        /// Role 1 - AdminRemoveOwner
+        /// Role 0 - SAFE_LEAD
         /// Target contract: KeyperModule
         /// Auth function removeOwner
-        setRoleCapability(
-            ADMIN_REMOVE_OWNERS_ROLE, keyperModule, REMOVE_OWNER, true
-        );
+        setRoleCapability(SAFE_LEAD, keyperModule, REMOVE_OWNER, true);
 
         /// Transfer ownership of authority to keyper module
         setOwner(keyperModule);

@@ -19,8 +19,7 @@ abstract contract Constants is Context {
     address internal constant FALLBACK_HANDLER =
         0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4;
 
-    uint8 internal constant ADMIN_ADD_OWNERS_ROLE = 0;
-    uint8 internal constant ADMIN_REMOVE_OWNERS_ROLE = 1;
+    uint8 internal constant SAFE_LEAD = 0;
     uint8 internal constant SAFE_SET_ROLE = 2;
 
     bytes4 internal constant ADD_OWNER = bytes4(
@@ -31,4 +30,7 @@ abstract contract Constants is Context {
 
     bytes4 internal constant SET_USER_ADMIN =
         bytes4(keccak256(bytes("setUserAdmin(address,bool)")));
+
+    bytes4 internal constant EXEC_ON_BEHALF =
+        bytes4(keccak256(bytes("execTransactionOnBehalf(address,address,address,uint256,bytes,uint8,bytes)")));
 }

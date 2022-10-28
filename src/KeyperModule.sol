@@ -272,8 +272,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         requiresAuth
     {
         RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(user, ADMIN_ADD_OWNERS_ROLE, enabled);
-        authority.setUserRole(user, ADMIN_REMOVE_OWNERS_ROLE, enabled);
+        authority.setUserRole(user, SAFE_LEAD, enabled);
         /// Update user admin on org
         Group storage org = orgs[_msgSender()];
         org.admin = user;

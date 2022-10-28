@@ -302,7 +302,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address caller = address(0x1);
         vm.expectRevert(bytes("UNAUTHORIZED"));
         keyperRolesContract.setRoleCapability(
-            ADMIN_ADD_OWNERS_ROLE, caller, ADD_OWNER, true
+            SAFE_LEAD, caller, ADD_OWNER, true
         );
     }
 
@@ -319,16 +319,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         keyperModule.setUserAdmin(userAdmin, userEnabled);
 
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                userAdmin, ADMIN_ADD_OWNERS_ROLE
-            ),
-            true
-        );
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                userAdmin, ADMIN_REMOVE_OWNERS_ROLE
-            ),
-            true
+            keyperRolesContract.doesUserHaveRole(userAdmin, SAFE_LEAD), true
         );
     }
 
@@ -427,10 +418,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         vm.stopPrank();
 
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                userAdminOrgB, ADMIN_ADD_OWNERS_ROLE
-            ),
-            true
+            keyperRolesContract.doesUserHaveRole(userAdminOrgB, SAFE_LEAD), true
         );
 
         address newOwnerOnOrgA = address(0xF1F1);
