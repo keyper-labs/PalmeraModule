@@ -5,6 +5,7 @@ libs = ['lib']
 # Fixed Version
 solc_version = '0.8.15'
 ffi = true
+via-ir = true
 optimizer = true
 optimizer_runs = 999
 
