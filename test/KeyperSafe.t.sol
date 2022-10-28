@@ -306,7 +306,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    function testSetUserAdmin() public {
+    function testsetSafeLead() public {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
         vm.label(keyperSafes[orgName], orgName);
@@ -316,7 +316,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bool userEnabled = true;
 
         vm.startPrank(orgAddr);
-        keyperModule.setUserAdmin(userAdmin, userEnabled);
+        keyperModule.setSafeLead(userAdmin, userEnabled);
 
         assertEq(
             keyperRolesContract.doesUserHaveRole(userAdmin, SAFE_LEAD), true
@@ -333,7 +333,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bool userEnabled = true;
 
         vm.startPrank(orgAddr);
-        keyperModule.setUserAdmin(userAdmin, userEnabled);
+        keyperModule.setSafeLead(userAdmin, userEnabled);
         vm.stopPrank();
 
         address newOwner = address(0xaaaf);
@@ -368,7 +368,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bool userEnabled = true;
 
         vm.startPrank(orgAddr);
-        keyperModule.setUserAdmin(userAdmin, userEnabled);
+        keyperModule.setSafeLead(userAdmin, userEnabled);
         vm.stopPrank();
 
         address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
@@ -410,11 +410,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address userAdminOrgB = address(0x321);
 
         vm.startPrank(orgAAddr);
-        keyperModule.setUserAdmin(userAdminOrgA, userEnabled);
+        keyperModule.setSafeLead(userAdminOrgA, userEnabled);
         vm.stopPrank();
 
         vm.startPrank(orgBAddr);
-        keyperModule.setUserAdmin(userAdminOrgB, userEnabled);
+        keyperModule.setSafeLead(userAdminOrgB, userEnabled);
         vm.stopPrank();
 
         assertEq(
@@ -450,11 +450,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address userAdminOrgB = address(0x321);
 
         vm.startPrank(orgAAddr);
-        keyperModule.setUserAdmin(userAdminOrgA, userEnabled);
+        keyperModule.setSafeLead(userAdminOrgA, userEnabled);
         vm.stopPrank();
 
         vm.startPrank(orgBAddr);
-        keyperModule.setUserAdmin(userAdminOrgB, userEnabled);
+        keyperModule.setSafeLead(userAdminOrgB, userEnabled);
         vm.stopPrank();
 
         address prevOwnerToRemoveOnOrgA =

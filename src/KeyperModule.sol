@@ -266,7 +266,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @notice Give user admin role
     /// @dev Call must come from the safe
     /// @param user User that will have the Admin role
-    function setUserAdmin(address user, bool enabled)
+    function setSafeLead(address user, bool enabled)
         external
         validAddress(user)
         requiresAuth

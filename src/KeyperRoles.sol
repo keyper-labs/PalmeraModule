@@ -24,15 +24,19 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         internal
         validAddress(keyperModule)
     {
-        /// Role 0 - SAFE_LEAD
+        /// Define Role 0 - SAFE_LEAD
+
         /// Target contract: KeyperModule
         /// Auth function addOwnerWithThreshold
         setRoleCapability(SAFE_LEAD, keyperModule, ADD_OWNER, true);
 
-        /// Role 0 - SAFE_LEAD
         /// Target contract: KeyperModule
         /// Auth function removeOwner
         setRoleCapability(SAFE_LEAD, keyperModule, REMOVE_OWNER, true);
+
+        /// Target contract: KeyperModule
+        /// Auth function execTransactionOnBehalf
+        setRoleCapability(SAFE_LEAD, keyperModule, EXEC_ON_BEHALF, true);
 
         /// Transfer ownership of authority to keyper module
         setOwner(keyperModule);

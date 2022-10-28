@@ -29,8 +29,13 @@ abstract contract Constants is Context {
         bytes4(keccak256(bytes("removeOwner(address,address,uint256,address)")));
 
     bytes4 internal constant SET_USER_ADMIN =
-        bytes4(keccak256(bytes("setUserAdmin(address,bool)")));
+        bytes4(keccak256(bytes("setSafeLead(address,bool)")));
 
-    bytes4 internal constant EXEC_ON_BEHALF =
-        bytes4(keccak256(bytes("execTransactionOnBehalf(address,address,address,uint256,bytes,uint8,bytes)")));
+    bytes4 internal constant EXEC_ON_BEHALF = bytes4(
+        keccak256(
+            bytes(
+                "execTransactionOnBehalf(address,address,address,uint256,bytes,uint8,bytes)"
+            )
+        )
+    );
 }
