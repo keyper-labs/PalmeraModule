@@ -26,7 +26,12 @@ contract DenyHelperTest is Test {
         listOfOwners();
         keyperModule.addToAllowedList(owners);
         assertEq(keyperModule.allowedCount(), 5);
-        assertEq(keyperModule.getPrevUser(owners[1]), owners[0]);
+        assertEq(keyperModule.getAllAllowed().length, 5);
+        assertEq(keyperModule.isAllowed(owners[0]), true);
+        assertEq(keyperModule.isAllowed(owners[1]), true);
+        assertEq(keyperModule.isAllowed(owners[2]), true);
+        assertEq(keyperModule.isAllowed(owners[3]), true);
+        assertEq(keyperModule.isAllowed(owners[4]), true);
     }
 
     function testRevertAddToAllowedListZeroAddress() public {
@@ -71,6 +76,89 @@ contract DenyHelperTest is Test {
         keyperModule.dropFromAllowedList(secOwnerToRemove);
         assertEq(keyperModule.isAllowed(secOwnerToRemove), false);
         assertEq(keyperModule.getAllAllowed().length, 3);
+    }
+
+    function testAddToDeniedList() public {
+        listOfOwners();
+        keyperModule.addToDeniedList(owners);
+        assertEq(keyperModule.deniedCount(), 5);
+        assertEq(keyperModule.getAllDenied().length, 5);
+        assertEq(keyperModule.isDenied(owners[0]), true);
+        assertEq(keyperModule.isDenied(owners[1]), true);
+        assertEq(keyperModule.isDenied(owners[2]), true);
+        assertEq(keyperModule.isDenied(owners[3]), true);
+        assertEq(keyperModule.isDenied(owners[4]), true);
+    }
+
+    function testRevertAddToDenieddListZeroAddress() public {
+        address[] memory voidOwnersArray = new address[](0);
+
+        vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
+        keyperModule.addToDeniedList(voidOwnersArray);
+    }
+
+    function testRevertAddToDeniedListInvalidAddress() public {
+        listOfInvalidOwners();
+
+        vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
+        keyperModule.addToDeniedList(owners);
+    }
+
+    function testRevertAddToDeniedDuplicateAddress() public {
+        listOfOwners();
+        keyperModule.addToDeniedList(owners);
+
+        address[] memory newOwner = new address[](1);
+        newOwner[0] = address(0xDDD);
+
+        vm.expectRevert(DenyHelper.UserAlreadyOnDeniedList.selector);
+        keyperModule.addToDeniedList(newOwner);
+    }
+
+    /// TODO: Function on pending because forge test on terminal remains unresponsive when try to run this test
+    // function testDropFromDeniedList() public {
+    //     listOfOwners();
+
+    //     keyperModule.addToDeniedList(owners);
+
+    //     // Must be the address(0xBBB)
+    //     address ownerToRemove = owners[1];
+
+    //     keyperModule.dropFromDeniedList(ownerToRemove);
+    //     assertEq(keyperModule.isDenied(ownerToRemove), false);
+    //     assertEq(keyperModule.getAllDenied().length, 4);
+    // }
+
+    function testGetPrevUserAllowedList() public {
+        listOfOwners();
+
+        keyperModule.addToAllowedList(owners);
+        assertEq(keyperModule.getPrevUser(owners[1]), owners[0]);
+        assertEq(keyperModule.getPrevUser(owners[2]), owners[1]);
+        assertEq(keyperModule.getPrevUser(owners[3]), owners[2]);
+        assertEq(keyperModule.getPrevUser(owners[4]), owners[3]);
+        assertEq(keyperModule.getPrevUser(address(0)), owners[4]);
+        // SENTINEL_WALLETS
+        assertEq(keyperModule.getPrevUser(owners[0]), address(0x1));
+    }
+
+    /// TODO: Function on pending because forge test on terminal remains unresponsive when try to run this test
+    // function testGetPrevUserDeniedList() public {
+    //     listOfOwners();
+
+    //     keyperModule.addToDeniedList(owners);
+    //     assertEq(keyperModule.getPrevUser(owners[1]), owners[0]);
+    //     assertEq(keyperModule.getPrevUser(owners[2]), owners[1]);
+    //     assertEq(keyperModule.getPrevUser(owners[3]), owners[2]);
+    //     assertEq(keyperModule.getPrevUser(owners[4]), owners[3]);
+    //     assertEq(keyperModule.getPrevUser(address(0)), owners[4]);
+    //     // SENTINEL_WALLETS
+    //     assertEq(keyperModule.getPrevUser(owners[0]), address(0x1));
+    // }
+
+    function testGetAllDenied() public {
+        listOfOwners();
+        keyperModule.addToDeniedList(owners);
     }
 
     function listOfOwners() internal {

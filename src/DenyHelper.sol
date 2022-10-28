@@ -45,7 +45,7 @@ abstract contract DenyHelper {
 
     /// @dev Modifier for Valid if wallet is Denied or Not
     modifier Denied(address _user) {
-        if (isDenied(_user)) revert("Address is denied");
+        if (!isDenied(_user)) revert("Address is denied");
         _;
     }
 
@@ -73,7 +73,7 @@ abstract contract DenyHelper {
         emit AddedToTheAllowedList(users);
     }
 
-    function addToDeniedList(address[] memory users) external {
+    function addToDeniedList(address[] memory users) public {
         if (users.length == 0) revert ZeroAddressProvided();
         address currentWallet = SENTINEL_WALLETS;
         for (uint256 i = 0; i < users.length; i++) {
@@ -147,12 +147,10 @@ abstract contract DenyHelper {
         return result;
     }
 
-    /// TODO: Need to Validate if this logic is correct!!
     /// @dev Function to get the Previous User of the Wallet
     /// @param user Address of the Wallet
     function getPrevUser(address user)
         public
-        /// originally internal
         view
         returns (address prevUser)
     {
