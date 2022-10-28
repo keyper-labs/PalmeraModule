@@ -96,7 +96,7 @@ abstract contract DenyHelper {
     }
 
     function dropFromAllowedList(address user) external validAddress(user) {
-        address prevUser = getPrevUser(user);
+        address prevUser = getPrevUser(user, true);
         allowed[prevUser] = allowed[user];
         allowed[user] = address(0);
         allowedCount--;
@@ -106,7 +106,7 @@ abstract contract DenyHelper {
     /// @dev Function to Drop Wallet from Denied based on Approach of Safe Contract - Owner Manager
     /// @param user Array of Address of the Wallet to be dropped to DeniedList
     function dropFromDeniedList(address user) external validAddress(user) {
-        address prevUser = getPrevUser(user);
+        address prevUser = getPrevUser(user, false);
         denied[prevUser] = denied[user];
         denied[user] = address(0);
         deniedCount--;
@@ -149,19 +149,19 @@ abstract contract DenyHelper {
 
     /// @dev Function to get the Previous User of the Wallet
     /// @param user Address of the Wallet
-    function getPrevUser(address user)
+    function getPrevUser(address user, bool isAllow)
         public
         view
         returns (address prevUser)
     {
         prevUser = SENTINEL_WALLETS;
-        address currentWallet = allowed[prevUser];
+        address currentWallet = isAllow ? allowed[prevUser] : denied[prevUser];
         while (currentWallet != SENTINEL_WALLETS) {
             if (currentWallet == user) {
                 return prevUser;
             }
             prevUser = currentWallet;
-            currentWallet = allowed[currentWallet];
+            currentWallet = isAllow ? allowed[currentWallet] : denied[currentWallet];
         }
         return prevUser;
     }

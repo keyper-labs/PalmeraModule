@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
+import {console} from "forge-std/console.sol";
 
 contract DenyHelperTest is Test {
     KeyperModule public keyperModule;
@@ -116,45 +117,45 @@ contract DenyHelperTest is Test {
     }
 
     /// TODO: Function on pending because forge test on terminal remains unresponsive when try to run this test
-    // function testDropFromDeniedList() public {
-    //     listOfOwners();
+    function testDropFromDeniedList() public {
+        listOfOwners();
 
-    //     keyperModule.addToDeniedList(owners);
+        keyperModule.addToDeniedList(owners);
 
-    //     // Must be the address(0xBBB)
-    //     address ownerToRemove = owners[1];
+        // Must be the address(0xBBB)
+        address ownerToRemove = owners[1];
 
-    //     keyperModule.dropFromDeniedList(ownerToRemove);
-    //     assertEq(keyperModule.isDenied(ownerToRemove), false);
-    //     assertEq(keyperModule.getAllDenied().length, 4);
-    // }
+        keyperModule.dropFromDeniedList(ownerToRemove);
+        assertEq(keyperModule.isDenied(ownerToRemove), false);
+        assertEq(keyperModule.getAllDenied().length, 4);
+    }
 
     function testGetPrevUserAllowedList() public {
         listOfOwners();
 
         keyperModule.addToAllowedList(owners);
-        assertEq(keyperModule.getPrevUser(owners[1]), owners[0]);
-        assertEq(keyperModule.getPrevUser(owners[2]), owners[1]);
-        assertEq(keyperModule.getPrevUser(owners[3]), owners[2]);
-        assertEq(keyperModule.getPrevUser(owners[4]), owners[3]);
-        assertEq(keyperModule.getPrevUser(address(0)), owners[4]);
+        assertEq(keyperModule.getPrevUser(owners[1], true), owners[0]);
+        assertEq(keyperModule.getPrevUser(owners[2], true), owners[1]);
+        assertEq(keyperModule.getPrevUser(owners[3], true), owners[2]);
+        assertEq(keyperModule.getPrevUser(owners[4], true), owners[3]);
+        assertEq(keyperModule.getPrevUser(address(0), true), owners[4]);
         // SENTINEL_WALLETS
-        assertEq(keyperModule.getPrevUser(owners[0]), address(0x1));
+        assertEq(keyperModule.getPrevUser(owners[0], true), address(0x1));
     }
 
     /// TODO: Function on pending because forge test on terminal remains unresponsive when try to run this test
-    // function testGetPrevUserDeniedList() public {
-    //     listOfOwners();
+    function testGetPrevUserDeniedList() public {
+        listOfOwners();
 
-    //     keyperModule.addToDeniedList(owners);
-    //     assertEq(keyperModule.getPrevUser(owners[1]), owners[0]);
-    //     assertEq(keyperModule.getPrevUser(owners[2]), owners[1]);
-    //     assertEq(keyperModule.getPrevUser(owners[3]), owners[2]);
-    //     assertEq(keyperModule.getPrevUser(owners[4]), owners[3]);
-    //     assertEq(keyperModule.getPrevUser(address(0)), owners[4]);
-    //     // SENTINEL_WALLETS
-    //     assertEq(keyperModule.getPrevUser(owners[0]), address(0x1));
-    // }
+        keyperModule.addToDeniedList(owners);
+        assertEq(keyperModule.getPrevUser(owners[1], false), owners[0]);
+        assertEq(keyperModule.getPrevUser(owners[2], false), owners[1]);
+        assertEq(keyperModule.getPrevUser(owners[3], false), owners[2]);
+        assertEq(keyperModule.getPrevUser(owners[4], false), owners[3]);
+        assertEq(keyperModule.getPrevUser(address(0), false), owners[4]);
+        // SENTINEL_WALLETS
+        assertEq(keyperModule.getPrevUser(owners[0], false), address(0x1));
+    }
 
     function testGetAllDenied() public {
         listOfOwners();
