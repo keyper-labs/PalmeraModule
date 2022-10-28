@@ -23,7 +23,6 @@ contract KeyperRolesTest is Test, Constants {
         bytes32 salt = keccak256(abi.encode(0xafff));
         // Predict the future address of keyper module
         keyperModuleDeployed = factory.getDeployed(address(this), salt);
-        // console.log("Deployed", keyperModuleDeployed);
         // Deployment with keyper module address
         keyperRoles = new KeyperRoles(keyperModuleDeployed);
 
