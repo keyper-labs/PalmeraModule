@@ -116,7 +116,6 @@ contract DenyHelperTest is Test {
         keyperModule.addToDeniedList(newOwner);
     }
 
-    /// TODO: Function on pending because forge test on terminal remains unresponsive when try to run this test
     function testDropFromDeniedList() public {
         listOfOwners();
 
@@ -128,6 +127,13 @@ contract DenyHelperTest is Test {
         keyperModule.dropFromDeniedList(ownerToRemove);
         assertEq(keyperModule.isDenied(ownerToRemove), false);
         assertEq(keyperModule.getAllDenied().length, 4);
+
+        // Must be the address(0xEEE)
+        address secOwnerToRemove = owners[3];
+
+        keyperModule.dropFromDeniedList(secOwnerToRemove);
+        assertEq(keyperModule.isDenied(secOwnerToRemove), false);
+        assertEq(keyperModule.getAllDenied().length, 3);
     }
 
     function testGetPrevUserAllowedList() public {
@@ -143,7 +149,6 @@ contract DenyHelperTest is Test {
         assertEq(keyperModule.getPrevUser(owners[0], true), address(0x1));
     }
 
-    /// TODO: Function on pending because forge test on terminal remains unresponsive when try to run this test
     function testGetPrevUserDeniedList() public {
         listOfOwners();
 
