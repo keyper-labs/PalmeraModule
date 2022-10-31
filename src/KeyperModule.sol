@@ -358,7 +358,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         public
         OrgRegistered(org)
         validAddress(parent)
-        Denied(parent)
         IsGnosisSafe(_msgSender())
     {
         address caller = _msgSender();
