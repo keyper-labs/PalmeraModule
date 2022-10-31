@@ -253,7 +253,7 @@ contract GnosisSafeHelper is
     }
 
     function createRemoveGroupTx(address org, address parent) public returns (bool) {
-        console.log("Caller createRemoveGroupTx: ", msg.sender);
+        
         bytes memory data = abi.encodeWithSignature(
             "removeGroup(address,address)", org, parent
         );
