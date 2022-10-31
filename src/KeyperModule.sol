@@ -233,7 +233,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address owner,
         uint256 threshold,
         address targetSafe
-    ) public requiresAuth Denied(owner) IsGnosisSafe(targetSafe) {
+    ) public requiresAuth IsGnosisSafe(targetSafe) {
         /// Check _msgSender() is an user admin of the target safe
         if (!isUserAdmin(targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotAnAdmin();
