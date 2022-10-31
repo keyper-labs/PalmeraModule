@@ -26,8 +26,8 @@ contract DenyHelperTest is Test {
     function testAddToAllowedList() public {
         listOfOwners();
         keyperModule.addToAllowedList(owners);
-        assertEq(keyperModule.allowedCount(), 5);
-        assertEq(keyperModule.getAllAllowed().length, 5);
+        assertEq(keyperModule.allowedCount(), owners.length);
+        assertEq(keyperModule.getAllAllowed().length, owners.length);
         assertEq(keyperModule.isAllowed(owners[0]), true);
         assertEq(keyperModule.isAllowed(owners[1]), true);
         assertEq(keyperModule.isAllowed(owners[2]), true);
@@ -82,8 +82,8 @@ contract DenyHelperTest is Test {
     function testAddToDeniedList() public {
         listOfOwners();
         keyperModule.addToDeniedList(owners);
-        assertEq(keyperModule.deniedCount(), 5);
-        assertEq(keyperModule.getAllDenied().length, 5);
+        assertEq(keyperModule.deniedCount(), owners.length);
+        assertEq(keyperModule.getAllDenied().length, owners.length);
         assertEq(keyperModule.isDenied(owners[0]), true);
         assertEq(keyperModule.isDenied(owners[1]), true);
         assertEq(keyperModule.isDenied(owners[2]), true);
@@ -110,7 +110,7 @@ contract DenyHelperTest is Test {
         keyperModule.addToDeniedList(owners);
 
         address[] memory newOwner = new address[](1);
-        newOwner[0] = address(0xDDD);
+        newOwner[0] = owners[3];
 
         vm.expectRevert(DenyHelper.UserAlreadyOnDeniedList.selector);
         keyperModule.addToDeniedList(newOwner);
@@ -126,14 +126,14 @@ contract DenyHelperTest is Test {
 
         keyperModule.dropFromDeniedList(ownerToRemove);
         assertEq(keyperModule.isDenied(ownerToRemove), false);
-        assertEq(keyperModule.getAllDenied().length, 4);
+        assertEq(keyperModule.getAllDenied().length, owners.length - 1);
 
         // Must be the address(0xEEE)
         address secOwnerToRemove = owners[3];
 
         keyperModule.dropFromDeniedList(secOwnerToRemove);
         assertEq(keyperModule.isDenied(secOwnerToRemove), false);
-        assertEq(keyperModule.getAllDenied().length, 3);
+        assertEq(keyperModule.getAllDenied().length, owners.length - 2);
     }
 
     function testGetPrevUserAllowedList() public {
