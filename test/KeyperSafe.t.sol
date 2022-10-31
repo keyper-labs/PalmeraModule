@@ -675,10 +675,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         assertEq(orgAddr, parent);
 
-        vm.startPrank(orgAddr);
-        keyperModule.removeGroup(orgAddr, groupAddr);
+        gnosisHelper.updateSafeInterface(orgAddr);
+        // vm.startPrank(orgAddr);
+        
+        // keyperModule.removeGroup(orgAddr, groupAddr);
         // assertEq(keyperModule.isOrgRegistered(orgAddr), false);
-        // result = gnosisHelper.createRemoveGroupTx(orgAddr, groupAddr);
+        result = gnosisHelper.createRemoveGroupTx(orgAddr, groupAddr);
         assertEq(result, true);
     }
 

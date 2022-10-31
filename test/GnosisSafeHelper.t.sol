@@ -8,6 +8,7 @@ import "../script/DeploySafeFactory.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {Constants} from "../src/Constants.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
+import {console} from "forge-std/console.sol";
 
 // Helper contract handling deployment Gnosis Safe contracts
 contract GnosisSafeHelper is
@@ -252,6 +253,7 @@ contract GnosisSafeHelper is
     }
 
     function createRemoveGroupTx(address org, address parent) public returns (bool) {
+        console.log("Caller createRemoveGroupTx: ", msg.sender);
         bytes memory data = abi.encodeWithSignature(
             "removeGroup(address,address)", org, parent
         );
