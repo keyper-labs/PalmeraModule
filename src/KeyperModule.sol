@@ -454,6 +454,14 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             Group storage parentOrg = orgs[org];
             if (caller != parentOrg.safe) revert NotAuthorized();
             parentOrg.parent = address(0);
+            for (uint256 i = 0; i < parentOrg.childs.length; i++) {
+                if (parentOrg.childs[i] == parent) {
+                    parentOrg.childs[i] =
+                        parentOrg.childs[parentOrg.childs.length - 1];
+                    parentOrg.childs.pop();
+                    break;
+                }
+            }
         } else {
             /// Remove parent from child
             if (caller != parentGroup.parent) revert NotAuthorized();
@@ -466,7 +474,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             });
             groups[org][parent] = removedGroup;
         }
-        for (uint256 i = 0; i <= childs.length; i++) {
+        for (uint256 i = 0; i < childs.length; i++) {
             /// Remove parent from child
             Group storage childGroup = groups[org][childs[i]];
             childGroup.parent = address(0);
