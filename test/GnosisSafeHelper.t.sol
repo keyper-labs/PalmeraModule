@@ -250,4 +250,16 @@ contract GnosisSafeHelper is
 
         return signatures;
     }
+
+    function createRemoveGroupTx(address org, address parent) public returns (bool) {
+        bytes memory data = abi.encodeWithSignature(
+            "removeGroup(address,address)", org, parent
+        );
+        // Create module safe tx
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
 }
