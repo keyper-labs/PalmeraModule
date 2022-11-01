@@ -29,14 +29,26 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         /// Target contract: KeyperModule
         /// Auth function addOwnerWithThreshold
         setRoleCapability(SAFE_LEAD, keyperModule, ADD_OWNER, true);
-
         /// Target contract: KeyperModule
         /// Auth function removeOwner
         setRoleCapability(SAFE_LEAD, keyperModule, REMOVE_OWNER, true);
-
         /// Target contract: KeyperModule
         /// Auth function execTransactionOnBehalf
         setRoleCapability(SAFE_LEAD, keyperModule, EXEC_ON_BEHALF, true);
+
+        /// Define Role 1 - SAFE_LEAD_EXEC_ON_BEHALF_ONLY
+        /// Target contract: KeyperModule
+        /// Auth function execTransactionOnBehalf
+        setRoleCapability(SAFE_LEAD_EXEC_ON_BEHALF_ONLY, keyperModule, EXEC_ON_BEHALF, true);
+
+        /// Define Role 2 - SAFE_LEAD_MODIFY_OWNERS_ONLY
+        /// Target contract: KeyperModule
+        /// Auth function addOwnerWithThreshold
+        setRoleCapability(SAFE_LEAD_MODIFY_OWNERS_ONLY, keyperModule, ADD_OWNER, true);
+        /// Target contract: KeyperModule
+        /// Auth function removeOwner
+        setRoleCapability(SAFE_LEAD_MODIFY_OWNERS_ONLY, keyperModule, REMOVE_OWNER, true);
+
 
         /// Transfer ownership of authority to keyper module
         setOwner(keyperModule);

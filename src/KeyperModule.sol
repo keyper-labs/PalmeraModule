@@ -140,7 +140,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         bytes calldata data,
         Enum.Operation operation,
         bytes memory signatures
-    ) external payable returns (bool success) {
+    ) external payable requiresAuth returns (bool success) {
         if (org == address(0) || targetSafe == address(0) || to == address(0)) {
             revert ZeroAddress();
         }
@@ -303,13 +303,15 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         rootOrg.name = name;
         rootOrg.safe = caller;
 
-        /// Set org role to set admin role
+        /// Assign SafeLead Role + Role assignment
         RolesAuthority authority = RolesAuthority(rolesAuthority);
         authority.setUserRole(caller, SAFE_SET_ROLE, true);
 
         authority.setRoleCapability(
             SAFE_SET_ROLE, address(this), SET_USER_ADMIN, true
         );
+
+        authority.setUserRole(caller, SAFE_LEAD, true);
 
         emit OrganisationCreated(caller, name);
     }

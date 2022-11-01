@@ -244,6 +244,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             groupA, subGroupA, receiver, 2 gwei, emptyData, Enum.Operation(0)
         );
+
+        // Set groupA as safe lead
+        vm.startPrank(orgAddr);
+        keyperModule.setSafeLead(groupA, true);
+        vm.stopPrank();
+
         // Execute on behalf function
         vm.startPrank(groupA);
         bool result = keyperModule.execTransactionOnBehalf(
@@ -276,6 +282,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             subGroupA, groupA, receiver, 2 gwei, emptyData, Enum.Operation(0)
         );
+
+        // Set subGroupA as safe lead
+        vm.startPrank(orgAddr);
+        keyperModule.setSafeLead(subGroupA, true);
+        vm.stopPrank();
 
         vm.expectRevert(KeyperModule.NotAuthorizedExecOnBehalf.selector);
         // Execute OnBehalf function with a safe that is not authorized

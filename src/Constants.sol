@@ -20,7 +20,9 @@ abstract contract Constants is Context {
         0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4;
 
     uint8 internal constant SAFE_LEAD = 0;
-    uint8 internal constant SAFE_SET_ROLE = 2;
+    uint8 internal constant SAFE_LEAD_EXEC_ON_BEHALF_ONLY = 1;
+    uint8 internal constant SAFE_LEAD_MODIFY_OWNERS_ONLY = 2;
+    uint8 internal constant SAFE_SET_ROLE = 3;
 
     bytes4 internal constant ADD_OWNER = bytes4(
         keccak256(bytes("addOwnerWithThreshold(address,uint256,address)"))
