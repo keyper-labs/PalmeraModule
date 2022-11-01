@@ -112,7 +112,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     //           RootOrg
     //              |
     //           GroupA
-    function setUpRootOrgAndOneGroup() public returns(address, address, bool) {
+    function setUpRootOrgAndOneGroup() public returns(address, address) {
         // Set initial safe as a rootOrg
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
@@ -128,17 +128,13 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         vm.deal(orgAddr, 100 gwei);
         vm.deal(safeGroupA, 100 gwei);
 
-        return (orgAddr, safeGroupA, result);
+        return (orgAddr, safeGroupA);
     }
 
 
     function testAdminExecOnBehalf() public {
 
-        (
-            address orgAddr,
-            address groupSafe,
-            bool result
-        ) = setUpRootOrgAndOneGroup();
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
 
         address receiver = address(0xABC);
 
@@ -150,7 +146,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
         // Execute on behalf function
         vm.startPrank(orgAddr);
-        result = keyperModule.execTransactionOnBehalf(
+        bool result = keyperModule.execTransactionOnBehalf(
             orgAddr,
             groupSafe,
             receiver,
@@ -165,11 +161,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     function testRevertZeroAddressProvidedExecTransactionOnBehalf() public {
 
-        (
-            address orgAddr, 
-            address groupSafe, 
-            bool result
-        ) = setUpRootOrgAndOneGroup();
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
 
         address receiver = address(0);
 
@@ -182,7 +174,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // Execute on behalf function
         vm.startPrank(orgAddr);
         vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
-        result = keyperModule.execTransactionOnBehalf(
+        keyperModule.execTransactionOnBehalf(
             orgAddr,
             groupSafe,
             receiver,
@@ -195,11 +187,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     function testRevertInvalidGnosisSafeExecTransactionOnBehalf() public {
         
-        (
-            address orgAddr,
-            address groupSafe,
-            bool result
-        ) = setUpRootOrgAndOneGroup();
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
 
         // Random wallet instead of a safe
         address fakeGroupSafe = address(0xFED);
@@ -214,7 +202,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // Execute on behalf function
         vm.startPrank(orgAddr);
         vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
-        result = keyperModule.execTransactionOnBehalf(
+        keyperModule.execTransactionOnBehalf(
             orgAddr,
             fakeGroupSafe,
             receiver,
@@ -227,11 +215,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     function testRevertNotAuthorizedExecTransactionOnBehalf() public {
        
-        (
-            address orgAddr,
-            address groupSafe,
-            bool result
-        ) = setUpRootOrgAndOneGroup();
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
 
         // Random wallet instead of a safe
         address fakeCaller = address(0xFED);
@@ -246,7 +230,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // Execute on behalf function from a not authorized caller
         vm.startPrank(fakeCaller);
         vm.expectRevert(KeyperModule.NotAuthorizedExecOnBehalf.selector);
-        result = keyperModule.execTransactionOnBehalf(
+        keyperModule.execTransactionOnBehalf(
             orgAddr,
             groupSafe,
             receiver,
@@ -259,11 +243,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     function testRevertInvalidSignatureExecOnBehalf() public {
    
-        (
-            address orgAddr,
-            address groupSafe,
-            bool result
-        ) = setUpRootOrgAndOneGroup();
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
 
         address receiver = address(0xABC);
 
@@ -277,7 +257,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         vm.expectRevert("GS026");
         // Execute invalid OnBehalf function
         vm.startPrank(orgAddr);
-        result = keyperModule.execTransactionOnBehalf(
+        bool result = keyperModule.execTransactionOnBehalf(
             orgAddr,
             groupSafe,
             receiver,
@@ -412,6 +392,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
         vm.label(keyperSafes[orgName], orgName);
+        assertEq(result, true);
 
         address orgAddr = keyperSafes[orgName];
         address userAdmin = address(0x123);
@@ -438,6 +419,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
         vm.label(keyperSafes[orgName], orgName);
+        assertEq(result, true);
 
         address orgAddr = keyperSafes[orgName];
         address userAdmin = address(0x123);
@@ -473,6 +455,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
         vm.label(keyperSafes[orgName], orgName);
+        assertEq(result, true);
 
         address orgAddr = keyperSafes[orgName];
         address userAdmin = address(0x123);
@@ -505,7 +488,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
-        address newSafe = gnosisHelper.newKeyperSafe(4, 2);
+        gnosisHelper.newKeyperSafe(4, 2);
         result = gnosisHelper.registerOrgTx(orgBName);
         keyperSafes[orgBName] = address(gnosisHelper.gnosisSafe());
 
@@ -548,7 +531,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
-        address newSafe = gnosisHelper.newKeyperSafe(4, 2);
+        gnosisHelper.newKeyperSafe(4, 2);
         result = gnosisHelper.registerOrgTx(orgBName);
         keyperSafes[orgBName] = address(gnosisHelper.gnosisSafe());
 
@@ -587,21 +570,21 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     /// RemoveGroup when org = parent
     function testRemoveGroupFromSafeOrgEqParent() public {
 
-        (
-            address orgAddr,
-            address groupSafe,
-            bool result
-        ) = setUpRootOrgAndOneGroup();
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
 
         assertEq(keyperModule.isOrgRegistered(orgAddr), true);
 
-        (,,, address parent) = keyperModule.getGroupInfo(orgAddr, groupSafe);
+        address parent;
+        (,,, parent) = keyperModule.getGroupInfo(orgAddr, groupSafe);
    
         assertEq(orgAddr, parent);
 
         gnosisHelper.updateSafeInterface(orgAddr);
-        result = gnosisHelper.createRemoveGroupTx(orgAddr, groupSafe);
+        bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupSafe);
 
         assertEq(result, true);
+
+        result = keyperModule.isParent(orgAddr, orgAddr, groupSafe);
+        assertEq(result, false);
     }
 }
