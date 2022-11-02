@@ -114,6 +114,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     //           GroupA
     function setUpRootOrgAndOneGroup() public returns(address, address) {
         // Set initial safe as a rootOrg
+        console.log("caller: ", msg.sender);
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
@@ -129,6 +130,23 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         vm.deal(safeGroupA, 100 gwei);
 
         return (orgAddr, safeGroupA);
+    }
+
+    function setAdminOfOrg() public returns (address, address) {
+        bool result = gnosisHelper.registerOrgTx(orgName);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+        vm.label(keyperSafes[orgName], orgName);
+        assertEq(result, true);
+
+        address orgAddr = keyperSafes[orgName];
+        address userAdmin = address(0x123);
+        bool userEnabled = true;
+
+        vm.startPrank(orgAddr);
+        keyperModule.setUserAdmin(userAdmin, userEnabled);
+        vm.stopPrank();
+
+        return (orgAddr, userAdmin);
     }
 
 
@@ -416,18 +434,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     function testAddOwnerWithThreshold() public {
-        bool result = gnosisHelper.registerOrgTx(orgName);
-        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
-        vm.label(keyperSafes[orgName], orgName);
-        assertEq(result, true);
+        
+        (address orgAddr, address userAdmin) = setAdminOfOrg();
 
-        address orgAddr = keyperSafes[orgName];
-        address userAdmin = address(0x123);
-        bool userEnabled = true;
-
-        vm.startPrank(orgAddr);
-        keyperModule.setUserAdmin(userAdmin, userEnabled);
-        vm.stopPrank();
+        assertEq(keyperModule.isUserAdmin(orgAddr, userAdmin), true);
 
         address newOwner = address(0xaaaf);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
@@ -449,6 +459,57 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             }
         }
         assertEq(ownerTest, newOwner);
+    }
+
+    function testIsUserAdminWithThreshold() public {
+        
+        (address orgAddr, address userAdmin) = setAdminOfOrg();
+
+        assertEq(keyperModule.isUserAdmin(orgAddr, userAdmin), true);
+
+        address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
+        address newOwner;
+
+        for (uint256 i = 0; i < owners.length; i++) {
+            newOwner = owners[i];
+        }
+
+        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+
+        vm.startPrank(userAdmin);
+        vm.expectRevert(KeyperModule.OwnerAlreadyExists.selector);
+        keyperModule.addOwnerWithThreshold(newOwner, threshold + 1, orgAddr);
+    }
+
+    // addOwnerWithThreshold => NotAuthorizedAsNotAnAdmin is triggered
+    // TODO: Pending check, because already exists a modifier asking for
+    // auth, so it's probable the revertion is not necessary. This test
+    // is commented for now. 
+    // function testRevertNotAuthorizedAsNotAnAdminAddOwnerWithThreshold() public {
+
+    //     (address orgAddr,) = setAdminOfOrg();
+    //     (address orgAddrB, ) = setAdminOfOrg();
+        
+    //     address fakeAdmin = address(0xfff);
+    //     address newOwner = address(0xaaaf);
+    //     uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+
+    //     vm.startPrank(fakeAdmin);
+    //     vm.expectRevert(KeyperModule.NotAuthorizedAsNotAnAdmin.selector);
+    //     keyperModule.addOwnerWithThreshold(newOwner, threshold + 1, orgAddr);
+
+    // }
+
+    function testRevertInvalidThresholdAddOwnerWithThreshold() public {
+
+        (address orgAddr, address userAdmin) = setAdminOfOrg();
+
+        address newOwner = address(0xf1f1f1);
+        uint256 wrongThreshold = 0;
+
+        vm.startPrank(userAdmin);
+        vm.expectRevert(KeyperModule.InvalidThreshold.selector);
+        keyperModule.addOwnerWithThreshold(newOwner, wrongThreshold, orgAddr);
     }
 
     function testRemoveOwner() public {
@@ -567,7 +628,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    /// RemoveGroup when org = parent
+    /// removeGroup when org == parent
     function testRemoveGroupFromSafeOrgEqParent() public {
 
         (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
@@ -586,5 +647,32 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         result = keyperModule.isParent(orgAddr, orgAddr, groupSafe);
         assertEq(result, false);
+    }
+
+    function testRemoveGroupWithChildren() public {
+        setUpBaseOrgTree();
+        address orgAddr = keyperSafes[orgName];
+        address groupA = keyperSafes[groupAName];
+        address subGroupA = keyperSafes[subGroupAName];
+
+        gnosisHelper.updateSafeInterface(orgAddr);
+        bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupA);
+        assertEq(result, true);
+        // TODO: On pending, since the children of groupA are being removed from the child[], but there's no a clear value to compare with on isChild function. I must ask about it.
+    }
+
+    function testRemoveChild() public {
+        setUpBaseOrgTree();
+        address orgAddr = keyperSafes[orgName];
+        address groupA = keyperSafes[groupAName];
+        address subGroupA = keyperSafes[subGroupAName];
+
+        assertEq(keyperModule.isChild(orgAddr, groupA, subGroupA), true);
+        assertEq(keyperModule.isAdmin(orgAddr, subGroupA), true);
+        assertEq(keyperModule.isAdmin(groupA, subGroupA), false);
+
+        vm.startPrank(orgAddr);
+        keyperModule.removeChild(orgAddr, groupA, subGroupA);
+        assertEq(keyperModule.isChild(orgAddr, groupA, subGroupA), false);
     }
 }
