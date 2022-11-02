@@ -60,7 +60,7 @@ contract KeyperRolesTest is Test, Constants {
         // Check Role
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                SAFE_SET_ROLE, address(keyperModule), SET_USER_ADMIN
+                ROOT_SAFE, address(keyperModule), ROLE_ASSIGMENT
             ),
             true
         );

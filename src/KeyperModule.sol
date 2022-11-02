@@ -67,7 +67,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     error AdminNotRegistered();
     error NotAuthorized();
     error NotAuthorizedExecOnBehalf();
-    error NotAuthorizedAsNotAnAdmin();
+    error NotAuthorizedAsNotSafeLead();
     error OwnerNotFound();
     error OwnerAlreadyExists();
     error CreateSafeProxyFailed();
@@ -192,16 +192,18 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         emit ModuleEnabled(address(this), module);
     }
 
-    /// @notice This function will allow UserAdmin to add owner and set a threshold without passing by normal multisig check
+    /// @notice This function will allow Safe Lead & Safe Lead mody only roles to to add owner and set a threshold without passing by normal multisig check
     /// @dev For instance role
+    /// TODO add modifier for check that targetSafe is a Safe / Check orgRegister
     function addOwnerWithThreshold(
         address owner,
         uint256 threshold,
-        address targetSafe
+        address targetSafe,
+        address org
     ) public requiresAuth {
         /// Check _msgSender() is an user admin of the target safe
-        if (!isUserAdmin(targetSafe, _msgSender())) {
-            revert NotAuthorizedAsNotAnAdmin();
+        if (!isSafeLead(org, targetSafe, _msgSender())) {
+            revert NotAuthorizedAsNotSafeLead();
         }
 
         /// If the owner is already an owner
@@ -234,15 +236,16 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address prevOwner,
         address owner,
         uint256 threshold,
-        address targetSafe
+        address targetSafe,
+        address org
     ) public requiresAuth {
         if (
             prevOwner == address(0) || targetSafe == address(0)
-                || owner == address(0)
+                || owner == address(0) || org == address(0)
         ) revert ZeroAddress();
         /// Check _msgSender() is an user admin of the target safe
-        if (!isUserAdmin(targetSafe, _msgSender())) {
-            revert NotAuthorizedAsNotAnAdmin();
+        if (!isSafeLead(org, targetSafe, _msgSender())) {
+            revert NotAuthorizedAsNotSafeLead();
         }
 
         /// if Owner Not found
@@ -263,7 +266,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (!result) revert TxExecutionModuleFaild();
     }
 
-    /// @notice Give user admin role
+    /// @notice Give user safe lead
     /// @dev Call must come from the safe
     /// @param user User that will have the Admin role
     function setSafeLead(address user, bool enabled)
@@ -276,6 +279,33 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         /// Update user admin on org
         Group storage org = orgs[_msgSender()];
         org.admin = user;
+    }
+
+    /// @notice Give user roles
+    /// @dev Call must come from the root safe
+    /// @param role Role to be assigned
+    /// @param user User that will have specific role
+    /// @param group Safe group which will have the user permissions on
+    function setRole(uint8 role, address user, address group, bool enabled)
+        external
+        validAddress(user)
+        requiresAuth
+    {
+        if (
+            role == SAFE_LEAD || role == SAFE_LEAD_EXEC_ON_BEHALF_ONLY
+                || role == SAFE_LEAD_MODIFY_OWNERS_ONLY
+        ) {
+            /// Check if group is part of the org
+            if (groups[_msgSender()][group].safe == address(0)) {
+                revert ParentNotRegistered();
+            }
+            /// Update group admin
+            Group storage safeGroup = groups[_msgSender()][group];
+            safeGroup.admin = user;
+        }
+        // TODO check other cases when we need to update org
+        RolesAuthority authority = RolesAuthority(rolesAuthority);
+        authority.setUserRole(user, role, enabled);
     }
 
     function getOrg(address _org)
@@ -305,10 +335,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 
         /// Assign SafeLead Role + Role assignment
         RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(caller, SAFE_SET_ROLE, true);
+        authority.setUserRole(caller, ROOT_SAFE, true);
 
         authority.setRoleCapability(
-            SAFE_SET_ROLE, address(this), SET_USER_ADMIN, true
+            ROOT_SAFE, address(this), ROLE_ASSIGMENT, true
         );
 
         authority.setUserRole(caller, SAFE_LEAD, true);
@@ -349,6 +379,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         newGroup.parent = parent;
         newGroup.safe = caller;
         newGroup.name = name;
+        /// Give Role SuperSafe
         emit GroupCreated(org, caller, name, newGroup.admin, parent);
     }
 
@@ -420,6 +451,21 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     {
         Group memory _org = orgs[org];
         if (_org.admin == user) {
+            return true;
+        }
+        return false;
+    }
+
+    /// @notice Check if a user is an safe lead of the group
+    function isSafeLead(address org, address group, address user)
+        public
+        view
+        returns (bool)
+    {
+        if (org == group) return false; // Root org cannot have a lead
+        Group memory _group = groups[org][group];
+        if (_group.safe == address(0)) revert GroupNotRegistered();
+        if (_group.admin == user) {
             return true;
         }
         return false;
