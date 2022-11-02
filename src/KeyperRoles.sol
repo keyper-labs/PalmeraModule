@@ -13,8 +13,6 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
     /// @dev Event when a new keyperModule is setting up
     event KeyperModuleSetup(address keyperModule, address caller);
 
-    /// @dev Errors
-    error invalidKeyperModule();
 
     constructor(address keyperModule)
         RolesAuthority(_msgSender(), Authority(address(0)))

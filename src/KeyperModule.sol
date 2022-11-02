@@ -397,10 +397,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     {
         address caller = _msgSender();
         if (!isChild(org, parent, child)) revert ChildNotFound();
-        Group storage parentGroup = groups[org][parent];
-        if (parentGroup.safe == child) revert NotAuthorizedAsNotAnAdmin();
-        string memory parentName = parentGroup.name;
-        /// Remove to org root
+        /// Remove to group from org root
         if (parent == org) {
             ///  By default Admin of the new group is the admin of the org
             Group storage parentOrg = orgs[org];
@@ -415,6 +412,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             }
         } else {
             /// Remove child from parent
+            Group storage parentGroup = groups[org][parent];
+            if (parentGroup.safe == child) revert NotAuthorizedAsNotAnAdmin();
+            string memory parentName = parentGroup.name;
             if (caller != parentGroup.parent) revert NotAuthorized();
             for (uint256 i = 0; i < parentGroup.childs.length; i++) {
                 if (parentGroup.childs[i] == child) {
@@ -446,14 +446,12 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (parentGroup.safe == address(0)) {
             revert ParentNotRegistered();
         }
-        string memory parentName = parentGroup.name;
+		string memory parentName = parentGroup.name;
         address[] memory childs = parentGroup.childs;
-        /// Remove to org root
+        /// Remove the children from org root
         if (parent == org) {
-            ///  By default Admin of the new group is the admin of the org
             Group storage parentOrg = orgs[org];
             if (caller != parentOrg.safe) revert NotAuthorized();
-            parentOrg.parent = address(0);
             for (uint256 i = 0; i < parentOrg.childs.length; i++) {
                 if (parentOrg.childs[i] == parent) {
                     parentOrg.childs[i] =
