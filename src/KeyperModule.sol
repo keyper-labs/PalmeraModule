@@ -166,6 +166,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         /// Increase nonce and execute transaction.
         nonce++;
         /// TODO not sure about caller => Maybe just check admin address
+        // TODO add usecase for safe lead => Caller can be an EOA account,
+        // so first we need to check if safe, if yes load gnosis interface + call owners...,
+        // if not then just execute the tx after checking signature
         /// Init safe interface to get parent owners/threshold
         IGnosisSafe gnosisAdminSafe = IGnosisSafe(caller);
         gnosisAdminSafe.checkSignatures(
@@ -266,21 +269,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (!result) revert TxExecutionModuleFaild();
     }
 
-    /// @notice Give user safe lead
-    /// @dev Call must come from the safe
-    /// @param user User that will have the Admin role
-    function setSafeLead(address user, bool enabled)
-        external
-        validAddress(user)
-        requiresAuth
-    {
-        RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(user, SAFE_LEAD, enabled);
-        /// Update user admin on org
-        Group storage org = orgs[_msgSender()];
-        org.admin = user;
-    }
-
     /// @notice Give user roles
     /// @dev Call must come from the root safe
     /// @param role Role to be assigned
@@ -333,14 +321,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         rootOrg.name = name;
         rootOrg.safe = caller;
 
-        /// Assign SafeLead Role + Role assignment
+        /// Assign SAFE_LEAD Role + SAFE_ROOT Role
         RolesAuthority authority = RolesAuthority(rolesAuthority);
         authority.setUserRole(caller, ROOT_SAFE, true);
-
-        authority.setRoleCapability(
-            ROOT_SAFE, address(this), ROLE_ASSIGMENT, true
-        );
-
         authority.setUserRole(caller, SAFE_LEAD, true);
 
         emit OrganisationCreated(caller, name);
@@ -380,6 +363,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         newGroup.safe = caller;
         newGroup.name = name;
         /// Give Role SuperSafe
+        RolesAuthority authority = RolesAuthority(rolesAuthority);
+        authority.setUserRole(caller, SUPER_SAFE, true);
+
         emit GroupCreated(org, caller, name, newGroup.admin, parent);
     }
 

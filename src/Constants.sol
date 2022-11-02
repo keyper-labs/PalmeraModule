@@ -23,12 +23,16 @@ abstract contract Constants is Context {
     uint8 internal constant SAFE_LEAD_EXEC_ON_BEHALF_ONLY = 1;
     uint8 internal constant SAFE_LEAD_MODIFY_OWNERS_ONLY = 2;
     uint8 internal constant ROOT_SAFE = 3;
+    uint8 internal constant SUPER_SAFE = 4;
 
     bytes4 internal constant ADD_OWNER = bytes4(
-        keccak256(bytes("addOwnerWithThreshold(address,uint256,address,address)"))
+        keccak256(
+            bytes("addOwnerWithThreshold(address,uint256,address,address)")
+        )
     );
-    bytes4 internal constant REMOVE_OWNER =
-        bytes4(keccak256(bytes("removeOwner(address,address,uint256,address,address)")));
+    bytes4 internal constant REMOVE_OWNER = bytes4(
+        keccak256(bytes("removeOwner(address,address,uint256,address,address)"))
+    );
 
     bytes4 internal constant SET_USER_ADMIN =
         bytes4(keccak256(bytes("setSafeLead(address,bool)")));
