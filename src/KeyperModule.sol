@@ -225,7 +225,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address owner,
         uint256 threshold,
         address targetSafe
-    ) public requiresAuth Denied(owner) IsGnosisSafe(targetSafe) {
+    ) public requiresAuth IsGnosisSafe(targetSafe) {
         /// Check _msgSender() is an user admin of the target safe
         if (!isUserAdmin(targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotAnAdmin();
@@ -346,11 +346,11 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @param org address of the organisation
     /// @param parent address of the parent
     /// @param name name of the group
+	/// TODO: how avoid any safe adding in the org or group?
     function addGroup(address org, address parent, string memory name)
         public
         OrgRegistered(org)
         validAddress(parent)
-        Denied(parent)
         IsGnosisSafe(_msgSender())
     {
         address caller = _msgSender();
