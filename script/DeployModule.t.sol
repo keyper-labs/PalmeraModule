@@ -2,6 +2,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 import "src/KeyperModule.sol";
+import "test/MockedContract.t.sol";
 import "@solenv/Solenv.sol";
 
 contract DeployModule is Script {
@@ -11,9 +12,11 @@ contract DeployModule is Script {
         address proxyFactory = vm.envAddress("PROXY_FACTORY_ADDRESS");
         address rolesAuthority = address(0xBEEF);
         vm.startBroadcast();
+        MockedContractA mockedContractA = new MockedContractA();
+        MockedContractB mockedContractB = new MockedContractB();
         KeyperModule keyperModule = new KeyperModule(
-            masterCopy,
-            proxyFactory,
+            address(mockedContractA),
+            address(mockedContractB),
             rolesAuthority
         );
         vm.stopBroadcast();

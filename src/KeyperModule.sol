@@ -121,9 +121,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
                 || authority == address(0)
         ) revert ZeroAddressProvided();
 
-        // if (
-        //     !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
-        // ) revert InvalidAddressProvided();
+        if (
+            !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
+        ) revert InvalidAddressProvided();
 
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
@@ -419,18 +419,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         requiresAuth
     {
         address caller = _msgSender();
-        // RootSafe usecase : Check if the group is part of caller's org
-        if (caller == org) {
-            if (groups[caller][group].safe == address(0)) {
-                revert NotAuthorizedRemoveGroupFromOtherOrg();
-            }
-        } else {
-            // SuperSafe usecase : Check caller is parent of the group
-            if (!isParent(org, caller, group)) {
-                revert NotAuthorizedRemoveNonChildrenGroup();
-            }
-        }
-
         Group memory _group = groups[org][group];
         if (_group.safe == address(0)) revert GroupNotRegistered();
 
@@ -606,15 +594,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             curentParent = childGroup.parent;
         }
         return false;
-    }
-
-    /// @notice Method to validate if a provided address is a contract
-    /// @param gnosisAddress Address used to initialize KeyperModule
-    /// @return bool
-    function isContract(address gnosisAddress) public view returns (bool) {
-        bool addrToCheck = gnosisAddress.isContract();
-        if (addrToCheck) return true;
-        else return false;
     }
 
     /// @notice Method to Validate if address is a Gnosis Safe Multisig Wallet
