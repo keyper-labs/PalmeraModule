@@ -99,10 +99,17 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             address[] memory childs,
             address parent
         ) = keyperModule.getOrg(gnosisSafeAddr);
+
         assertEq(name, orgName);
         assertEq(admin, gnosisSafeAddr);
         assertEq(safe, gnosisSafeAddr);
         assertEq(parent, address(0));
+
+        address child;
+        for (uint256 i = 0; i < childs.length; i++) {
+            childs[i] = child;
+        }
+        assertEq(child, address(0));
     }
 
     function testCreateGroupFromSafe() public {
@@ -643,53 +650,85 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     /// removeGroup when org == parent
-    // TODO: FIX THIS TEST
-    // function testRemoveGroupFromSafeOrgEqParent() public {
+    function testRemoveGroupFromSafeOrgEqParent() public {
 
-    //     (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
 
-    //     assertEq(keyperModule.isOrgRegistered(orgAddr), true);
+        assertEq(keyperModule.isOrgRegistered(orgAddr), true);
 
-    //     address parent;
-    //     (,,,, parent) = keyperModule.getGroupInfo(orgAddr, groupSafe);
+        address parent;
+        (,,,, parent) = keyperModule.getGroupInfo(orgAddr, groupSafe);
    
-    //     assertEq(orgAddr, parent);
+        assertEq(orgAddr, parent);
 
-    //     gnosisHelper.updateSafeInterface(orgAddr);
-    //     bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupSafe);
+        gnosisHelper.updateSafeInterface(orgAddr);
+        bool result = gnosisHelper.createRemoveGroupTx(orgAddr, orgAddr, groupSafe);
 
-    //     assertEq(result, true);
+        assertEq(result, true);
 
-    //     result = keyperModule.isParent(orgAddr, orgAddr, groupSafe);
-    //     assertEq(result, false);
-    // }
+        result = keyperModule.isParent(orgAddr, orgAddr, groupSafe);
+        assertEq(result, false);
+    }
+
+    // Deploy 4 keyperSafes : following structure
+    //           RootOrg
+    //          |      |
+    //      GroupA   GroupB
+    //        |
+    //  SubGroupA
+    // SubGroupA is going to be removed
+    function testRemoveChild() public {
+        setUpBaseOrgTree();
+        address orgAddr = keyperSafes[orgName];
+        address groupA = keyperSafes[groupAName];
+        address subGroupA = keyperSafes[subGroupAName];
+
+        assertEq(keyperModule.isChild(orgAddr, groupA, subGroupA), true);
+        assertEq(keyperModule.isAdmin(orgAddr, subGroupA), true);
+        assertEq(keyperModule.isAdmin(groupA, subGroupA), false);
+
+        gnosisHelper.updateSafeInterface(orgAddr);
+
+        bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupA, subGroupA);
+
+        assertEq(result, true);
+        assertEq(keyperModule.isChild(orgAddr, groupA, subGroupA), false);
+        
+        address[] memory children;
+        (,,, children,) = keyperModule.getGroupInfo(orgAddr, groupA);
+        address newChild;
+
+        for (uint256 i = 0; i < children.length; i++) {
+            children[i] == newChild;
+        }
+
+        bool comparison = newChild == subGroupA ? true : false;
+        assertEq(comparison, false);
+    }
     
-    // TODO: FIX this test taking into account all the improvings placed on the main contract (KeyperModule)
-    // function testRemoveGroupWithChildren() public {
-    //     setUpBaseOrgTree();
-    //     address orgAddr = keyperSafes[orgName];
-    //     address groupA = keyperSafes[groupAName];
-    //     address subGroupA = keyperSafes[subGroupAName];
+    // Deploy 4 keyperSafes : following structure
+    //           RootOrg
+    //          |      |
+    //      GroupA   GroupB
+    //        |
+    //  SubGroupA
+    // GroupA is going to be removed
+    function testRemoveGroupWithChildren() public {
+        setUpBaseOrgTree();
+        address orgAddr = keyperSafes[orgName];
+        address groupA = keyperSafes[groupAName];
+        address subGroupA = keyperSafes[subGroupAName];
 
-    //     gnosisHelper.updateSafeInterface(orgAddr);
-    //     bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupA);
-    //     assertEq(result, true);
-    //     // TODO: On pending, since the children of groupA are being removed from the child[], but there's no a clear value to compare with on isChild function. I must ask about it.
-    // }
+        assertEq(keyperModule.isChild(orgAddr, orgAddr, groupA), true);
 
-    // TODO: This test is deprecated. Will be removed shortly
-    // function testRemoveChild() public {
-    //     setUpBaseOrgTree();
-    //     address orgAddr = keyperSafes[orgName];
-    //     address groupA = keyperSafes[groupAName];
-    //     address subGroupA = keyperSafes[subGroupAName];
+        gnosisHelper.updateSafeInterface(orgAddr);
+        bool result = gnosisHelper.createRemoveGroupTx(orgAddr, orgAddr, groupA);
 
-    //     assertEq(keyperModule.isChild(orgAddr, groupA, subGroupA), true);
-    //     assertEq(keyperModule.isAdmin(orgAddr, subGroupA), true);
-    //     assertEq(keyperModule.isAdmin(groupA, subGroupA), false);
+        assertEq(result, true);
+        assertEq(keyperModule.isChild(orgAddr, orgAddr, groupA), false);
 
-    //     vm.startPrank(orgAddr);
-    //     keyperModule.removeChild(orgAddr, groupA, subGroupA);
-    //     assertEq(keyperModule.isChild(orgAddr, groupA, subGroupA), false);
-    // }
+        // TODO: Check why isChild is not working for this test, but isParent is.
+        assertEq(keyperModule.isChild(orgAddr, orgAddr, subGroupA), true);
+        assertEq(keyperModule.isParent(orgAddr, orgAddr, subGroupA), true);
+    }
 }
