@@ -82,8 +82,13 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // Create registerOrg calldata
         bool result = gnosisHelper.registerOrgTx(orgName);
         assertEq(result, true);
-        (string memory name, address admin, address safe, address parent) =
-            keyperModule.getOrg(gnosisSafeAddr);
+        (
+            string memory name,
+            address admin,
+            address safe,
+            address[] memory childs,
+            address parent
+        ) = keyperModule.getOrg(gnosisSafeAddr);
         assertEq(name, orgName);
         assertEq(admin, gnosisSafeAddr);
         assertEq(safe, gnosisSafeAddr);
