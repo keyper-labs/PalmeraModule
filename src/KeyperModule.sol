@@ -32,7 +32,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         string name;
         address admin;
         address safe;
-        address[] childs;
+        address[] child;
         address parent;
     }
     /// @dev Orgs -> Groups
@@ -52,20 +52,12 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address parent
     );
 
-    event ChildRemoved(
-        address indexed org,
-        address indexed group,
-        address parent,
-        string name,
-        address indexed childRemoved
-    );
-
     event GroupRemoved(
         address indexed org,
-        address indexed group,
-        address parentRemoved,
-        string name,
-        address[] childReleased
+        address indexed groupRemoved,
+        address indexed caller,
+        address parent,
+        string name
     );
 
     event TxOnBehalfExecuted(
@@ -314,12 +306,13 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         public
         view
         OrgRegistered(_org)
-        returns (string memory, address, address, address)
+        returns (string memory, address, address, address[] memory, address)
     {
         return (
             orgs[_org].name,
             orgs[_org].admin,
             orgs[_org].safe,
+            orgs[_org].child,
             orgs[_org].parent
         );
     }
@@ -368,14 +361,14 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             ///  By default Admin of the new group is the admin of the org
             newGroup.admin = orgs[org].admin;
             Group storage parentOrg = orgs[org];
-            parentOrg.childs.push(caller);
+            parentOrg.child.push(caller);
         }
         /// Add to group
         else {
             /// By default Admin of the new group is the admin of the parent (TODO check this)
             newGroup.admin = groups[org][parent].admin;
             Group storage parentGroup = groups[org][parent];
-            parentGroup.childs.push(caller);
+            parentGroup.child.push(caller);
         }
         newGroup.parent = parent;
         newGroup.safe = caller;
@@ -383,95 +376,45 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         emit GroupCreated(org, caller, name, newGroup.admin, parent);
     }
 
-    /// @notice Remove Childs from an organisation/Group
-    /// @dev Call coming from the safe of the Gorup for exclude a child
+    /// @notice Remove group and reasign all child to the parent
+    /// @dev All actions will be driven based on the caller of the method, and args
     /// @param org address of the organisation
-    /// @param parent address of the parent
-    /// @param child address of the child
-    function removeChild(address org, address parent, address child)
+    /// @param group address of the group to be removed
+    /// TODO: Add auth/permissions for the caller
+    function removeGroup(address org, address group)
         public
         OrgRegistered(org)
-        validAddress(parent)
-        validAddress(child)
+        validAddress(group)
         IsGnosisSafe(_msgSender())
     {
         address caller = _msgSender();
-        if (!isChild(org, parent, child)) revert ChildNotFound();
-        Group storage parentGroup = groups[org][parent];
-        if (parentGroup.safe == child) revert NotAuthorizedAsNotAnAdmin();
-        string memory parentName = parentGroup.name;
-        /// Remove to org root
-        if (parent == org) {
-            ///  By default Admin of the new group is the admin of the org
-            Group storage parentOrg = orgs[org];
-            if (caller != parentOrg.safe) revert NotAuthorized();
-            for (uint256 i = 0; i < parentOrg.childs.length; i++) {
-                if (parentOrg.childs[i] == child) {
-                    parentOrg.childs[i] =
-                        parentOrg.childs[parentOrg.childs.length - 1];
-                    parentOrg.childs.pop();
-                    break;
-                }
-            }
-        } else {
-            /// Remove child from parent
-            if (caller != parentGroup.parent) revert NotAuthorized();
-            for (uint256 i = 0; i < parentGroup.childs.length; i++) {
-                if (parentGroup.childs[i] == child) {
-                    parentGroup.childs[i] =
-                        parentGroup.childs[parentGroup.childs.length - 1];
-                    parentGroup.childs.pop();
-                    break;
-                }
-            }
-        }
-        /// Remove parent from child
-        Group storage childGroup = groups[org][child];
-        childGroup.parent = address(0);
-        emit ChildRemoved(org, caller, parent, parentName, child);
-    }
+        Group memory _group = groups[org][group];
+        if (_group.safe == address(0)) revert GroupNotRegistered();
 
-    /// @notice Remove Parent from an organisation/Group
-    /// @dev Call coming from the safe of the Org for exclude a parent
-    /// @param org address of the organisation
-    /// @param parent address of the parent
-    function removeGroup(address org, address parent)
-        public
-        OrgRegistered(org)
-        validAddress(parent)
-        IsGnosisSafe(_msgSender())
-    {
-        address caller = _msgSender();
-        Group storage parentGroup = groups[org][parent];
-        if (parentGroup.safe == address(0)) {
-            revert ParentNotRegistered();
+        // Parent is either an org or a group
+        Group storage parent =
+            _group.parent == org ? orgs[org] : groups[org][_group.parent];
+
+        /// Remove child from parent
+        for (uint256 i = 0; i < parent.child.length; i++) {
+            if (parent.child[i] == group) {
+                parent.child[i] = parent.child[parent.child.length - 1];
+                parent.child.pop();
+                break;
+            }
         }
-        string memory parentName = parentGroup.name;
-        address[] memory childs = parentGroup.childs;
-        /// Remove to org root
-        if (parent == org) {
-            ///  By default Admin of the new group is the admin of the org
-            Group storage parentOrg = orgs[org];
-            if (caller != parentOrg.safe) revert NotAuthorized();
-            parentOrg.parent = address(0);
-        } else {
-            /// Remove parent from child
-            if (caller != parentGroup.parent) revert NotAuthorized();
-            Group memory removedGroup = Group({
-                name: "",
-                parent: address(0),
-                safe: address(0),
-                admin: address(0),
-                childs: new address[](0)
-            });
-            groups[org][parent] = removedGroup;
+        // Handle child from removed group
+        for (uint256 i = 0; i < _group.child.length; i++) {
+            // Add removed group child to parent
+            parent.child.push(_group.child[i]);
+            Group storage childrenGroup = groups[org][_group.child[i]];
+            // Update children group parent reference
+            childrenGroup.parent = parent.safe;
         }
-        for (uint256 i = 0; i <= childs.length; i++) {
-            /// Remove parent from child
-            Group storage childGroup = groups[org][childs[i]];
-            childGroup.parent = address(0);
-        }
-        emit GroupRemoved(org, caller, parent, parentName, childs);
+
+        // Store the name before to delete the Group
+        emit GroupRemoved(org, group, caller, parent.safe, _group.name);
+        delete groups[org][group];
     }
 
     /// @notice Get all the information about a group
@@ -480,7 +423,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         view
         OrgRegistered(org)
         validAddress(group)
-        returns (string memory, address, address, address)
+        returns (string memory, address, address, address[] memory, address)
     {
         address groupSafe = groups[org][group].safe;
         if (groupSafe == address(0)) revert OrgNotRegistered();
@@ -488,6 +431,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             groups[org][group].name,
             groups[org][group].admin,
             groups[org][group].safe,
+            groups[org][group].child,
             groups[org][group].parent
         );
     }
@@ -508,8 +452,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         /// Check within orgs first if parent is an organisation
         if (org == parent) {
             Group memory organisation = orgs[org];
-            for (uint256 i = 0; i < organisation.childs.length; i++) {
-                if (organisation.childs[i] == child) return true;
+            for (uint256 i = 0; i < organisation.child.length; i++) {
+                if (organisation.child[i] == child) return true;
             }
             return false;
         }
@@ -518,8 +462,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             revert ParentNotRegistered();
         }
         Group memory group = groups[org][parent];
-        for (uint256 i = 0; i < group.childs.length; i++) {
-            if (group.childs[i] == child) return true;
+        for (uint256 i = 0; i < group.child.length; i++) {
+            if (group.child[i] == child) return true;
         }
         return false;
     }
