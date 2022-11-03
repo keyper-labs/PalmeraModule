@@ -60,6 +60,13 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         string name
     );
 
+	event GroupParentUpdated(
+		address indexed org,
+		address indexed group,
+		address indexed caller,
+		address parent
+	);
+
     event TxOnBehalfExecuted(
         address indexed org,
         address indexed executor,
