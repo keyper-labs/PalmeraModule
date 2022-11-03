@@ -7,7 +7,6 @@ import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
 import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
-import {DenyHelper} from "../src/DenyHelper.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {console} from "forge-std/console.sol";
 
@@ -16,8 +15,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     GnosisSafeHelper gnosisHelper;
     KeyperModuleHelper keyperHelper;
     KeyperRoles keyperRolesContract;
-
-    // DenyHelper denyHelper;
 
     address gnosisSafeAddr;
     address keyperModuleAddr;
@@ -71,11 +68,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
 
         keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
-    }
-
-    function testValidGnosisSafeAddresses() public {
-        assertEq(keyperModule.isContract(address(masterCopy)), true);
-        assertEq(keyperModule.isContract(address(safeFactory)), true);
     }
 
     function testCreateSafeFromModule() public {
