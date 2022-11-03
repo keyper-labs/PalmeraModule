@@ -40,4 +40,24 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         setOwner(keyperModule);
         emit KeyperModuleSetup(keyperModule, _msgSender());
     }
+
+    /*//////////////////////////////////////////////////////////////
+                       USER ROLE (OVERRIDE) ASSIGNMENT LOGIC
+    //////////////////////////////////////////////////////////////*/
+
+    function setUserRole(address user, uint8 role, bool enabled)
+        public
+        virtual
+        override
+        requiresAuth
+        Denied(user)
+    {
+        if (enabled) {
+            getUserRoles[user] |= bytes32(1 << role);
+        } else {
+            getUserRoles[user] &= ~bytes32(1 << role);
+        }
+
+        emit UserRoleUpdated(user, role, enabled);
+    }
 }
