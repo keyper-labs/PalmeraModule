@@ -7,12 +7,13 @@ import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Constants} from "./Constants.sol";
-import {DenyHelper} from "./DenyHelper.sol";
+import {DenyHelper, Address} from "./DenyHelper.sol";
 import {console} from "forge-std/console.sol";
 import {KeyperRoles} from "./KeyperRoles.sol";
 
 contract KeyperModule is Auth, Constants, DenyHelper {
     using GnosisSafeMath for uint256;
+    using Address for address;
     /// @dev Definition of Safe module
 
     string public constant NAME = "Keyper Module";
@@ -31,7 +32,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         string name;
         address admin;
         address safe;
-        address[] childs;
+        address[] child;
         address parent;
     }
     /// @dev Orgs -> Groups
@@ -49,6 +50,14 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         string name,
         address indexed admin,
         address parent
+    );
+
+    event GroupRemoved(
+        address indexed org,
+        address indexed groupRemoved,
+        address indexed caller,
+        address parent,
+        string name
     );
 
     event TxOnBehalfExecuted(
@@ -71,14 +80,24 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     error OwnerNotFound();
     error OwnerAlreadyExists();
     error CreateSafeProxyFailed();
-    error ZeroAddress();
     error InvalidThreshold();
     error TxExecutionModuleFaild();
+    error ChildAlreadyExist();
+    error InvalidGnosisSafe();
+    error ChildNotFound();
 
     /// @dev Modifier for Validate if Org Exist or Not
     modifier OrgRegistered(address org) {
         if (org == address(0) || orgs[org].safe == address(0)) {
             revert OrgNotRegistered();
+        }
+        _;
+    }
+
+    /// @dev Modifier for Validate ifthe address is a Gnosis Safe Multisig Wallet
+    modifier IsGnosisSafe(address safe) {
+        if (safe == address(0) || !isSafe(safe)) {
+            revert InvalidGnosisSafe();
         }
         _;
     }
@@ -91,7 +110,11 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (
             masterCopyAddress == address(0) || proxyFactoryAddress == address(0)
                 || authority == address(0)
-        ) revert ZeroAddress();
+        ) revert ZeroAddressProvided();
+
+        // if (
+        //     !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
+        // ) revert InvalidAddressProvided();
 
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
@@ -140,17 +163,20 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         bytes calldata data,
         Enum.Operation operation,
         bytes memory signatures
-    ) external payable requiresAuth returns (bool success) {
+    ) external payable Denied(to) requiresAuth returns (bool result) {
         if (org == address(0) || targetSafe == address(0) || to == address(0)) {
-            revert ZeroAddress();
+            revert ZeroAddressProvided();
         }
-
+        if (!isSafe(targetSafe)) {
+            revert InvalidGnosisSafe();
+        }
         address caller = _msgSender();
-        /// Check _msgSender() is an admin of the target safe
+        /// Check caller is an admin of the target safe
         if (!isAdmin(caller, targetSafe) && !isParent(org, caller, targetSafe))
         {
             revert NotAuthorizedExecOnBehalf();
         }
+
         bytes memory keyperTxHashData = encodeTransactionData(
             /// Keyper Info
             caller,
@@ -176,11 +202,11 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         );
         /// Execute transaction from target safe
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
-        bool result = gnosisTargetSafe.execTransactionFromModule(
+        result = gnosisTargetSafe.execTransactionFromModule(
             to, value, data, operation
         );
+
         emit TxOnBehalfExecuted(org, caller, targetSafe, result);
-        return result;
     }
 
     function internalEnableModule(address module)
@@ -203,7 +229,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         uint256 threshold,
         address targetSafe,
         address org
-    ) public requiresAuth {
+    ) public requiresAuth Denied(owner) IsGnosisSafe(targetSafe) {
         /// Check _msgSender() is an user admin of the target safe
         if (!isSafeLead(org, targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotSafeLead();
@@ -241,11 +267,11 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         uint256 threshold,
         address targetSafe,
         address org
-    ) public requiresAuth {
+    ) public requiresAuth IsGnosisSafe(targetSafe) {
         if (
             prevOwner == address(0) || targetSafe == address(0)
                 || owner == address(0) || org == address(0)
-        ) revert ZeroAddress();
+        ) revert ZeroAddressProvided();
         /// Check _msgSender() is an user admin of the target safe
         if (!isSafeLead(org, targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotSafeLead();
@@ -300,12 +326,13 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         public
         view
         OrgRegistered(_org)
-        returns (string memory, address, address, address)
+        returns (string memory, address, address, address[] memory, address)
     {
         return (
             orgs[_org].name,
             orgs[_org].admin,
             orgs[_org].safe,
+            orgs[_org].child,
             orgs[_org].parent
         );
     }
@@ -313,8 +340,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @notice Register an organisatin
     /// @dev Call has to be done from a safe transaction
     /// @param name of the org
-    function registerOrg(string memory name) public {
-        /// TODO: Add check to verify call is coming from a safe
+    function registerOrg(string memory name)
+        public
+        IsGnosisSafe(_msgSender())
+    {
         address caller = _msgSender();
         Group storage rootOrg = orgs[caller];
         rootOrg.admin = caller;
@@ -338,26 +367,25 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         public
         OrgRegistered(org)
         validAddress(parent)
+        Denied(parent)
+        IsGnosisSafe(_msgSender())
     {
         address caller = _msgSender();
+        if (isChild(org, parent, caller)) revert ChildAlreadyExist();
         Group storage newGroup = groups[org][caller];
         /// Add to org root
         if (parent == org) {
             ///  By default Admin of the new group is the admin of the org
             newGroup.admin = orgs[org].admin;
             Group storage parentOrg = orgs[org];
-            parentOrg.childs.push(caller);
+            parentOrg.child.push(caller);
         }
         /// Add to group
         else {
-            if (groups[org][parent].safe == address(0)) {
-                revert ParentNotRegistered();
-            }
-
             /// By default Admin of the new group is the admin of the parent (TODO check this)
             newGroup.admin = groups[org][parent].admin;
             Group storage parentGroup = groups[org][parent];
-            parentGroup.childs.push(caller);
+            parentGroup.child.push(caller);
         }
         newGroup.parent = parent;
         newGroup.safe = caller;
@@ -369,13 +397,54 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         emit GroupCreated(org, caller, name, newGroup.admin, parent);
     }
 
+    /// @notice Remove group and reasign all child to the parent
+    /// @dev All actions will be driven based on the caller of the method, and args
+    /// @param org address of the organisation
+    /// @param group address of the group to be removed
+    /// TODO: Add auth/permissions for the caller
+    function removeGroup(address org, address group)
+        public
+        OrgRegistered(org)
+        validAddress(group)
+        IsGnosisSafe(_msgSender())
+    {
+        address caller = _msgSender();
+        Group memory _group = groups[org][group];
+        if (_group.safe == address(0)) revert GroupNotRegistered();
+
+        // Parent is either an org or a group
+        Group storage parent =
+            _group.parent == org ? orgs[org] : groups[org][_group.parent];
+
+        /// Remove child from parent
+        for (uint256 i = 0; i < parent.child.length; i++) {
+            if (parent.child[i] == group) {
+                parent.child[i] = parent.child[parent.child.length - 1];
+                parent.child.pop();
+                break;
+            }
+        }
+        // Handle child from removed group
+        for (uint256 i = 0; i < _group.child.length; i++) {
+            // Add removed group child to parent
+            parent.child.push(_group.child[i]);
+            Group storage childrenGroup = groups[org][_group.child[i]];
+            // Update children group parent reference
+            childrenGroup.parent = parent.safe;
+        }
+
+        // Store the name before to delete the Group
+        emit GroupRemoved(org, group, caller, parent.safe, _group.name);
+        delete groups[org][group];
+    }
+
     /// @notice Get all the information about a group
     function getGroupInfo(address org, address group)
         public
         view
         OrgRegistered(org)
         validAddress(group)
-        returns (string memory, address, address, address)
+        returns (string memory, address, address, address[] memory, address)
     {
         address groupSafe = groups[org][group].safe;
         if (groupSafe == address(0)) revert OrgNotRegistered();
@@ -383,6 +452,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             groups[org][group].name,
             groups[org][group].admin,
             groups[org][group].safe,
+            groups[org][group].child,
             groups[org][group].parent
         );
     }
@@ -403,17 +473,18 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         /// Check within orgs first if parent is an organisation
         if (org == parent) {
             Group memory organisation = orgs[org];
-            for (uint256 i = 0; i < organisation.childs.length; i++) {
-                if (organisation.childs[i] == child) return true;
+            for (uint256 i = 0; i < organisation.child.length; i++) {
+                if (organisation.child[i] == child) return true;
             }
+            return false;
         }
         /// Check within groups of the org
         if (groups[org][parent].safe == address(0)) {
             revert ParentNotRegistered();
         }
         Group memory group = groups[org][parent];
-        for (uint256 i = 0; i < group.childs.length; i++) {
-            if (group.childs[i] == child) return true;
+        for (uint256 i = 0; i < group.child.length; i++) {
+            if (group.child[i] == child) return true;
         }
         return false;
     }
@@ -472,6 +543,26 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             curentParent = childGroup.parent;
         }
         return false;
+    }
+
+    /// @notice Method to Validate if address is a Gnosis Safe Multisig Wallet
+    /// @dev This method is used to validate if the address is a Gnosis Safe Multisig Wallet
+    /// @param safe Address to validate
+    /// @return bool
+    function isSafe(address safe) public view returns (bool) {
+        /// Check if the address is a Gnosis Safe Multisig Wallet
+        if (safe.isContract()) {
+            /// Check if the address is a Gnosis Safe Multisig Wallet
+            bytes memory payload = abi.encodeWithSignature("getThreshold()");
+            (bool success, bytes memory returnData) = safe.staticcall(payload);
+            if (!success) return false;
+            /// Check if the address is a Gnosis Safe Multisig Wallet
+            uint256 threshold = abi.decode(returnData, (uint256));
+            if (threshold == 0) return false;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     function domainSeparator() public view returns (bytes32) {

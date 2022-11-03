@@ -32,14 +32,14 @@ contract DenyHelperTest is Test {
     function testRevertAddToAllowedListZeroAddress() public {
         address[] memory voidOwnersArray = new address[](0);
 
-        vm.expectRevert(DenyHelper.zeroAddressProvided.selector);
+        vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
         keyperModule.addToAllowedList(voidOwnersArray);
     }
 
     function testRevertAddToAllowedListInvalidAddress() public {
         listOfInvalidOwners();
 
-        vm.expectRevert(DenyHelper.invalidAddressProvided.selector);
+        vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
         keyperModule.addToAllowedList(owners);
     }
 
@@ -50,7 +50,7 @@ contract DenyHelperTest is Test {
         address[] memory newOwner = new address[](1);
         newOwner[0] = address(0xDDD);
 
-        vm.expectRevert(DenyHelper.userAlreadyOnAllowedList.selector);
+        vm.expectRevert(DenyHelper.UserAlreadyOnAllowedList.selector);
         keyperModule.addToAllowedList(newOwner);
     }
 

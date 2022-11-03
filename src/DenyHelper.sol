@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
+import {Address} from "@openzeppelin/utils/Address.sol";
+
 abstract contract DenyHelper {
+    using Address for address;
     /// @dev Wallet Sentinel
+
     address internal constant SENTINEL_WALLETS = address(0x1);
 
     /// @dev Counters
@@ -20,10 +24,10 @@ abstract contract DenyHelper {
     event DroppedFromDeniedList(address indexed user);
 
     /// @dev Errors
-    error zeroAddressProvided();
-    error invalidAddressProvided();
-    error userAlreadyOnAllowedList();
-    error userAlreadyOnDeniedList();
+    error ZeroAddressProvided();
+    error InvalidAddressProvided();
+    error UserAlreadyOnAllowedList();
+    error UserAlreadyOnDeniedList();
 
     /// @dev Modifier for Valid if wallet is Zero Address or Not
     modifier validAddress(address to) {
@@ -45,22 +49,20 @@ abstract contract DenyHelper {
         _;
     }
 
-    constructor() {}
-
     /// @dev Funtion to Add Wallet to allowedList based on Approach of Safe Contract - Owner Manager
     /// @param users Array of Address of the Wallet to be added to allowedList
     function addToAllowedList(address[] memory users) public {
-        if (users.length == 0) revert zeroAddressProvided();
+        if (users.length == 0) revert ZeroAddressProvided();
         address currentWallet = SENTINEL_WALLETS;
         for (uint256 i = 0; i < users.length; i++) {
             address wallet = users[i];
             if (
                 wallet == address(0) || wallet == SENTINEL_WALLETS
                     || wallet == address(this) || currentWallet == wallet
-            ) revert invalidAddressProvided();
+            ) revert InvalidAddressProvided();
             // Avoid duplicate wallet
             if (allowed[wallet] != address(0)) {
-                revert userAlreadyOnAllowedList();
+                revert UserAlreadyOnAllowedList();
             }
             // Add wallet to allowedList
             allowed[currentWallet] = wallet;
@@ -72,17 +74,17 @@ abstract contract DenyHelper {
     }
 
     function addToDeniedList(address[] memory users) external {
-        if (users.length == 0) revert zeroAddressProvided();
+        if (users.length == 0) revert ZeroAddressProvided();
         address currentWallet = SENTINEL_WALLETS;
         for (uint256 i = 0; i < users.length; i++) {
             address wallet = users[i];
             if (
                 wallet == address(0) || wallet == SENTINEL_WALLETS
                     || wallet == address(this) || currentWallet == wallet
-            ) revert invalidAddressProvided();
+            ) revert InvalidAddressProvided();
             // Avoid duplicate wallet
             if (denied[wallet] != address(0)) {
-                revert userAlreadyOnDeniedList();
+                revert UserAlreadyOnDeniedList();
             }
             // Add wallet to deniedList
             denied[currentWallet] = wallet;
