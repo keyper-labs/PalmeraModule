@@ -532,6 +532,12 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         return false;
     }
 
+    function isContract(address gnosisAddress) public view returns (bool) {
+        bool addrToCheck = gnosisAddress.isContract();
+        if (addrToCheck) return true;
+        else return false;
+    }
+
     /// @notice Method to Validate if address is a Gnosis Safe Multisig Wallet
     /// @dev This method is used to validate if the address is a Gnosis Safe Multisig Wallet
     /// @param safe Address to validate
