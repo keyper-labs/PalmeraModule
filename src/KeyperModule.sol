@@ -346,7 +346,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @param org address of the organisation
     /// @param parent address of the parent
     /// @param name name of the group
-	/// TODO: how avoid any safe adding in the org or group?
+    /// TODO: how avoid any safe adding in the org or group?
     function addGroup(address org, address parent, string memory name)
         public
         OrgRegistered(org)
@@ -397,10 +397,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         Group storage parentGroup =
             parent == org ? groups[org][child] : groups[org][parent];
         /// Remove to group from org root
-		/// Create instance of Org and Remove child of Org, in this use case
-    	/// the child is a Group of the Org, and a parent into the group mapping
+        /// Create instance of Org and Remove child of Org, in this use case
+        /// the child is a Group of the Org, and a parent into the group mapping
         if (parent == org) {
-			/// Validate only the Admin of Root Org can remove childs(Groups in this case)
+            /// Validate only the Admin of Root Org can remove childs(Groups in this case)
             if (caller != parentOrg.admin) revert NotAuthorized();
             if (parentOrg.admin == child) revert NotAuthorizedAsNotAnAdmin();
             for (uint256 i = 0; i < parentOrg.childs.length; i++) {
@@ -413,7 +413,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             }
         } else {
             /// Remove child from parent
-			/// Validate only the admin of the Org or Group can remove childs
+            /// Validate only the admin of the Org or Group can remove childs
             if ((caller != parentGroup.admin) && (caller != parentOrg.admin)) {
                 revert NotAuthorized();
             }
@@ -427,16 +427,16 @@ contract KeyperModule is Auth, Constants, DenyHelper {
                 }
             }
         }
-		/// Define Array of Childs
-		address[] memory childs = parentGroup.childs;
-		/// Remove parent from child reassign to superior parent
-		for (uint256 i = 0; i < childs.length; i++) {
-			Group storage ChildGroup = groups[org][childs[i]];
-			ChildGroup.parent = parent == org ? org : parentGroup.parent;
-		}
-		// storage the parentName before to delete the Group
+        /// Define Array of Childs
+        address[] memory childs = parentGroup.childs;
+        /// Remove parent from child reassign to superior parent
+        for (uint256 i = 0; i < childs.length; i++) {
+            Group storage ChildGroup = groups[org][childs[i]];
+            ChildGroup.parent = parent == org ? org : parentGroup.parent;
+        }
+        // storage the parentName before to delete the Group
         emit GroupRemoved(org, caller, parent, parentGroup.name, child);
-		delete groups[org][child];
+        delete groups[org][child];
     }
 
     /// @notice Get all the information about a group

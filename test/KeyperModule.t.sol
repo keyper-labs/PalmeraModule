@@ -63,7 +63,6 @@ contract KeyperModuleTest is Test, Constants {
     }
 
     function testValidGnosisSafeAddressesOnConstructor() public {
-
         address fakeMasterCopyAddress = keyperModule.masterCopy();
         address fakeProxyFactoryAddress = keyperModule.proxyFactory();
 
