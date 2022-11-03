@@ -19,16 +19,35 @@ abstract contract Constants is Context {
     address internal constant FALLBACK_HANDLER =
         0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4;
 
-    uint8 internal constant ADMIN_ADD_OWNERS_ROLE = 0;
-    uint8 internal constant ADMIN_REMOVE_OWNERS_ROLE = 1;
-    uint8 internal constant SAFE_SET_ROLE = 2;
+    uint8 internal constant SAFE_LEAD = 0;
+    uint8 internal constant SAFE_LEAD_EXEC_ON_BEHALF_ONLY = 1;
+    uint8 internal constant SAFE_LEAD_MODIFY_OWNERS_ONLY = 2;
+    uint8 internal constant ROOT_SAFE = 3;
+    uint8 internal constant SUPER_SAFE = 4;
 
     bytes4 internal constant ADD_OWNER = bytes4(
-        keccak256(bytes("addOwnerWithThreshold(address,uint256,address)"))
+        keccak256(
+            bytes("addOwnerWithThreshold(address,uint256,address,address)")
+        )
     );
-    bytes4 internal constant REMOVE_OWNER =
-        bytes4(keccak256(bytes("removeOwner(address,address,uint256,address)")));
+    bytes4 internal constant REMOVE_OWNER = bytes4(
+        keccak256(bytes("removeOwner(address,address,uint256,address,address)"))
+    );
 
     bytes4 internal constant SET_USER_ADMIN =
-        bytes4(keccak256(bytes("setUserAdmin(address,bool)")));
+        bytes4(keccak256(bytes("setSafeLead(address,bool)")));
+
+    bytes4 internal constant ROLE_ASSIGMENT =
+        bytes4(keccak256(bytes("setRole(uint8,address,address,bool)")));
+
+    bytes4 internal constant EXEC_ON_BEHALF = bytes4(
+        keccak256(
+            bytes(
+                "execTransactionOnBehalf(address,address,address,uint256,bytes,uint8,bytes)"
+            )
+        )
+    );
+
+    bytes4 internal constant REMOVE_GROUP =
+        bytes4(keccak256(bytes("removeGroup(address,address)")));
 }

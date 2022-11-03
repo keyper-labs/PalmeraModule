@@ -32,7 +32,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         string name;
         address admin;
         address safe;
-        address[] childs;
+        address[] child;
         address parent;
     }
     /// @dev Orgs -> Groups
@@ -82,8 +82,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     error ParentNotRegistered();
     error AdminNotRegistered();
     error NotAuthorized();
+    error NotAuthorizedRemoveGroupFromOtherOrg();
+    error NotAuthorizedRemoveNonChildrenGroup();
     error NotAuthorizedExecOnBehalf();
-    error NotAuthorizedAsNotAnAdmin();
+    error NotAuthorizedAsNotSafeLead();
     error OwnerNotFound();
     error OwnerAlreadyExists();
     error CreateSafeProxyFailed();
@@ -170,7 +172,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         bytes calldata data,
         Enum.Operation operation,
         bytes memory signatures
-    ) external payable Denied(to) returns (bool result) {
+    ) external payable Denied(to) requiresAuth returns (bool result) {
         if (org == address(0) || targetSafe == address(0) || to == address(0)) {
             revert ZeroAddressProvided();
         }
@@ -199,7 +201,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         /// Increase nonce and execute transaction.
         nonce++;
         /// TODO not sure about caller => Maybe just check admin address
-
+        // TODO add usecase for safe lead => Caller can be an EOA account,
+        // so first we need to check if safe, if yes load gnosis interface + call owners...,
+        // if not then just execute the tx after checking signature
         /// Init safe interface to get parent owners/threshold
         IGnosisSafe gnosisAdminSafe = IGnosisSafe(caller);
         gnosisAdminSafe.checkSignatures(
@@ -226,16 +230,18 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         emit ModuleEnabled(address(this), module);
     }
 
-    /// @notice This function will allow UserAdmin to add owner and set a threshold without passing by normal multisig check
+    /// @notice This function will allow Safe Lead & Safe Lead mody only roles to to add owner and set a threshold without passing by normal multisig check
     /// @dev For instance role
+    /// TODO add modifier for check that targetSafe is a Safe / Check orgRegister
     function addOwnerWithThreshold(
         address owner,
         uint256 threshold,
-        address targetSafe
-    ) public requiresAuth Denied(owner) IsGnosisSafe(targetSafe) {
+        address targetSafe,
+        address org
+    ) public requiresAuth IsGnosisSafe(targetSafe) {
         /// Check _msgSender() is an user admin of the target safe
-        if (!isUserAdmin(targetSafe, _msgSender())) {
-            revert NotAuthorizedAsNotAnAdmin();
+        if (!isSafeLead(org, targetSafe, _msgSender())) {
+            revert NotAuthorizedAsNotSafeLead();
         }
 
         /// If the owner is already an owner
@@ -268,11 +274,16 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address prevOwner,
         address owner,
         uint256 threshold,
-        address targetSafe
+        address targetSafe,
+        address org
     ) public requiresAuth IsGnosisSafe(targetSafe) {
+        if (
+            prevOwner == address(0) || targetSafe == address(0)
+                || owner == address(0) || org == address(0)
+        ) revert ZeroAddressProvided();
         /// Check _msgSender() is an user admin of the target safe
-        if (!isUserAdmin(targetSafe, _msgSender())) {
-            revert NotAuthorizedAsNotAnAdmin();
+        if (!isSafeLead(org, targetSafe, _msgSender())) {
+            revert NotAuthorizedAsNotSafeLead();
         }
 
         /// if Owner Not found
@@ -293,20 +304,31 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (!result) revert TxExecutionModuleFaild();
     }
 
-    /// @notice Give user admin role
-    /// @dev Call must come from the safe
-    /// @param user User that will have the Admin role
-    function setUserAdmin(address user, bool enabled)
+    /// @notice Give user roles
+    /// @dev Call must come from the root safe
+    /// @param role Role to be assigned
+    /// @param user User that will have specific role
+    /// @param group Safe group which will have the user permissions on
+    function setRole(uint8 role, address user, address group, bool enabled)
         external
         validAddress(user)
         requiresAuth
     {
+        if (
+            role == SAFE_LEAD || role == SAFE_LEAD_EXEC_ON_BEHALF_ONLY
+                || role == SAFE_LEAD_MODIFY_OWNERS_ONLY
+        ) {
+            /// Check if group is part of the org
+            if (groups[_msgSender()][group].safe == address(0)) {
+                revert ParentNotRegistered();
+            }
+            /// Update group admin
+            Group storage safeGroup = groups[_msgSender()][group];
+            safeGroup.admin = user;
+        }
+        // TODO check other cases when we need to update org
         RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(user, ADMIN_ADD_OWNERS_ROLE, enabled);
-        authority.setUserRole(user, ADMIN_REMOVE_OWNERS_ROLE, enabled);
-        /// Update user admin on org
-        Group storage org = orgs[_msgSender()];
-        org.admin = user;
+        authority.setUserRole(user, role, enabled);
     }
 
     function getOrg(address _org)
@@ -319,7 +341,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             orgs[_org].name,
             orgs[_org].admin,
             orgs[_org].safe,
-            orgs[_org].childs,
+            orgs[_org].child,
             orgs[_org].parent
         );
     }
@@ -337,13 +359,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         rootOrg.name = name;
         rootOrg.safe = caller;
 
-        /// Set org role to set admin role
+        /// Assign SUPER_SAFE Role + SAFE_ROOT Role
         RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(caller, SAFE_SET_ROLE, true);
-
-        authority.setRoleCapability(
-            SAFE_SET_ROLE, address(this), SET_USER_ADMIN, true
-        );
+        authority.setUserRole(caller, ROOT_SAFE, true);
+        authority.setUserRole(caller, SUPER_SAFE, true);
 
         emit OrganisationCreated(caller, name);
     }
@@ -358,7 +377,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         public
         OrgRegistered(org)
         validAddress(parent)
-        Denied(parent)
         IsGnosisSafe(_msgSender())
     {
         address caller = _msgSender();
@@ -369,18 +387,22 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             ///  By default Admin of the new group is the admin of the org
             newGroup.admin = orgs[org].admin;
             Group storage parentOrg = orgs[org];
-            parentOrg.childs.push(caller);
+            parentOrg.child.push(caller);
         }
         /// Add to group
         else {
             /// By default Admin of the new group is the admin of the parent (TODO check this)
             newGroup.admin = groups[org][parent].admin;
             Group storage parentGroup = groups[org][parent];
-            parentGroup.childs.push(caller);
+            parentGroup.child.push(caller);
         }
         newGroup.parent = parent;
         newGroup.safe = caller;
         newGroup.name = name;
+        /// Give Role SuperSafe
+        RolesAuthority authority = RolesAuthority(rolesAuthority);
+        authority.setUserRole(caller, SUPER_SAFE, true);
+
         emit GroupCreated(org, caller, name, newGroup.admin, parent);
     }
 
@@ -394,8 +416,21 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         OrgRegistered(org)
         validAddress(group)
         IsGnosisSafe(_msgSender())
+        requiresAuth
     {
         address caller = _msgSender();
+        // RootSafe usecase : Check if the group is part of caller's org
+        if (caller == org) {
+            if (groups[caller][group].safe == address(0)) {
+                revert NotAuthorizedRemoveGroupFromOtherOrg();
+            }
+        } else {
+            // SuperSafe usecase : Check caller is parent of the group
+            if (!isParent(org, caller, group)) {
+                revert NotAuthorizedRemoveNonChildrenGroup();
+            }
+        }
+
         Group memory _group = groups[org][group];
         if (_group.safe == address(0)) revert GroupNotRegistered();
 
@@ -404,18 +439,18 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             _group.parent == org ? orgs[org] : groups[org][_group.parent];
 
         /// Remove child from parent
-        for (uint256 i = 0; i < parent.childs.length; i++) {
-            if (parent.childs[i] == group) {
-                parent.childs[i] = parent.childs[parent.childs.length - 1];
-                parent.childs.pop();
+        for (uint256 i = 0; i < parent.child.length; i++) {
+            if (parent.child[i] == group) {
+                parent.child[i] = parent.child[parent.child.length - 1];
+                parent.child.pop();
                 break;
             }
         }
         // Handle child from removed group
-        for (uint256 i = 0; i < _group.childs.length; i++) {
+        for (uint256 i = 0; i < _group.child.length; i++) {
             // Add removed group child to parent
-            parent.childs.push(_group.childs[i]);
-            Group storage childrenGroup = groups[org][_group.childs[i]];
+            parent.child.push(_group.child[i]);
+            Group storage childrenGroup = groups[org][_group.child[i]];
             // Update children group parent reference
             childrenGroup.parent = parent.safe;
         }
@@ -446,10 +481,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 			_group.parent == org ? orgs[org] : groups[org][_group.parent];
 
 		/// Remove child from parent
-		for (uint256 i = 0; i < parent.childs.length; i++) {
-			if (parent.childs[i] == group) {
-				parent.childs[i] = parent.childs[parent.childs.length - 1];
-				parent.childs.pop();
+		for (uint256 i = 0; i < parent.child.length; i++) {
+			if (parent.child[i] == group) {
+				parent.child[i] = parent.child[parent.child.length - 1];
+				parent.child.pop();
 				break;
 			}
 		}
@@ -458,9 +493,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 		_group.parent = newParent;
 		// Add group to new parent
 		if (newParent == org) {
-			orgs[org].childs.push(group);
+			orgs[org].child.push(group);
 		} else {
-			groups[org][newParent].childs.push(group);
+			groups[org][newParent].child.push(group);
 		}
 		emit GroupParentUpdated(org, group, _msgSender(), newParent);
 	}
@@ -480,7 +515,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             groups[org][group].name,
             groups[org][group].admin,
             groups[org][group].safe,
-            groups[org][group].childs,
+            groups[org][group].child,
             groups[org][group].parent
         );
     }
@@ -501,8 +536,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         /// Check within orgs first if parent is an organisation
         if (org == parent) {
             Group memory organisation = orgs[org];
-            for (uint256 i = 0; i < organisation.childs.length; i++) {
-                if (organisation.childs[i] == child) return true;
+            for (uint256 i = 0; i < organisation.child.length; i++) {
+                if (organisation.child[i] == child) return true;
             }
             return false;
         }
@@ -511,8 +546,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             revert ParentNotRegistered();
         }
         Group memory group = groups[org][parent];
-        for (uint256 i = 0; i < group.childs.length; i++) {
-            if (group.childs[i] == child) return true;
+        for (uint256 i = 0; i < group.child.length; i++) {
+            if (group.child[i] == child) return true;
         }
         return false;
     }
@@ -536,6 +571,21 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     {
         Group memory _org = orgs[org];
         if (_org.admin == user) {
+            return true;
+        }
+        return false;
+    }
+
+    /// @notice Check if a user is an safe lead of the group
+    function isSafeLead(address org, address group, address user)
+        public
+        view
+        returns (bool)
+    {
+        if (org == group) return false; // Root org cannot have a lead
+        Group memory _group = groups[org][group];
+        if (_group.safe == address(0)) revert GroupNotRegistered();
+        if (_group.admin == user) {
             return true;
         }
         return false;

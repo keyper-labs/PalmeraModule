@@ -45,13 +45,13 @@ contract KeyperRolesTest is Test, Constants {
         // Check KeyperModule has role capabilites
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                ADMIN_ADD_OWNERS_ROLE, keyperModuleDeployed, ADD_OWNER
+                SAFE_LEAD, keyperModuleDeployed, ADD_OWNER
             ),
             true
         );
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                ADMIN_REMOVE_OWNERS_ROLE, keyperModuleDeployed, REMOVE_OWNER
+                SAFE_LEAD, keyperModuleDeployed, REMOVE_OWNER
             ),
             true
         );
@@ -68,7 +68,7 @@ contract KeyperRolesTest is Test, Constants {
         // Check Role
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                SAFE_SET_ROLE, address(keyperModule), SET_USER_ADMIN
+                ROOT_SAFE, address(keyperModule), ROLE_ASSIGMENT
             ),
             true
         );

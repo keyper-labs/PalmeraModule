@@ -75,9 +75,9 @@ contract KeyperModuleTest is Test, Constants {
         string memory orgname;
         address admin;
         address safe;
-        address[] memory childs;
+        address[] memory child;
         address parent;
-        (orgname, admin, safe, childs, parent) = keyperModule.getOrg(org1);
+        (orgname, admin, safe, child, parent) = keyperModule.getOrg(org1);
         assertEq(orgname, rootOrgName);
         assertEq(admin, org1);
         assertEq(safe, org1);
@@ -91,9 +91,9 @@ contract KeyperModuleTest is Test, Constants {
         string memory groupName;
         address admin;
         address safe;
-        address[] memory childs;
+        address[] memory child;
         address parent;
-        (groupName, admin, safe, childs, parent) =
+        (groupName, admin, safe, child, parent) =
             keyperModule.getGroupInfo(org1, groupA);
         assertEq(groupName, "GroupA");
         assertEq(safe, groupA);
