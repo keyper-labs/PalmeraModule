@@ -250,12 +250,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             groupA, subGroupA, receiver, 2 gwei, emptyData, Enum.Operation(0)
         );
 
-        // Set groupA as safe lead
-        // vm.startPrank(orgAddr);
-        // address leadGroupA = address(0xAAAC);
-        // keyperModule.setRole(SAFE_LEAD, leadGroupA, groupA, true);
-        // vm.stopPrank();
-
         // Execute on behalf function
         vm.startPrank(groupA);
         bool result = keyperModule.execTransactionOnBehalf(
@@ -271,7 +265,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(receiver.balance, 2 gwei);
     }
 
-    // TODO: @Christian implement this usecases
+    // TODO: @Cristian implement this usecases
     // function testSafeLeadExecOnBehalf()
     //                  --> Case 1: Lead is a Safe
     //                  --> Case 2: Lead is an EOA
@@ -501,4 +495,9 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         (,,, newChild,) = keyperModule.getOrg(orgAddr);
         assertEq(newChild[0], subSafeGroupA);
     }
+
+    // TODO remove Group:
+    // Usecases for revert from Remove group
+    // -> Org call removeGRoup for a group of another org
+    // -> Group call removeGroup for a group that is not his children
 }

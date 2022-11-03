@@ -47,4 +47,7 @@ abstract contract Constants is Context {
             )
         )
     );
+
+    bytes4 internal constant REMOVE_GROUP =
+        bytes4(keccak256(bytes("removeGroup(address,address)")));
 }

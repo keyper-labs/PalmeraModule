@@ -75,6 +75,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     error ParentNotRegistered();
     error AdminNotRegistered();
     error NotAuthorized();
+    error NotAuthorizedRemoveGroupFromOtherOrg();
+    error NotAuthorizedRemoveNonChildrenGroup();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedAsNotSafeLead();
     error OwnerNotFound();
@@ -350,10 +352,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         rootOrg.name = name;
         rootOrg.safe = caller;
 
-        /// Assign SAFE_LEAD Role + SAFE_ROOT Role
+        /// Assign SUPER_SAFE Role + SAFE_ROOT Role
         RolesAuthority authority = RolesAuthority(rolesAuthority);
         authority.setUserRole(caller, ROOT_SAFE, true);
-        authority.setUserRole(caller, SAFE_LEAD, true);
+        authority.setUserRole(caller, SUPER_SAFE, true);
 
         emit OrganisationCreated(caller, name);
     }
@@ -407,8 +409,21 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         OrgRegistered(org)
         validAddress(group)
         IsGnosisSafe(_msgSender())
+        requiresAuth
     {
         address caller = _msgSender();
+        // RootSafe usecase : Check if the group is part of caller's org
+        if (caller == org) {
+            if (groups[caller][group].safe == address(0)) {
+                revert NotAuthorizedRemoveGroupFromOtherOrg();
+            }
+        } else {
+            // SuperSafe usecase : Check caller is parent of the group
+            if (!isParent(org, caller, group)) {
+                revert NotAuthorizedRemoveNonChildrenGroup();
+            }
+        }
+
         Group memory _group = groups[org][group];
         if (_group.safe == address(0)) revert GroupNotRegistered();
 
