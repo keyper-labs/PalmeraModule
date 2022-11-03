@@ -460,13 +460,21 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 		validAddress(group)
 		validAddress(newParent)
 		IsGnosisSafe(_msgSender())
+		requiresAuth
 	{
+		address caller = _msgSender();
 		Group memory _group = groups[org][group];
 		if (_group.safe == address(0)) revert GroupNotRegistered();
 
 		// Parent is either an org or a group
-		Group storage parent =
-			_group.parent == org ? orgs[org] : groups[org][_group.parent];
+		Group storage parent
+		if (_group.parent == org) {
+			if (!isUserAdmin(org, caller)) revert NotAuthorized();
+			parent = orgs[org];
+		} else {
+			if (!isSafeLead(org, _group.parent, caller)) revert NotAuthorizedAsNotSafeLead();
+			parent = groups[org][_group.parent];
+		}
 
 		/// Remove child from parent
 		for (uint256 i = 0; i < parent.child.length; i++) {
@@ -481,6 +489,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 		_group.parent = newParent;
 		// Add group to new parent
 		if (newParent == org) {
+			if (!isUserAdmin(org, caller)) revert NotAuthorized();
 			orgs[org].child.push(group);
 		} else {
 			groups[org][newParent].child.push(group);

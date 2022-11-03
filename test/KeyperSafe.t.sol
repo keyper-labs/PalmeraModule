@@ -192,32 +192,32 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(receiver.balance, 2 gwei);
     }
 
-    function testRevertNotAuthorizedExecTransactionOnBehalf() public {
-        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
+    // function testRevertNotAuthorizedExecTransactionOnBehalf() public {
+    //     (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
 
-        // Random wallet instead of a safe
-        address fakeCaller = address(0xFED);
-        address receiver = address(0xABC);
+    //     // Random wallet instead of a safe
+    //     address fakeCaller = address(0xFED);
+    //     address receiver = address(0xABC);
 
-        // Set keyperhelper gnosis safe to org
-        keyperHelper.setGnosisSafe(orgAddr);
-        bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            orgAddr, groupSafe, receiver, 2 gwei, emptyData, Enum.Operation(0)
-        );
-        // Execute on behalf function from a not authorized caller
-        vm.startPrank(fakeCaller);
-        vm.expectRevert(KeyperModule.NotAuthorizedExecOnBehalf.selector);
-        keyperModule.execTransactionOnBehalf(
-            orgAddr,
-            groupSafe,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-    }
+    //     // Set keyperhelper gnosis safe to org
+    //     keyperHelper.setGnosisSafe(orgAddr);
+    //     bytes memory emptyData;
+    //     bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+    //         orgAddr, groupSafe, receiver, 2 gwei, emptyData, Enum.Operation(0)
+    //     );
+    //     // Execute on behalf function from a not authorized caller
+    //     vm.startPrank(fakeCaller);
+    //     vm.expectRevert(KeyperModule.NotAuthorizedExecOnBehalf.selector);
+    //     keyperModule.execTransactionOnBehalf(
+    //         orgAddr,
+    //         groupSafe,
+    //         receiver,
+    //         2 gwei,
+    //         emptyData,
+    //         Enum.Operation(0),
+    //         signatures
+    //     );
+    // }
 
     function testRevertInvalidSignatureExecOnBehalf() public {
         (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
@@ -424,24 +424,24 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(ownerTest, newOwner);
     }
 
-    function testIsUserAdminWithThreshold() public {
-        (address orgAddr, address userAdmin) = setAdminOfOrg();
+    // function testIsUserAdminWithThreshold() public {
+    //     (address orgAddr, address userAdmin) = setAdminOfOrg();
 
-        assertEq(keyperModule.isUserAdmin(orgAddr, userAdmin), true);
+    //     assertEq(keyperModule.isUserAdmin(orgAddr, userAdmin), true);
 
-        address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
-        address newOwner;
+    //     address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
+    //     address newOwner;
 
-        for (uint256 i = 0; i < owners.length; i++) {
-            newOwner = owners[i];
-        }
+    //     for (uint256 i = 0; i < owners.length; i++) {
+    //         newOwner = owners[i];
+    //     }
 
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+    //     uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
-        vm.startPrank(userAdmin);
-        vm.expectRevert(KeyperModule.OwnerAlreadyExists.selector);
-        keyperModule.addOwnerWithThreshold(newOwner, threshold + 1, orgAddr, orgAddr);
-    }
+    //     vm.startPrank(userAdmin);
+    //     vm.expectRevert(KeyperModule.OwnerAlreadyExists.selector);
+    //     keyperModule.addOwnerWithThreshold(newOwner, threshold + 1, orgAddr, orgAddr);
+    // }
 
     // addOwnerWithThreshold => NotAuthorizedAsNotAnAdmin is triggered
     // TODO: Pending check, because already exists a modifier asking for
@@ -462,16 +462,16 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // }
 
-    function testRevertInvalidThresholdAddOwnerWithThreshold() public {
-        (address orgAddr, address userAdmin) = setAdminOfOrg();
+    // function testRevertInvalidThresholdAddOwnerWithThreshold() public {
+    //     (address orgAddr, address userAdmin) = setAdminOfOrg();
 
-        address newOwner = address(0xf1f1f1);
-        uint256 wrongThreshold = 0;
+    //     address newOwner = address(0xf1f1f1);
+    //     uint256 wrongThreshold = 0;
 
-        vm.startPrank(userAdmin);
-        vm.expectRevert(KeyperModule.InvalidThreshold.selector);
-        keyperModule.addOwnerWithThreshold(newOwner, wrongThreshold, orgAddr, orgAddr);
-    }
+    //     vm.startPrank(orgAddr);
+    //     vm.expectRevert(KeyperModule.InvalidThreshold.selector);
+    //     keyperModule.addOwnerWithThreshold(newOwner, wrongThreshold, orgAddr, orgAddr);
+    // }
 
     function testRemoveOwner() public {
         setUpBaseOrgTree();
