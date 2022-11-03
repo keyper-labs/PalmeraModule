@@ -532,6 +532,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         return false;
     }
 
+    /// @notice Method to validate if a provided address is a contract
+    /// @param gnosisAddress Address used to initialize KeyperModule
+    /// @return bool
     function isContract(address gnosisAddress) public view returns (bool) {
         bool addrToCheck = gnosisAddress.isContract();
         if (addrToCheck) return true;

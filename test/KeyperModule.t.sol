@@ -62,6 +62,15 @@ contract KeyperModuleTest is Test, Constants {
         factory.deploy(salt, bytecode);
     }
 
+    function testValidGnosisSafeAddressesOnConstructor() public {
+
+        address fakeMasterCopyAddress = keyperModule.masterCopy();
+        address fakeProxyFactoryAddress = keyperModule.proxyFactory();
+
+        assertEq(keyperModule.isContract(fakeMasterCopyAddress), false);
+        assertEq(keyperModule.isContract(fakeProxyFactoryAddress), false);
+    }
+
     function testCreateRootOrg() public {
         registerOrgWithRoles(org1, rootOrgName);
         string memory orgname;
