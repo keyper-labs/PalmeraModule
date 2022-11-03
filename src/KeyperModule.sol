@@ -418,6 +418,46 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         delete groups[org][group];
     }
 
+	/// @notice update parent of a group
+	/// @dev Update the parent of a group with a new parent
+	/// @param org address of the organisation
+	/// @param group address of the group to be removed
+	/// @param newParent address of the new parent
+	/// TODO: Add auth/permissions for the caller
+	function updateParent(address org, address group, address newParent)
+		public
+		OrgRegistered(org)
+		validAddress(group)
+		validAddress(newParent)
+		IsGnosisSafe(_msgSender())
+	{
+		Group memory _group = groups[org][group];
+		if (_group.safe == address(0)) revert GroupNotRegistered();
+
+		// Parent is either an org or a group
+		Group storage parent =
+			_group.parent == org ? orgs[org] : groups[org][_group.parent];
+
+		/// Remove child from parent
+		for (uint256 i = 0; i < parent.childs.length; i++) {
+			if (parent.childs[i] == group) {
+				parent.childs[i] = parent.childs[parent.childs.length - 1];
+				parent.childs.pop();
+				break;
+			}
+		}
+
+		// Update group parent
+		_group.parent = newParent;
+		// Add group to new parent
+		if (newParent == org) {
+			orgs[org].childs.push(group);
+		} else {
+			groups[org][newParent].childs.push(group);
+		}
+		emit GroupParentUpdated(org, group, _msgSender(), newParent);
+	}
+
     /// @notice Get all the information about a group
     function getGroupInfo(address org, address group)
         public

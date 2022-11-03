@@ -640,25 +640,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    function setUpRootOrgAndOneGroup() public returns (address, address) {
-        // Set initial safe as a rootOrg
-        bool result = gnosisHelper.registerOrgTx(orgName);
-        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
-
-        // Create a safe
-        address safeGroupA = gnosisHelper.newKeyperSafe(4, 2);
-        string memory nameGroupA = groupAName;
-        keyperSafes[nameGroupA] = address(safeGroupA);
-
-        address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, nameGroupA);
-
-        vm.deal(orgAddr, 100 gwei);
-        vm.deal(safeGroupA, 100 gwei);
-
-        return (orgAddr, safeGroupA);
-    }
-
     /// removeGroup when org == parent
     function testRemoveGroupFromSafeOrgEqParent() public {
         (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
