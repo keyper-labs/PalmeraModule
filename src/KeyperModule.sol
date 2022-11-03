@@ -391,14 +391,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         Group memory _group = groups[org][group];
         if (_group.safe == address(0)) revert GroupNotRegistered();
 
-        Group storage parent;
-        if (_group.parent == org) {
-            // Parent is an org
-            parent = orgs[org];
-        } else {
-            // Parent is a group
-            parent = groups[org][_group.parent];
-        }
+        // Parent is either an org or a group
+        Group storage parent =
+            _group.parent == org ? orgs[org] : groups[org][_group.parent];
+
         /// Remove child from parent
         for (uint256 i = 0; i < parent.childs.length; i++) {
             if (parent.childs[i] == group) {
