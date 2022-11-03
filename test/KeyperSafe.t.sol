@@ -640,87 +640,43 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
+    function setUpRootOrgAndOneGroup() public returns (address, address) {
+        // Set initial safe as a rootOrg
+        bool result = gnosisHelper.registerOrgTx(orgName);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+
+        // Create a safe
+        address safeGroupA = gnosisHelper.newKeyperSafe(4, 2);
+        string memory nameGroupA = groupAName;
+        keyperSafes[nameGroupA] = address(safeGroupA);
+
+        address orgAddr = keyperSafes[orgName];
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, nameGroupA);
+
+        vm.deal(orgAddr, 100 gwei);
+        vm.deal(safeGroupA, 100 gwei);
+
+        return (orgAddr, safeGroupA);
+    }
+
     /// removeGroup when org == parent
     function testRemoveGroupFromSafeOrgEqParent() public {
         (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
-
-        assertEq(keyperModule.isOrgRegistered(orgAddr), true);
-
-        address parent;
-        (,,,, parent) = keyperModule.getGroupInfo(orgAddr, groupSafe);
-
-        assertEq(orgAddr, parent);
+        // Create a sub safe
+        address subSafeGroupA = gnosisHelper.newKeyperSafe(3, 2);
+        keyperSafes[subGroupAName] = address(subSafeGroupA);
+        gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupAName);
 
         gnosisHelper.updateSafeInterface(orgAddr);
-        bool result =
-            gnosisHelper.createRemoveGroupTx(orgAddr, orgAddr, groupSafe);
-
+        bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupSafe);
         assertEq(result, true);
 
         result = keyperModule.isParent(orgAddr, orgAddr, groupSafe);
         assertEq(result, false);
-    }
 
-    // Deploy 4 keyperSafes : following structure
-    //           RootOrg
-    //          |      |
-    //      GroupA   GroupB
-    //        |
-    //  SubGroupA
-    // SubGroupA is going to be removed
-    function testRemoveChild() public {
-        setUpBaseOrgTree();
-        address orgAddr = keyperSafes[orgName];
-        address groupA = keyperSafes[groupAName];
-        address subGroupA = keyperSafes[subGroupAName];
-
-        assertEq(keyperModule.isChild(orgAddr, groupA, subGroupA), true);
-        assertEq(keyperModule.isAdmin(orgAddr, subGroupA), true);
-        assertEq(keyperModule.isAdmin(groupA, subGroupA), false);
-
-        gnosisHelper.updateSafeInterface(orgAddr);
-
-        bool result =
-            gnosisHelper.createRemoveGroupTx(orgAddr, groupA, subGroupA);
-
-        assertEq(result, true);
-        assertEq(keyperModule.isChild(orgAddr, groupA, subGroupA), false);
-
-        address[] memory children;
-        (,,, children,) = keyperModule.getGroupInfo(orgAddr, groupA);
-        address newChild;
-
-        for (uint256 i = 0; i < children.length; i++) {
-            children[i] == newChild;
-        }
-
-        bool comparison = newChild == subGroupA ? true : false;
-        assertEq(comparison, false);
-    }
-
-    // Deploy 4 keyperSafes : following structure
-    //           RootOrg
-    //          |      |
-    //      GroupA   GroupB
-    //        |
-    //  SubGroupA
-    // GroupA is going to be removed
-    function testRemoveGroupWithChildren() public {
-        setUpBaseOrgTree();
-        address orgAddr = keyperSafes[orgName];
-        address groupA = keyperSafes[groupAName];
-        address subGroupA = keyperSafes[subGroupAName];
-
-        assertEq(keyperModule.isChild(orgAddr, orgAddr, groupA), true);
-
-        gnosisHelper.updateSafeInterface(orgAddr);
-        bool result = gnosisHelper.createRemoveGroupTx(orgAddr, orgAddr, groupA);
-
-        assertEq(result, true);
-        assertEq(keyperModule.isChild(orgAddr, orgAddr, groupA), false);
-
-        // TODO: Check why isChild is not working for this test, but isParent is.
-        // assertEq(keyperModule.isChild(orgAddr, orgAddr, subGroupA), true);
-        assertEq(keyperModule.isParent(orgAddr, orgAddr, subGroupA), true);
+        // Check sub safe is a child of org
+        address[] memory newChild;
+        (,,, newChild,) = keyperModule.getOrg(orgAddr);
+        assertEq(newChild[0], subSafeGroupA);
     }
 }
