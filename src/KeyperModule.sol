@@ -54,10 +54,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 
     event GroupRemoved(
         address indexed org,
-        address indexed group,
+        address indexed groupRemoved,
+        address indexed caller,
         address parent,
-        string name,
-        address indexed childRemoved
+        string name
     );
 
     event TxOnBehalfExecuted(
@@ -376,66 +376,45 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         emit GroupCreated(org, caller, name, newGroup.admin, parent);
     }
 
-    /// @notice Remove Child or Group and reasign the all Child to the Superior Parent
+    /// @notice Remove group and reasign all child to the parent
     /// @dev All actions will be driven based on the caller of the method, and args
     /// @param org address of the organisation
-    /// @param parent address of the parent
-    /// @param child address of the child
-    function removeGroup(address org, address parent, address child)
+    /// @param group address of the group to be removed
+    /// TODO: Add auth/permissions for the caller
+    function removeGroup(address org, address group)
         public
         OrgRegistered(org)
-        validAddress(parent)
-        validAddress(child)
+        validAddress(group)
         IsGnosisSafe(_msgSender())
     {
         address caller = _msgSender();
-        if (!isChild(org, parent, child)) revert ChildNotFound();
-        /// create a local variable to storage parent Name, and asign into the logic
-        /// the value depend on use case
-        Group storage parentOrg = orgs[org];
-        Group storage parentGroup =
-            parent == org ? groups[org][child] : groups[org][parent];
-        /// Remove to group from org root
-		/// Create instance of Org and Remove child of Org, in this use case
-    	/// the child is a Group of the Org, and a parent into the group mapping
-        if (parent == org) {
-			/// Validate only the Admin of Root Org can remove childs(Groups in this case)
-            if (caller != parentOrg.admin) revert NotAuthorized();
-            if (parentOrg.admin == child) revert NotAuthorizedAsNotAnAdmin();
-            for (uint256 i = 0; i < parentOrg.childs.length; i++) {
-                if (parentOrg.childs[i] == child) {
-                    parentOrg.childs[i] =
-                        parentOrg.childs[parentOrg.childs.length - 1];
-                    parentOrg.childs.pop();
-                    break;
-                }
-            }
-        } else {
-            /// Remove child from parent
-			/// Validate only the admin of the Org or Group can remove childs
-            if ((caller != parentGroup.admin) && (caller != parentOrg.admin)) {
-                revert NotAuthorized();
-            }
-            if (parentGroup.admin == child) revert NotAuthorizedAsNotAnAdmin();
-            for (uint256 i = 0; i < parentGroup.childs.length; i++) {
-                if (parentGroup.childs[i] == child) {
-                    parentGroup.childs[i] =
-                        parentGroup.childs[parentGroup.childs.length - 1];
-                    parentGroup.childs.pop();
-                    break;
-                }
+        Group memory _group = groups[org][group];
+        if (_group.safe == address(0)) revert GroupNotRegistered();
+
+        // Parent is either an org or a group
+        Group storage parent =
+            _group.parent == org ? orgs[org] : groups[org][_group.parent];
+
+        /// Remove child from parent
+        for (uint256 i = 0; i < parent.childs.length; i++) {
+            if (parent.childs[i] == group) {
+                parent.childs[i] = parent.childs[parent.childs.length - 1];
+                parent.childs.pop();
+                break;
             }
         }
-		/// Define Array of Childs
-		address[] memory childs = parentGroup.childs;
-		/// Remove parent from child reassign to superior parent
-		for (uint256 i = 0; i < childs.length; i++) {
-			Group storage ChildGroup = groups[org][childs[i]];
-			ChildGroup.parent = parent == org ? org : parentGroup.parent;
-		}
-		// storage the parentName before to delete the Group
-        emit GroupRemoved(org, caller, parent, parentGroup.name, child);
-		delete groups[org][child];
+        // Handle child from removed group
+        for (uint256 i = 0; i < _group.childs.length; i++) {
+            // Add removed group child to parent
+            parent.childs.push(_group.childs[i]);
+            Group storage childrenGroup = groups[org][_group.childs[i]];
+            // Update children group parent reference
+            childrenGroup.parent = parent.safe;
+        }
+
+        // Store the name before to delete the Group
+        emit GroupRemoved(org, group, caller, parent.safe, _group.name);
+        delete groups[org][group];
     }
 
     /// @notice Get all the information about a group
