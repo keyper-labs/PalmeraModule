@@ -10,8 +10,9 @@ import {Constants} from "./Constants.sol";
 import {DenyHelper, Address} from "./DenyHelper.sol";
 import {console} from "forge-std/console.sol";
 import {KeyperRoles} from "./KeyperRoles.sol";
+import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
-contract KeyperModule is Auth, Constants, DenyHelper {
+contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     using GnosisSafeMath for uint256;
     using Address for address;
     /// @dev Definition of Safe module
@@ -163,7 +164,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         bytes calldata data,
         Enum.Operation operation,
         bytes memory signatures
-    ) external payable Denied(to) returns (bool result) {
+    ) external payable Denied(to) nonReentrant() returns (bool result) {
         if (org == address(0) || targetSafe == address(0) || to == address(0)) {
             revert ZeroAddressProvided();
         }
