@@ -227,13 +227,12 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 
     /// @notice This function will allow Safe Lead & Safe Lead mody only roles to to add owner and set a threshold without passing by normal multisig check
     /// @dev For instance role
-    /// TODO add modifier for check that targetSafe is a Safe / Check orgRegister
     function addOwnerWithThreshold(
         address owner,
         uint256 threshold,
         address targetSafe,
         address org
-    ) public requiresAuth IsGnosisSafe(targetSafe) {
+    ) public OrgRegistered(org) requiresAuth IsGnosisSafe(targetSafe) {
         /// Check _msgSender() is an user lead of the target safe
         if (!isSafeLead(org, targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotSafeLead();
@@ -320,8 +319,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             role == Role.SAFE_LEAD || role == Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
                 || role == Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
         ) {
-            /// Update group lead
-            Group storage safeGroup = groups[_msgSender()][group];
+            /// Update group/org lead
+            Group storage safeGroup = (_msgSender() == group)
+                ? orgs[_msgSender()]
+                : groups[_msgSender()][group];
             safeGroup.lead = user;
         }
         RolesAuthority authority = RolesAuthority(rolesAuthority);
@@ -525,24 +526,13 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         return false;
     }
 
-    /// @notice Check if a user is an lead of the org
-    /// TODO: This function is not used anymore, check if we need to delete it
-    function isOrgLead(address org, address user) public view returns (bool) {
-        Group memory _org = orgs[org];
-        if (_org.lead == user) {
-            return true;
-        }
-        return false;
-    }
-
-    /// @notice Check if a user is an safe lead of the group
+    /// @notice Check if a user is an safe lead of a group/org
     function isSafeLead(address org, address group, address user)
         public
         view
         returns (bool)
     {
-        if (org == group) return false; // Root org cannot have a lead
-        Group memory _group = groups[org][group];
+        Group memory _group = (org == group) ? orgs[org] : groups[org][group];
         if (_group.safe == address(0)) revert GroupNotRegistered();
         if (_group.lead == user) {
             return true;

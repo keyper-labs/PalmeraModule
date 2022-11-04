@@ -506,4 +506,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // Usecases for revert from Remove group
     // -> Org call removeGRoup for a group of another org
     // -> Group call removeGroup for a group that is not his children
+    // Role related usecases:
+    // -> Check that the roles have been disabled for the group/org and for his safe lead
 }

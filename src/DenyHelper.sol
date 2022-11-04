@@ -166,7 +166,6 @@ abstract contract DenyHelper {
         return result;
     }
 
-    /// TODO: Need to Validate if this logic is correct!!
     /// @dev Function to get the Previous User of the Wallet
     /// @param user Address of the Wallet
     function getPrevUser(address user)
