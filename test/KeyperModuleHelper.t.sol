@@ -120,7 +120,6 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
 
         address masterCopy = address(deploySafeFactory.gnosisSafeContract());
         address safeFactory = address(deploySafeFactory.proxyFactory());
-        // TODO: rolesAuthority setup
         address rolesAuthority = address(deploySafeFactory.proxyFactory());
         keyper = new KeyperModule(masterCopy, safeFactory, rolesAuthority);
 

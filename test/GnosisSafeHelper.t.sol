@@ -212,12 +212,13 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createAddGroupTx(address org, address parent, string memory name)
-        public
-        returns (bool)
-    {
+    function createAddGroupTx(
+        address org,
+        address superSafe,
+        string memory name
+    ) public returns (bool) {
         bytes memory data = abi.encodeWithSignature(
-            "addGroup(address,address,string)", org, parent, name
+            "addGroup(address,address,string)", org, superSafe, name
         );
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
@@ -252,13 +253,12 @@ contract GnosisSafeHelper is
         return signatures;
     }
 
-    function createRemoveGroupTx(address org, address parent, address child)
+    function createRemoveGroupTx(address org, address group)
         public
         returns (bool)
     {
-        bytes memory data = abi.encodeWithSignature(
-            "removeGroup(address,address,address)", org, parent, child
-        );
+        bytes memory data =
+            abi.encodeWithSignature("removeGroup(address,address)", org, group);
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx

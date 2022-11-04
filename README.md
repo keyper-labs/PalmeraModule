@@ -48,7 +48,7 @@ The address of the calling safe is going to be registered with the input name
 
 # Add Subgroups to main organisation
 
-```function addGroup(address org, address parent, string memory name)```
+```function addGroup(address org, address superSafe, string memory name)```
 
 Need to specify to which organisation the new group will belong
 
@@ -57,8 +57,8 @@ Need to specify to which organisation the new group will belong
 Organization=Safe Root has multiple groups
 Groups/Safe relationship
 - Each group is associated to a safe
-- Each group has a parent (parent has ownership over the group)
-- Each group has set of childs
+- Each group has a superSafe (superSafe has ownership over the group)
+- Each group has set of child
 
 
 Validate transfer rules - execTransactionFromModule:
@@ -67,8 +67,8 @@ Validate transfer rules - execTransactionFromModule:
     - Group threshold kept
 
 Setup groups rules:
-- Root admin has full control over all groups (or over all groups that he is a designed admin?)
+- Root lead has full control over all groups (or over all groups that he is a designed lead?)
     => Remove/Add groups.
     => Remove/Add signers of any child safe
-- Each group has a designed admin (full ownership of the safe)
-- Can an admin be something different than a Safe contract?
+- Each group has a designed lead (full ownership of the safe)
+- Can an lead be something different than a Safe contract?
