@@ -108,17 +108,20 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         (
             string memory name,
-            address admin,
+            address lead,
             address safe,
             address[] memory child,
-            address parent
+            address superSafe
         ) = keyperModule.getGroupInfo(orgAddr, groupSafe);
 
+		(,address orgLead,,,) =
+            keyperModule.getOrg(orgAddr);
+
         assertEq(name, groupName);
-        assertEq(admin, orgAddr);
+        assertEq(lead, orgLead);
         assertEq(safe, groupSafe);
         assertEq(child.length, 0);
-        assertEq(parent, orgAddr);
+        assertEq(superSafe, orgAddr);
     }
 
     function testRevertChildAlreadyExistAddGroup() public {
