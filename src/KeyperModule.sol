@@ -389,9 +389,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         Group storage superSafeOrgGroup =
             (superSafe == org) ? orgs[org] : groups[org][superSafe];
         superSafeOrgGroup.child.push(caller);
-        newGroup.superSafe = superSafe;
+		newGroup.lead = superSafeOrgGroup.lead; // inherit lead from superSafe
         newGroup.safe = caller;
         newGroup.name = name;
+		newGroup.superSafe = superSafe;
         /// Give Role SuperSafe
         RolesAuthority authority = RolesAuthority(rolesAuthority);
         authority.setUserRole(caller, uint8(Role.SUPER_SAFE), true);
