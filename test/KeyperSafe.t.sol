@@ -83,13 +83,13 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(result, true);
         (
             string memory name,
-            address admin,
+            address lead,
             address safe,
             address[] memory child,
             address superSafe
         ) = keyperModule.getOrg(gnosisSafeAddr);
         assertEq(name, orgName);
-        assertEq(admin, gnosisSafeAddr);
+        assertEq(lead, gnosisSafeAddr);
         assertEq(safe, gnosisSafeAddr);
         assertEq(superSafe, address(0));
     }
@@ -112,7 +112,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(result, true);
     }
 
-    function testAdminExecOnBehalf() public {
+    function testLeadExecOnBehalf() public {
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
@@ -232,7 +232,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             gnosisHelper.createAddGroupTx(orgAddr, safeGroupA, nameSubGroupA);
     }
 
-    function testParentExecOnBehalf() public {
+    function testSuperSafeExecOnBehalf() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
         address groupA = keyperSafes[groupAName];
@@ -272,7 +272,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // function testRootSafeExecOnBehalf
     // function testRevertExecOnBehalfNoRole
 
-    function testRevertParentExecOnBehalf() public {
+    function testRevertSuperSafeExecOnBehalf() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
         address groupA = keyperSafes[groupAName];
@@ -476,7 +476,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     /// removeGroup when org == superSafe
-    function testRemoveGroupFromSafeOrgEqParent() public {
+    function testRemoveGroupFromSafeOrgEqSuperSafe() public {
         (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
         // Create a sub safe
         address subSafeGroupA = gnosisHelper.newKeyperSafe(3, 2);

@@ -65,13 +65,13 @@ contract KeyperModuleTest is Test, Constants {
     function testCreateRootOrg() public {
         registerOrgWithRoles(org1, rootOrgName);
         string memory orgname;
-        address admin;
+        address lead;
         address safe;
         address[] memory child;
         address superSafe;
-        (orgname, admin, safe, child, superSafe) = keyperModule.getOrg(org1);
+        (orgname, lead, safe, child, superSafe) = keyperModule.getOrg(org1);
         assertEq(orgname, rootOrgName);
-        assertEq(admin, org1);
+        assertEq(lead, org1);
         assertEq(safe, org1);
         assertEq(superSafe, address(0));
     }
@@ -81,15 +81,15 @@ contract KeyperModuleTest is Test, Constants {
         vm.startPrank(groupA);
         keyperModule.addGroup(org1, org1, "GroupA");
         string memory groupName;
-        address admin;
+        address lead;
         address safe;
         address[] memory child;
         address superSafe;
-        (groupName, admin, safe, child, superSafe) =
+        (groupName, lead, safe, child, superSafe) =
             keyperModule.getGroupInfo(org1, groupA);
         assertEq(groupName, "GroupA");
         assertEq(safe, groupA);
-        assertEq(admin, org1);
+        assertEq(lead, org1);
         assertEq(superSafe, org1);
         assertEq(keyperModule.isChild(org1, org1, groupA), true);
     }
@@ -100,7 +100,7 @@ contract KeyperModuleTest is Test, Constants {
         keyperModule.addGroup(org1, org1, "GroupA");
     }
 
-    function testExpectParentNotRegistered() public {
+    function testExpectSuperSafeNotRegistered() public {
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(groupA);
         vm.expectRevert(KeyperModule.SuperSafeNotRegistered.selector);
@@ -147,8 +147,8 @@ contract KeyperModuleTest is Test, Constants {
         keyperModule.addGroup(org1, org1, "GroupA");
     }
 
-    // Test is Parent function
-    function testIsParent() public {
+    // Test is SuperSafe function
+    function testIsSuperSafe() public {
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(groupA);
         keyperModule.addGroup(org1, org1, "GroupA");

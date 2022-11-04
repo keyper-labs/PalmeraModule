@@ -67,8 +67,8 @@ Validate transfer rules - execTransactionFromModule:
     - Group threshold kept
 
 Setup groups rules:
-- Root admin has full control over all groups (or over all groups that he is a designed admin?)
+- Root lead has full control over all groups (or over all groups that he is a designed lead?)
     => Remove/Add groups.
     => Remove/Add signers of any child safe
-- Each group has a designed admin (full ownership of the safe)
-- Can an admin be something different than a Safe contract?
+- Each group has a designed lead (full ownership of the safe)
+- Can an lead be something different than a Safe contract?

@@ -30,7 +30,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 
     struct Group {
         string name;
-        address admin;
+        address lead;
         address safe;
         address[] child;
         address superSafe;
@@ -48,7 +48,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address indexed org,
         address indexed group,
         string name,
-        address indexed admin,
+        address indexed lead,
         address superSafe
     );
 
@@ -73,7 +73,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     error OrgNotRegistered();
     error GroupNotRegistered();
     error SuperSafeNotRegistered();
-    error AdminNotRegistered();
+    error LeadNotRegistered();
     error NotAuthorized();
     error NotAuthorizedRemoveGroupFromOtherOrg();
     error NotAuthorizedRemoveNonChildrenGroup();
@@ -173,8 +173,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             revert InvalidGnosisSafe();
         }
         address caller = _msgSender();
-        /// Check caller is an admin of the target safe
-        if (!isAdmin(caller, targetSafe) && !isSuperSafe(org, caller, targetSafe))
+        /// Check caller is an lead of the target safe
+        if (!isLead(caller, targetSafe) && !isSuperSafe(org, caller, targetSafe))
         {
             revert NotAuthorizedExecOnBehalf();
         }
@@ -193,13 +193,13 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         );
         /// Increase nonce and execute transaction.
         nonce++;
-        /// TODO not sure about caller => Maybe just check admin address
+        /// TODO not sure about caller => Maybe just check lead address
         // TODO add usecase for safe lead => Caller can be an EOA account,
         // so first we need to check if safe, if yes load gnosis interface + call owners...,
         // if not then just execute the tx after checking signature
         /// Init safe interface to get superSafe owners/threshold
-        IGnosisSafe gnosisAdminSafe = IGnosisSafe(caller);
-        gnosisAdminSafe.checkSignatures(
+        IGnosisSafe gnosisLeadSafe = IGnosisSafe(caller);
+        gnosisLeadSafe.checkSignatures(
             keccak256(keyperTxHashData), keyperTxHashData, signatures
         );
         /// Execute transaction from target safe
@@ -232,7 +232,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address targetSafe,
         address org
     ) public requiresAuth IsGnosisSafe(targetSafe) {
-        /// Check _msgSender() is an user admin of the target safe
+        /// Check _msgSender() is an user lead of the target safe
         if (!isSafeLead(org, targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotSafeLead();
         }
@@ -261,7 +261,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (!result) revert TxExecutionModuleFaild();
     }
 
-    /// @notice This function will allow UserAdmin to remove an owner
+    /// @notice This function will allow UserLead to remove an owner
     /// @dev For instance role
     function removeOwner(
         address prevOwner,
@@ -274,7 +274,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             prevOwner == address(0) || targetSafe == address(0)
                 || owner == address(0) || org == address(0)
         ) revert ZeroAddressProvided();
-        /// Check _msgSender() is an user admin of the target safe
+        /// Check _msgSender() is an user lead of the target safe
         if (!isSafeLead(org, targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotSafeLead();
         }
@@ -315,9 +315,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             if (groups[_msgSender()][group].safe == address(0)) {
                 revert SuperSafeNotRegistered();
             }
-            /// Update group admin
+            /// Update group lead
             Group storage safeGroup = groups[_msgSender()][group];
-            safeGroup.admin = user;
+            safeGroup.lead = user;
         }
         // TODO check other cases when we need to update org
         RolesAuthority authority = RolesAuthority(rolesAuthority);
@@ -332,7 +332,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     {
         return (
             orgs[_org].name,
-            orgs[_org].admin,
+            orgs[_org].lead,
             orgs[_org].safe,
             orgs[_org].child,
             orgs[_org].superSafe
@@ -348,7 +348,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     {
         address caller = _msgSender();
         Group storage rootOrg = orgs[caller];
-        rootOrg.admin = caller;
+        rootOrg.lead = caller;
         rootOrg.name = name;
         rootOrg.safe = caller;
 
@@ -377,15 +377,15 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         Group storage newGroup = groups[org][caller];
         /// Add to org root
         if (superSafe == org) {
-            ///  By default Admin of the new group is the admin of the org
-            newGroup.admin = orgs[org].admin;
+            ///  By default Lead of the new group is the lead of the org
+            newGroup.lead = orgs[org].lead;
             Group storage superSafeOrg = orgs[org];
             superSafeOrg.child.push(caller);
         }
         /// Add to group
         else {
-            /// By default Admin of the new group is the admin of the superSafe (TODO check this)
-            newGroup.admin = groups[org][superSafe].admin;
+            /// By default Lead of the new group is the lead of the superSafe (TODO check this)
+            newGroup.lead = groups[org][superSafe].lead;
             Group storage superSafeGroup = groups[org][superSafe];
             superSafeGroup.child.push(caller);
         }
@@ -396,7 +396,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         RolesAuthority authority = RolesAuthority(rolesAuthority);
         authority.setUserRole(caller, SUPER_SAFE, true);
 
-        emit GroupCreated(org, caller, name, newGroup.admin, superSafe);
+        emit GroupCreated(org, caller, name, newGroup.lead, superSafe);
     }
 
     /// @notice Remove group and reasign all child to the superSafe
@@ -465,7 +465,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (groupSafe == address(0)) revert OrgNotRegistered();
         return (
             groups[org][group].name,
-            groups[org][group].admin,
+            groups[org][group].lead,
             groups[org][group].safe,
             groups[org][group].child,
             groups[org][group].superSafe
@@ -504,25 +504,26 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         return false;
     }
 
-    /// @notice Check if an org is admin of the group
-    function isAdmin(address org, address group) public view returns (bool) {
+    /// @notice Check if an org is lead of the group
+    function isLead(address org, address group) public view returns (bool) {
         if (orgs[org].safe == address(0)) return false;
-        /// Check group admin
+        /// Check group lead
         Group memory _group = groups[org][group];
-        if (_group.admin == org) {
+        if (_group.lead == org) {
             return true;
         }
         return false;
     }
 
-    /// @notice Check if a user is an admin of the org
-    function isUserAdmin(address org, address user)
+    /// @notice Check if a user is an lead of the org
+    /// TODO: This function is not used anymore, check if we need to delete it
+    function isOrgLead(address org, address user)
         public
         view
         returns (bool)
     {
         Group memory _org = orgs[org];
-        if (_org.admin == user) {
+        if (_org.lead == user) {
             return true;
         }
         return false;
@@ -537,7 +538,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (org == group) return false; // Root org cannot have a lead
         Group memory _group = groups[org][group];
         if (_group.safe == address(0)) revert GroupNotRegistered();
-        if (_group.admin == user) {
+        if (_group.lead == user) {
             return true;
         }
         return false;
