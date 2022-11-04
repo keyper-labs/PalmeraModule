@@ -7,7 +7,6 @@ import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
 import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
-import {DenyHelper} from "../src/DenyHelper.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {console} from "forge-std/console.sol";
 
@@ -17,14 +16,9 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     KeyperModuleHelper keyperHelper;
     KeyperRoles keyperRolesContract;
 
-    // DenyHelper denyHelper;
-
     address gnosisSafeAddr;
     address keyperModuleAddr;
     address keyperRolesDeployed;
-
-    address masterCopy;
-    address safeFactory;
 
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) keyperSafes;
@@ -42,14 +36,14 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         // Init a new safe as main organization (3 owners, 1 threshold)
         gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv(0);
+        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
 
         // setting keyperRoles Address
         gnosisHelper.setKeyperRoles(keyperRolesDeployed);
 
         // Init KeyperModule
-        masterCopy = gnosisHelper.gnosisMasterCopy();
-        safeFactory = address(gnosisHelper.safeFactory());
+        address masterCopy = gnosisHelper.gnosisMasterCopy();
+        address safeFactory = address(gnosisHelper.safeFactory());
 
         keyperModule = new KeyperModule(
             masterCopy,
@@ -71,11 +65,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
 
         keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
-    }
-
-    function testValidGnosisSafeAddresses() public {
-        assertEq(keyperModule.isContract(address(masterCopy)), true);
-        assertEq(keyperModule.isContract(address(safeFactory)), true);
     }
 
     function testCreateSafeFromModule() public {
@@ -123,40 +112,18 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
-        // Create a safe
-        address safeGroupA = gnosisHelper.newKeyperSafe(4, 2);
-        string memory nameGroupA = groupAName;
-        keyperSafes[nameGroupA] = address(safeGroupA);
+        // Create new safe with setup called while creating contract
+        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
+        // Create Group calldata
+        string memory groupName = groupAName;
+        keyperSafes[groupName] = address(groupSafe);
 
         address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, nameGroupA);
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
 
+        // Send ETH to org&subgroup
         vm.deal(orgAddr, 100 gwei);
-        vm.deal(safeGroupA, 100 gwei);
-
-        return (orgAddr, safeGroupA);
-    }
-
-    function setAdminOfOrg() public returns (address, address) {
-        bool result = gnosisHelper.registerOrgTx(orgName);
-        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
-        vm.label(keyperSafes[orgName], orgName);
-        assertEq(result, true);
-
-        address orgAddr = keyperSafes[orgName];
-        address userAdmin = address(0x123);
-        bool userEnabled = true;
-
-        vm.startPrank(orgAddr);
-        keyperModule.setUserAdmin(userAdmin, userEnabled);
-        vm.stopPrank();
-
-        return (orgAddr, userAdmin);
-    }
-
-    function testAdminExecOnBehalf() public {
-        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
-
+        vm.deal(groupSafe, 100 gwei);
         address receiver = address(0xABC);
 
         // Set keyperhelper gnosis safe to org
@@ -167,7 +134,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
         // Execute on behalf function
         vm.startPrank(orgAddr);
-        bool result = keyperModule.execTransactionOnBehalf(
+        result = keyperModule.execTransactionOnBehalf(
             orgAddr,
             groupSafe,
             receiver,
@@ -180,88 +147,22 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(receiver.balance, 2 gwei);
     }
 
-    function testRevertZeroAddressProvidedExecTransactionOnBehalf() public {
-        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
-
-        address receiver = address(0);
-
-        // Set keyperhelper gnosis safe to org
-        keyperHelper.setGnosisSafe(orgAddr);
-        bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            orgAddr, groupSafe, receiver, 2 gwei, emptyData, Enum.Operation(0)
-        );
-        // Execute on behalf function
-        vm.startPrank(orgAddr);
-        vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
-        keyperModule.execTransactionOnBehalf(
-            orgAddr,
-            groupSafe,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-    }
-
-    function testRevertInvalidGnosisSafeExecTransactionOnBehalf() public {
-        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
-
-        // Random wallet instead of a safe
-        address fakeGroupSafe = address(0xFED);
-        address receiver = address(0xABC);
-
-        // Set keyperhelper gnosis safe to org
-        keyperHelper.setGnosisSafe(orgAddr);
-        bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            orgAddr, groupSafe, receiver, 2 gwei, emptyData, Enum.Operation(0)
-        );
-        // Execute on behalf function
-        vm.startPrank(orgAddr);
-        vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
-        keyperModule.execTransactionOnBehalf(
-            orgAddr,
-            fakeGroupSafe,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-    }
-
-    function testRevertNotAuthorizedExecTransactionOnBehalf() public {
-        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
-
-        // Random wallet instead of a safe
-        address fakeCaller = address(0xFED);
-        address receiver = address(0xABC);
-
-        // Set keyperhelper gnosis safe to org
-        keyperHelper.setGnosisSafe(orgAddr);
-        bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            orgAddr, groupSafe, receiver, 2 gwei, emptyData, Enum.Operation(0)
-        );
-        // Execute on behalf function from a not authorized caller
-        vm.startPrank(fakeCaller);
-        vm.expectRevert(KeyperModule.NotAuthorizedExecOnBehalf.selector);
-        keyperModule.execTransactionOnBehalf(
-            orgAddr,
-            groupSafe,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-    }
-
     function testRevertInvalidSignatureExecOnBehalf() public {
-        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
+        // Set initialsafe as org
+        bool result = gnosisHelper.registerOrgTx(orgName);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
+        // Create new safe with setup called while creating contract
+        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
+        // Create Group calldata
+        string memory groupName = groupAName;
+        keyperSafes[groupName] = address(groupSafe);
+
+        address orgAddr = keyperSafes[orgName];
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
+        // Send ETH to org&subgroup
+        vm.deal(orgAddr, 100 gwei);
+        vm.deal(groupSafe, 100 gwei);
         address receiver = address(0xABC);
 
         // Try onbehalf with incorrect signers
@@ -274,7 +175,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         vm.expectRevert("GS026");
         // Execute invalid OnBehalf function
         vm.startPrank(orgAddr);
-        bool result = keyperModule.execTransactionOnBehalf(
+        result = keyperModule.execTransactionOnBehalf(
             orgAddr,
             groupSafe,
             receiver,
@@ -469,55 +370,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             }
         }
         assertEq(ownerTest, newOwner);
-    }
-
-    function testIsUserAdminWithThreshold() public {
-        (address orgAddr, address userAdmin) = setAdminOfOrg();
-
-        assertEq(keyperModule.isUserAdmin(orgAddr, userAdmin), true);
-
-        address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
-        address newOwner;
-
-        for (uint256 i = 0; i < owners.length; i++) {
-            newOwner = owners[i];
-        }
-
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-
-        vm.startPrank(userAdmin);
-        vm.expectRevert(KeyperModule.OwnerAlreadyExists.selector);
-        keyperModule.addOwnerWithThreshold(newOwner, threshold + 1, orgAddr);
-    }
-
-    // addOwnerWithThreshold => NotAuthorizedAsNotAnAdmin is triggered
-    // TODO: Pending check, because already exists a modifier asking for
-    // auth, so it's probable the revertion is not necessary. This test
-    // is commented for now.
-    // function testRevertNotAuthorizedAsNotAnAdminAddOwnerWithThreshold() public {
-
-    //     (address orgAddr,) = setAdminOfOrg();
-    //     (address orgAddrB, ) = setAdminOfOrg();
-
-    //     address fakeAdmin = address(0xfff);
-    //     address newOwner = address(0xaaaf);
-    //     uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-
-    //     vm.startPrank(fakeAdmin);
-    //     vm.expectRevert(KeyperModule.NotAuthorizedAsNotAnAdmin.selector);
-    //     keyperModule.addOwnerWithThreshold(newOwner, threshold + 1, orgAddr);
-
-    // }
-
-    function testRevertInvalidThresholdAddOwnerWithThreshold() public {
-        (address orgAddr, address userAdmin) = setAdminOfOrg();
-
-        address newOwner = address(0xf1f1f1);
-        uint256 wrongThreshold = 0;
-
-        vm.startPrank(userAdmin);
-        vm.expectRevert(KeyperModule.InvalidThreshold.selector);
-        keyperModule.addOwnerWithThreshold(newOwner, wrongThreshold, orgAddr);
     }
 
     function testRemoveOwner() public {
