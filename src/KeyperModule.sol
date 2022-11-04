@@ -380,20 +380,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address caller = _msgSender();
         if (isChild(org, superSafe, caller)) revert ChildAlreadyExist();
         Group storage newGroup = groups[org][caller];
-        /// Add to org root
-        if (superSafe == org) {
-            ///  By default Lead of the new group is the lead of the org
-            newGroup.lead = orgs[org].lead;
-            Group storage superSafeOrg = orgs[org];
-            superSafeOrg.child.push(caller);
-        }
-        /// Add to group
-        else {
-            /// By default Lead of the new group is the lead of the superSafe (TODO check this)
-            newGroup.lead = groups[org][superSafe].lead;
-            Group storage superSafeGroup = groups[org][superSafe];
-            superSafeGroup.child.push(caller);
-        }
+        /// Add to org root/group
+        Group storage superSafeOrgGroup = (superSafe == org) ? orgs[org] : groups[org][superSafe];
+        superSafeOrgGroup.child.push(caller);
         newGroup.superSafe = superSafe;
         newGroup.safe = caller;
         newGroup.name = name;
@@ -408,7 +397,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @dev All actions will be driven based on the caller of the method, and args
     /// @param org address of the organisation
     /// @param group address of the group to be removed
-    /// TODO: Add auth/permissions for the caller
     function removeGroup(address org, address group)
         public
         OrgRegistered(org)
