@@ -500,7 +500,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
                 revert NotAuthorizedRemoveNonChildrenGroup();
             }
         }
-        Group memory _group = groups[org][group];
+        Group storage _group = groups[org][group];
         // SuperSafe is either an org or a group
         Group storage superSafe;
         if (_group.superSafe == org) {
@@ -524,10 +524,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (newSuper == org) {
             orgs[org].child.push(group);
         } else {
-		    // TODO: check if a SuperSafe can reassigned to another SuperSafe
+            // TODO: check if a SuperSafe can reassigned to another SuperSafe
             groups[org][newSuper].child.push(group);
         }
-        emit GroupParentUpdated(org, group, _msgSender(), newSuper);
+        emit GroupParentUpdated(org, group, caller, newSuper);
     }
 
     /// @notice Get all the information about a group
