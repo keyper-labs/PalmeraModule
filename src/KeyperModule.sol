@@ -60,12 +60,12 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         string name
     );
 
-	event GroupParentUpdated(
-		address indexed org,
-		address indexed group,
-		address indexed caller,
-		address parent
-	);
+    event GroupParentUpdated(
+        address indexed org,
+        address indexed group,
+        address indexed caller,
+        address parent
+    );
 
     event TxOnBehalfExecuted(
         address indexed org,
@@ -467,54 +467,61 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         delete groups[org][group];
     }
 
-	/// @notice update parent of a group
-	/// @dev Update the parent of a group with a new parent
-	/// @param org address of the organisation
-	/// @param group address of the group to be removed
-	/// @param newParent address of the new parent
-	/// TODO: Add auth/permissions for the caller
-	function updateParent(address org, address group, address newParent)
-		public
-		OrgRegistered(org)
-		validAddress(group)
-		validAddress(newParent)
-		IsGnosisSafe(_msgSender())
-		requiresAuth
-	{
-		address caller = _msgSender();
-		Group memory _group = groups[org][group];
-		if (_group.safe == address(0)) revert GroupNotRegistered();
+    /// @notice update parent of a group
+    /// @dev Update the parent of a group with a new parent
+    /// @param org address of the organisation
+    /// @param group address of the group to be removed
+    /// @param newSuper address of the new parent
+    function updateSuper(address org, address group, address newSuper)
+        public
+        OrgRegistered(org)
+        validAddress(group)
+        validAddress(newSuper)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        address caller = _msgSender();
+        Group memory _group = groups[org][group];
+        if (_group.safe == address(0)) revert GroupNotRegistered();
+        // RootSafe usecase : Check if the group is part of caller's org
+        if (caller == org) {
+            if (groups[caller][group].safe == address(0)) {
+                revert NotAuthorizedRemoveGroupFromOtherOrg();
+            }
+        } else {
+            // SuperSafe usecase : Check caller is superSafe of the group
+            if (!isSuperSafe(org, caller, group)) {
+                revert NotAuthorizedRemoveNonChildrenGroup();
+            }
+        }
 
-		// Parent is either an org or a group
-		Group storage parent
-		if (_group.parent == org) {
-			if (!isUserAdmin(org, caller)) revert NotAuthorized();
-			parent = orgs[org];
-		} else {
-			if (!isSafeLead(org, _group.parent, caller)) revert NotAuthorizedAsNotSafeLead();
-			parent = groups[org][_group.parent];
-		}
+        // Parent is either an org or a group
+        Group storage superSafe;
+        if (_group.superSafe == org) {
+            superSafe = orgs[org];
+        } else {
+            superSafe = groups[org][_group.superSafe];
+        }
 
-		/// Remove child from parent
-		for (uint256 i = 0; i < parent.child.length; i++) {
-			if (parent.child[i] == group) {
-				parent.child[i] = parent.child[parent.child.length - 1];
-				parent.child.pop();
-				break;
-			}
-		}
+        /// Remove child from superSafe
+        for (uint256 i = 0; i < superSafe.child.length; i++) {
+            if (superSafe.child[i] == group) {
+                superSafe.child[i] = superSafe.child[superSafe.child.length - 1];
+                superSafe.child.pop();
+                break;
+            }
+        }
 
-		// Update group parent
-		_group.parent = newParent;
-		// Add group to new parent
-		if (newParent == org) {
-			if (!isUserAdmin(org, caller)) revert NotAuthorized();
-			orgs[org].child.push(group);
-		} else {
-			groups[org][newParent].child.push(group);
-		}
-		emit GroupParentUpdated(org, group, _msgSender(), newParent);
-	}
+        // Update group superSafe
+        _group.superSafe = newSuper;
+        // Add group to new superSafe
+        if (newSuper == org) {
+            orgs[org].child.push(group);
+        } else {
+            groups[org][newSuper].child.push(group);
+        }
+        emit GroupParentUpdated(org, group, _msgSender(), newSuper);
+    }
 
     /// @notice Get all the information about a group
     function getGroupInfo(address org, address group)

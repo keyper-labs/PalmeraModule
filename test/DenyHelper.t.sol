@@ -18,7 +18,6 @@ contract DenyHelperTest is Test {
     address[] public owners = new address[](5);
 
     function setUp() public {
-
         mockedContractA = new MockedContractA();
         mockedContractB = new MockedContractB();
 
