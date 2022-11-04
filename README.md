@@ -48,7 +48,7 @@ The address of the calling safe is going to be registered with the input name
 
 # Add Subgroups to main organisation
 
-```function addGroup(address org, address parent, string memory name)```
+```function addGroup(address org, address superSafe, string memory name)```
 
 Need to specify to which organisation the new group will belong
 
@@ -57,7 +57,7 @@ Need to specify to which organisation the new group will belong
 Organization=Safe Root has multiple groups
 Groups/Safe relationship
 - Each group is associated to a safe
-- Each group has a parent (parent has ownership over the group)
+- Each group has a superSafe (superSafe has ownership over the group)
 - Each group has set of child
 
 

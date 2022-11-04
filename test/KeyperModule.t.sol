@@ -68,12 +68,12 @@ contract KeyperModuleTest is Test, Constants {
         address admin;
         address safe;
         address[] memory child;
-        address parent;
-        (orgname, admin, safe, child, parent) = keyperModule.getOrg(org1);
+        address superSafe;
+        (orgname, admin, safe, child, superSafe) = keyperModule.getOrg(org1);
         assertEq(orgname, rootOrgName);
         assertEq(admin, org1);
         assertEq(safe, org1);
-        assertEq(parent, address(0));
+        assertEq(superSafe, address(0));
     }
 
     function testAddGroup() public {
@@ -84,13 +84,13 @@ contract KeyperModuleTest is Test, Constants {
         address admin;
         address safe;
         address[] memory child;
-        address parent;
-        (groupName, admin, safe, child, parent) =
+        address superSafe;
+        (groupName, admin, safe, child, superSafe) =
             keyperModule.getGroupInfo(org1, groupA);
         assertEq(groupName, "GroupA");
         assertEq(safe, groupA);
         assertEq(admin, org1);
-        assertEq(parent, org1);
+        assertEq(superSafe, org1);
         assertEq(keyperModule.isChild(org1, org1, groupA), true);
     }
 
@@ -103,7 +103,7 @@ contract KeyperModuleTest is Test, Constants {
     function testExpectParentNotRegistered() public {
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(groupA);
-        vm.expectRevert(KeyperModule.ParentNotRegistered.selector);
+        vm.expectRevert(KeyperModule.SuperSafeNotRegistered.selector);
         keyperModule.addGroup(org1, groupA, "GroupA");
     }
 
@@ -161,14 +161,14 @@ contract KeyperModuleTest is Test, Constants {
         vm.stopPrank();
         vm.startPrank(groupD);
         keyperModule.addGroup(org1, groupC, "groupD");
-        assertEq(keyperModule.isParent(org1, org1, groupA), true);
-        assertEq(keyperModule.isParent(org1, groupA, groupB), true);
-        assertEq(keyperModule.isParent(org1, groupB, groupC), true);
-        assertEq(keyperModule.isParent(org1, groupC, groupD), true);
-        assertEq(keyperModule.isParent(org1, groupB, groupD), true);
-        assertEq(keyperModule.isParent(org1, groupA, groupD), true);
-        assertEq(keyperModule.isParent(org1, groupD, groupA), false);
-        assertEq(keyperModule.isParent(org1, groupB, groupA), false);
+        assertEq(keyperModule.isSuperSafe(org1, org1, groupA), true);
+        assertEq(keyperModule.isSuperSafe(org1, groupA, groupB), true);
+        assertEq(keyperModule.isSuperSafe(org1, groupB, groupC), true);
+        assertEq(keyperModule.isSuperSafe(org1, groupC, groupD), true);
+        assertEq(keyperModule.isSuperSafe(org1, groupB, groupD), true);
+        assertEq(keyperModule.isSuperSafe(org1, groupA, groupD), true);
+        assertEq(keyperModule.isSuperSafe(org1, groupD, groupA), false);
+        assertEq(keyperModule.isSuperSafe(org1, groupB, groupA), false);
     }
 
     // Register org call with mocked call to KeyperRoles

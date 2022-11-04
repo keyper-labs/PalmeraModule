@@ -439,8 +439,8 @@ BRDA:553,32,0,2
 BRDA:553,32,1,2
 DA:554,2
 DA:556,2
-FN:560,KeyperModule.isParent
-FNDA:8,KeyperModule.isParent
+FN:560,KeyperModule.isSuperSafe
+FNDA:8,KeyperModule.isSuperSafe
 DA:565,10
 DA:566,10
 DA:568,16

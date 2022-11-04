@@ -247,12 +247,12 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createAddGroupTx(address org, address parent, string memory name)
+    function createAddGroupTx(address org, address superSafe, string memory name)
         public
         returns (bool)
     {
         bytes memory data = abi.encodeWithSignature(
-            "addGroup(address,address,string)", org, parent, name
+            "addGroup(address,address,string)", org, superSafe, name
         );
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);

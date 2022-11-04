@@ -86,12 +86,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             address admin,
             address safe,
             address[] memory child,
-            address parent
+            address superSafe
         ) = keyperModule.getOrg(gnosisSafeAddr);
         assertEq(name, orgName);
         assertEq(admin, gnosisSafeAddr);
         assertEq(safe, gnosisSafeAddr);
-        assertEq(parent, address(0));
+        assertEq(superSafe, address(0));
     }
 
     function testCreateGroupFromSafe() public {
@@ -475,7 +475,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         return (orgAddr, safeGroupA);
     }
 
-    /// removeGroup when org == parent
+    /// removeGroup when org == superSafe
     function testRemoveGroupFromSafeOrgEqParent() public {
         (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
         // Create a sub safe
@@ -487,7 +487,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupSafe);
         assertEq(result, true);
 
-        result = keyperModule.isParent(orgAddr, orgAddr, groupSafe);
+        result = keyperModule.isSuperSafe(orgAddr, orgAddr, groupSafe);
         assertEq(result, false);
 
         // Check sub safe is a child of org

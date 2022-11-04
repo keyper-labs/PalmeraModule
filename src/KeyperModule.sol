@@ -33,7 +33,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address admin;
         address safe;
         address[] child;
-        address parent;
+        address superSafe;
     }
     /// @dev Orgs -> Groups
 
@@ -49,14 +49,14 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address indexed group,
         string name,
         address indexed admin,
-        address parent
+        address superSafe
     );
 
     event GroupRemoved(
         address indexed org,
         address indexed groupRemoved,
         address indexed caller,
-        address parent,
+        address superSafe,
         string name
     );
 
@@ -72,7 +72,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @dev Errors
     error OrgNotRegistered();
     error GroupNotRegistered();
-    error ParentNotRegistered();
+    error SuperSafeNotRegistered();
     error AdminNotRegistered();
     error NotAuthorized();
     error NotAuthorizedRemoveGroupFromOtherOrg();
@@ -174,7 +174,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         }
         address caller = _msgSender();
         /// Check caller is an admin of the target safe
-        if (!isAdmin(caller, targetSafe) && !isParent(org, caller, targetSafe))
+        if (!isAdmin(caller, targetSafe) && !isSuperSafe(org, caller, targetSafe))
         {
             revert NotAuthorizedExecOnBehalf();
         }
@@ -197,7 +197,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         // TODO add usecase for safe lead => Caller can be an EOA account,
         // so first we need to check if safe, if yes load gnosis interface + call owners...,
         // if not then just execute the tx after checking signature
-        /// Init safe interface to get parent owners/threshold
+        /// Init safe interface to get superSafe owners/threshold
         IGnosisSafe gnosisAdminSafe = IGnosisSafe(caller);
         gnosisAdminSafe.checkSignatures(
             keccak256(keyperTxHashData), keyperTxHashData, signatures
@@ -313,7 +313,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         ) {
             /// Check if group is part of the org
             if (groups[_msgSender()][group].safe == address(0)) {
-                revert ParentNotRegistered();
+                revert SuperSafeNotRegistered();
             }
             /// Update group admin
             Group storage safeGroup = groups[_msgSender()][group];
@@ -335,7 +335,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             orgs[_org].admin,
             orgs[_org].safe,
             orgs[_org].child,
-            orgs[_org].parent
+            orgs[_org].superSafe
         );
     }
 
@@ -363,43 +363,43 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @notice Add a group to an organisation/group
     /// @dev Call coming from the group safe
     /// @param org address of the organisation
-    /// @param parent address of the parent
+    /// @param superSafe address of the superSafe
     /// @param name name of the group
 	/// TODO: how avoid any safe adding in the org or group?
-    function addGroup(address org, address parent, string memory name)
+    function addGroup(address org, address superSafe, string memory name)
         public
         OrgRegistered(org)
-        validAddress(parent)
+        validAddress(superSafe)
         IsGnosisSafe(_msgSender())
     {
         address caller = _msgSender();
-        if (isChild(org, parent, caller)) revert ChildAlreadyExist();
+        if (isChild(org, superSafe, caller)) revert ChildAlreadyExist();
         Group storage newGroup = groups[org][caller];
         /// Add to org root
-        if (parent == org) {
+        if (superSafe == org) {
             ///  By default Admin of the new group is the admin of the org
             newGroup.admin = orgs[org].admin;
-            Group storage parentOrg = orgs[org];
-            parentOrg.child.push(caller);
+            Group storage superSafeOrg = orgs[org];
+            superSafeOrg.child.push(caller);
         }
         /// Add to group
         else {
-            /// By default Admin of the new group is the admin of the parent (TODO check this)
-            newGroup.admin = groups[org][parent].admin;
-            Group storage parentGroup = groups[org][parent];
-            parentGroup.child.push(caller);
+            /// By default Admin of the new group is the admin of the superSafe (TODO check this)
+            newGroup.admin = groups[org][superSafe].admin;
+            Group storage superSafeGroup = groups[org][superSafe];
+            superSafeGroup.child.push(caller);
         }
-        newGroup.parent = parent;
+        newGroup.superSafe = superSafe;
         newGroup.safe = caller;
         newGroup.name = name;
         /// Give Role SuperSafe
         RolesAuthority authority = RolesAuthority(rolesAuthority);
         authority.setUserRole(caller, SUPER_SAFE, true);
 
-        emit GroupCreated(org, caller, name, newGroup.admin, parent);
+        emit GroupCreated(org, caller, name, newGroup.admin, superSafe);
     }
 
-    /// @notice Remove group and reasign all child to the parent
+    /// @notice Remove group and reasign all child to the superSafe
     /// @dev All actions will be driven based on the caller of the method, and args
     /// @param org address of the organisation
     /// @param group address of the group to be removed
@@ -418,8 +418,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
                 revert NotAuthorizedRemoveGroupFromOtherOrg();
             }
         } else {
-            // SuperSafe usecase : Check caller is parent of the group
-            if (!isParent(org, caller, group)) {
+            // SuperSafe usecase : Check caller is superSafe of the group
+            if (!isSuperSafe(org, caller, group)) {
                 revert NotAuthorizedRemoveNonChildrenGroup();
             }
         }
@@ -427,29 +427,29 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         Group memory _group = groups[org][group];
         if (_group.safe == address(0)) revert GroupNotRegistered();
 
-        // Parent is either an org or a group
-        Group storage parent =
-            _group.parent == org ? orgs[org] : groups[org][_group.parent];
+        // superSafe is either an org or a group
+        Group storage superSafe =
+            _group.superSafe == org ? orgs[org] : groups[org][_group.superSafe];
 
-        /// Remove child from parent
-        for (uint256 i = 0; i < parent.child.length; i++) {
-            if (parent.child[i] == group) {
-                parent.child[i] = parent.child[parent.child.length - 1];
-                parent.child.pop();
+        /// Remove child from superSafe
+        for (uint256 i = 0; i < superSafe.child.length; i++) {
+            if (superSafe.child[i] == group) {
+                superSafe.child[i] = superSafe.child[superSafe.child.length - 1];
+                superSafe.child.pop();
                 break;
             }
         }
         // Handle child from removed group
         for (uint256 i = 0; i < _group.child.length; i++) {
-            // Add removed group child to parent
-            parent.child.push(_group.child[i]);
+            // Add removed group child to superSafe
+            superSafe.child.push(_group.child[i]);
             Group storage childrenGroup = groups[org][_group.child[i]];
-            // Update children group parent reference
-            childrenGroup.parent = parent.safe;
+            // Update children group superSafe reference
+            childrenGroup.superSafe = superSafe.safe;
         }
 
         // Store the name before to delete the Group
-        emit GroupRemoved(org, group, caller, parent.safe, _group.name);
+        emit GroupRemoved(org, group, caller, superSafe.safe, _group.name);
         delete groups[org][group];
     }
 
@@ -468,7 +468,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             groups[org][group].admin,
             groups[org][group].safe,
             groups[org][group].child,
-            groups[org][group].parent
+            groups[org][group].superSafe
         );
     }
 
@@ -480,13 +480,13 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     }
 
     /// @notice Check if child address is part of the group within an organisation
-    function isChild(address org, address parent, address child)
+    function isChild(address org, address superSafe, address child)
         public
         view
         returns (bool)
     {
-        /// Check within orgs first if parent is an organisation
-        if (org == parent) {
+        /// Check within orgs first if superSafe is an organisation
+        if (org == superSafe) {
             Group memory organisation = orgs[org];
             for (uint256 i = 0; i < organisation.child.length; i++) {
                 if (organisation.child[i] == child) return true;
@@ -494,10 +494,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             return false;
         }
         /// Check within groups of the org
-        if (groups[org][parent].safe == address(0)) {
-            revert ParentNotRegistered();
+        if (groups[org][superSafe].safe == address(0)) {
+            revert SuperSafeNotRegistered();
         }
-        Group memory group = groups[org][parent];
+        Group memory group = groups[org][superSafe];
         for (uint256 i = 0; i < group.child.length; i++) {
             if (group.child[i] == child) return true;
         }
@@ -543,19 +543,19 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         return false;
     }
 
-    /// @notice Check if the group is a parent of another group
-    function isParent(address org, address parent, address child)
+    /// @notice Check if the group is a superSafe of another group
+    function isSuperSafe(address org, address superSafe, address child)
         public
         view
         returns (bool)
     {
         Group memory childGroup = groups[org][child];
-        address curentParent = childGroup.parent;
-        /// TODO: probably more efficient to just create a parents mapping instead of this iterations
-        while (curentParent != address(0)) {
-            if (curentParent == parent) return true;
-            childGroup = groups[org][curentParent];
-            curentParent = childGroup.parent;
+        address curentsuperSafe = childGroup.superSafe;
+        /// TODO: probably more efficient to just create a superSafes mapping instead of this iterations
+        while (curentsuperSafe != address(0)) {
+            if (curentsuperSafe == superSafe) return true;
+            childGroup = groups[org][curentsuperSafe];
+            curentsuperSafe = childGroup.superSafe;
         }
         return false;
     }
