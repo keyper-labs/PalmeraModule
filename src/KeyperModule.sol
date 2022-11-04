@@ -485,6 +485,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         public
         OrgRegistered(org)
         GroupRegistered(org, group)
+        GroupRegistered(org, newSuper)
         validAddress(group)
         validAddress(newSuper)
         IsGnosisSafe(_msgSender())
