@@ -291,10 +291,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address targetSafe,
         address org
     ) public requiresAuth IsGnosisSafe(targetSafe) {
-        if (
-            prevOwner == address(0) || targetSafe == address(0)
-                || owner == address(0) || org == address(0)
-        ) revert ZeroAddressProvided();
+        if (prevOwner == address(0) || owner == address(0) || org == address(0))
+        {
+            revert ZeroAddressProvided();
+        }
         /// Check _msgSender() is an user lead of the target safe
         if (!isSafeLead(org, targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotSafeLead();
@@ -424,7 +424,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         public
         OrgRegistered(org)
         GroupRegistered(org, group)
-        validAddress(group)
         IsGnosisSafe(_msgSender())
         requiresAuth
     {
