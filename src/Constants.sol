@@ -4,6 +4,14 @@ pragma solidity ^0.8.15;
 import {Context} from "@openzeppelin/utils/Context.sol";
 
 abstract contract Constants is Context {
+    enum Role {
+        SAFE_LEAD,
+        SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+        SAFE_LEAD_MODIFY_OWNERS_ONLY,
+        ROOT_SAFE,
+        SUPER_SAFE
+    }
+
     // keccak256(
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"
     // );
@@ -18,12 +26,6 @@ abstract contract Constants is Context {
 
     address internal constant FALLBACK_HANDLER =
         0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4;
-
-    uint8 internal constant SAFE_LEAD = 0;
-    uint8 internal constant SAFE_LEAD_EXEC_ON_BEHALF_ONLY = 1;
-    uint8 internal constant SAFE_LEAD_MODIFY_OWNERS_ONLY = 2;
-    uint8 internal constant ROOT_SAFE = 3;
-    uint8 internal constant SUPER_SAFE = 4;
 
     bytes4 internal constant ADD_OWNER = bytes4(
         keccak256(

@@ -174,8 +174,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         }
         address caller = _msgSender();
         /// Check caller is an lead of the target safe
-        if (!isLead(caller, targetSafe) && !isSuperSafe(org, caller, targetSafe))
-        {
+        if (
+            !isLead(caller, targetSafe) && !isSuperSafe(org, caller, targetSafe)
+        ) {
             revert NotAuthorizedExecOnBehalf();
         }
 
@@ -302,14 +303,14 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @param role Role to be assigned
     /// @param user User that will have specific role
     /// @param group Safe group which will have the user permissions on
-    function setRole(uint8 role, address user, address group, bool enabled)
+    function setRole(Role role, address user, address group, bool enabled)
         external
         validAddress(user)
         requiresAuth
     {
         if (
-            role == SAFE_LEAD || role == SAFE_LEAD_EXEC_ON_BEHALF_ONLY
-                || role == SAFE_LEAD_MODIFY_OWNERS_ONLY
+            role == Role.SAFE_LEAD || role == Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
+                || role == Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
         ) {
             /// Check if group is part of the org
             if (groups[_msgSender()][group].safe == address(0)) {
@@ -321,7 +322,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         }
         // TODO check other cases when we need to update org
         RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(user, role, enabled);
+        authority.setUserRole(user, uint8(role), enabled);
     }
 
     function getOrg(address _org)
@@ -354,8 +355,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 
         /// Assign SUPER_SAFE Role + SAFE_ROOT Role
         RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(caller, ROOT_SAFE, true);
-        authority.setUserRole(caller, SUPER_SAFE, true);
+        authority.setUserRole(caller, uint8(Role.ROOT_SAFE), true);
+        authority.setUserRole(caller, uint8(Role.SUPER_SAFE), true);
 
         emit OrganisationCreated(caller, name);
     }
@@ -365,7 +366,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @param org address of the organisation
     /// @param superSafe address of the superSafe
     /// @param name name of the group
-	/// TODO: how avoid any safe adding in the org or group?
+    /// TODO: how avoid any safe adding in the org or group?
     function addGroup(address org, address superSafe, string memory name)
         public
         OrgRegistered(org)
@@ -394,7 +395,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         newGroup.name = name;
         /// Give Role SuperSafe
         RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(caller, SUPER_SAFE, true);
+        authority.setUserRole(caller, uint8(Role.SUPER_SAFE), true);
 
         emit GroupCreated(org, caller, name, newGroup.lead, superSafe);
     }
@@ -517,11 +518,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 
     /// @notice Check if a user is an lead of the org
     /// TODO: This function is not used anymore, check if we need to delete it
-    function isOrgLead(address org, address user)
-        public
-        view
-        returns (bool)
-    {
+    function isOrgLead(address org, address user) public view returns (bool) {
         Group memory _org = orgs[org];
         if (_org.lead == user) {
             return true;

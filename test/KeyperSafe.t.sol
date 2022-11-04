@@ -315,7 +315,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address caller = address(0x1);
         vm.expectRevert(bytes("UNAUTHORIZED"));
         keyperRolesContract.setRoleCapability(
-            SAFE_LEAD, caller, ADD_OWNER, true
+            uint8(Role.SAFE_LEAD), caller, ADD_OWNER, true
         );
     }
 
@@ -326,10 +326,13 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address userLead = address(0x123);
 
         vm.startPrank(orgAddr);
-        keyperModule.setRole(SAFE_LEAD, userLead, groupA, true);
+        keyperModule.setRole(Role.SAFE_LEAD, userLead, groupA, true);
 
         assertEq(
-            keyperRolesContract.doesUserHaveRole(userLead, SAFE_LEAD), true
+            keyperRolesContract.doesUserHaveRole(
+                userLead, uint8(Role.SAFE_LEAD)
+            ),
+            true
         );
     }
 
@@ -341,7 +344,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         vm.startPrank(orgAddr);
         keyperModule.setRole(
-            SAFE_LEAD_MODIFY_OWNERS_ONLY, userLeadModifyOwnersOnly, groupA, true
+            Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
+            userLeadModifyOwnersOnly,
+            groupA,
+            true
         );
         vm.stopPrank();
 
@@ -377,7 +383,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address userLead = address(0x123);
 
         vm.startPrank(orgAddr);
-        keyperModule.setRole(SAFE_LEAD, userLead, groupA, true);
+        keyperModule.setRole(Role.SAFE_LEAD, userLead, groupA, true);
         vm.stopPrank();
 
         gnosisHelper.updateSafeInterface(groupA);
