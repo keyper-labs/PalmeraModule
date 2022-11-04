@@ -38,7 +38,7 @@ contract KeyperRolesTest is Test, Constants {
         factory.deploy(salt, bytecode);
 
         gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv(0);
+        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
     }
 
     function testRolesModulesSetup() public {

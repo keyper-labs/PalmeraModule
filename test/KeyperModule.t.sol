@@ -28,12 +28,12 @@ contract KeyperModuleTest is Test, Constants {
         // Setup Gnosis Helper
         gnosisHelper = new GnosisSafeHelper();
         // Setup of all Safe for Testing
-        org1 = gnosisHelper.setupSafeEnv(0);
-        org2 = gnosisHelper.setupSafeEnv(1);
-        groupA = gnosisHelper.setupSafeEnv(2);
-        groupB = gnosisHelper.setupSafeEnv(3);
-        groupC = gnosisHelper.setupSafeEnv(4);
-        groupD = gnosisHelper.setupSafeEnv(5);
+        org1 = gnosisHelper.setupSafeEnv();
+        org2 = gnosisHelper.setupSafeEnv();
+        groupA = gnosisHelper.setupSafeEnv();
+        groupB = gnosisHelper.setupSafeEnv();
+        groupC = gnosisHelper.setupSafeEnv();
+        groupD = gnosisHelper.setupSafeEnv();
         vm.label(org1, "Org 1");
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
