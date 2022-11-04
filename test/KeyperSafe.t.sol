@@ -114,8 +114,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             address superSafe
         ) = keyperModule.getGroupInfo(orgAddr, groupSafe);
 
-		(,address orgLead,,,) =
-            keyperModule.getOrg(orgAddr);
+        (, address orgLead,,,) = keyperModule.getOrg(orgAddr);
 
         assertEq(name, groupName);
         assertEq(lead, orgLead);
@@ -125,14 +124,14 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     function testRevertChildAlreadyExistAddGroup() public {
-
         (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
 
         address subGroupSafe = gnosisHelper.newKeyperSafe(2, 1);
         string memory subGroupName = subGroupAName;
         keyperSafes[subGroupName] = address(subGroupSafe);
 
-        bool result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
+        bool result =
+            gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
         assertEq(result, true);
 
         vm.startPrank(subGroupSafe);
