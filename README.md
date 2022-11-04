@@ -58,7 +58,7 @@ Organization=Safe Root has multiple groups
 Groups/Safe relationship
 - Each group is associated to a safe
 - Each group has a parent (parent has ownership over the group)
-- Each group has set of childs
+- Each group has set of child
 
 
 Validate transfer rules - execTransactionFromModule:

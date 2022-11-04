@@ -32,7 +32,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         string name;
         address admin;
         address safe;
-        address[] childs;
+        address[] child;
         address parent;
     }
     /// @dev Orgs -> Groups
@@ -312,7 +312,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             orgs[_org].name,
             orgs[_org].admin,
             orgs[_org].safe,
-            orgs[_org].childs,
+            orgs[_org].child,
             orgs[_org].parent
         );
     }
@@ -362,14 +362,14 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             ///  By default Admin of the new group is the admin of the org
             newGroup.admin = orgs[org].admin;
             Group storage parentOrg = orgs[org];
-            parentOrg.childs.push(caller);
+            parentOrg.child.push(caller);
         }
         /// Add to group
         else {
             /// By default Admin of the new group is the admin of the parent (TODO check this)
             newGroup.admin = groups[org][parent].admin;
             Group storage parentGroup = groups[org][parent];
-            parentGroup.childs.push(caller);
+            parentGroup.child.push(caller);
         }
         newGroup.parent = parent;
         newGroup.safe = caller;
@@ -397,18 +397,18 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             _group.parent == org ? orgs[org] : groups[org][_group.parent];
 
         /// Remove child from parent
-        for (uint256 i = 0; i < parent.childs.length; i++) {
-            if (parent.childs[i] == group) {
-                parent.childs[i] = parent.childs[parent.childs.length - 1];
-                parent.childs.pop();
+        for (uint256 i = 0; i < parent.child.length; i++) {
+            if (parent.child[i] == group) {
+                parent.child[i] = parent.child[parent.child.length - 1];
+                parent.child.pop();
                 break;
             }
         }
         // Handle child from removed group
-        for (uint256 i = 0; i < _group.childs.length; i++) {
+        for (uint256 i = 0; i < _group.child.length; i++) {
             // Add removed group child to parent
-            parent.childs.push(_group.childs[i]);
-            Group storage childrenGroup = groups[org][_group.childs[i]];
+            parent.child.push(_group.child[i]);
+            Group storage childrenGroup = groups[org][_group.child[i]];
             // Update children group parent reference
             childrenGroup.parent = parent.safe;
         }
@@ -433,7 +433,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             groups[org][group].name,
             groups[org][group].admin,
             groups[org][group].safe,
-            groups[org][group].childs,
+            groups[org][group].child,
             groups[org][group].parent
         );
     }
@@ -454,8 +454,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         /// Check within orgs first if parent is an organisation
         if (org == parent) {
             Group memory organisation = orgs[org];
-            for (uint256 i = 0; i < organisation.childs.length; i++) {
-                if (organisation.childs[i] == child) return true;
+            for (uint256 i = 0; i < organisation.child.length; i++) {
+                if (organisation.child[i] == child) return true;
             }
             return false;
         }
@@ -464,8 +464,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             revert ParentNotRegistered();
         }
         Group memory group = groups[org][parent];
-        for (uint256 i = 0; i < group.childs.length; i++) {
-            if (group.childs[i] == child) return true;
+        for (uint256 i = 0; i < group.child.length; i++) {
+            if (group.child[i] == child) return true;
         }
         return false;
     }

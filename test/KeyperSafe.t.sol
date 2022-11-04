@@ -88,7 +88,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             string memory name,
             address admin,
             address safe,
-            address[] memory childs,
+            address[] memory child,
             address parent
         ) = keyperModule.getOrg(gnosisSafeAddr);
 
