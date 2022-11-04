@@ -577,7 +577,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @dev Returns the chain id used by this contract.
     function getChainId() public view returns (uint256) {
         uint256 id;
-        /// solhint-disable-next-line no-inline-assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             id := chainid()
         }
