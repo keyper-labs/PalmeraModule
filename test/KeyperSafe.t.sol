@@ -81,13 +81,8 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // Create registerOrg calldata
         bool result = gnosisHelper.registerOrgTx(orgName);
         assertEq(result, true);
-        (
-            string memory name,
-            address lead,
-            address safe,
-            address[] memory child,
-            address superSafe
-        ) = keyperModule.getOrg(gnosisSafeAddr);
+        (string memory name, address lead, address safe,, address superSafe) =
+            keyperModule.getOrg(gnosisSafeAddr);
         assertEq(name, orgName);
         assertEq(lead, gnosisSafeAddr);
         assertEq(safe, gnosisSafeAddr);
@@ -269,6 +264,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // function testSafeLeadExecOnBehalf()
     //                  --> Case 1: Lead is a Safe
     //                  --> Case 2: Lead is an EOA
+    //                  --> Case 3: Lead is an EOA but tries to call the function for a group that he's not the lead
     // function testRootSafeExecOnBehalf
     // function testRevertExecOnBehalfNoRole
 
@@ -453,15 +449,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    // UseCases missing (similar usecase testRevert...) :
-    // Create 2 Org: each with 1 group + 1 subgroup, then set a safe as safe_lead
-    // then try with that safe to modify from another org
-
-    // TODO: Add Tests that checks that this roles has been assigned following this rules
-    // registerOrg => Give ROOT_SAFE role to safe registered
-    // addGroup => Give SUPER_SAFE role to added safe
-    // setRole(SAFE_LEAD,...., user) => Give SAFE_LEAD to role added
-
     function setUpRootOrgAndOneGroup() public returns (address, address) {
         // Set initial safe as a rootOrg
         bool result = gnosisHelper.registerOrgTx(orgName);
@@ -502,10 +489,20 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(newChild[0], subSafeGroupA);
     }
 
-    // TODO remove Group:
+    // TODO : test following usecases
+    // remove Group:
     // Usecases for revert from Remove group
     // -> Org call removeGRoup for a group of another org
     // -> Group call removeGroup for a group that is not his children
     // Role related usecases:
     // -> Check that the roles have been disabled for the group/org and for his safe lead
+
+    // UseCases missing (similar usecase testRevert...) :
+    // Create 2 Org: each with 1 group + 1 subgroup, then set a safe as safe_lead
+    // then try with that safe to modify from another org
+
+    // Add Tests that checks that this roles has been assigned following this rules
+    // registerOrg => Give ROOT_SAFE role to safe registered
+    // addGroup => Give SUPER_SAFE role to added safe
+    // setRole(SAFE_LEAD,...., user) => Give SAFE_LEAD to role added
 }

@@ -174,9 +174,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             revert InvalidGnosisSafe();
         }
         address caller = _msgSender();
-        /// Check caller is an lead of the target safe
+        /// Check caller is a lead of the target safe
         if (
-            !isLead(caller, targetSafe) && !isSuperSafe(org, caller, targetSafe)
+            !isSafeLead(org, caller, targetSafe)
+                && !isSuperSafe(org, caller, targetSafe)
         ) {
             revert NotAuthorizedExecOnBehalf();
         }
@@ -195,15 +196,19 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         );
         /// Increase nonce and execute transaction.
         nonce++;
-        /// TODO not sure about caller => Maybe just check lead address
-        // TODO add usecase for safe lead => Caller can be an EOA account,
-        // so first we need to check if safe, if yes load gnosis interface + call owners...,
-        // if not then just execute the tx after checking signature
-        /// Init safe interface to get superSafe owners/threshold
-        IGnosisSafe gnosisLeadSafe = IGnosisSafe(caller);
-        gnosisLeadSafe.checkSignatures(
-            keccak256(keyperTxHashData), keyperTxHashData, signatures
-        );
+        // If caller is a safe then check caller safe signatures.
+        if (isSafe(caller)) {
+            IGnosisSafe gnosisLeadSafe = IGnosisSafe(caller);
+            gnosisLeadSafe.checkSignatures(
+                keccak256(keyperTxHashData), keyperTxHashData, signatures
+            );
+        } else {
+            // Caller is EAO (lead) : that has the rights over the target safe
+            if (!isSafeLead(org, targetSafe, caller)) {
+                revert NotAuthorizedAsNotSafeLead();
+            }
+        }
+
         /// Execute transaction from target safe
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
         result = gnosisTargetSafe.execTransactionFromModule(
@@ -381,7 +386,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (isChild(org, superSafe, caller)) revert ChildAlreadyExist();
         Group storage newGroup = groups[org][caller];
         /// Add to org root/group
-        Group storage superSafeOrgGroup = (superSafe == org) ? orgs[org] : groups[org][superSafe];
+        Group storage superSafeOrgGroup =
+            (superSafe == org) ? orgs[org] : groups[org][superSafe];
         superSafeOrgGroup.child.push(caller);
         newGroup.superSafe = superSafe;
         newGroup.safe = caller;
@@ -503,18 +509,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         return false;
     }
 
-    /// @notice Check if an org is lead of the group
-    function isLead(address org, address group) public view returns (bool) {
-        if (orgs[org].safe == address(0)) return false;
-        /// Check group lead
-        Group memory _group = groups[org][group];
-        if (_group.lead == org) {
-            return true;
-        }
-        return false;
-    }
-
     /// @notice Check if a user is an safe lead of a group/org
+    /// @param org address of the organisation
+    /// @param group address of the group
+    /// @param user address of the user that is a lead or not
     function isSafeLead(address org, address group, address user)
         public
         view
@@ -529,6 +527,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     }
 
     /// @notice Check if the group is a superSafe of another group
+    /// @param org address of the organisation
+    /// @param superSafe address of the superSafe
+    /// @param child address of the child group
     function isSuperSafe(address org, address superSafe, address child)
         public
         view
