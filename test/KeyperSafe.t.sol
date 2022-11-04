@@ -88,7 +88,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             string memory name,
             address admin,
             address safe,
-            address[] memory child,
+            address[] memory children,
             address parent
         ) = keyperModule.getOrg(gnosisSafeAddr);
 
@@ -98,10 +98,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(parent, address(0));
 
         address child;
-        for (uint256 i = 0; i < childs.length; i++) {
-            childs[i] = child;
+        for (uint256 i = 0; i < children.length; i++) {
+            children[i] = child;
         }
         assertEq(child, address(0));
+        assertEq(keyperModule.isOrgRegistered(gnosisSafeAddr), true);
     }
 
     function testCreateGroupFromSafe() public {
@@ -120,6 +121,44 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address orgAddr = keyperSafes[orgName];
         result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
         assertEq(result, true);
+
+        (
+            string memory name, 
+            address admin, 
+            address safe, 
+            address[] memory child, 
+            address parent
+        ) = keyperModule.getGroupInfo(orgAddr, groupSafe);
+
+        assertEq(name, groupName);
+        assertEq(admin, orgAddr);
+        assertEq(safe, groupSafe);
+        assertEq(child.length, 0);
+        assertEq(parent, orgAddr);
+    }
+
+    function testRevertChildAlreadyExistAddGroup() public {
+        
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
+
+        address subGroupSafe = gnosisHelper.newKeyperSafe(2, 1);
+        string memory subGroupName = subGroupAName;
+        keyperSafes[subGroupName] = address(subGroupSafe);
+
+        bool result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
+        assertEq(result, true);
+
+        vm.startPrank(subGroupSafe);
+        vm.expectRevert(KeyperModule.ChildAlreadyExist.selector);
+        keyperModule.addGroup(orgAddr, groupSafe, subGroupName);
+
+        // TODO: Until this point the test is working, so I must check why this
+        // is not working with the following code: 
+        // vm.deal(subGroupSafe, 100 gwei);
+        // gnosisHelper.updateSafeInterface(subGroupSafe); 
+        
+        // vm.expectRevert(KeyperModule.ChildAlreadyExist.selector);
+        // result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
     }
 
     // Just deploy a root org and a Group
@@ -453,11 +492,25 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // }
 
-    function testRevertInvalidThresholdAddOwnerWithThreshold() public {
+    // When threshold < 1
+    function testRevertInvalidThresholdAddOwnerWithThresholdScenarioOne() public {
         (address orgAddr, address userAdmin) = setAdminOfOrg();
 
         address newOwner = address(0xf1f1f1);
         uint256 wrongThreshold = 0;
+
+        vm.startPrank(userAdmin);
+        vm.expectRevert(KeyperModule.InvalidThreshold.selector);
+        keyperModule.addOwnerWithThreshold(newOwner, wrongThreshold, orgAddr);
+    }
+
+    // When threshold > (IGnosisSafe(targetSafe).getOwners().length.add(1))
+    function testRevertInvalidThresholdAddOwnerWithThresholdScenarioTwo() public {
+
+        (address orgAddr, address userAdmin) = setAdminOfOrg();
+
+        address newOwner = address(0xf1f1f1);
+        uint256 wrongThreshold = gnosisHelper.gnosisSafe().getOwners().length + 2;
 
         vm.startPrank(userAdmin);
         vm.expectRevert(KeyperModule.InvalidThreshold.selector);
