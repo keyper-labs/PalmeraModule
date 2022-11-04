@@ -87,6 +87,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     error ChildAlreadyExist();
     error InvalidGnosisSafe();
     error ChildNotFound();
+    error SetRoleForbidden(Role role);
 
     /// @dev Modifier for Validate if Org Exist or Not
     modifier OrgRegistered(address org) {
@@ -308,19 +309,21 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         validAddress(user)
         requiresAuth
     {
+        /// Check if group is part of the caller org
+        if (groups[_msgSender()][group].safe == address(0)) {
+            revert SuperSafeNotRegistered();
+        }
+        if (role == Role.ROOT_SAFE || role == Role.SUPER_SAFE) {
+            revert SetRoleForbidden(role);
+        }
         if (
             role == Role.SAFE_LEAD || role == Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
                 || role == Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
         ) {
-            /// Check if group is part of the org
-            if (groups[_msgSender()][group].safe == address(0)) {
-                revert SuperSafeNotRegistered();
-            }
             /// Update group lead
             Group storage safeGroup = groups[_msgSender()][group];
             safeGroup.lead = user;
         }
-        // TODO check other cases when we need to update org
         RolesAuthority authority = RolesAuthority(rolesAuthority);
         authority.setUserRole(user, uint8(role), enabled);
     }
@@ -448,6 +451,12 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             // Update children group superSafe reference
             childrenGroup.superSafe = superSafe.safe;
         }
+
+        // Revoke roles to group
+        RolesAuthority authority = RolesAuthority(rolesAuthority);
+        authority.setUserRole(group, uint8(Role.SUPER_SAFE), false);
+        // Disable safe lead role
+        disableSafeLeadRoles(_group.superSafe);
 
         // Store the name before to delete the Group
         emit GroupRemoved(org, group, caller, superSafe.safe, _group.name);
@@ -650,5 +659,31 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             }
         }
         return false;
+    }
+
+    /// @notice disable safe lead roles
+    /// @dev Associated roles: SAFE_LEAD || SAFE_LEAD_EXEC_ON_BEHALF_ONLY || SAFE_LEAD_MODIFY_OWNERS_ONLY
+    /// @param user Address of the user to disable roles
+    function disableSafeLeadRoles(address user) private {
+        RolesAuthority authority = RolesAuthority(rolesAuthority);
+        if (authority.doesUserHaveRole(user, uint8(Role.SAFE_LEAD))) {
+            authority.setUserRole(user, uint8(Role.SUPER_SAFE), false);
+        } else if (
+            authority.doesUserHaveRole(
+                user, uint8(Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            )
+        ) {
+            authority.setUserRole(
+                user, uint8(Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY), false
+            );
+        } else if (
+            authority.doesUserHaveRole(
+                user, uint8(Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            )
+        ) {
+            authority.setUserRole(
+                user, uint8(Role.SAFE_LEAD_MODIFY_OWNERS_ONLY), false
+            );
+        }
     }
 }
