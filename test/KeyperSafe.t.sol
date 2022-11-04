@@ -84,24 +84,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // Create registerOrg calldata
         bool result = gnosisHelper.registerOrgTx(orgName);
         assertEq(result, true);
-        (
-            string memory name,
-            address admin,
-            address safe,
-            address[] memory childs,
-            address parent
-        ) = keyperModule.getOrg(gnosisSafeAddr);
-
+        (string memory name, address lead, address safe,, address superSafe) =
+            keyperModule.getOrg(gnosisSafeAddr);
         assertEq(name, orgName);
-        assertEq(admin, gnosisSafeAddr);
+        assertEq(lead, gnosisSafeAddr);
         assertEq(safe, gnosisSafeAddr);
-        assertEq(parent, address(0));
-
-        address child;
-        for (uint256 i = 0; i < childs.length; i++) {
-            childs[i] = child;
-        }
-        assertEq(child, address(0));
+        assertEq(superSafe, address(0));
     }
 
     function testCreateGroupFromSafe() public {
@@ -120,18 +108,50 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address orgAddr = keyperSafes[orgName];
         result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
         assertEq(result, true);
+
+        (
+            string memory name,
+            address lead,
+            address safe,
+            address[] memory child,
+            address superSafe
+        ) = keyperModule.getGroupInfo(orgAddr, groupSafe);
+
+        (, address orgLead,,,) = keyperModule.getOrg(orgAddr);
+
+        assertEq(name, groupName);
+        assertEq(lead, orgLead);
+        assertEq(safe, groupSafe);
+        assertEq(child.length, 0);
+        assertEq(superSafe, orgAddr);
     }
 
-    // Just deploy a root org and a Group
-    //           RootOrg
-    //              |
-    //           GroupA
-	// TODO: Add Tests that checks that this roles has been assigned following this rules
-    // registerOrg => Give ROOT_SAFE role to safe registered
-    // addGroup => Give SUPER_SAFE role to added safe
-    // setRole(SAFE_LEAD,...., user) => Give SAFE_LEAD to role added
-    function setUpRootOrgAndOneGroup() public returns (address, address) {
-        // Set initial safe as a rootOrg
+    function testRevertChildAlreadyExistAddGroup() public {
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
+
+        address subGroupSafe = gnosisHelper.newKeyperSafe(2, 1);
+        string memory subGroupName = subGroupAName;
+        keyperSafes[subGroupName] = address(subGroupSafe);
+
+        bool result =
+            gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
+        assertEq(result, true);
+
+        vm.startPrank(subGroupSafe);
+        vm.expectRevert(KeyperModule.ChildAlreadyExist.selector);
+        keyperModule.addGroup(orgAddr, groupSafe, subGroupName);
+
+        // TODO: Until this point the test is working, so I must check why this
+        // is not working with the following code:
+        // vm.deal(subGroupSafe, 100 gwei);
+        // gnosisHelper.updateSafeInterface(subGroupSafe);
+
+        // vm.expectRevert(KeyperModule.ChildAlreadyExist.selector);
+        // result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
+    }
+
+    function testLeadExecOnBehalf() public {
+        // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
@@ -286,7 +306,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             gnosisHelper.createAddGroupTx(orgAddr, safeGroupA, nameSubGroupA);
     }
 
-    function testParentExecOnBehalf() public {
+    function testSuperSafeExecOnBehalf() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
         address groupA = keyperSafes[groupAName];
@@ -323,10 +343,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // function testSafeLeadExecOnBehalf()
     //                  --> Case 1: Lead is a Safe
     //                  --> Case 2: Lead is an EOA
+    //                  --> Case 3: Lead is an EOA but tries to call the function for a group that he's not the lead
     // function testRootSafeExecOnBehalf
     // function testRevertExecOnBehalfNoRole
 
-    function testRevertParentExecOnBehalf() public {
+    function testRevertSuperSafeExecOnBehalf() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
         address groupA = keyperSafes[groupAName];
@@ -369,7 +390,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address caller = address(0x1);
         vm.expectRevert(bytes("UNAUTHORIZED"));
         keyperRolesContract.setRoleCapability(
-            SAFE_LEAD, caller, ADD_OWNER, true
+            uint8(Role.SAFE_LEAD), caller, ADD_OWNER, true
         );
     }
 
@@ -380,10 +401,13 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address userLead = address(0x123);
 
         vm.startPrank(orgAddr);
-        keyperModule.setRole(SAFE_LEAD, userLead, groupA, true);
+        keyperModule.setRole(Role.SAFE_LEAD, userLead, groupA, true);
 
         assertEq(
-            keyperRolesContract.doesUserHaveRole(userLead, SAFE_LEAD), true
+            keyperRolesContract.doesUserHaveRole(
+                userLead, uint8(Role.SAFE_LEAD)
+            ),
+            true
         );
     }
 
@@ -395,7 +419,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         vm.startPrank(orgAddr);
         keyperModule.setRole(
-            SAFE_LEAD_MODIFY_OWNERS_ONLY, userLeadModifyOwnersOnly, groupA, true
+            Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
+            userLeadModifyOwnersOnly,
+            groupA,
+            true
         );
         vm.stopPrank();
 
@@ -480,7 +507,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address userLead = address(0x123);
 
         vm.startPrank(orgAddr);
-        keyperModule.setRole(SAFE_LEAD, userLead, groupA, true);
+        keyperModule.setRole(Role.SAFE_LEAD, userLead, groupA, true);
         vm.stopPrank();
 
         gnosisHelper.updateSafeInterface(groupA);
@@ -550,22 +577,40 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    function testRemoveGroupFromOrg() public {
-        setUpBaseOrgTree();
+    function setUpRootOrgAndOneGroup() public returns (address, address) {
+        // Set initial safe as a rootOrg
+        bool result = gnosisHelper.registerOrgTx(orgName);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+
+        // Create a safe
+        address safeGroupA = gnosisHelper.newKeyperSafe(4, 2);
+        string memory nameGroupA = groupAName;
+        keyperSafes[nameGroupA] = address(safeGroupA);
+
         address orgAddr = keyperSafes[orgName];
-        address groupA = keyperSafes[groupAName];
-        address subGroupA = keyperSafes[subGroupAName];
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, nameGroupA);
+
+        vm.deal(orgAddr, 100 gwei);
+        vm.deal(safeGroupA, 100 gwei);
+
+        return (orgAddr, safeGroupA);
+    }
+
+    /// removeGroup when org == superSafe
+    function testRemoveGroupFromSafeOrgEqSuperSafe() public {
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
+        // Create a sub safe
+        address subSafeGroupA = gnosisHelper.newKeyperSafe(3, 2);
+        keyperSafes[subGroupAName] = address(subSafeGroupA);
+        gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupAName);
 
         gnosisHelper.updateSafeInterface(orgAddr);
         bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupA);
         assertEq(result, true);
         assertEq(keyperModule.isParent(orgAddr, orgAddr, groupA), false);
 
-        // Check subGroupA is now a child of org
-        assertEq(keyperModule.isChild(orgAddr, orgAddr, subGroupA), true);
-        // Check org is parent of subGroupA
-        assertEq(keyperModule.isParent(orgAddr, orgAddr, subGroupA), true);
-    }
+        result = keyperModule.isSuperSafe(orgAddr, orgAddr, groupSafe);
+        assertEq(result, false);
 
     function testRemoveGroupFromOtherGroup() public {
         setUpBaseOrgTree();
@@ -587,8 +632,20 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(keyperModule.isChild(orgAddr, groupA, subGroupA), false);
     }
 
-    // TODO remove Group:
+    // TODO : test following usecases
+    // remove Group:
     // Usecases for revert from Remove group
     // -> Org call removeGRoup for a group of another org
     // -> Group call removeGroup for a group that is not his children
+    // Role related usecases:
+    // -> Check that the roles have been disabled for the group/org and for his safe lead
+
+    // UseCases missing (similar usecase testRevert...) :
+    // Create 2 Org: each with 1 group + 1 subgroup, then set a safe as safe_lead
+    // then try with that safe to modify from another org
+
+    // Add Tests that checks that this roles has been assigned following this rules
+    // registerOrg => Give ROOT_SAFE role to safe registered
+    // addGroup => Give SUPER_SAFE role to added safe
+    // setRole(SAFE_LEAD,...., user) => Give SAFE_LEAD to role added
 }

@@ -54,13 +54,13 @@ contract KeyperRolesTest is Test, Constants {
         // Check KeyperModule has role capabilites
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                SAFE_LEAD, keyperModuleDeployed, ADD_OWNER
+                uint8(Role.SAFE_LEAD), keyperModuleDeployed, ADD_OWNER
             ),
             true
         );
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                SAFE_LEAD, keyperModuleDeployed, REMOVE_OWNER
+                uint8(Role.SAFE_LEAD), keyperModuleDeployed, REMOVE_OWNER
             ),
             true
         );
@@ -77,7 +77,7 @@ contract KeyperRolesTest is Test, Constants {
         // Check Role
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                ROOT_SAFE, address(keyperModule), ROLE_ASSIGMENT
+                uint8(Role.ROOT_SAFE), address(keyperModule), ROLE_ASSIGMENT
             ),
             true
         );

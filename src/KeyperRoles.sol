@@ -28,51 +28,72 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
 
         /// Target contract: KeyperModule
         /// Auth function addOwnerWithThreshold
-        setRoleCapability(SAFE_LEAD, keyperModule, ADD_OWNER, true);
+        setRoleCapability(uint8(Role.SAFE_LEAD), keyperModule, ADD_OWNER, true);
         /// Target contract: KeyperModule
         /// Auth function removeOwner
-        setRoleCapability(SAFE_LEAD, keyperModule, REMOVE_OWNER, true);
+        setRoleCapability(
+            uint8(Role.SAFE_LEAD), keyperModule, REMOVE_OWNER, true
+        );
         /// Target contract: KeyperModule
         /// Auth function execTransactionOnBehalf
-        setRoleCapability(SAFE_LEAD, keyperModule, EXEC_ON_BEHALF, true);
+        setRoleCapability(
+            uint8(Role.SAFE_LEAD), keyperModule, EXEC_ON_BEHALF, true
+        );
 
         /// Define Role 1 - SAFE_LEAD_EXEC_ON_BEHALF_ONLY
         /// Target contract: KeyperModule
         /// Auth function execTransactionOnBehalf
         setRoleCapability(
-            SAFE_LEAD_EXEC_ON_BEHALF_ONLY, keyperModule, EXEC_ON_BEHALF, true
+            uint8(Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY),
+            keyperModule,
+            EXEC_ON_BEHALF,
+            true
         );
 
         /// Define Role 2 - SAFE_LEAD_MODIFY_OWNERS_ONLY
         /// Target contract: KeyperModule
         /// Auth function addOwnerWithThreshold
         setRoleCapability(
-            SAFE_LEAD_MODIFY_OWNERS_ONLY, keyperModule, ADD_OWNER, true
+            uint8(Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
+            keyperModule,
+            ADD_OWNER,
+            true
         );
         /// Target contract: KeyperModule
         /// Auth function removeOwner
         setRoleCapability(
-            SAFE_LEAD_MODIFY_OWNERS_ONLY, keyperModule, REMOVE_OWNER, true
+            uint8(Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
+            keyperModule,
+            REMOVE_OWNER,
+            true
         );
 
         /// Define Role 3 - ROOT_SAFE
         /// Target contract: KeyperModule
         /// Auth function setRole
-        setRoleCapability(ROOT_SAFE, keyperModule, ROLE_ASSIGMENT, true);
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, ROLE_ASSIGMENT, true
+        );
 
         /// Define Role 4 - SUPER_SAFE
         /// Target contract: KeyperModule
         /// Auth function addOwnerWithThreshold
-        setRoleCapability(SUPER_SAFE, keyperModule, ADD_OWNER, true);
+        setRoleCapability(uint8(Role.SUPER_SAFE), keyperModule, ADD_OWNER, true);
         /// Target contract: KeyperModule
         /// Auth function removeOwner
-        setRoleCapability(SUPER_SAFE, keyperModule, REMOVE_OWNER, true);
+        setRoleCapability(
+            uint8(Role.SUPER_SAFE), keyperModule, REMOVE_OWNER, true
+        );
         /// Target contract: KeyperModule
         /// Auth function execTransactionOnBehalf
-        setRoleCapability(SUPER_SAFE, keyperModule, EXEC_ON_BEHALF, true);
+        setRoleCapability(
+            uint8(Role.SUPER_SAFE), keyperModule, EXEC_ON_BEHALF, true
+        );
         /// Target contract: KeyperModule
         /// Auth function removeGroup
-        setRoleCapability(SUPER_SAFE, keyperModule, REMOVE_GROUP, true);
+        setRoleCapability(
+            uint8(Role.SUPER_SAFE), keyperModule, REMOVE_GROUP, true
+        );
 
         /// Transfer ownership of authority to keyper module
         setOwner(keyperModule);
