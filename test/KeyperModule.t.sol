@@ -8,10 +8,14 @@ import {Constants} from "../src/Constants.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import "./GnosisSafeHelper.t.sol";
+import {MockedContractA, MockedContractB} from "./MockedContract.t.sol";
 
 contract KeyperModuleTest is Test, Constants {
     GnosisSafeHelper gnosisHelper;
     KeyperModule keyperModule;
+
+    MockedContractA public mockedContractA;
+    MockedContractB public mockedContractB;
 
     address org1;
     address org2;
@@ -38,6 +42,9 @@ contract KeyperModuleTest is Test, Constants {
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
 
+        mockedContractA = new MockedContractA();
+        mockedContractB = new MockedContractB();
+
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
         // Predict the future address of keyper roles
@@ -45,8 +52,8 @@ contract KeyperModuleTest is Test, Constants {
 
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
         keyperModule = new KeyperModule(
-            address(0x112233),
-            address(0x445566),
+            address(mockedContractA),
+            address(mockedContractB),
             address(keyperRolesDeployed)
         );
 
@@ -60,14 +67,6 @@ contract KeyperModuleTest is Test, Constants {
             abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
 
         factory.deploy(salt, bytecode);
-    }
-
-    function testValidGnosisSafeAddressesOnConstructor() public {
-        address fakeMasterCopyAddress = keyperModule.masterCopy();
-        address fakeProxyFactoryAddress = keyperModule.proxyFactory();
-
-        assertEq(keyperModule.isContract(fakeMasterCopyAddress), false);
-        assertEq(keyperModule.isContract(fakeProxyFactoryAddress), false);
     }
 
     function testCreateRootOrg() public {

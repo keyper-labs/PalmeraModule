@@ -105,6 +105,44 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address orgAddr = keyperSafes[orgName];
         result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
         assertEq(result, true);
+
+        (
+            string memory name,
+            address admin,
+            address safe,
+            address[] memory child,
+            address parent
+        ) = keyperModule.getGroupInfo(orgAddr, groupSafe);
+
+        assertEq(name, groupName);
+        assertEq(admin, orgAddr);
+        assertEq(safe, groupSafe);
+        assertEq(child.length, 0);
+        assertEq(parent, orgAddr);
+    }
+
+    function testRevertChildAlreadyExistAddGroup() public {
+
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
+
+        address subGroupSafe = gnosisHelper.newKeyperSafe(2, 1);
+        string memory subGroupName = subGroupAName;
+        keyperSafes[subGroupName] = address(subGroupSafe);
+
+        bool result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
+        assertEq(result, true);
+
+        vm.startPrank(subGroupSafe);
+        vm.expectRevert(KeyperModule.ChildAlreadyExist.selector);
+        keyperModule.addGroup(orgAddr, groupSafe, subGroupName);
+
+        // TODO: Until this point the test is working, so I must check why this
+        // is not working with the following code:
+        // vm.deal(subGroupSafe, 100 gwei);
+        // gnosisHelper.updateSafeInterface(subGroupSafe);
+
+        // vm.expectRevert(KeyperModule.ChildAlreadyExist.selector);
+        // result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
     }
 
     function testLeadExecOnBehalf() public {

@@ -116,9 +116,9 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
                 || authority == address(0)
         ) revert ZeroAddressProvided();
 
-        // if (
-        //     !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
-        // ) revert InvalidAddressProvided();
+        if (
+            !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
+        ) revert InvalidAddressProvided();
 
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
@@ -546,15 +546,6 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
             curentsuperSafe = childGroup.superSafe;
         }
         return false;
-    }
-
-    /// @notice Method to validate if a provided address is a contract
-    /// @param gnosisAddress Address used to initialize KeyperModule
-    /// @return bool
-    function isContract(address gnosisAddress) public view returns (bool) {
-        bool addrToCheck = gnosisAddress.isContract();
-        if (addrToCheck) return true;
-        else return false;
     }
 
     /// @notice Method to Validate if address is a Gnosis Safe Multisig Wallet
