@@ -152,21 +152,8 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     function testLeadExecOnBehalf() public {
         // Set initialsafe as org
-        bool result = gnosisHelper.registerOrgTx(orgName);
-        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
 
-        // Create new safe with setup called while creating contract
-        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
-        // Create Group calldata
-        string memory groupName = groupAName;
-        keyperSafes[groupName] = address(groupSafe);
-
-        address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
-
-        // Send ETH to org&subgroup
-        vm.deal(orgAddr, 100 gwei);
-        vm.deal(groupSafe, 100 gwei);
         address receiver = address(0xABC);
 
         // Set keyperhelper gnosis safe to org
@@ -177,7 +164,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
         // Execute on behalf function
         vm.startPrank(orgAddr);
-        result = keyperModule.execTransactionOnBehalf(
+        bool result = keyperModule.execTransactionOnBehalf(
             orgAddr,
             groupSafe,
             receiver,

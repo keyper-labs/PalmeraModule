@@ -104,6 +104,14 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         _;
     }
 
+    /// @dev Modifier for Validate if Org Exist or Not
+    modifier GroupRegistered(address org, address group) {
+        if (group == address(0) || groups[org][group].safe == address(0)) {
+            revert GroupNotRegistered();
+        }
+        _;
+    }
+
     /// @dev Modifier for Validate ifthe address is a Gnosis Safe Multisig Wallet
     modifier IsGnosisSafe(address safe) {
         if (safe == address(0) || !isSafe(safe)) {
@@ -415,6 +423,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     function removeGroup(address org, address group)
         public
         OrgRegistered(org)
+        GroupRegistered(org, group)
         validAddress(group)
         IsGnosisSafe(_msgSender())
         requiresAuth
@@ -475,14 +484,13 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     function updateSuper(address org, address group, address newSuper)
         public
         OrgRegistered(org)
+        GroupRegistered(org, group)
         validAddress(group)
         validAddress(newSuper)
         IsGnosisSafe(_msgSender())
         requiresAuth
     {
         address caller = _msgSender();
-        Group memory _group = groups[org][group];
-        if (_group.safe == address(0)) revert GroupNotRegistered();
         // RootSafe usecase : Check if the group is part of caller's org
         if (caller == org) {
             if (groups[caller][group].safe == address(0)) {
@@ -494,8 +502,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
                 revert NotAuthorizedRemoveNonChildrenGroup();
             }
         }
-
-        // Parent is either an org or a group
+        Group memory _group = groups[org][group];
+        // SuperSafe is either an org or a group
         Group storage superSafe;
         if (_group.superSafe == org) {
             superSafe = orgs[org];
