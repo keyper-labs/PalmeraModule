@@ -524,6 +524,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (newSuper == org) {
             orgs[org].child.push(group);
         } else {
+		    // TODO: check if a SuperSafe can reassigned to another SuperSafe
             groups[org][newSuper].child.push(group);
         }
         emit GroupParentUpdated(org, group, _msgSender(), newSuper);
