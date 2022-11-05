@@ -441,7 +441,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         }
 
         Group memory _group = groups[org][group];
-        if (_group.safe == address(0)) revert GroupNotRegistered();
 
         // superSafe is either an org or a group
         Group storage superSafe =
@@ -569,10 +568,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             return false;
         }
         /// Check within groups of the org
-        if (groups[org][superSafe].safe == address(0)) {
+        Group memory group = groups[org][superSafe];
+        if (group.safe == address(0)) {
             revert SuperSafeNotRegistered();
         }
-        Group memory group = groups[org][superSafe];
         for (uint256 i = 0; i < group.child.length; i++) {
             if (group.child[i] == child) return true;
         }
