@@ -60,6 +60,13 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         string name
     );
 
+    event GroupParentUpdated(
+        address indexed org,
+        address indexed group,
+        address indexed caller,
+        address parent
+    );
+
     event TxOnBehalfExecuted(
         address indexed org,
         address indexed executor,
@@ -93,6 +100,14 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     modifier OrgRegistered(address org) {
         if (org == address(0) || orgs[org].safe == address(0)) {
             revert OrgNotRegistered();
+        }
+        _;
+    }
+
+    /// @dev Modifier for Validate if Org Exist or Not
+    modifier GroupRegistered(address org, address group) {
+        if (group == address(0) || groups[org][group].safe == address(0)) {
+            revert GroupNotRegistered();
         }
         _;
     }
@@ -276,10 +291,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address targetSafe,
         address org
     ) public requiresAuth IsGnosisSafe(targetSafe) {
-        if (
-            prevOwner == address(0) || targetSafe == address(0)
-                || owner == address(0) || org == address(0)
-        ) revert ZeroAddressProvided();
+        if (prevOwner == address(0) || owner == address(0) || org == address(0))
+        {
+            revert ZeroAddressProvided();
+        }
         /// Check _msgSender() is an user lead of the target safe
         if (!isSafeLead(org, targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotSafeLead();
@@ -408,7 +423,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     function removeGroup(address org, address group)
         public
         OrgRegistered(org)
-        validAddress(group)
+        GroupRegistered(org, group)
         IsGnosisSafe(_msgSender())
         requiresAuth
     {
@@ -460,16 +475,69 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         delete groups[org][group];
     }
 
+    /// @notice update parent of a group
+    /// @dev Update the parent of a group with a new parent
+    /// @param org address of the organisation
+    /// @param group address of the group to be removed
+    /// @param newSuper address of the new parent
+    function updateSuper(address org, address group, address newSuper)
+        public
+        OrgRegistered(org)
+        GroupRegistered(org, group)
+        GroupRegistered(org, newSuper)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        address caller = _msgSender();
+        // RootSafe usecase : Check if the group is part of caller's org
+        if (caller == org) {
+            if (groups[caller][group].safe == address(0)) {
+                revert NotAuthorizedRemoveGroupFromOtherOrg();
+            }
+        } else {
+            // SuperSafe usecase : Check caller is superSafe of the group
+            if (!isSuperSafe(org, caller, group)) {
+                revert NotAuthorizedRemoveNonChildrenGroup();
+            }
+        }
+        Group storage _group = groups[org][group];
+        // SuperSafe is either an org or a group
+        Group storage superSafe;
+        if (_group.superSafe == org) {
+            superSafe = orgs[org];
+        } else {
+            superSafe = groups[org][_group.superSafe];
+        }
+
+        /// Remove child from superSafe
+        for (uint256 i = 0; i < superSafe.child.length; i++) {
+            if (superSafe.child[i] == group) {
+                superSafe.child[i] = superSafe.child[superSafe.child.length - 1];
+                superSafe.child.pop();
+                break;
+            }
+        }
+
+        // Update group superSafe
+        _group.superSafe = newSuper;
+        // Add group to new superSafe
+        if (newSuper == org) {
+            orgs[org].child.push(group);
+        } else {
+            // TODO: check if a SuperSafe can reassigned to another SuperSafe
+            groups[org][newSuper].child.push(group);
+        }
+        emit GroupParentUpdated(org, group, caller, newSuper);
+    }
+
     /// @notice Get all the information about a group
     function getGroupInfo(address org, address group)
         public
         view
         OrgRegistered(org)
-        validAddress(group)
+        GroupRegistered(org, group)
         returns (string memory, address, address, address[] memory, address)
     {
-        address groupSafe = groups[org][group].safe;
-        if (groupSafe == address(0)) revert OrgNotRegistered();
         return (
             groups[org][group].name,
             groups[org][group].lead,
