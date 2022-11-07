@@ -230,7 +230,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         emit ModuleEnabled(address(this), module);
     }
 
-    /// @notice This function will allow Safe Lead & Safe Lead mody only roles to to add owner and set a threshold without passing by normal multisig check
+    /// @notice This function will allow Safe Lead & Safe Lead modify only roles to to add owner and set a threshold without passing by normal multisig check
     /// @dev For instance role
     function addOwnerWithThreshold(
         address owner,

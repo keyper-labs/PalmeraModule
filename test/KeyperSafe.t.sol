@@ -786,7 +786,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         gnosisHelper.updateSafeInterface(orgAddr);
         bool result =
-            gnosisHelper.createRemoveGroupTx(orgAddr, subSafeGroupA);
+            gnosisHelper.createRemoveGroupTx(orgAddr, groupSafe);
 
         assertEq(result, true);
 
@@ -794,9 +794,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(result, false);
 
         address[] memory child;
-        (,,, child,) = keyperModule.getGroupInfo(orgAddr, groupSafe);
-        // Check removed group parent has not more child
-        assertEq(child.length, 0);
+        (,,, child,) = keyperModule.getOrg(orgAddr);
+        // Check removed group parent has subSafeGroup A as child an not groupSafe
+        assertEq(child.length, 1);
+        assertEq(child[0] == groupSafe, false);
+        assertEq(child[0] == subSafeGroupA, true);
         assertEq(keyperModule.isChild(orgAddr, groupSafe, subSafeGroupA), false);
     }
 
