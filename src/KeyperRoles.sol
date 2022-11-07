@@ -74,36 +74,36 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         setRoleCapability(
             uint8(Role.ROOT_SAFE), keyperModule, ROLE_ASSIGMENT, true
         );
-		/// Target contract: KeyperModule
-		/// Auth function enable Allow List
-		setRoleCapability(
-			uint8(Role.ROOT_SAFE), keyperModule, ENABLE_ALLOWLIST, true
-		);
-		/// Target contract: KeyperModule
-		/// Auth function enable Deny List
-		setRoleCapability(
-			uint8(Role.ROOT_SAFE), keyperModule, ENABLE_DENYLIST, true
-		);
-		/// Target contract: KeyperModule
-		/// Auth function Add to Allow List
-		setRoleCapability(
-			uint8(Role.ROOT_SAFE), keyperModule, ADD_TO_ALLOWLIST, true
-		);
-		/// Target contract: KeyperModule
-		/// Auth function Add to Deny List
-		setRoleCapability(
-			uint8(Role.ROOT_SAFE), keyperModule, ADD_TO_DENYLIST, true
-		);
-		/// Target contract: KeyperModule
-		/// Auth function Remove from Allow List
-		setRoleCapability(
-			uint8(Role.ROOT_SAFE), keyperModule, DROP_FROM_ALLOWLIST, true
-		);
-		/// Target contract: KeyperModule
-		/// Auth function Remove from Deny List
-		setRoleCapability(
-			uint8(Role.ROOT_SAFE), keyperModule, DROP_FROM_DENYLIST, true
-		);
+        /// Target contract: KeyperModule
+        /// Auth function enable Allow List
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, ENABLE_ALLOWLIST, true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function enable Deny List
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, ENABLE_DENYLIST, true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function Add to Allow List
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, ADD_TO_ALLOWLIST, true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function Add to Deny List
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, ADD_TO_DENYLIST, true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function Remove from Allow List
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, DROP_FROM_ALLOWLIST, true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function Remove from Deny List
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, DROP_FROM_DENYLIST, true
+        );
 
         /// Define Role 4 - SUPER_SAFE
         /// Target contract: KeyperModule

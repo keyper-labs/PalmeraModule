@@ -237,7 +237,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         uint256 threshold,
         address targetSafe,
         address org
-    ) public OrgRegistered(org) requiresAuth IsGnosisSafe(targetSafe) {
+    ) external OrgRegistered(org) requiresAuth IsGnosisSafe(targetSafe) {
         /// Check _msgSender() is an user lead of the target safe
         if (!isSafeLead(org, targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotSafeLead();
@@ -275,7 +275,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         uint256 threshold,
         address targetSafe,
         address org
-    ) public requiresAuth IsGnosisSafe(targetSafe) {
+    ) external requiresAuth IsGnosisSafe(targetSafe) {
         if (
             prevOwner == address(0) || targetSafe == address(0)
                 || owner == address(0) || org == address(0)
@@ -334,26 +334,11 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         authority.setUserRole(user, uint8(role), enabled);
     }
 
-    function getOrg(address _org)
-        public
-        view
-        OrgRegistered(_org)
-        returns (string memory, address, address, address[] memory, address)
-    {
-        return (
-            orgs[_org].name,
-            orgs[_org].lead,
-            orgs[_org].safe,
-            orgs[_org].child,
-            orgs[_org].superSafe
-        );
-    }
-
     /// @notice Register an organisatin
     /// @dev Call has to be done from a safe transaction
     /// @param name of the org
     function registerOrg(string memory name)
-        public
+        external
         IsGnosisSafe(_msgSender())
     {
         address caller = _msgSender();
@@ -377,7 +362,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @param name name of the group
     /// TODO: how avoid any safe adding in the org or group?
     function addGroup(address org, address superSafe, string memory name)
-        public
+        external
         OrgRegistered(org)
         validAddress(superSafe)
         IsGnosisSafe(_msgSender())
@@ -406,7 +391,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @param org address of the organisation
     /// @param group address of the group to be removed
     function removeGroup(address org, address group)
-        public
+        external
         OrgRegistered(org)
         validAddress(group)
         IsGnosisSafe(_msgSender())
@@ -458,6 +443,153 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         // Store the name before to delete the Group
         emit GroupRemoved(org, group, caller, superSafe.safe, _group.name);
         delete groups[org][group];
+    }
+
+    // List of the Methods of DenyHelpers override
+
+    /// @dev Funtion to Add Wallet to allowedList based on Approach of Safe Contract - Owner Manager
+    /// @param org Address of Org where the Wallet to be added to the allowedList
+    /// @param users Array of Address of the Wallet to be added to allowedList
+    function addToAllowedList(address org, address[] memory users)
+        external
+        override
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        if (users.length == 0) revert ZeroAddressProvided();
+        if (!allowFeature[org]) revert AllowedListDisable();
+        address currentWallet = SENTINEL_WALLETS;
+        for (uint256 i = 0; i < users.length; i++) {
+            address wallet = users[i];
+            if (
+                wallet == address(0) || wallet == SENTINEL_WALLETS
+                    || wallet == address(this) || currentWallet == wallet
+            ) revert InvalidAddressProvided();
+            // Avoid duplicate wallet
+            if (allowed[org][wallet] != address(0)) {
+                revert UserAlreadyOnAllowedList();
+            }
+            // Add wallet to allowedList
+            allowed[org][currentWallet] = wallet;
+            currentWallet = wallet;
+        }
+        allowed[org][currentWallet] = SENTINEL_WALLETS;
+        allowedCount[org] += users.length;
+        emit AddedToTheAllowedList(users);
+    }
+
+    /// @dev Funtion to Add Wallet to denyList based on Approach of Safe Contract - Owner Manager
+    /// @param org Address of Org where the Wallet to be added to the denyList
+    /// @param users Array of Address of the Wallet to be added to denyList
+    function addToDeniedList(address org, address[] memory users)
+        external
+        override
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        if (users.length == 0) revert ZeroAddressProvided();
+        if (!denyFeature[org]) revert DeniedListDisable();
+        address currentWallet = SENTINEL_WALLETS;
+        for (uint256 i = 0; i < users.length; i++) {
+            address wallet = users[i];
+            if (
+                wallet == address(0) || wallet == SENTINEL_WALLETS
+                    || wallet == address(this) || currentWallet == wallet
+            ) revert InvalidAddressProvided();
+            // Avoid duplicate wallet
+            if (denied[org][wallet] != address(0)) {
+                revert UserAlreadyOnDeniedList();
+            }
+            // Add wallet to deniedList
+            denied[org][currentWallet] = wallet;
+            currentWallet = wallet;
+        }
+        denied[org][currentWallet] = SENTINEL_WALLETS;
+        deniedCount[org] += users.length;
+        emit AddedToTheDeniedList(users);
+    }
+
+    /// @dev Function to Drop Wallet from Allowed based on Approach of Safe Contract - Owner Manager
+	/// @param org Address of Org where the Wallet to be added to the allowedList
+    /// @param user Array of Address of the Wallet to be dropped to AllowedList
+    function dropFromAllowedList(address org, address user)
+        external
+        override
+        validAddress(user)
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        if (!allowFeature[org]) revert AllowedListDisable();
+        address prevUser = getPrevUser(org, user, true);
+        allowed[org][prevUser] = allowed[org][user];
+        allowed[org][user] = address(0);
+        allowedCount[org] = allowedCount[org] > 1 ? allowedCount[org].sub(1) : 0;
+        emit DroppedFromAllowedList(user);
+    }
+
+    /// @dev Function to Drop Wallet from Denied based on Approach of Safe Contract - Owner Manager
+	/// @param org Address of Org where the Wallet to be added to the denyList
+    /// @param user Array of Address of the Wallet to be dropped to DeniedList
+    function dropFromDeniedList(address org, address user)
+        external
+        override
+        validAddress(user)
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        if (!denyFeature[org]) revert DeniedListDisable();
+        address prevUser = getPrevUser(org, user, false);
+        denied[org][prevUser] = denied[org][user];
+        denied[org][user] = address(0);
+        deniedCount[org] = deniedCount[org] > 1 ? deniedCount[org].sub(1) : 0;
+        emit DroppedFromDeniedList(user);
+    }
+
+    /// @dev Method to Enable Allowlist
+	/// @param org Address of Org where will be enabled the Allowedlist
+    function enableAllowlist(address org)
+        external
+        override
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        allowFeature[org] = true;
+        denyFeature[org] = false;
+    }
+
+    /// @dev Method to Enable Allowlist
+	/// @param org Address of Org where will be enabled the Deniedlist
+    function enableDenylist(address org)
+        external
+        override
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        denyFeature[org] = true;
+        allowFeature[org] = false;
+    }
+
+    // List of Helpers
+
+    function getOrg(address _org)
+        public
+        view
+        OrgRegistered(_org)
+        returns (string memory, address, address, address[] memory, address)
+    {
+        return (
+            orgs[_org].name,
+            orgs[_org].lead,
+            orgs[_org].safe,
+            orgs[_org].child,
+            orgs[_org].superSafe
+        );
     }
 
     /// @notice Get all the information about a group
@@ -624,24 +756,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         );
     }
 
-    /// @notice Check if the signer is an owner of the safe
-    /// @dev Call has to be done from a safe transaction
-    /// @param gnosisSafe GnosisSafe interface
-    /// @param signer Address of the signer to verify
-    function isSafeOwner(IGnosisSafe gnosisSafe, address signer)
-        private
-        view
-        returns (bool)
-    {
-        address[] memory safeOwners = gnosisSafe.getOwners();
-        for (uint256 i = 0; i < safeOwners.length; i++) {
-            if (safeOwners[i] == signer) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /// @notice disable safe lead roles
     /// @dev Associated roles: SAFE_LEAD || SAFE_LEAD_EXEC_ON_BEHALF_ONLY || SAFE_LEAD_MODIFY_OWNERS_ONLY
     /// @param user Address of the user to disable roles
@@ -666,5 +780,23 @@ contract KeyperModule is Auth, Constants, DenyHelper {
                 user, uint8(Role.SAFE_LEAD_MODIFY_OWNERS_ONLY), false
             );
         }
+    }
+
+    /// @notice Check if the signer is an owner of the safe
+    /// @dev Call has to be done from a safe transaction
+    /// @param gnosisSafe GnosisSafe interface
+    /// @param signer Address of the signer to verify
+    function isSafeOwner(IGnosisSafe gnosisSafe, address signer)
+        private
+        view
+        returns (bool)
+    {
+        address[] memory safeOwners = gnosisSafe.getOwners();
+        for (uint256 i = 0; i < safeOwners.length; i++) {
+            if (safeOwners[i] == signer) {
+                return true;
+            }
+        }
+        return false;
     }
 }
