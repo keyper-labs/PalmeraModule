@@ -476,9 +476,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         validAddress(group)
         returns (string memory, address, address, address[] memory, address)
     {
-        address groupSafe = groups[org][group].safe;
-        // TODO: This should be removed since we already have modifier that works avoiding address(0)
-        if (groupSafe == address(0)) revert OrgNotRegistered();
         return (
             groups[org][group].name,
             groups[org][group].lead,

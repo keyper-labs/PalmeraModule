@@ -14,8 +14,8 @@ contract KeyperModuleTest is Test, Constants {
     GnosisSafeHelper gnosisHelper;
     KeyperModule keyperModule;
 
-    MockedContractA public mockedContractA;
-    MockedContractB public mockedContractB;
+    MockedContractA public masterCopyMocked;
+    MockedContractB public proxyFactoryMocked;
 
     address org1;
     address org2;
@@ -42,8 +42,8 @@ contract KeyperModuleTest is Test, Constants {
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
 
-        mockedContractA = new MockedContractA();
-        mockedContractB = new MockedContractB();
+        masterCopyMocked = new MockedContractA();
+        proxyFactoryMocked = new MockedContractB();
 
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
@@ -52,8 +52,8 @@ contract KeyperModuleTest is Test, Constants {
 
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
         keyperModule = new KeyperModule(
-            address(mockedContractA),
-            address(mockedContractB),
+            address(masterCopyMocked),
+            address(proxyFactoryMocked),
             address(keyperRolesDeployed)
         );
 

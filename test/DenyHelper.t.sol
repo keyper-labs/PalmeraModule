@@ -10,21 +10,21 @@ import {MockedContractA, MockedContractB} from "./MockedContract.t.sol";
 
 contract DenyHelperTest is Test {
     KeyperModule public keyperModule;
-    MockedContractA public mockedContractA;
-    MockedContractB public mockedContractB;
+    MockedContractA public masterCopyMocked;
+    MockedContractB public proxyFactoryMocked;
 
     address public keyperModuleAddr;
     address public keyperRolesDeployed;
     address[] public owners = new address[](5);
 
     function setUp() public {
-        mockedContractA = new MockedContractA();
-        mockedContractB = new MockedContractB();
+        masterCopyMocked = new MockedContractA();
+        proxyFactoryMocked = new MockedContractB();
 
         // Gnosis safe call / keyperRoles are not used during the tests, no need deployed factory/mastercopy/keyperRoles
         keyperModule = new KeyperModule(
-            address(mockedContractA),
-            address(mockedContractB),
+            address(masterCopyMocked),
+            address(proxyFactoryMocked),
             address(0x786946)
         );
     }
@@ -34,11 +34,9 @@ contract DenyHelperTest is Test {
         keyperModule.addToAllowedList(owners);
         assertEq(keyperModule.allowedCount(), owners.length);
         assertEq(keyperModule.getAllAllowed().length, owners.length);
-        assertEq(keyperModule.isAllowed(owners[0]), true);
-        assertEq(keyperModule.isAllowed(owners[1]), true);
-        assertEq(keyperModule.isAllowed(owners[2]), true);
-        assertEq(keyperModule.isAllowed(owners[3]), true);
-        assertEq(keyperModule.isAllowed(owners[4]), true);
+        for (uint256 i = 0; i < owners.length; i++) {
+            assertEq(keyperModule.isAllowed(owners[i]), true);
+        }
     }
 
     function testRevertAddToAllowedListZeroAddress() public {
@@ -90,11 +88,9 @@ contract DenyHelperTest is Test {
         keyperModule.addToDeniedList(owners);
         assertEq(keyperModule.deniedCount(), owners.length);
         assertEq(keyperModule.getAllDenied().length, owners.length);
-        assertEq(keyperModule.isDenied(owners[0]), true);
-        assertEq(keyperModule.isDenied(owners[1]), true);
-        assertEq(keyperModule.isDenied(owners[2]), true);
-        assertEq(keyperModule.isDenied(owners[3]), true);
-        assertEq(keyperModule.isDenied(owners[4]), true);
+        for (uint256 i = 0; i < owners.length; i++) {
+            assertEq(keyperModule.isDenied(owners[i]), true);
+        }
     }
 
     function testRevertAddToDenieddListZeroAddress() public {
@@ -146,10 +142,9 @@ contract DenyHelperTest is Test {
         listOfOwners();
 
         keyperModule.addToAllowedList(owners);
-        assertEq(keyperModule.getPrevUser(owners[1], true), owners[0]);
-        assertEq(keyperModule.getPrevUser(owners[2], true), owners[1]);
-        assertEq(keyperModule.getPrevUser(owners[3], true), owners[2]);
-        assertEq(keyperModule.getPrevUser(owners[4], true), owners[3]);
+        for (uint256 i = 0; i < owners.length - 1; i++) {
+            assertEq(keyperModule.getPrevUser(owners[i + 1], true), owners[i]);
+        }
         assertEq(keyperModule.getPrevUser(address(0), true), owners[4]);
         // SENTINEL_WALLETS
         assertEq(keyperModule.getPrevUser(owners[0], true), address(0x1));
@@ -159,10 +154,9 @@ contract DenyHelperTest is Test {
         listOfOwners();
 
         keyperModule.addToDeniedList(owners);
-        assertEq(keyperModule.getPrevUser(owners[1], false), owners[0]);
-        assertEq(keyperModule.getPrevUser(owners[2], false), owners[1]);
-        assertEq(keyperModule.getPrevUser(owners[3], false), owners[2]);
-        assertEq(keyperModule.getPrevUser(owners[4], false), owners[3]);
+        for (uint256 i = 0; i < owners.length - 1; i++) {
+            assertEq(keyperModule.getPrevUser(owners[i + 1], false), owners[i]);
+        }
         assertEq(keyperModule.getPrevUser(address(0), false), owners[4]);
         // SENTINEL_WALLETS
         assertEq(keyperModule.getPrevUser(owners[0], false), address(0x1));
