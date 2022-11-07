@@ -6,20 +6,20 @@ import {KeyperModule} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
 import {console} from "forge-std/console.sol";
-import {MockedContractA, MockedContractB} from "./MockedContract.t.sol";
+import {MockedContract} from "./MockedContract.t.sol";
 
 contract DenyHelperTest is Test {
     KeyperModule public keyperModule;
-    MockedContractA public masterCopyMocked;
-    MockedContractB public proxyFactoryMocked;
+    MockedContract public masterCopyMocked;
+    MockedContract public proxyFactoryMocked;
 
     address public keyperModuleAddr;
     address public keyperRolesDeployed;
     address[] public owners = new address[](5);
 
     function setUp() public {
-        masterCopyMocked = new MockedContractA();
-        proxyFactoryMocked = new MockedContractB();
+        masterCopyMocked = new MockedContract();
+        proxyFactoryMocked = new MockedContract();
 
         // Gnosis safe call / keyperRoles are not used during the tests, no need deployed factory/mastercopy/keyperRoles
         keyperModule = new KeyperModule(

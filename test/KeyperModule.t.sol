@@ -8,14 +8,14 @@ import {Constants} from "../src/Constants.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import "./GnosisSafeHelper.t.sol";
-import {MockedContractA, MockedContractB} from "./MockedContract.t.sol";
+import {MockedContract} from "./MockedContract.t.sol";
 
 contract KeyperModuleTest is Test, Constants {
     GnosisSafeHelper gnosisHelper;
     KeyperModule keyperModule;
 
-    MockedContractA public masterCopyMocked;
-    MockedContractB public proxyFactoryMocked;
+    MockedContract public masterCopyMocked;
+    MockedContract public proxyFactoryMocked;
 
     address org1;
     address org2;
@@ -42,8 +42,8 @@ contract KeyperModuleTest is Test, Constants {
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
 
-        masterCopyMocked = new MockedContractA();
-        proxyFactoryMocked = new MockedContractB();
+        masterCopyMocked = new MockedContract();
+        proxyFactoryMocked = new MockedContract();
 
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
