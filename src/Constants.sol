@@ -42,6 +42,9 @@ abstract contract Constants is Context {
     bytes4 internal constant ROLE_ASSIGMENT =
         bytes4(keccak256(bytes("setRole(uint8,address,address,bool)")));
 
+	bytes4 internal constant UPDATE_SUPER_SAFE =
+        bytes4(keccak256(bytes("updateSuper(address,address)")));
+
     bytes4 internal constant EXEC_ON_BEHALF = bytes4(
         keccak256(
             bytes(

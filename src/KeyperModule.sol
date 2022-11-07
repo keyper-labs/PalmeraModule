@@ -481,16 +481,11 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @param newSuper address of the new parent
     function updateSuper(address group, address newSuper)
         public
-        GroupRegistered(_msgSender(), group)
-        GroupRegistered(_msgSender(), newSuper)
-        IsGnosisSafe(_msgSender())
+		GroupRegistered(_msgSender(), group)
+		GroupRegistered(_msgSender(), newSuper)
         requiresAuth
     {
         address caller = _msgSender();
-        // RootSafe usecase : Check if the group is part of caller's org
-        if (groups[caller][group].safe == address(0)) {
-            revert NotAuthorizedUpdateGroupFromOtherOrg();
-        }
         Group storage _group = groups[caller][group];
         // SuperSafe is either an Org or a Group
         Group storage superSafe;

@@ -74,6 +74,11 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         setRoleCapability(
             uint8(Role.ROOT_SAFE), keyperModule, ROLE_ASSIGMENT, true
         );
+		/// Target contract: KeyperModule
+		/// Auth function updateSuper
+		setRoleCapability(
+			uint8(Role.ROOT_SAFE), keyperModule, UPDATE_SUPER_SAFE, true
+		);
 
         /// Define Role 4 - SUPER_SAFE
         /// Target contract: KeyperModule
