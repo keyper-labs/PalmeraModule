@@ -166,7 +166,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         bytes calldata data,
         Enum.Operation operation,
         bytes memory signatures
-    ) external payable Denied(to) requiresAuth returns (bool result) {
+    ) external payable Denied(org, to) requiresAuth returns (bool result) {
         if (org == address(0) || targetSafe == address(0) || to == address(0)) {
             revert ZeroAddressProvided();
         }

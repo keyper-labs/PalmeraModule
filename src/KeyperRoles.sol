@@ -109,7 +109,7 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         virtual
         override
         requiresAuth
-        Denied(user)
+        Denied(_msgSender(), user)
     {
         if (enabled) {
             getUserRoles[user] |= bytes32(1 << role);
