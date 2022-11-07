@@ -83,6 +83,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     error LeadNotRegistered();
     error NotAuthorized();
     error NotAuthorizedRemoveGroupFromOtherOrg();
+	error NotAuthorizedUpdateGroupFromOtherOrg();
     error NotAuthorizedRemoveNonChildrenGroup();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedAsNotSafeLead();
@@ -475,37 +476,28 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     }
 
     /// @notice update parent of a group
-    /// @dev Update the parent of a group with a new parent
-    /// @param org address of the organisation
+    /// @dev Update the parent of a group with a new parent, Call must come from the root safe
     /// @param group address of the group to be updated
     /// @param newSuper address of the new parent
-    function updateSuper(address org, address group, address newSuper)
+    function updateSuper(address group, address newSuper)
         public
-        OrgRegistered(org)
-        GroupRegistered(org, group)
-        GroupRegistered(org, newSuper)
+        GroupRegistered(_msgSender(), group)
+        GroupRegistered(_msgSender(), newSuper)
         IsGnosisSafe(_msgSender())
         requiresAuth
     {
         address caller = _msgSender();
         // RootSafe usecase : Check if the group is part of caller's org
-        if (caller == org) {
-            if (groups[caller][group].safe == address(0)) {
-                revert NotAuthorizedRemoveGroupFromOtherOrg();
-            }
-        } else {
-            // SuperSafe usecase : Check caller is superSafe of the group
-            if (!isSuperSafe(org, caller, group)) {
-                revert NotAuthorizedRemoveNonChildrenGroup();
-            }
-        }
-        Group storage _group = groups[org][group];
-        // SuperSafe is either an org or a group
+		if (groups[caller][group].safe == address(0)) {
+			revert NotAuthorizedUpdateGroupFromOtherOrg();
+		}
+        Group storage _group = groups[caller][group];
+        // SuperSafe is either an Org or a Group
         Group storage superSafe;
-        if (_group.superSafe == org) {
-            superSafe = orgs[org];
+        if (_group.superSafe == caller) {
+            superSafe = orgs[caller];
         } else {
-            superSafe = groups[org][_group.superSafe];
+            superSafe = groups[caller][_group.superSafe];
         }
 
         /// Remove child from superSafe
@@ -520,13 +512,13 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         // Update group superSafe
         _group.superSafe = newSuper;
         // Add group to new superSafe
-        if (newSuper == org) {
-            orgs[org].child.push(group);
+        if (newSuper == caller) {
+            orgs[caller].child.push(group);
         } else {
             // TODO: check if a SuperSafe can reassigned to another SuperSafe
-            groups[org][newSuper].child.push(group);
+            groups[caller][newSuper].child.push(group);
         }
-        emit GroupParentUpdated(org, group, caller, newSuper);
+        emit GroupParentUpdated(caller, group, caller, newSuper);
     }
 
     /// @notice Get all the information about a group
