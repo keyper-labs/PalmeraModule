@@ -89,19 +89,14 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             string memory name,
             address lead,
             address safe,
-            address[] memory children,
+            address[] memory child,
             address superSafe
         ) = keyperModule.getOrg(gnosisSafeAddr);
         assertEq(name, orgName);
-        assertEq(lead, gnosisSafeAddr);
+        assertEq(lead, address(0));
         assertEq(safe, gnosisSafeAddr);
         assertEq(superSafe, address(0));
-
-        address child;
-        for (uint256 i = 0; i < children.length; i++) {
-            children[i] = child;
-        }
-        assertEq(child, address(0));
+        assertEq(child.length, 0);
         assertEq(keyperModule.isOrgRegistered(gnosisSafeAddr), true);
     }
 
@@ -156,7 +151,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         ) = keyperModule.getGroupInfo(orgAddr, groupA);
 
         assertEq(name, groupAName);
-        assertEq(lead, orgAddr);
+        assertEq(lead, address(0));
         assertEq(safe, groupA);
         assertEq(child.length, 1);
         assertEq(child[0], subGroupA);
@@ -171,7 +166,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         ) = keyperModule.getGroupInfo(orgAddr, subGroupA);
 
         assertEq(nameSubGroup, subGroupAName);
-        assertEq(leadSubGroup, orgAddr);
+        assertEq(leadSubGroup, address(0));
         assertEq(safeSubGroup, subGroupA);
         assertEq(childrenSubGroup.length, 0);
         assertEq(parentSubGroup, groupA);

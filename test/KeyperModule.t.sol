@@ -78,7 +78,7 @@ contract KeyperModuleTest is Test, Constants {
         address superSafe;
         (orgname, lead, safe, child, superSafe) = keyperModule.getOrg(org1);
         assertEq(orgname, rootOrgName);
-        assertEq(lead, org1);
+        assertEq(lead, address(0));
         assertEq(safe, org1);
         assertEq(superSafe, address(0));
     }

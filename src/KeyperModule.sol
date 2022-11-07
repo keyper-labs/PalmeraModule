@@ -363,7 +363,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     {
         address caller = _msgSender();
         Group storage rootOrg = orgs[caller];
-        rootOrg.lead = caller;
         rootOrg.name = name;
         rootOrg.safe = caller;
 
