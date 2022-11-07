@@ -108,10 +108,14 @@ contract KeyperModuleTest is Test, Constants {
         keyperModule.addGroup(org1, org1, "GroupA");
     }
 
-    function testExpectSuperSafeNotRegistered() public {
+    function testExpectGroupNotRegistered() public {
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(groupA);
-        vm.expectRevert(KeyperModule.SuperSafeNotRegistered.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                KeyperModule.GroupNotRegistered.selector, groupA
+            )
+        );
         keyperModule.addGroup(org1, groupA, "GroupA");
     }
 

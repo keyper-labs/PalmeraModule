@@ -71,8 +71,8 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 
     /// @dev Errors
     error OrgNotRegistered();
-    error GroupNotRegistered();
-    error SuperSafeNotRegistered();
+    error GroupNotRegistered(address group);
+    error SuperSafeNotRegistered(address superSafe);
     error LeadNotRegistered();
     error NotAuthorized();
     error NotAuthorizedRemoveGroupFromOtherOrg();
@@ -313,10 +313,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         validAddress(user)
         requiresAuth
     {
-        /// Check if group is part of the caller org
-        if (groups[_msgSender()][group].safe == address(0)) {
-            revert SuperSafeNotRegistered();
-        }
         if (role == Role.ROOT_SAFE || role == Role.SUPER_SAFE) {
             revert SetRoleForbidden(role);
         }
@@ -324,10 +320,19 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             role == Role.SAFE_LEAD || role == Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
                 || role == Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
         ) {
-            /// Update group/org lead
-            Group storage safeGroup = (_msgSender() == group)
-                ? orgs[_msgSender()]
-                : groups[_msgSender()][group];
+            Group storage safeGroup;
+            if (_msgSender() == group) {
+                // Check org validity
+                if (!isOrgRegistered(_msgSender())) revert OrgNotRegistered();
+                safeGroup = orgs[_msgSender()];
+            } else {
+                // Check if group is part of the caller org
+                if (groups[_msgSender()][group].safe == address(0)) {
+                    revert GroupNotRegistered(group);
+                }
+                safeGroup = groups[_msgSender()][group];
+            }
+            // Update group/org lead
             safeGroup.lead = user;
         }
         RolesAuthority authority = RolesAuthority(rolesAuthority);
@@ -384,6 +389,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     {
         address caller = _msgSender();
         if (isChild(org, superSafe, caller)) revert ChildAlreadyExist();
+        if (org != superSafe && groups[org][superSafe].safe == address(0)) {
+            revert GroupNotRegistered(superSafe);
+        }
         Group storage newGroup = groups[org][caller];
         /// Add to org root/group
         Group storage superSafeOrgGroup =
@@ -426,7 +434,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         }
 
         Group memory _group = groups[org][group];
-        if (_group.safe == address(0)) revert GroupNotRegistered();
+        if (_group.safe == address(0)) revert GroupNotRegistered(group);
 
         // superSafe is either an org or a group
         Group storage superSafe =
@@ -503,7 +511,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         }
         /// Check within groups of the org
         if (groups[org][superSafe].safe == address(0)) {
-            revert SuperSafeNotRegistered();
+            return false;
         }
         Group memory group = groups[org][superSafe];
         for (uint256 i = 0; i < group.child.length; i++) {
@@ -522,7 +530,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         returns (bool)
     {
         Group memory _group = (org == group) ? orgs[org] : groups[org][group];
-        if (_group.safe == address(0)) revert GroupNotRegistered();
+        if (_group.safe == address(0)) return false;
         if (_group.lead == user) {
             return true;
         }
