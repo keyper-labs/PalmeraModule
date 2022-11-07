@@ -22,7 +22,8 @@ contract DenyHelperTest is Test, KeyperModuleTest {
 
     function testAddToAllowedList() public {
         listOfOwners();
-		registerOrgWithRoles(org1,rootOrgName);
+        registerOrgWithRoles(org1, rootOrgName);
+        keyperModule.enableAllowlist(org1);
         keyperModule.addToAllowedList(org1, owners);
         assertEq(keyperModule.allowedCount(org1), 5);
         assertEq(keyperModule.getPrevUser(org1, owners[1], true), owners[0]);
@@ -30,21 +31,24 @@ contract DenyHelperTest is Test, KeyperModuleTest {
 
     function testRevertAddToAllowedListZeroAddress() public {
         address[] memory voidOwnersArray = new address[](0);
-		registerOrgWithRoles(org1,rootOrgName);
+        registerOrgWithRoles(org1, rootOrgName);
+        keyperModule.enableAllowlist(org1);
         vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
         keyperModule.addToAllowedList(org1, voidOwnersArray);
     }
 
     function testRevertAddToAllowedListInvalidAddress() public {
         listOfInvalidOwners();
-		registerOrgWithRoles(org1,rootOrgName);
+        registerOrgWithRoles(org1, rootOrgName);
+        keyperModule.enableAllowlist(org1);
         vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
         keyperModule.addToAllowedList(org1, owners);
     }
 
     function testRevertAddToAllowedDuplicateAddress() public {
         listOfOwners();
-		registerOrgWithRoles(org1,rootOrgName);
+        registerOrgWithRoles(org1, rootOrgName);
+		keyperModule.enableAllowlist(org1);
         keyperModule.addToAllowedList(org1, owners);
 
         address[] memory newOwner = new address[](1);
@@ -56,7 +60,8 @@ contract DenyHelperTest is Test, KeyperModuleTest {
 
     function testDropFromAllowedList() public {
         listOfOwners();
-		registerOrgWithRoles(org1,rootOrgName);
+        registerOrgWithRoles(org1, rootOrgName);
+		keyperModule.enableAllowlist(org1);
         keyperModule.addToAllowedList(org1, owners);
 
         // Must be the address(0xCCC)
@@ -69,8 +74,8 @@ contract DenyHelperTest is Test, KeyperModuleTest {
         // Must be the address(0xEEE)
         address secOwnerToRemove = owners[4];
 
-        keyperModule.dropFromAllowedList(org1,secOwnerToRemove);
-        assertEq(keyperModule.isAllowed(org1,secOwnerToRemove), false);
+        keyperModule.dropFromAllowedList(org1, secOwnerToRemove);
+        assertEq(keyperModule.isAllowed(org1, secOwnerToRemove), false);
         assertEq(keyperModule.getAll(org1).length, 3);
     }
 
