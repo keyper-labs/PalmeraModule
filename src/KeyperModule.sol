@@ -83,7 +83,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     error LeadNotRegistered();
     error NotAuthorized();
     error NotAuthorizedRemoveGroupFromOtherOrg();
-	error NotAuthorizedUpdateGroupFromOtherOrg();
+    error NotAuthorizedUpdateGroupFromOtherOrg();
     error NotAuthorizedRemoveNonChildrenGroup();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedAsNotSafeLead();
@@ -488,9 +488,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     {
         address caller = _msgSender();
         // RootSafe usecase : Check if the group is part of caller's org
-		if (groups[caller][group].safe == address(0)) {
-			revert NotAuthorizedUpdateGroupFromOtherOrg();
-		}
+        if (groups[caller][group].safe == address(0)) {
+            revert NotAuthorizedUpdateGroupFromOtherOrg();
+        }
         Group storage _group = groups[caller][group];
         // SuperSafe is either an Org or a Group
         Group storage superSafe;
@@ -515,7 +515,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         if (newSuper == caller) {
             orgs[caller].child.push(group);
         } else {
-            // TODO: check if a SuperSafe can reassigned to another SuperSafe
             groups[caller][newSuper].child.push(group);
         }
         emit GroupParentUpdated(caller, group, caller, newSuper);
