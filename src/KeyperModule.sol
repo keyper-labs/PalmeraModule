@@ -477,7 +477,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @notice update parent of a group
     /// @dev Update the parent of a group with a new parent
     /// @param org address of the organisation
-    /// @param group address of the group to be removed
+    /// @param group address of the group to be updated
     /// @param newSuper address of the new parent
     function updateSuper(address org, address group, address newSuper)
         public
