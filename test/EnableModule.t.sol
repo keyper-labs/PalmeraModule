@@ -17,7 +17,6 @@ contract TestEnableModule is Test {
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
-        // TODO Init KeyperRoles properly
         address rolesAuthority = address(0xBEEF);
         keyperModule = new KeyperModule(
             masterCopy,

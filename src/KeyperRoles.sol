@@ -19,21 +19,80 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         setupRoles(keyperModule);
     }
 
-    /// Configure roles  access control on Authority
+    /// Configure roles access control on Authority
     function setupRoles(address keyperModule)
         internal
         validAddress(keyperModule)
     {
-        /// Role 0 - AdminAddOwner
+        /// Define Role 0 - SAFE_LEAD
+
         /// Target contract: KeyperModule
         /// Auth function addOwnerWithThreshold
-        setRoleCapability(ADMIN_ADD_OWNERS_ROLE, keyperModule, ADD_OWNER, true);
-
-        /// Role 1 - AdminRemoveOwner
+        setRoleCapability(uint8(Role.SAFE_LEAD), keyperModule, ADD_OWNER, true);
         /// Target contract: KeyperModule
         /// Auth function removeOwner
         setRoleCapability(
-            ADMIN_REMOVE_OWNERS_ROLE, keyperModule, REMOVE_OWNER, true
+            uint8(Role.SAFE_LEAD), keyperModule, REMOVE_OWNER, true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function execTransactionOnBehalf
+        setRoleCapability(
+            uint8(Role.SAFE_LEAD), keyperModule, EXEC_ON_BEHALF, true
+        );
+
+        /// Define Role 1 - SAFE_LEAD_EXEC_ON_BEHALF_ONLY
+        /// Target contract: KeyperModule
+        /// Auth function execTransactionOnBehalf
+        setRoleCapability(
+            uint8(Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY),
+            keyperModule,
+            EXEC_ON_BEHALF,
+            true
+        );
+
+        /// Define Role 2 - SAFE_LEAD_MODIFY_OWNERS_ONLY
+        /// Target contract: KeyperModule
+        /// Auth function addOwnerWithThreshold
+        setRoleCapability(
+            uint8(Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
+            keyperModule,
+            ADD_OWNER,
+            true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function removeOwner
+        setRoleCapability(
+            uint8(Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
+            keyperModule,
+            REMOVE_OWNER,
+            true
+        );
+
+        /// Define Role 3 - ROOT_SAFE
+        /// Target contract: KeyperModule
+        /// Auth function setRole
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, ROLE_ASSIGMENT, true
+        );
+
+        /// Define Role 4 - SUPER_SAFE
+        /// Target contract: KeyperModule
+        /// Auth function addOwnerWithThreshold
+        setRoleCapability(uint8(Role.SUPER_SAFE), keyperModule, ADD_OWNER, true);
+        /// Target contract: KeyperModule
+        /// Auth function removeOwner
+        setRoleCapability(
+            uint8(Role.SUPER_SAFE), keyperModule, REMOVE_OWNER, true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function execTransactionOnBehalf
+        setRoleCapability(
+            uint8(Role.SUPER_SAFE), keyperModule, EXEC_ON_BEHALF, true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function removeGroup
+        setRoleCapability(
+            uint8(Role.SUPER_SAFE), keyperModule, REMOVE_GROUP, true
         );
 
         /// Transfer ownership of authority to keyper module
