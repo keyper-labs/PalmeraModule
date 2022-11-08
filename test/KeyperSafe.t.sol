@@ -27,7 +27,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     string groupAName = "GroupA";
     string groupBName = "GroupB";
     string subGroupAName = "SubGroupA";
-	string subSubGroupAName = "SubSubGroupA";
+    string subSubGroupAName = "SubSubGroupA";
 
     function setUp() public {
         CREATE3Factory factory = new CREATE3Factory();
@@ -266,14 +266,15 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         result =
             gnosisHelper.createAddGroupTx(orgAddr, safeGroupA, nameSubGroupA);
 
-		// Create new safe with setup called while creating contract
+        // Create new safe with setup called while creating contract
         address safeSubSubGroupA = gnosisHelper.newKeyperSafe(2, 1);
         // Create AddGroup calldata
         string memory nameSubSubGroupA = subSubGroupAName;
         keyperSafes[nameSubSubGroupA] = address(safeSubSubGroupA);
         orgAddr = keyperSafes[orgName];
-        result =
-            gnosisHelper.createAddGroupTx(orgAddr, safeSubGroupA, nameSubSubGroupA);
+        result = gnosisHelper.createAddGroupTx(
+            orgAddr, safeSubGroupA, nameSubSubGroupA
+        );
     }
 
     function testSuperSafeExecOnBehalf() public {
@@ -322,7 +323,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address orgAddr = keyperSafes[orgName];
         address groupA = keyperSafes[groupAName];
         address subGroupA = keyperSafes[subGroupAName];
-		address subSubGroupA = keyperSafes[subSubGroupAName];
+        address subSubGroupA = keyperSafes[subSubGroupAName];
 
         assertEq(
             keyperRolesContract.doesUserHaveRole(
@@ -340,7 +341,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             ),
             true
         );
-		assertEq(
+        assertEq(
             keyperRolesContract.doesUserHaveRole(
                 subSubGroupA, uint8(Role.SUPER_SAFE)
             ),
