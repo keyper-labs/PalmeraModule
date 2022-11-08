@@ -300,7 +300,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(receiver.balance, 2 gwei);
     }
 
-	function testRevertSuperSafeExecOnBehalfIsNotAllowList() public {
+    function testRevertSuperSafeExecOnBehalfIsNotAllowList() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
         address groupA = keyperSafes[groupAName];
@@ -311,10 +311,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         vm.deal(subGroupA, 100 gwei);
         address receiver = address(0xABC);
 
-		/// Enalbe allowlist
-		vm.startPrank(orgAddr);
-		keyperModule.enableAllowlist(orgAddr);
-		vm.stopPrank();
+        /// Enalbe allowlist
+        vm.startPrank(orgAddr);
+        keyperModule.enableAllowlist(orgAddr);
+        vm.stopPrank();
 
         // Set keyperhelper gnosis safe to groupA
         keyperHelper.setGnosisSafe(groupA);
@@ -325,7 +325,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         // Execute on behalf function
         vm.startPrank(groupA);
-		vm.expectRevert(DenyHelper.AddresNotAllowed.selector);
+        vm.expectRevert(DenyHelper.AddresNotAllowed.selector);
         keyperModule.execTransactionOnBehalf(
             orgAddr,
             subGroupA,
@@ -337,7 +337,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-	function testRevertSuperSafeExecOnBehalfIsDenyList() public {
+    function testRevertSuperSafeExecOnBehalfIsDenyList() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
         address groupA = keyperSafes[groupAName];
@@ -349,11 +349,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address[] memory receiver = new address[](1);
         receiver[0] = address(0xDDD);
 
-		/// Enalbe allowlist
-		vm.startPrank(orgAddr);
-		keyperModule.enableDenylist(orgAddr);
-		keyperModule.addToList(orgAddr, receiver);
-		vm.stopPrank();
+        /// Enalbe allowlist
+        vm.startPrank(orgAddr);
+        keyperModule.enableDenylist(orgAddr);
+        keyperModule.addToList(orgAddr, receiver);
+        vm.stopPrank();
 
         // Set keyperhelper gnosis safe to groupA
         keyperHelper.setGnosisSafe(groupA);
@@ -364,7 +364,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         // Execute on behalf function
         vm.startPrank(groupA);
-		vm.expectRevert(DenyHelper.AddressDenied.selector);
+        vm.expectRevert(DenyHelper.AddressDenied.selector);
         keyperModule.execTransactionOnBehalf(
             orgAddr,
             subGroupA,

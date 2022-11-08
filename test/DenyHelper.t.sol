@@ -129,52 +129,52 @@ contract DenyHelperTest is Test {
         keyperModule.addToList(org1, owners);
         address dropOwner = owners[1];
         vm.expectRevert(DenyHelper.DenyHelpersDisabled.selector);
-		keyperModule.dropFromList(org1, dropOwner);
-        vm.stopPrank();
-    }
-
-	function testRevertIfListEmptyForAllowList() public {
-        listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(org1);
-        address dropOwner = owners[1];
-		keyperModule.enableAllowlist(org1);
-		vm.expectRevert(DenyHelper.ListEmpty.selector);
-		keyperModule.dropFromList(org1, dropOwner);
-        vm.stopPrank();
-    }
-
-	function testRevertIfListEmptyForDenyList() public {
-        listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(org1);
-        address dropOwner = owners[1];
-		keyperModule.enableDenylist(org1);
-		vm.expectRevert(DenyHelper.ListEmpty.selector);
-		keyperModule.dropFromList(org1, dropOwner);
-        vm.stopPrank();
-    }
-
-	function testRevertIfInvalidAddressProvidedForAllowList() public {
-        listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(org1);
-		keyperModule.enableAllowlist(org1);
-		keyperModule.addToList(org1, owners);
-        address dropOwner = address(0xFFF111);
-		vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
         keyperModule.dropFromList(org1, dropOwner);
         vm.stopPrank();
     }
 
-	function testRevertIfInvalidAddressProvidedForDenyList() public {
+    function testRevertIfListEmptyForAllowList() public {
         listOfOwners();
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
-		keyperModule.enableDenylist(org1);
-		keyperModule.addToList(org1, owners);
+        address dropOwner = owners[1];
+        keyperModule.enableAllowlist(org1);
+        vm.expectRevert(DenyHelper.ListEmpty.selector);
+        keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+    function testRevertIfListEmptyForDenyList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        address dropOwner = owners[1];
+        keyperModule.enableDenylist(org1);
+        vm.expectRevert(DenyHelper.ListEmpty.selector);
+        keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+    function testRevertIfInvalidAddressProvidedForAllowList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableAllowlist(org1);
+        keyperModule.addToList(org1, owners);
         address dropOwner = address(0xFFF111);
-		vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
+        vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
+        keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+    function testRevertIfInvalidAddressProvidedForDenyList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableDenylist(org1);
+        keyperModule.addToList(org1, owners);
+        address dropOwner = address(0xFFF111);
+        vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
         keyperModule.dropFromList(org1, dropOwner);
         vm.stopPrank();
     }
