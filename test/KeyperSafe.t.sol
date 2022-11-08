@@ -261,7 +261,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // Create AddGroup calldata
         string memory nameSubGroupA = subGroupAName;
         keyperSafes[nameSubGroupA] = address(safeSubGroupA);
-
         orgAddr = keyperSafes[orgName];
         result =
             gnosisHelper.createAddGroupTx(orgAddr, safeGroupA, nameSubGroupA);
@@ -314,6 +313,25 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address groupA = keyperSafes[groupAName];
         address subGroupA = keyperSafes[subGroupAName];
 
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                orgAddr, uint8(Role.SUPER_SAFE)
+            ),
+            true
+        );
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                groupA, uint8(Role.SUPER_SAFE)
+            ),
+            true
+        );
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                subGroupA, uint8(Role.SUPER_SAFE)
+            ),
+            true
+        );
+
         // Send ETH to org&subgroup
         vm.deal(orgAddr, 100 gwei);
         vm.deal(groupA, 100 gwei);
@@ -327,7 +345,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
 
         vm.expectRevert(KeyperModule.NotAuthorizedExecOnBehalf.selector);
-        // Execute OnBehalf function with a safe that is not authorized
+
         vm.startPrank(subGroupA);
         bool result = keyperModule.execTransactionOnBehalf(
             orgAddr,

@@ -60,11 +60,11 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         string name
     );
 
-    event GroupParentUpdated(
+    event GroupSuperUpdated(
         address indexed org,
         address indexed group,
         address indexed caller,
-        address parent
+        address superSafe
     );
 
     event TxOnBehalfExecuted(
@@ -481,38 +481,48 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @param newSuper address of the new parent
     function updateSuper(address group, address newSuper)
         public
-		GroupRegistered(_msgSender(), group)
-		GroupRegistered(_msgSender(), newSuper)
+        GroupRegistered(_msgSender(), group)
+        GroupRegistered(_msgSender(), newSuper)
         requiresAuth
     {
         address caller = _msgSender();
         Group storage _group = groups[caller][group];
         // SuperSafe is either an Org or a Group
-        Group storage superSafe;
+        Group storage oldSuper;
         if (_group.superSafe == caller) {
-            superSafe = orgs[caller];
+            oldSuper = orgs[caller];
         } else {
-            superSafe = groups[caller][_group.superSafe];
+            oldSuper = groups[caller][_group.superSafe];
         }
 
         /// Remove child from superSafe
-        for (uint256 i = 0; i < superSafe.child.length; i++) {
-            if (superSafe.child[i] == group) {
-                superSafe.child[i] = superSafe.child[superSafe.child.length - 1];
-                superSafe.child.pop();
+        for (uint256 i = 0; i < oldSuper.child.length; i++) {
+            if (oldSuper.child[i] == group) {
+                oldSuper.child[i] = oldSuper.child[oldSuper.child.length - 1];
+                oldSuper.child.pop();
                 break;
             }
+        }
+        RolesAuthority authority = RolesAuthority(rolesAuthority);
+        // Revoke SuperSafe and SafeLead if don't have any child, and is not organization
+        if ((oldSuper.child.length == 0) && (oldSuper.safe != caller)) {
+            authority.setUserRole(oldSuper.safe, uint8(Role.SUPER_SAFE), false);
+            disableSafeLeadRoles(oldSuper.safe);
         }
 
         // Update group superSafe
         _group.superSafe = newSuper;
+        /// Give Role SuperSafe if not have it
+        if (!authority.doesUserHaveRole(newSuper, uint8(Role.SUPER_SAFE))) {
+            authority.setUserRole(newSuper, uint8(Role.SUPER_SAFE), true);
+        }
         // Add group to new superSafe
         if (newSuper == caller) {
             orgs[caller].child.push(group);
         } else {
             groups[caller][newSuper].child.push(group);
         }
-        emit GroupParentUpdated(caller, group, caller, newSuper);
+        emit GroupSuperUpdated(caller, group, caller, newSuper);
     }
 
     /// @notice Get all the information about a group
