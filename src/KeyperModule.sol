@@ -42,7 +42,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     mapping(address => Group) public orgs;
     /// @dev Events
 
-    event OrganisationCreated(address indexed org, string name);
+    event OrganizationCreated(address indexed org, string name);
 
     event GroupCreated(
         address indexed org,
@@ -352,7 +352,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         authority.setUserRole(caller, uint8(Role.ROOT_SAFE), true);
         authority.setUserRole(caller, uint8(Role.SUPER_SAFE), true);
 
-        emit OrganisationCreated(caller, name);
+        emit OrganizationCreated(caller, name);
     }
 
     /// @notice Add a group to an organisation/group
@@ -447,10 +447,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
 
     // List of the Methods of DenyHelpers override
 
-    /// @dev Funtion to Add Wallet to allowedList based on Approach of Safe Contract - Owner Manager
-    /// @param org Address of Org where the Wallet to be added to the allowedList
-    /// @param users Array of Address of the Wallet to be added to allowedList
-    function addToAllowedList(address org, address[] memory users)
+    /// @dev Funtion to Add Wallet to the List based on Approach of Safe Contract - Owner Manager
+    /// @param org Address of Org where the Wallet to be added to the List
+    /// @param users Array of Address of the Wallet to be added to the List
+    function addToList(address org, address[] memory users)
         external
         override
         OrgRegistered(org)
@@ -458,7 +458,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         requiresAuth
     {
         if (users.length == 0) revert ZeroAddressProvided();
-        if (!allowFeature[org]) revert AllowedListDisable();
+        if (!allowFeature[org] && !denyFeature[org]) {
+            revert DenyHelpersDisabled();
+        }
         address currentWallet = SENTINEL_WALLETS;
         for (uint256 i = 0; i < users.length; i++) {
             address wallet = users[i];
@@ -467,54 +469,22 @@ contract KeyperModule is Auth, Constants, DenyHelper {
                     || wallet == address(this) || currentWallet == wallet
             ) revert InvalidAddressProvided();
             // Avoid duplicate wallet
-            if (allowed[org][wallet] != address(0)) {
-                revert UserAlreadyOnAllowedList();
+            if (listed[org][wallet] != address(0)) {
+                revert UserAlreadyOnList();
             }
-            // Add wallet to allowedList
-            allowed[org][currentWallet] = wallet;
+            // Add wallet to List
+            listed[org][currentWallet] = wallet;
             currentWallet = wallet;
         }
-        allowed[org][currentWallet] = SENTINEL_WALLETS;
-        allowedCount[org] += users.length;
-        emit AddedToTheAllowedList(users);
+        listed[org][currentWallet] = SENTINEL_WALLETS;
+        listCount[org] += users.length;
+        emit AddedToList(users);
     }
 
-    /// @dev Funtion to Add Wallet to denyList based on Approach of Safe Contract - Owner Manager
-    /// @param org Address of Org where the Wallet to be added to the denyList
-    /// @param users Array of Address of the Wallet to be added to denyList
-    function addToDeniedList(address org, address[] memory users)
-        external
-        override
-        OrgRegistered(org)
-        IsGnosisSafe(_msgSender())
-        requiresAuth
-    {
-        if (users.length == 0) revert ZeroAddressProvided();
-        if (!denyFeature[org]) revert DeniedListDisable();
-        address currentWallet = SENTINEL_WALLETS;
-        for (uint256 i = 0; i < users.length; i++) {
-            address wallet = users[i];
-            if (
-                wallet == address(0) || wallet == SENTINEL_WALLETS
-                    || wallet == address(this) || currentWallet == wallet
-            ) revert InvalidAddressProvided();
-            // Avoid duplicate wallet
-            if (denied[org][wallet] != address(0)) {
-                revert UserAlreadyOnDeniedList();
-            }
-            // Add wallet to deniedList
-            denied[org][currentWallet] = wallet;
-            currentWallet = wallet;
-        }
-        denied[org][currentWallet] = SENTINEL_WALLETS;
-        deniedCount[org] += users.length;
-        emit AddedToTheDeniedList(users);
-    }
-
-    /// @dev Function to Drop Wallet from Allowed based on Approach of Safe Contract - Owner Manager
-	/// @param org Address of Org where the Wallet to be added to the allowedList
-    /// @param user Array of Address of the Wallet to be dropped to AllowedList
-    function dropFromAllowedList(address org, address user)
+    /// @dev Function to Drop Wallet from the List  based on Approach of Safe Contract - Owner Manager
+    /// @param org Address of Org where the Wallet to be dropped of the List
+    /// @param user Array of Address of the Wallet to be dropped of the List
+    function dropFromList(address org, address user)
         external
         override
         validAddress(user)
@@ -522,35 +492,20 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         IsGnosisSafe(_msgSender())
         requiresAuth
     {
-        if (!allowFeature[org]) revert AllowedListDisable();
-        address prevUser = getPrevUser(org, user, true);
-        allowed[org][prevUser] = allowed[org][user];
-        allowed[org][user] = address(0);
-        allowedCount[org] = allowedCount[org] > 1 ? allowedCount[org].sub(1) : 0;
-        emit DroppedFromAllowedList(user);
-    }
-
-    /// @dev Function to Drop Wallet from Denied based on Approach of Safe Contract - Owner Manager
-	/// @param org Address of Org where the Wallet to be added to the denyList
-    /// @param user Array of Address of the Wallet to be dropped to DeniedList
-    function dropFromDeniedList(address org, address user)
-        external
-        override
-        validAddress(user)
-        OrgRegistered(org)
-        IsGnosisSafe(_msgSender())
-        requiresAuth
-    {
-        if (!denyFeature[org]) revert DeniedListDisable();
-        address prevUser = getPrevUser(org, user, false);
-        denied[org][prevUser] = denied[org][user];
-        denied[org][user] = address(0);
-        deniedCount[org] = deniedCount[org] > 1 ? deniedCount[org].sub(1) : 0;
-        emit DroppedFromDeniedList(user);
+        if (!allowFeature[org] && !denyFeature[org]) {
+            revert DenyHelpersDisabled();
+        }
+        if (listCount[org] == 0) revert ListEmpty();
+        if (!isListed(org, user)) revert InvalidAddressProvided();
+        address prevUser = getPrevUser(org, user);
+        listed[org][prevUser] = listed[org][user];
+        listed[org][user] = address(0);
+        listCount[org] = listCount[org] > 1 ? listCount[org].sub(1) : 0;
+        emit DroppedFromList(user);
     }
 
     /// @dev Method to Enable Allowlist
-	/// @param org Address of Org where will be enabled the Allowedlist
+    /// @param org Address of Org where will be enabled the Allowedlist
     function enableAllowlist(address org)
         external
         override
@@ -563,7 +518,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     }
 
     /// @dev Method to Enable Allowlist
-	/// @param org Address of Org where will be enabled the Deniedlist
+    /// @param org Address of Org where will be enabled the Deniedlist
     function enableDenylist(address org)
         external
         override
@@ -571,8 +526,20 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         IsGnosisSafe(_msgSender())
         requiresAuth
     {
-        denyFeature[org] = true;
         allowFeature[org] = false;
+        denyFeature[org] = true;
+    }
+
+    /// @dev Method to Disable All
+    function disableDenyHelper(address org)
+        external
+        override
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        allowFeature[org] = false;
+        denyFeature[org] = false;
     }
 
     // List of Helpers

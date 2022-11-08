@@ -9,14 +9,14 @@ import {KeyperRoles} from "../src/KeyperRoles.sol";
 import "./GnosisSafeHelper.t.sol";
 
 contract DenyHelperTest is Test {
-	GnosisSafeHelper gnosisHelper;
+    GnosisSafeHelper gnosisHelper;
     KeyperModule keyperModule;
 
     address org1;
     address groupA;
     address keyperModuleAddr;
     address keyperRolesDeployed;
-	address[] public owners = new address[](5);
+    address[] public owners = new address[](5);
     string rootOrgName;
 
     // Function called before each test is run
@@ -53,15 +53,15 @@ contract DenyHelperTest is Test {
         factory.deploy(salt, bytecode);
     }
 
-    function testAddToAllowedList() public {
+    function testAddToList() public {
         listOfOwners();
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableAllowlist(org1);
-        keyperModule.addToAllowedList(org1, owners);
+        keyperModule.addToList(org1, owners);
         vm.stopPrank();
-        assertEq(keyperModule.allowedCount(org1), 5);
-        assertEq(keyperModule.getPrevUser(org1, owners[1], true), owners[0]);
+        assertEq(keyperModule.listCount(org1), 5);
+        assertEq(keyperModule.getPrevUser(org1, owners[1]), owners[0]);
     }
 
     function testRevertInvalidGnosisSafe() public {
@@ -72,13 +72,13 @@ contract DenyHelperTest is Test {
         vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
         keyperModule.enableDenylist(org1);
         vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
-        keyperModule.addToAllowedList(org1, owners);
+        keyperModule.addToList(org1, owners);
         vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
-        keyperModule.addToDeniedList(org1, owners);
+        keyperModule.addToList(org1, owners);
         vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
-        keyperModule.dropFromAllowedList(org1, owners[2]);
+        keyperModule.dropFromList(org1, owners[2]);
         vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
-        keyperModule.dropFromDeniedList(org1, owners[2]);
+        keyperModule.dropFromList(org1, owners[2]);
     }
 
     function testRevertUnAuthorizedIfCallSuperSafe() public {
@@ -91,13 +91,13 @@ contract DenyHelperTest is Test {
         vm.expectRevert("UNAUTHORIZED");
         keyperModule.enableDenylist(org1);
         vm.expectRevert("UNAUTHORIZED");
-        keyperModule.addToAllowedList(org1, owners);
+        keyperModule.addToList(org1, owners);
         vm.expectRevert("UNAUTHORIZED");
-        keyperModule.addToDeniedList(org1, owners);
+        keyperModule.addToList(org1, owners);
         vm.expectRevert("UNAUTHORIZED");
-        keyperModule.dropFromAllowedList(org1, owners[2]);
+        keyperModule.dropFromList(org1, owners[2]);
         vm.expectRevert("UNAUTHORIZED");
-        keyperModule.dropFromDeniedList(org1, owners[2]);
+        keyperModule.dropFromList(org1, owners[2]);
         vm.stopPrank();
     }
 
@@ -111,149 +111,133 @@ contract DenyHelperTest is Test {
         vm.expectRevert("UNAUTHORIZED");
         keyperModule.enableDenylist(org1);
         vm.expectRevert("UNAUTHORIZED");
-        keyperModule.addToAllowedList(org1, owners);
+        keyperModule.addToList(org1, owners);
         vm.expectRevert("UNAUTHORIZED");
-        keyperModule.addToDeniedList(org1, owners);
+        keyperModule.addToList(org1, owners);
         vm.expectRevert("UNAUTHORIZED");
-        keyperModule.dropFromAllowedList(org1, owners[2]);
+        keyperModule.dropFromList(org1, owners[2]);
         vm.expectRevert("UNAUTHORIZED");
-        keyperModule.dropFromDeniedList(org1, owners[2]);
+        keyperModule.dropFromList(org1, owners[2]);
         vm.stopPrank();
     }
 
-	function testRevertIfAllowOrDeniedFeatureIsDisabled() public {
-		listOfOwners();
-		registerOrgWithRoles(org1, rootOrgName);
-		vm.startPrank(org1);
-		vm.expectRevert(DenyHelper.AllowedListDisable.selector);
-		keyperModule.addToAllowedList(org1, owners);
-		vm.expectRevert(DenyHelper.DeniedListDisable.selector);
-		keyperModule.addToDeniedList(org1, owners);
-		vm.stopPrank();
-	}
+    function testRevertIfDenyHelpersDisabled() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        vm.expectRevert(DenyHelper.DenyHelpersDisabled.selector);
+        keyperModule.addToList(org1, owners);
+        address dropOwner = owners[1];
+        vm.expectRevert(DenyHelper.DenyHelpersDisabled.selector);
+		keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
 
-    function testRevertAddToDeniedListZeroAddress() public {
+	function testRevertIfListEmptyForAllowList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        address dropOwner = owners[1];
+		keyperModule.enableAllowlist(org1);
+		vm.expectRevert(DenyHelper.ListEmpty.selector);
+		keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+	function testRevertIfListEmptyForDenyList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        address dropOwner = owners[1];
+		keyperModule.enableDenylist(org1);
+		vm.expectRevert(DenyHelper.ListEmpty.selector);
+		keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+	function testRevertIfInvalidAddressProvidedForAllowList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+		keyperModule.enableAllowlist(org1);
+		keyperModule.addToList(org1, owners);
+        address dropOwner = address(0xFFF111);
+		vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
+        keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+	function testRevertIfInvalidAddressProvidedForDenyList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+		keyperModule.enableDenylist(org1);
+		keyperModule.addToList(org1, owners);
+        address dropOwner = address(0xFFF111);
+		vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
+        keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+    function testRevertAddToListZeroAddress() public {
         address[] memory voidOwnersArray = new address[](0);
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableDenylist(org1);
         vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
-        keyperModule.addToDeniedList(org1, voidOwnersArray);
+        keyperModule.addToList(org1, voidOwnersArray);
         vm.stopPrank();
     }
 
-    function testRevertAddToDeniedListInvalidAddress() public {
+    function testRevertAddToListInvalidAddress() public {
         listOfInvalidOwners();
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableDenylist(org1);
         vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
-        keyperModule.addToDeniedList(org1, owners);
+        keyperModule.addToList(org1, owners);
         vm.stopPrank();
     }
 
-    function testRevertAddToDeniedDuplicateAddress() public {
+    function testRevertAddToDuplicateAddress() public {
         listOfOwners();
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableDenylist(org1);
-        keyperModule.addToDeniedList(org1, owners);
+        keyperModule.addToList(org1, owners);
 
         address[] memory newOwner = new address[](1);
         newOwner[0] = address(0xDDD);
 
-        vm.expectRevert(DenyHelper.UserAlreadyOnDeniedList.selector);
-        keyperModule.addToDeniedList(org1, newOwner);
+        vm.expectRevert(DenyHelper.UserAlreadyOnList.selector);
+        keyperModule.addToList(org1, newOwner);
         vm.stopPrank();
     }
 
-    function testDropFromDeniedList() public {
+    function testDropFromList() public {
         listOfOwners();
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableDenylist(org1);
-        keyperModule.addToDeniedList(org1, owners);
+        keyperModule.addToList(org1, owners);
 
-		// Must be Revert if drop not address (0)
-		address newOwner = address(0x0);
-		vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
-		keyperModule.dropFromDeniedList(org1, newOwner);
-
-        // Must be the address(0xCCC)
-        address ownerToRemove = owners[2];
-
-        keyperModule.dropFromDeniedList(org1, ownerToRemove);
-        assertEq(keyperModule.isDenied(org1, ownerToRemove), false);
-        assertEq(keyperModule.getAll(org1).length, 4);
-
-        // Must be the address(0xEEE)
-        address secOwnerToRemove = owners[4];
-
-        keyperModule.dropFromDeniedList(org1, secOwnerToRemove);
-        assertEq(keyperModule.isDenied(org1, secOwnerToRemove), false);
-        assertEq(keyperModule.getAll(org1).length, 3);
-        vm.stopPrank();
-    }
-
-    function testRevertAddToAllowedListZeroAddress() public {
-        address[] memory voidOwnersArray = new address[](0);
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(org1);
-        keyperModule.enableAllowlist(org1);
-        vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
-        keyperModule.addToAllowedList(org1, voidOwnersArray);
-        vm.stopPrank();
-    }
-
-    function testRevertAddToAllowedListInvalidAddress() public {
-        listOfInvalidOwners();
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(org1);
-        keyperModule.enableAllowlist(org1);
+        // Must be Revert if drop not address (0)
+        address newOwner = address(0x0);
         vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
-        keyperModule.addToAllowedList(org1, owners);
-        vm.stopPrank();
-    }
-
-    function testRevertAddToAllowedDuplicateAddress() public {
-        listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(org1);
-        keyperModule.enableAllowlist(org1);
-        keyperModule.addToAllowedList(org1, owners);
-
-        address[] memory newOwner = new address[](1);
-        newOwner[0] = address(0xDDD);
-
-        vm.expectRevert(DenyHelper.UserAlreadyOnAllowedList.selector);
-        keyperModule.addToAllowedList(org1, newOwner);
-        vm.stopPrank();
-    }
-
-    function testDropFromAllowedList() public {
-        listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(org1);
-        keyperModule.enableAllowlist(org1);
-        keyperModule.addToAllowedList(org1, owners);
-
-		// Must be Revert if drop not address (0)
-		address newOwner = address(0x0);
-		vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
-		keyperModule.dropFromAllowedList(org1, newOwner);
+        keyperModule.dropFromList(org1, newOwner);
 
         // Must be the address(0xCCC)
         address ownerToRemove = owners[2];
 
-        keyperModule.dropFromAllowedList(org1, ownerToRemove);
-        assertEq(keyperModule.isAllowed(org1, ownerToRemove), false);
+        keyperModule.dropFromList(org1, ownerToRemove);
+        assertEq(keyperModule.isListed(org1, ownerToRemove), false);
         assertEq(keyperModule.getAll(org1).length, 4);
 
         // Must be the address(0xEEE)
         address secOwnerToRemove = owners[4];
 
-        keyperModule.dropFromAllowedList(org1, secOwnerToRemove);
-        assertEq(keyperModule.isAllowed(org1, secOwnerToRemove), false);
+        keyperModule.dropFromList(org1, secOwnerToRemove);
+        assertEq(keyperModule.isListed(org1, secOwnerToRemove), false);
         assertEq(keyperModule.getAll(org1).length, 3);
         vm.stopPrank();
     }
@@ -276,7 +260,7 @@ contract DenyHelperTest is Test {
         owners[4] = address(0xEEE);
     }
 
-	// Register org call with mocked call to KeyperRoles
+    // Register org call with mocked call to KeyperRoles
     function registerOrgWithRoles(address org, string memory name) public {
         vm.startPrank(org);
         keyperModule.registerOrg(name);

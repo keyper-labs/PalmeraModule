@@ -48,17 +48,14 @@ abstract contract Constants is Context {
     bytes4 internal constant ENABLE_DENYLIST =
         bytes4(keccak256(bytes("enableDenylist(address)")));
 
-    bytes4 internal constant ADD_TO_ALLOWLIST =
-        bytes4(keccak256(bytes("addToAllowedList(address,address[])")));
+    bytes4 internal constant DISABLE_DENY_HELPER =
+        bytes4(keccak256(bytes("disableDenyHelper(address)")));
 
-    bytes4 internal constant ADD_TO_DENYLIST =
-        bytes4(keccak256(bytes("addToDeniedList(address,address[])")));
+    bytes4 internal constant ADD_TO_LIST =
+        bytes4(keccak256(bytes("addToList(address,address[])")));
 
-    bytes4 internal constant DROP_FROM_ALLOWLIST =
-        bytes4(keccak256(bytes("dropFromAllowedList(address,address)")));
-
-    bytes4 internal constant DROP_FROM_DENYLIST =
-        bytes4(keccak256(bytes("dropFromDeniedList(address,address)")));
+    bytes4 internal constant DROP_FROM_LIST =
+        bytes4(keccak256(bytes("dropFromList(address,address)")));
 
     bytes4 internal constant EXEC_ON_BEHALF = bytes4(
         keccak256(
