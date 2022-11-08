@@ -45,7 +45,7 @@ abstract contract DenyHelper {
         _;
     }
 
-    /// @dev Modifier for Valid if wallet is Denied or Not
+    /// @dev Modifier for Valid if wallet is Denied/Allowed or Not
     modifier Denied(address org, address _user) {
         if (allowFeature[org]) {
             if (!isListed(org, _user)) revert AddresNotAllowed();
@@ -103,18 +103,21 @@ abstract contract DenyHelper {
     }
 
     /// @dev Method to Enable Allowlist
+    /// @param org Address of Org where to Enable Allow List
     function enableAllowlist(address org) external virtual {
         allowFeature[org] = true;
         denyFeature[org] = false;
     }
 
     /// @dev Method to Enable Allowlist
+    /// @param org Address of Org where to Enable Deny List
     function enableDenylist(address org) external virtual {
         allowFeature[org] = false;
         denyFeature[org] = true;
     }
 
     /// @dev Method to Disable All
+    /// @param org Address of Org where to Disable Deny Helper
     function disableDenyHelper(address org) external virtual {
         allowFeature[org] = false;
         denyFeature[org] = false;
@@ -125,6 +128,8 @@ abstract contract DenyHelper {
             && wallet != address(0);
     }
 
+    /// @dev Method to get All Wallet of the List
+    /// @param org Address of Org where to get the List of All Wallet
     function getAll(address org)
         public
         view
@@ -146,14 +151,12 @@ abstract contract DenyHelper {
     }
 
     /// @dev Function to get the Previous User of the Wallet
-    /// @param user Address of the Wallet
-    function getPrevUser(address org, address user)
+    /// @param org Address of Org where get the Previous User of the Wallet
+    /// @param wallet Address of the Wallet
+    function getPrevUser(address org, address wallet)
         public
         view
-        returns (
-            /// originally internal
-            address prevUser
-        )
+        returns (address prevUser)
     {
         prevUser = SENTINEL_WALLETS;
         address currentWallet = listed[org][prevUser];
@@ -161,7 +164,7 @@ abstract contract DenyHelper {
             (currentWallet != SENTINEL_WALLETS) && (currentWallet != address(0))
                 && (listCount[org] > 0)
         ) {
-            if (currentWallet == user) {
+            if (currentWallet == wallet) {
                 return prevUser;
             }
             prevUser = currentWallet;
