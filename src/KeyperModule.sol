@@ -412,7 +412,12 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         newGroup.superSafe = superSafe;
         /// Give Role SuperSafe
         RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(caller, uint8(Role.SUPER_SAFE), true);
+        if (
+            (!authority.doesUserHaveRole(superSafe, uint8(Role.SUPER_SAFE)))
+                && (superSafe != org) && (superSafeOrgGroup.child.length > 0)
+        ) {
+            authority.setUserRole(superSafe, uint8(Role.SUPER_SAFE), true);
+        }
 
         emit GroupCreated(org, caller, name, newGroup.lead, superSafe);
     }

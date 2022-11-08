@@ -189,9 +189,11 @@ contract KeyperModuleTest is Test, Constants {
             authority.doesUserHaveRole(groupA, uint8(Role.SUPER_SAFE)), true
         );
         assertEq(
-            authority.doesUserHaveRole(groupB, uint8(Role.SUPER_SAFE)), true
+            authority.doesUserHaveRole(groupB, uint8(Role.SUPER_SAFE)), false
         );
-        assertEq(authority.doesUserHaveRole(groupC,uint8(Role.SUPER_SAFE)), true);
+        assertEq(
+            authority.doesUserHaveRole(groupC, uint8(Role.SUPER_SAFE)), false
+        );
         vm.startPrank(org1);
         keyperModule.updateSuper(groupC, groupB);
         vm.stopPrank();
@@ -209,7 +211,9 @@ contract KeyperModuleTest is Test, Constants {
         assertEq(
             authority.doesUserHaveRole(groupB, uint8(Role.SUPER_SAFE)), true
         );
-        assertEq(authority.doesUserHaveRole(groupC,uint8(Role.SUPER_SAFE)), true);
+        assertEq(
+            authority.doesUserHaveRole(groupC, uint8(Role.SUPER_SAFE)), false
+        );
     }
 
     function testRevertUpdateSuperIfActualGroupNotRegistered() public {
