@@ -39,6 +39,7 @@ contract KeyperModuleTest is Test, Constants {
         groupC = gnosisHelper.setupSafeEnv();
         groupD = gnosisHelper.setupSafeEnv();
         vm.label(org1, "Org 1");
+        vm.label(org2, "Org 2");
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
 
@@ -179,10 +180,96 @@ contract KeyperModuleTest is Test, Constants {
         assertEq(keyperModule.isSuperSafe(org1, groupB, groupA), false);
     }
 
+    function testUpdateSuper() public {
+        setUpBaseOrgTree();
+        vm.stopPrank();
+        (,,,, address superSafeA) = keyperModule.getGroupInfo(org1, groupC);
+        assertEq(superSafeA, groupA);
+        assertEq(keyperModule.isChild(org1, groupB, groupC), false);
+        assertEq(keyperModule.isChild(org1, groupA, groupC), true);
+        assertEq(keyperModule.isSuperSafe(org1, groupB, groupC), false);
+        assertEq(keyperModule.isSuperSafe(org1, groupA, groupC), true);
+        assertEq(keyperModule.isSuperSafe(org1, groupC, groupB), false);
+        assertEq(keyperModule.isSuperSafe(org1, groupC, groupA), false);
+        KeyperRoles authority = KeyperRoles(keyperRolesDeployed);
+        assertEq(
+            authority.doesUserHaveRole(groupA, uint8(Role.SUPER_SAFE)), true
+        );
+        assertEq(
+            authority.doesUserHaveRole(groupB, uint8(Role.SUPER_SAFE)), false
+        );
+        assertEq(
+            authority.doesUserHaveRole(groupC, uint8(Role.SUPER_SAFE)), false
+        );
+        vm.startPrank(org1);
+        keyperModule.updateSuper(groupC, groupB);
+        vm.stopPrank();
+        (,,,, address superSafeB) = keyperModule.getGroupInfo(org1, groupC);
+        assertEq(superSafeB, groupB);
+        assertEq(keyperModule.isChild(org1, groupB, groupC), true);
+        assertEq(keyperModule.isChild(org1, groupA, groupC), false);
+        assertEq(keyperModule.isSuperSafe(org1, groupB, groupC), true);
+        assertEq(keyperModule.isSuperSafe(org1, groupA, groupC), false);
+        assertEq(keyperModule.isSuperSafe(org1, groupC, groupB), false);
+        assertEq(keyperModule.isSuperSafe(org1, groupC, groupA), false);
+        assertEq(
+            authority.doesUserHaveRole(groupA, uint8(Role.SUPER_SAFE)), false
+        );
+        assertEq(
+            authority.doesUserHaveRole(groupB, uint8(Role.SUPER_SAFE)), true
+        );
+        assertEq(
+            authority.doesUserHaveRole(groupC, uint8(Role.SUPER_SAFE)), false
+        );
+    }
+
+    function testRevertUpdateSuperIfActualGroupNotRegistered() public {
+        setUpBaseOrgTree();
+        vm.expectRevert(KeyperModule.GroupNotRegistered.selector);
+        keyperModule.updateSuper(groupD, groupB);
+    }
+
+    function testRevertUpdateSuperIfNewGroupNotRegistered() public {
+        setUpBaseOrgTree();
+        vm.expectRevert(KeyperModule.GroupNotRegistered.selector);
+        keyperModule.updateSuper(groupC, groupD);
+    }
+
+    function testRevertUpdateSuperIfCallerIsNotSafe() public {
+        setUpBaseOrgTree();
+        vm.startPrank(address(0xDDD));
+        vm.expectRevert(KeyperModule.GroupNotRegistered.selector);
+        keyperModule.updateSuper(groupC, groupB);
+        vm.stopPrank();
+    }
+
+    function testRevertUpdateSuperIfCallerNotPartofTheOrg() public {
+        setUpBaseOrgTree();
+        registerOrgWithRoles(org2, rootOrgName);
+        vm.startPrank(org2);
+        vm.expectRevert(KeyperModule.GroupNotRegistered.selector);
+        keyperModule.updateSuper(groupC, groupB);
+        vm.stopPrank();
+    }
+
     // Register org call with mocked call to KeyperRoles
     function registerOrgWithRoles(address org, string memory name) public {
         vm.startPrank(org);
         keyperModule.registerOrg(name);
+        vm.stopPrank();
+    }
+
+    // Register org call and tree group with several levels with mocked call to KeyperRoles
+    function setUpBaseOrgTree() public {
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(groupA);
+        keyperModule.addGroup(org1, org1, "GroupA");
+        vm.stopPrank();
+        vm.startPrank(groupB);
+        keyperModule.addGroup(org1, org1, "GroupB");
+        vm.stopPrank();
+        vm.startPrank(groupC);
+        keyperModule.addGroup(org1, groupA, "SubGroupA");
         vm.stopPrank();
     }
 }

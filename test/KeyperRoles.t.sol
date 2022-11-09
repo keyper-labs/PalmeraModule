@@ -24,7 +24,6 @@ contract KeyperRolesTest is Test, Constants {
     address keyperModuleDeployed;
 
     function setUp() public {
-
         mockedContractA = new MockedContractA();
         mockedContractB = new MockedContractB();
 

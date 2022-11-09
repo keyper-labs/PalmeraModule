@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 contract MockedContractA {
-
     address private mockAddress = address(0x123);
     mapping(address => bool) private randomMapping;
 
@@ -10,11 +9,11 @@ contract MockedContractA {
         randomMapping[_address] = true;
     }
 
-    function getMockAddress() public view returns(address) {
+    function getMockAddress() public view returns (address) {
         return mockAddress;
     }
 
-    function getRandomBoolValues(address _address) public view returns(bool) {
+    function getRandomBoolValues(address _address) public view returns (bool) {
         return randomMapping[_address];
     }
 }
@@ -26,7 +25,7 @@ contract MockedContractB {
         counter++;
     }
 
-    function getCounter() public view returns(uint256) {
+    function getCounter() public view returns (uint256) {
         return counter;
     }
 }
