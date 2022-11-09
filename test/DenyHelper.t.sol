@@ -258,7 +258,7 @@ contract DenyHelperTest is Test {
         listOfOwners();
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
-		keyperModule.enableAllowlist(org1);
+        keyperModule.enableAllowlist(org1);
         keyperModule.addToList(org1, owners);
         assertEq(keyperModule.getPrevUser(org1, owners[1]), owners[0]);
         assertEq(keyperModule.getPrevUser(org1, owners[2]), owners[1]);
