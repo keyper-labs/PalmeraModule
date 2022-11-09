@@ -507,7 +507,15 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     //                  --> Case 1: Lead is a Safe
     //                  --> Case 2: Lead is an EOA
     //                  --> Case 3: Lead is an EOA but tries to call the function for a group that he's not the lead
+	// All of this after to merge DenyHelper by Org branch
     // function testRootSafeExecOnBehalf
+    //                  --> Case 1: Execution Normal
+    //                  --> Case 2: Revert is Enable Allow List and the receiver is not in the allow list
+    //                  --> Case 3: Revert is Enable Deny List and the receiver is in the deny list
+    // function testSuperSafeExecOnBehalf
+    //                  --> Case 1: Execution Normal
+    //                  --> Case 2: Revert is Enable Allow List and the receiver is not in the allow list
+    //                  --> Case 3: Revert is Enable Deny List and the receiver is in the deny list
     // function testRevertExecOnBehalfNoRole
 
     function testRevertSuperSafeExecOnBehalf() public {
@@ -822,8 +830,8 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // TODO : test following usecases
     // remove Group:
     // Usecases for revert from Remove group
-    // -> Org call removeGRoup for a group of another org
-    // -> Group call removeGroup for a group that is not his children
+    // -> Org call removeGroup for a group of another org
+    // -> Group call removeGroup for a group that is not his children (in the new approach this use case changed)
     // Role related usecases:
     // -> Check that the roles have been disabled for the group/org and for his safe lead
 
@@ -838,4 +846,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // registerOrg => Give ROOT_SAFE role to safe registered
     // addGroup => Give SUPER_SAFE role to added safe
     // setRole(SAFE_LEAD,...., user) => Give SAFE_LEAD to role added
+
+    // update Super (after merge the branch updateSuperSafe):
+    // -> Check is the superSafe is the newSuper
+    // -> Check that the oldSuper is not the SUPER_SAFE Role if not have more children in the child[] array
+    // -> Check that the oldSuper is SUPER_SAFE Role if have more children in the child[] array
+    // -> Check that scenario where remove all children and the oldSuper lost the SuperSafe Role, and
+	// 		Validate if added a new Children, this safe recover the SUPER_SAFE role
 }
