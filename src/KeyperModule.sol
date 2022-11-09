@@ -512,19 +512,19 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         // Revoke SuperSafe and SafeLead if don't have any child, and is not organization
         if ((oldSuper.child.length == 0) && (oldSuper.safe != caller)) {
             authority.setUserRole(oldSuper.safe, uint8(Role.SUPER_SAFE), false);
-            disableSafeLeadRoles(oldSuper.safe);
+            // TODO: verify if the oldSuper need or not the Safe Lead role (after MVP)
         }
 
         // Update group superSafe
         _group.superSafe = newSuper;
-        /// Give Role SuperSafe if not have it
-        if (!authority.doesUserHaveRole(newSuper, uint8(Role.SUPER_SAFE))) {
-            authority.setUserRole(newSuper, uint8(Role.SUPER_SAFE), true);
-        }
         // Add group to new superSafe
         if (newSuper == caller) {
             orgs[caller].child.push(group);
         } else {
+            /// Give Role SuperSafe if not have it
+            if (!authority.doesUserHaveRole(newSuper, uint8(Role.SUPER_SAFE))) {
+                authority.setUserRole(newSuper, uint8(Role.SUPER_SAFE), true);
+            }
             groups[caller][newSuper].child.push(group);
         }
         emit GroupSuperUpdated(caller, group, caller, newSuper);
