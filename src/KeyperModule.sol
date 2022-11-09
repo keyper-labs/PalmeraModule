@@ -60,6 +60,13 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         string name
     );
 
+    event GroupSuperUpdated(
+        address indexed org,
+        address indexed group,
+        address indexed caller,
+        address superSafe
+    );
+
     event TxOnBehalfExecuted(
         address indexed org,
         address indexed executor,
@@ -76,6 +83,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     error LeadNotRegistered();
     error NotAuthorized();
     error NotAuthorizedRemoveGroupFromOtherOrg();
+    error NotAuthorizedUpdateGroupFromOtherOrg();
     error NotAuthorizedRemoveNonChildrenGroup();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedAsNotSafeLead();
@@ -93,6 +101,14 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     modifier OrgRegistered(address org) {
         if (org == address(0) || orgs[org].safe == address(0)) {
             revert OrgNotRegistered();
+        }
+        _;
+    }
+
+    /// @dev Modifier for Validate if Org Exist or Not
+    modifier GroupRegistered(address org, address group) {
+        if (group == address(0) || groups[org][group].safe == address(0)) {
+            revert GroupNotRegistered();
         }
         _;
     }
@@ -276,10 +292,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         address targetSafe,
         address org
     ) public requiresAuth IsGnosisSafe(targetSafe) {
-        if (
-            prevOwner == address(0) || targetSafe == address(0)
-                || owner == address(0) || org == address(0)
-        ) revert ZeroAddressProvided();
+        if (prevOwner == address(0) || owner == address(0) || org == address(0))
+        {
+            revert ZeroAddressProvided();
+        }
         /// Check _msgSender() is an user lead of the target safe
         if (!isSafeLead(org, targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotSafeLead();
@@ -396,7 +412,12 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         newGroup.superSafe = superSafe;
         /// Give Role SuperSafe
         RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(caller, uint8(Role.SUPER_SAFE), true);
+        if (
+            (!authority.doesUserHaveRole(superSafe, uint8(Role.SUPER_SAFE)))
+                && (superSafe != org) && (superSafeOrgGroup.child.length > 0)
+        ) {
+            authority.setUserRole(superSafe, uint8(Role.SUPER_SAFE), true);
+        }
 
         emit GroupCreated(org, caller, name, newGroup.lead, superSafe);
     }
@@ -408,7 +429,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     function removeGroup(address org, address group)
         public
         OrgRegistered(org)
-        validAddress(group)
+        GroupRegistered(org, group)
         IsGnosisSafe(_msgSender())
         requiresAuth
     {
@@ -426,7 +447,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         }
 
         Group memory _group = groups[org][group];
-        if (_group.safe == address(0)) revert GroupNotRegistered();
 
         // superSafe is either an org or a group
         Group storage superSafe =
@@ -460,16 +480,64 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         delete groups[org][group];
     }
 
+    /// @notice update parent of a group
+    /// @dev Update the parent of a group with a new parent, Call must come from the root safe
+    /// @param group address of the group to be updated
+    /// @param newSuper address of the new parent
+    function updateSuper(address group, address newSuper)
+        public
+        GroupRegistered(_msgSender(), group)
+        GroupRegistered(_msgSender(), newSuper)
+        requiresAuth
+    {
+        address caller = _msgSender();
+        Group storage _group = groups[caller][group];
+        // SuperSafe is either an Org or a Group
+        Group storage oldSuper;
+        if (_group.superSafe == caller) {
+            oldSuper = orgs[caller];
+        } else {
+            oldSuper = groups[caller][_group.superSafe];
+        }
+
+        /// Remove child from superSafe
+        for (uint256 i = 0; i < oldSuper.child.length; i++) {
+            if (oldSuper.child[i] == group) {
+                oldSuper.child[i] = oldSuper.child[oldSuper.child.length - 1];
+                oldSuper.child.pop();
+                break;
+            }
+        }
+        RolesAuthority authority = RolesAuthority(rolesAuthority);
+        // Revoke SuperSafe and SafeLead if don't have any child, and is not organization
+        if ((oldSuper.child.length == 0) && (oldSuper.safe != caller)) {
+            authority.setUserRole(oldSuper.safe, uint8(Role.SUPER_SAFE), false);
+            // TODO: verify if the oldSuper need or not the Safe Lead role (after MVP)
+        }
+
+        // Update group superSafe
+        _group.superSafe = newSuper;
+        // Add group to new superSafe
+        if (newSuper == caller) {
+            orgs[caller].child.push(group);
+        } else {
+            /// Give Role SuperSafe if not have it
+            if (!authority.doesUserHaveRole(newSuper, uint8(Role.SUPER_SAFE))) {
+                authority.setUserRole(newSuper, uint8(Role.SUPER_SAFE), true);
+            }
+            groups[caller][newSuper].child.push(group);
+        }
+        emit GroupSuperUpdated(caller, group, caller, newSuper);
+    }
+
     /// @notice Get all the information about a group
     function getGroupInfo(address org, address group)
         public
         view
         OrgRegistered(org)
-        validAddress(group)
+        GroupRegistered(org, group)
         returns (string memory, address, address, address[] memory, address)
     {
-        address groupSafe = groups[org][group].safe;
-        if (groupSafe == address(0)) revert OrgNotRegistered();
         return (
             groups[org][group].name,
             groups[org][group].lead,
@@ -501,10 +569,10 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             return false;
         }
         /// Check within groups of the org
-        if (groups[org][superSafe].safe == address(0)) {
+        Group memory group = groups[org][superSafe];
+        if (group.safe == address(0)) {
             revert SuperSafeNotRegistered();
         }
-        Group memory group = groups[org][superSafe];
         for (uint256 i = 0; i < group.child.length; i++) {
             if (group.child[i] == child) return true;
         }
