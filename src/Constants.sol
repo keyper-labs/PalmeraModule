@@ -56,7 +56,7 @@ abstract contract Constants is Context {
 
     bytes4 internal constant DROP_FROM_LIST =
         bytes4(keccak256(bytes("dropFromList(address,address)")));
-        
+
     bytes4 internal constant UPDATE_SUPER_SAFE =
         bytes4(keccak256(bytes("updateSuper(address,address)")));
 

@@ -100,7 +100,7 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         /// Auth function Remove from List
         setRoleCapability(
             uint8(Role.ROOT_SAFE), keyperModule, DROP_FROM_LIST, true
-		);
+        );
 
         /// Auth function updateSuper
         setRoleCapability(

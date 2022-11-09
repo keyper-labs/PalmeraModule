@@ -10,8 +10,9 @@ import {Constants} from "./Constants.sol";
 import {DenyHelper, Address} from "./DenyHelper.sol";
 import {console} from "forge-std/console.sol";
 import {KeyperRoles} from "./KeyperRoles.sol";
+import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
-contract KeyperModule is Auth, Constants, DenyHelper {
+contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     using GnosisSafeMath for uint256;
     using Address for address;
     /// @dev Definition of Safe module
@@ -131,9 +132,9 @@ contract KeyperModule is Auth, Constants, DenyHelper {
                 || authority == address(0)
         ) revert ZeroAddressProvided();
 
-        // if (
-        //     !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
-        // ) revert InvalidAddressProvided();
+        if (
+            !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
+        ) revert InvalidAddressProvided();
 
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
@@ -182,7 +183,14 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         bytes calldata data,
         Enum.Operation operation,
         bytes memory signatures
-    ) external payable Denied(org, to) requiresAuth returns (bool result) {
+    )
+        external
+        payable
+        Denied(org, to)
+        nonReentrant
+        requiresAuth
+        returns (bool result)
+    {
         if (org == address(0) || targetSafe == address(0) || to == address(0)) {
             revert ZeroAddressProvided();
         }
@@ -578,7 +586,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
             orgs[_org].superSafe
         );
     }
-    
+
     /// @notice update parent of a group
     /// @dev Update the parent of a group with a new parent, Call must come from the root safe
     /// @param group address of the group to be updated
