@@ -75,6 +75,7 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
             uint8(Role.ROOT_SAFE), keyperModule, ROLE_ASSIGMENT, true
         );
         /// Target contract: KeyperModule
+
         /// Auth function enable Allow List
         setRoleCapability(
             uint8(Role.ROOT_SAFE), keyperModule, ENABLE_ALLOWLIST, true
@@ -99,6 +100,10 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         /// Auth function Remove from List
         setRoleCapability(
             uint8(Role.ROOT_SAFE), keyperModule, DROP_FROM_LIST, true
+
+        /// Auth function updateSuper
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, UPDATE_SUPER_SAFE, true
         );
 
         /// Define Role 4 - SUPER_SAFE
