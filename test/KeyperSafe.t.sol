@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
-import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
+import {KeyperModule, IGnosisSafe, DenyHelper} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {console} from "forge-std/console.sol";
@@ -308,6 +308,82 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
         assertEq(result, true);
         assertEq(receiver.balance, 2 gwei);
+    }
+
+    function testRevertSuperSafeExecOnBehalfIsNotAllowList() public {
+        setUpBaseOrgTree();
+        address orgAddr = keyperSafes[orgName];
+        address groupA = keyperSafes[groupAName];
+        address subGroupA = keyperSafes[subGroupAName];
+
+        // Send ETH to group&subgroup
+        vm.deal(groupA, 100 gwei);
+        vm.deal(subGroupA, 100 gwei);
+        address receiver = address(0xABC);
+
+        /// Enalbe allowlist
+        vm.startPrank(orgAddr);
+        keyperModule.enableAllowlist(orgAddr);
+        vm.stopPrank();
+
+        // Set keyperhelper gnosis safe to groupA
+        keyperHelper.setGnosisSafe(groupA);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            groupA, subGroupA, receiver, 2 gwei, emptyData, Enum.Operation(0)
+        );
+
+        // Execute on behalf function
+        vm.startPrank(groupA);
+        vm.expectRevert(DenyHelper.AddresNotAllowed.selector);
+        keyperModule.execTransactionOnBehalf(
+            orgAddr,
+            subGroupA,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
+    function testRevertSuperSafeExecOnBehalfIsDenyList() public {
+        setUpBaseOrgTree();
+        address orgAddr = keyperSafes[orgName];
+        address groupA = keyperSafes[groupAName];
+        address subGroupA = keyperSafes[subGroupAName];
+
+        // Send ETH to group&subgroup
+        vm.deal(groupA, 100 gwei);
+        vm.deal(subGroupA, 100 gwei);
+        address[] memory receiver = new address[](1);
+        receiver[0] = address(0xDDD);
+
+        /// Enalbe allowlist
+        vm.startPrank(orgAddr);
+        keyperModule.enableDenylist(orgAddr);
+        keyperModule.addToList(orgAddr, receiver);
+        vm.stopPrank();
+
+        // Set keyperhelper gnosis safe to groupA
+        keyperHelper.setGnosisSafe(groupA);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            groupA, subGroupA, receiver[0], 2 gwei, emptyData, Enum.Operation(0)
+        );
+
+        // Execute on behalf function
+        vm.startPrank(groupA);
+        vm.expectRevert(DenyHelper.AddressDenied.selector);
+        keyperModule.execTransactionOnBehalf(
+            orgAddr,
+            subGroupA,
+            receiver[0],
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
     }
 
     // TODO: @Cristian implement this usecases

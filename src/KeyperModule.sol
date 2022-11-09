@@ -42,7 +42,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     mapping(address => Group) public orgs;
     /// @dev Events
 
-    event OrganisationCreated(address indexed org, string name);
+    event OrganizationCreated(address indexed org, string name);
 
     event GroupCreated(
         address indexed org,
@@ -182,7 +182,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         bytes calldata data,
         Enum.Operation operation,
         bytes memory signatures
-    ) external payable Denied(to) requiresAuth returns (bool result) {
+    ) external payable Denied(org, to) requiresAuth returns (bool result) {
         if (org == address(0) || targetSafe == address(0) || to == address(0)) {
             revert ZeroAddressProvided();
         }
@@ -253,7 +253,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         uint256 threshold,
         address targetSafe,
         address org
-    ) public OrgRegistered(org) requiresAuth IsGnosisSafe(targetSafe) {
+    ) external OrgRegistered(org) requiresAuth IsGnosisSafe(targetSafe) {
         /// Check _msgSender() is an user lead of the target safe
         if (!isSafeLead(org, targetSafe, _msgSender())) {
             revert NotAuthorizedAsNotSafeLead();
@@ -291,7 +291,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         uint256 threshold,
         address targetSafe,
         address org
-    ) public requiresAuth IsGnosisSafe(targetSafe) {
+    ) external requiresAuth IsGnosisSafe(targetSafe) {
         if (prevOwner == address(0) || owner == address(0) || org == address(0))
         {
             revert ZeroAddressProvided();
@@ -350,26 +350,11 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         authority.setUserRole(user, uint8(role), enabled);
     }
 
-    function getOrg(address _org)
-        public
-        view
-        OrgRegistered(_org)
-        returns (string memory, address, address, address[] memory, address)
-    {
-        return (
-            orgs[_org].name,
-            orgs[_org].lead,
-            orgs[_org].safe,
-            orgs[_org].child,
-            orgs[_org].superSafe
-        );
-    }
-
     /// @notice Register an organisatin
     /// @dev Call has to be done from a safe transaction
     /// @param name of the org
     function registerOrg(string memory name)
-        public
+        external
         IsGnosisSafe(_msgSender())
     {
         address caller = _msgSender();
@@ -383,7 +368,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         authority.setUserRole(caller, uint8(Role.ROOT_SAFE), true);
         authority.setUserRole(caller, uint8(Role.SUPER_SAFE), true);
 
-        emit OrganisationCreated(caller, name);
+        emit OrganizationCreated(caller, name);
     }
 
     /// @notice Add a group to an organisation/group
@@ -393,7 +378,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @param name name of the group
     /// TODO: how avoid any safe adding in the org or group?
     function addGroup(address org, address superSafe, string memory name)
-        public
+        external
         OrgRegistered(org)
         validAddress(superSafe)
         IsGnosisSafe(_msgSender())
@@ -427,7 +412,7 @@ contract KeyperModule is Auth, Constants, DenyHelper {
     /// @param org address of the organisation
     /// @param group address of the group to be removed
     function removeGroup(address org, address group)
-        public
+        external
         OrgRegistered(org)
         GroupRegistered(org, group)
         IsGnosisSafe(_msgSender())
@@ -480,6 +465,120 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         delete groups[org][group];
     }
 
+    // List of the Methods of DenyHelpers override
+
+    /// @dev Funtion to Add Wallet to the List based on Approach of Safe Contract - Owner Manager
+    /// @param org Address of Org where the Wallet to be added to the List
+    /// @param users Array of Address of the Wallet to be added to the List
+    function addToList(address org, address[] memory users)
+        external
+        override
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        if (users.length == 0) revert ZeroAddressProvided();
+        if (!allowFeature[org] && !denyFeature[org]) {
+            revert DenyHelpersDisabled();
+        }
+        address currentWallet = SENTINEL_WALLETS;
+        for (uint256 i = 0; i < users.length; i++) {
+            address wallet = users[i];
+            if (
+                wallet == address(0) || wallet == SENTINEL_WALLETS
+                    || wallet == address(this) || currentWallet == wallet
+            ) revert InvalidAddressProvided();
+            // Avoid duplicate wallet
+            if (listed[org][wallet] != address(0)) {
+                revert UserAlreadyOnList();
+            }
+            // Add wallet to List
+            listed[org][currentWallet] = wallet;
+            currentWallet = wallet;
+        }
+        listed[org][currentWallet] = SENTINEL_WALLETS;
+        listCount[org] += users.length;
+        emit AddedToList(users);
+    }
+
+    /// @dev Function to Drop Wallet from the List  based on Approach of Safe Contract - Owner Manager
+    /// @param org Address of Org where the Wallet to be dropped of the List
+    /// @param user Array of Address of the Wallet to be dropped of the List
+    function dropFromList(address org, address user)
+        external
+        override
+        validAddress(user)
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        if (!allowFeature[org] && !denyFeature[org]) {
+            revert DenyHelpersDisabled();
+        }
+        if (listCount[org] == 0) revert ListEmpty();
+        if (!isListed(org, user)) revert InvalidAddressProvided();
+        address prevUser = getPrevUser(org, user);
+        listed[org][prevUser] = listed[org][user];
+        listed[org][user] = address(0);
+        listCount[org] = listCount[org] > 1 ? listCount[org].sub(1) : 0;
+        emit DroppedFromList(user);
+    }
+
+    /// @dev Method to Enable Allowlist
+    /// @param org Address of Org where will be enabled the Allowedlist
+    function enableAllowlist(address org)
+        external
+        override
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        allowFeature[org] = true;
+        denyFeature[org] = false;
+    }
+
+    /// @dev Method to Enable Allowlist
+    /// @param org Address of Org where will be enabled the Deniedlist
+    function enableDenylist(address org)
+        external
+        override
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        allowFeature[org] = false;
+        denyFeature[org] = true;
+    }
+
+    /// @dev Method to Disable All
+    function disableDenyHelper(address org)
+        external
+        override
+        OrgRegistered(org)
+        IsGnosisSafe(_msgSender())
+        requiresAuth
+    {
+        allowFeature[org] = false;
+        denyFeature[org] = false;
+    }
+
+    // List of Helpers
+
+    function getOrg(address _org)
+        public
+        view
+        OrgRegistered(_org)
+        returns (string memory, address, address, address[] memory, address)
+    {
+        return (
+            orgs[_org].name,
+            orgs[_org].lead,
+            orgs[_org].safe,
+            orgs[_org].child,
+            orgs[_org].superSafe
+        );
+    }
+    
     /// @notice update parent of a group
     /// @dev Update the parent of a group with a new parent, Call must come from the root safe
     /// @param group address of the group to be updated
@@ -692,24 +791,6 @@ contract KeyperModule is Auth, Constants, DenyHelper {
         );
     }
 
-    /// @notice Check if the signer is an owner of the safe
-    /// @dev Call has to be done from a safe transaction
-    /// @param gnosisSafe GnosisSafe interface
-    /// @param signer Address of the signer to verify
-    function isSafeOwner(IGnosisSafe gnosisSafe, address signer)
-        private
-        view
-        returns (bool)
-    {
-        address[] memory safeOwners = gnosisSafe.getOwners();
-        for (uint256 i = 0; i < safeOwners.length; i++) {
-            if (safeOwners[i] == signer) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /// @notice disable safe lead roles
     /// @dev Associated roles: SAFE_LEAD || SAFE_LEAD_EXEC_ON_BEHALF_ONLY || SAFE_LEAD_MODIFY_OWNERS_ONLY
     /// @param user Address of the user to disable roles
@@ -734,5 +815,23 @@ contract KeyperModule is Auth, Constants, DenyHelper {
                 user, uint8(Role.SAFE_LEAD_MODIFY_OWNERS_ONLY), false
             );
         }
+    }
+
+    /// @notice Check if the signer is an owner of the safe
+    /// @dev Call has to be done from a safe transaction
+    /// @param gnosisSafe GnosisSafe interface
+    /// @param signer Address of the signer to verify
+    function isSafeOwner(IGnosisSafe gnosisSafe, address signer)
+        private
+        view
+        returns (bool)
+    {
+        address[] memory safeOwners = gnosisSafe.getOwners();
+        for (uint256 i = 0; i < safeOwners.length; i++) {
+            if (safeOwners[i] == signer) {
+                return true;
+            }
+        }
+        return false;
     }
 }
