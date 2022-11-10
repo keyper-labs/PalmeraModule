@@ -8,14 +8,14 @@ import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
 import {console} from "forge-std/console.sol";
-import {MockedContractA, MockedContractB} from "./MockedContract.t.sol";
+import {MockedContract} from "./MockedContract.t.sol";
 import "./GnosisSafeHelper.t.sol";
 
 contract DenyHelperTest is Test {
     GnosisSafeHelper gnosisHelper;
     KeyperModule public keyperModule;
-    MockedContractA public mockedContractA;
-    MockedContractB public mockedContractB;
+    MockedContract public masterCopyMocked;
+    MockedContract public proxyFactoryMocked;
 
     address org1;
     address groupA;
@@ -26,8 +26,9 @@ contract DenyHelperTest is Test {
 
     // Function called before each test is run
     function setUp() public {
-        mockedContractA = new MockedContractA();
-        mockedContractB = new MockedContractB();
+        masterCopyMocked = new MockedContract();
+        proxyFactoryMocked = new MockedContract();
+
         // Setup Gnosis Helper
         gnosisHelper = new GnosisSafeHelper();
         // Setup of all Safe for Testing
@@ -43,8 +44,8 @@ contract DenyHelperTest is Test {
 
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
         keyperModule = new KeyperModule(
-            address(mockedContractA),
-            address(mockedContractB),
+            address(masterCopyMocked),
+            address(proxyFactoryMocked),
             address(keyperRolesDeployed)
         );
 
@@ -66,14 +67,11 @@ contract DenyHelperTest is Test {
         vm.startPrank(org1);
         keyperModule.enableAllowlist(org1);
         keyperModule.addToList(org1, owners);
-        vm.stopPrank();
-        assertEq(keyperModule.listCount(org1), 5);
-        assertEq(keyperModule.getPrevUser(org1, owners[1]), owners[0]);
-        assertEq(keyperModule.isListed(org1, owners[0]), true);
-        assertEq(keyperModule.isListed(org1, owners[1]), true);
-        assertEq(keyperModule.isListed(org1, owners[2]), true);
-        assertEq(keyperModule.isListed(org1, owners[3]), true);
-        assertEq(keyperModule.isListed(org1, owners[4]), true);
+        assertEq(keyperModule.listCount(org1), owners.length);
+        assertEq(keyperModule.getAll(org1).length, owners.length);
+        for (uint256 i = 0; i < owners.length; i++) {
+            assertEq(keyperModule.isListed(org1, owners[i]), true);
+        }
     }
 
     function testRevertInvalidGnosisSafe() public {
@@ -183,12 +181,13 @@ contract DenyHelperTest is Test {
         listOfOwners();
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
-        keyperModule.enableDenylist(org1);
+        keyperModule.enableAllowlist(org1);
         keyperModule.addToList(org1, owners);
-        address dropOwner = address(0xFFF111);
-        vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
-        keyperModule.dropFromList(org1, dropOwner);
-        vm.stopPrank();
+        assertEq(keyperModule.listCount(org1), owners.length);
+        assertEq(keyperModule.getAll(org1).length, owners.length);
+        for (uint256 i = 0; i < owners.length; i++) {
+            assertEq(keyperModule.isListed(org1, owners[i]), true);
+        }
     }
 
     function testRevertAddToListZeroAddress() public {

@@ -8,14 +8,14 @@ import {Constants} from "../src/Constants.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import "./GnosisSafeHelper.t.sol";
-import {MockedContractA, MockedContractB} from "./MockedContract.t.sol";
+import {MockedContract} from "./MockedContract.t.sol";
 
 contract KeyperModuleTest is Test, Constants {
     GnosisSafeHelper gnosisHelper;
     KeyperModule keyperModule;
 
-    MockedContractA public mockedContractA;
-    MockedContractB public mockedContractB;
+    MockedContract public masterCopyMocked;
+    MockedContract public proxyFactoryMocked;
 
     address org1;
     address org2;
@@ -43,8 +43,8 @@ contract KeyperModuleTest is Test, Constants {
         vm.label(groupA, "GroupA");
         vm.label(groupB, "GroupB");
 
-        mockedContractA = new MockedContractA();
-        mockedContractB = new MockedContractB();
+        masterCopyMocked = new MockedContract();
+        proxyFactoryMocked = new MockedContract();
 
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
@@ -53,8 +53,8 @@ contract KeyperModuleTest is Test, Constants {
 
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
         keyperModule = new KeyperModule(
-            address(mockedContractA),
-            address(mockedContractB),
+            address(masterCopyMocked),
+            address(proxyFactoryMocked),
             address(keyperRolesDeployed)
         );
 
@@ -79,7 +79,7 @@ contract KeyperModuleTest is Test, Constants {
         address superSafe;
         (orgname, lead, safe, child, superSafe) = keyperModule.getOrg(org1);
         assertEq(orgname, rootOrgName);
-        assertEq(lead, org1);
+        assertEq(lead, address(0));
         assertEq(safe, org1);
         assertEq(superSafe, address(0));
     }
@@ -107,13 +107,6 @@ contract KeyperModuleTest is Test, Constants {
         vm.startPrank(groupA);
         vm.expectRevert(KeyperModule.OrgNotRegistered.selector);
         keyperModule.addGroup(org1, org1, "GroupA");
-    }
-
-    function testExpectSuperSafeNotRegistered() public {
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(groupA);
-        vm.expectRevert(KeyperModule.SuperSafeNotRegistered.selector);
-        keyperModule.addGroup(org1, groupA, "GroupA");
     }
 
     function testAddSubGroup() public {
@@ -225,21 +218,35 @@ contract KeyperModuleTest is Test, Constants {
 
     function testRevertUpdateSuperIfActualGroupNotRegistered() public {
         setUpBaseOrgTree();
-        vm.expectRevert(KeyperModule.GroupNotRegistered.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                KeyperModule.GroupNotRegistered.selector, groupD
+            )
+        );
         keyperModule.updateSuper(groupD, groupB);
     }
 
     function testRevertUpdateSuperIfNewGroupNotRegistered() public {
         setUpBaseOrgTree();
-        vm.expectRevert(KeyperModule.GroupNotRegistered.selector);
-        keyperModule.updateSuper(groupC, groupD);
+        vm.startPrank(org1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                KeyperModule.GroupNotRegistered.selector, groupD
+            )
+        );
+        keyperModule.updateSuper(groupB, groupD);
     }
 
+    // TODO: Should we add a custom error for a nonsafe caller?
     function testRevertUpdateSuperIfCallerIsNotSafe() public {
         setUpBaseOrgTree();
         vm.startPrank(address(0xDDD));
-        vm.expectRevert(KeyperModule.GroupNotRegistered.selector);
-        keyperModule.updateSuper(groupC, groupB);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                KeyperModule.GroupNotRegistered.selector, groupA
+            )
+        );
+        keyperModule.updateSuper(groupA, groupB);
         vm.stopPrank();
     }
 
@@ -247,7 +254,11 @@ contract KeyperModuleTest is Test, Constants {
         setUpBaseOrgTree();
         registerOrgWithRoles(org2, rootOrgName);
         vm.startPrank(org2);
-        vm.expectRevert(KeyperModule.GroupNotRegistered.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                KeyperModule.GroupNotRegistered.selector, groupC
+            )
+        );
         keyperModule.updateSuper(groupC, groupB);
         vm.stopPrank();
     }

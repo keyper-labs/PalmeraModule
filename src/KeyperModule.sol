@@ -79,8 +79,8 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
 
     /// @dev Errors
     error OrgNotRegistered();
-    error GroupNotRegistered();
-    error SuperSafeNotRegistered();
+    error GroupNotRegistered(address group);
+    error SuperSafeNotRegistered(address superSafe);
     error LeadNotRegistered();
     error NotAuthorized();
     error NotAuthorizedRemoveGroupFromOtherOrg();
@@ -106,10 +106,10 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         _;
     }
 
-    /// @dev Modifier for Validate if Org Exist or Not
+    /// @dev Modifier for Validate if Org/Group Exist or SuperSafeNotRegistered Not
     modifier GroupRegistered(address org, address group) {
         if (group == address(0) || groups[org][group].safe == address(0)) {
-            revert GroupNotRegistered();
+            revert GroupNotRegistered(group);
         }
         _;
     }
@@ -254,7 +254,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         emit ModuleEnabled(address(this), module);
     }
 
-    /// @notice This function will allow Safe Lead & Safe Lead mody only roles to to add owner and set a threshold without passing by normal multisig check
+    /// @notice This function will allow Safe Lead & Safe Lead modify only roles to to add owner and set a threshold without passing by normal multisig check
     /// @dev For instance role
     function addOwnerWithThreshold(
         address owner,
@@ -337,10 +337,6 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         validAddress(user)
         requiresAuth
     {
-        /// Check if group is part of the caller org
-        if (groups[_msgSender()][group].safe == address(0)) {
-            revert SuperSafeNotRegistered();
-        }
         if (role == Role.ROOT_SAFE || role == Role.SUPER_SAFE) {
             revert SetRoleForbidden(role);
         }
@@ -348,10 +344,19 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
             role == Role.SAFE_LEAD || role == Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
                 || role == Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
         ) {
-            /// Update group/org lead
-            Group storage safeGroup = (_msgSender() == group)
-                ? orgs[_msgSender()]
-                : groups[_msgSender()][group];
+            Group storage safeGroup;
+            if (_msgSender() == group) {
+                // Check org validity
+                if (!isOrgRegistered(_msgSender())) revert OrgNotRegistered();
+                safeGroup = orgs[_msgSender()];
+            } else {
+                // Check if group is part of the caller org
+                if (groups[_msgSender()][group].safe == address(0)) {
+                    revert GroupNotRegistered(group);
+                }
+                safeGroup = groups[_msgSender()][group];
+            }
+            // Update group/org lead
             safeGroup.lead = user;
         }
         RolesAuthority authority = RolesAuthority(rolesAuthority);
@@ -367,7 +372,6 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     {
         address caller = _msgSender();
         Group storage rootOrg = orgs[caller];
-        rootOrg.lead = caller;
         rootOrg.name = name;
         rootOrg.safe = caller;
 
@@ -393,6 +397,9 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     {
         address caller = _msgSender();
         if (isChild(org, superSafe, caller)) revert ChildAlreadyExist();
+        if (org != superSafe && groups[org][superSafe].safe == address(0)) {
+            revert GroupNotRegistered(superSafe);
+        }
         Group storage newGroup = groups[org][caller];
         /// Add to org root/group
         Group storage superSafeOrgGroup =
@@ -678,7 +685,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         /// Check within groups of the org
         Group memory group = groups[org][superSafe];
         if (group.safe == address(0)) {
-            revert SuperSafeNotRegistered();
+            return false;
         }
         for (uint256 i = 0; i < group.child.length; i++) {
             if (group.child[i] == child) return true;
@@ -696,7 +703,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         returns (bool)
     {
         Group memory _group = (org == group) ? orgs[org] : groups[org][group];
-        if (_group.safe == address(0)) revert GroupNotRegistered();
+        if (_group.safe == address(0)) return false;
         if (_group.lead == user) {
             return true;
         }
