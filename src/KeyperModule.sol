@@ -187,7 +187,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         external
         payable
         Denied(org, to)
-        nonReentrant
+        /// nonReentrant // Commented temporary just to perform the attack successfully
         requiresAuth
         returns (bool result)
     {

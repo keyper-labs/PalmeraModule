@@ -9,16 +9,20 @@ import {KeyperModule, IGnosisSafe, DenyHelper} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {console} from "forge-std/console.sol";
+import {Attacker} from "./ReentrancyAttack.t.sol";
+import {Constants} from "../src/Constants.sol";
 
 contract TestKeyperSafe is Test, SigningUtils, Constants {
     KeyperModule keyperModule;
     GnosisSafeHelper gnosisHelper;
     KeyperModuleHelper keyperHelper;
     KeyperRoles keyperRolesContract;
+    Attacker attackerContract;
 
     address gnosisSafeAddr;
     address keyperModuleAddr;
     address keyperRolesDeployed;
+    address attackerAddr;
 
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) keyperSafes;
@@ -66,6 +70,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
 
         keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
+
+        // Used to perform a reentrancy attack through execTransactionOnBehalf
+        attackerContract = new Attacker(keyperModuleAddr);
+        attackerAddr = address(attackerContract);
     }
 
     function testCreateSafeFromModule() public {
@@ -148,6 +156,86 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
     }
 
+    function testCreateASafeFromAContract() public {
+        
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
+
+        // Attacker attackerSafe = Attacker(address(gnosisHelper.newKeyperSafe(2, 1)));
+        attackerAddr = gnosisHelper.newKeyperSafe(2, 1);
+        string memory nameAttacker = "Attacker";
+        keyperSafes[nameAttacker] = address(attackerAddr);
+
+        console.log("a1", address(attackerAddr));
+        console.log("a2", address(attackerContract));
+
+        bool result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, nameAttacker);
+        assertEq(result, true);
+
+    }
+
+    function testReentrancyAttack() public {
+        
+        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
+
+        // address attackerSafe = gnosisHelper.newKeyperSafe(2, 1);
+        // string memory nameAttacker = "Attacker";
+        // keyperSafes[nameAttacker] = address(attackerSafe);
+
+        address receiver = address(0xABC);
+
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr, groupSafe, receiver, 5 gwei, emptyData, Enum.Operation(0)
+        );
+
+         (  ,
+            address lead,
+            address safe,
+            address[] memory child,
+            address superSafe
+        ) = keyperModule.getGroupInfo(orgAddr, groupSafe);
+
+        console.log("lead", lead);
+        console.log("safe", safe);
+        console.log("child[0]", child.length);
+        console.log("superSafe", superSafe);
+
+        console.log("orgAddr: ", orgAddr);
+        console.log("groupSafe: ", groupSafe);
+        // Execute on behalf function
+        vm.startPrank(orgAddr);
+        // bool result = keyperModule.execTransactionOnBehalf(
+        //     orgAddr,
+        //     groupSafe,
+        //     receiver,
+        //     5 gwei,
+        //     emptyData,
+        //     Enum.Operation(0),
+        //     signatures
+        // );
+        keyperModule.setRole(Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY, address(attackerContract), groupSafe, true);
+
+        assertEq(keyperRolesContract.canCall(address(attackerContract), keyperModuleAddr, bytes4(0xb5b2b86f)), true);
+
+        bool result = attackerContract.performAttack(
+            orgAddr,
+            groupSafe,
+            receiver,
+            5 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        assertEq(result, true);
+        // assertEq(receiver.balance, 5 gwei);
+
+        console.log("OrgAddr balance: ", address(orgAddr).balance);
+        console.log("groupSafe balance: ", address(groupSafe).balance);
+        console.log("receiver balance: ", address(receiver).balance);
+    }
+
     function testLeadExecOnBehalf() public {
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(orgName);
@@ -186,6 +274,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
         assertEq(result, true);
         assertEq(receiver.balance, 2 gwei);
+
+        console.log("OrgAddr balance: ", address(orgAddr).balance);
+        console.log("groupSafe balance: ", address(groupSafe).balance);
+        console.log("receiver balance: ", address(receiver).balance);
     }
 
     function testRevertInvalidSignatureExecOnBehalf() public {
