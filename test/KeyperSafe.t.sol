@@ -155,20 +155,19 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(child[0], subGroupA);
         assertEq(superSafe, orgAddr);
 
-        // TODO: fix this
-        // (
-        //     string memory nameSubGroup,
-        //     address leadSubGroup,
-        //     address safeSubGroup,
-        //     address[] memory childrenSubGroup,
-        //     address SuperSubGroup
-        // ) = keyperModule.getGroupInfo(orgAddr, subGroupA);
+        (
+            string memory nameSubGroup,
+            address leadSubGroup,
+            address safeSubGroup,
+            address[] memory childSubGroup,
+            address superSubGroup
+        ) = keyperModule.getGroupInfo(orgAddr, subGroupA);
 
-        // assertEq(nameSubGroup, subGroupAName);
-        // assertEq(leadSubGroup, address(0));
-        // assertEq(safeSubGroup, subGroupA);
-        // assertEq(childrenSubGroup.length, 0);
-        // assertEq(SuperSubGroup, groupA);
+        assertEq(nameSubGroup, subGroupAName);
+        assertEq(leadSubGroup, address(0));
+        assertEq(safeSubGroup, subGroupA);
+        assertEq(childSubGroup.length, 1);
+        assertEq(superSubGroup, groupA);
     }
 
     function testRevertChildrenAlreadyExistAddGroup() public {
@@ -435,6 +434,8 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     //      GroupA   GroupB
     //        |
     //  SubGroupA
+    //      |
+    //  SubSubGroupA
     function setUpBaseOrgTree() public {
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(orgName);
@@ -586,14 +587,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             signatures
         );
     }
-
-    // TODO: @Cristian implement this usecases
-    // function testSafeLeadExecOnBehalf()
-    //                  --> Case 1: Lead is a Safe
-    //                  --> Case 2: Lead is an EOA
-    //                  --> Case 3: Lead is an EOA but tries to call the function for a group that he's not the lead
-    // function testRootSafeExecOnBehalf
-    // function testRevertExecOnBehalfNoRole
 
     function testRevertSuperSafeExecOnBehalf() public {
         setUpBaseOrgTree();
@@ -885,22 +878,22 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    // function testRemoveGroupFromOrg() public {
-    //     setUpBaseOrgTree();
+    function testRemoveGroupFromOrg() public {
+        setUpBaseOrgTree();
+        address orgAddr = keyperSafes[orgName];
+        address groupA = keyperSafes[groupAName];
+        address subGroupA = keyperSafes[subGroupAName];
 
-    //     address orgAddr = keyperSafes[orgName];
-    //     result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, nameGroupA);
+        gnosisHelper.updateSafeInterface(orgAddr);
+        bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupA);
+        assertEq(result, true);
+        assertEq(keyperModule.isSuperSafe(orgAddr, orgAddr, groupA), false);
 
-    //     gnosisHelper.updateSafeInterface(orgAddr);
-    //     bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupA);
-    //     assertEq(result, true);
-    //     assertEq(keyperModule.isSuperSafe(orgAddr, orgAddr, groupA), false);
-
-    //     // Check subGroupA is now a child of org
-    //     assertEq(keyperModule.isChild(orgAddr, orgAddr, subGroupA), true);
-    //     // Check org is parent of subGroupA
-    //     assertEq(keyperModule.isSuperSafe(orgAddr, orgAddr, subGroupA), true);
-    // }
+        // Check subGroupA is now a child of org
+        assertEq(keyperModule.isChild(orgAddr, orgAddr, subGroupA), true);
+        // Check org is parent of subGroupA
+        assertEq(keyperModule.isSuperSafe(orgAddr, orgAddr, subGroupA), true);
+    }
 
     /// removeGroup when org == superSafe
     function testRemoveGroupFromSafeOrgEqSuperSafe() public {
@@ -926,24 +919,4 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(child[0] == subSafeGroupA, true);
         assertEq(keyperModule.isChild(orgAddr, groupSafe, subSafeGroupA), false);
     }
-
-    // TODO : test following usecases
-    // remove Group:
-    // Usecases for revert from Remove group
-    // -> Org call removeGRoup for a group of another org
-    // -> Group call removeGroup for a group that is not his children
-    // Role related usecases:
-    // -> Check that the roles have been disabled for the group/org and for his safe lead
-
-    // UseCases missing (similar usecase testRevert...) :
-    // Create 2 Org: each with 1 group + 1 subgroup, then set a safe as safe_lead
-    // then try with that safe to modify from another org
-
-    // SetRole missing usecases:
-    // Revert While assigning a lead to a org root not registered
-
-    // Add Tests that checks that this roles has been assigned following this rules
-    // registerOrg => Give ROOT_SAFE role to safe registered
-    // addGroup => Give SUPER_SAFE role to added safe
-    // setRole(SAFE_LEAD,...., user) => Give SAFE_LEAD to role added
 }

@@ -226,39 +226,42 @@ contract KeyperModuleTest is Test, Constants {
         keyperModule.updateSuper(groupD, groupB);
     }
 
-    // TODO FIX: reverting on the wrong group
-    // function testRevertUpdateSuperIfNewGroupNotRegistered() public {
-    //     setUpBaseOrgTree();
-    //     vm.expectRevert(
-    //         abi.encodeWithSelector(
-    //             KeyperModule.GroupNotRegistered.selector, groupD
-    //         )
-    //     );
-    //     keyperModule.updateSuper(groupB, groupD);
-    // }
+    function testRevertUpdateSuperIfNewGroupNotRegistered() public {
+        setUpBaseOrgTree();
+        vm.startPrank(org1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                KeyperModule.GroupNotRegistered.selector, groupD
+            )
+        );
+        keyperModule.updateSuper(groupB, groupD);
+    }
 
-    // TODO: fix it => Org not registered
-    // function testRevertUpdateSuperIfCallerIsNotSafe() public {
-    //     setUpBaseOrgTree();
-    //     vm.startPrank(address(0xDDD));
-    //     vm.expectRevert(
-    //         abi.encodeWithSelector(
-    //             KeyperModule.GroupNotRegistered.selector, groupD
-    //         )
-    //     );
-    //     keyperModule.updateSuper(groupA, groupB);
-    //     vm.stopPrank();
-    // }
+    // TODO: Should we add a custom error for a nonsafe caller?
+    function testRevertUpdateSuperIfCallerIsNotSafe() public {
+        setUpBaseOrgTree();
+        vm.startPrank(address(0xDDD));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                KeyperModule.GroupNotRegistered.selector, groupA
+            )
+        );
+        keyperModule.updateSuper(groupA, groupB);
+        vm.stopPrank();
+    }
 
-    // TODO: fix it => Org not registered
-    // function testRevertUpdateSuperIfCallerNotPartofTheOrg() public {
-    //     setUpBaseOrgTree();
-    //     registerOrgWithRoles(org2, rootOrgName);
-    //     vm.startPrank(org2);
-    //     vm.expectRevert(KeyperModule.GroupNotRegistered.selector);
-    //     keyperModule.updateSuper(groupC, groupB);
-    //     vm.stopPrank();
-    // }
+    function testRevertUpdateSuperIfCallerNotPartofTheOrg() public {
+        setUpBaseOrgTree();
+        registerOrgWithRoles(org2, rootOrgName);
+        vm.startPrank(org2);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                KeyperModule.GroupNotRegistered.selector, groupC
+            )
+        );
+        keyperModule.updateSuper(groupC, groupB);
+        vm.stopPrank();
+    }
 
     // Register org call with mocked call to KeyperRoles
     function registerOrgWithRoles(address org, string memory name) public {
