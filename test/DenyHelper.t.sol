@@ -253,30 +253,21 @@ contract DenyHelperTest is Test {
         vm.stopPrank();
     }
 
-    // function testGetPrevUserList() public {
-    //     listOfOwners();
-    //     registerOrgWithRoles(org1, rootOrgName);
-    //     vm.startPrank(org1);
-    //     keyperModule.addToList(org1, owners);
-    //     for (uint256 i = 0; i < owners.length - 1; i++) {
-    //         assertEq(keyperModule.getPrevUser(owners[i + 1], owners[i]));
-    //     }
-    //     assertEq(keyperModule.getPrevUser(address(0), owners[4]));
-    //     // SENTINEL_WALLETS
-    //     assertEq(keyperModule.getPrevUser(owners[0], address(0x1)));
-    // }
-
-    // function testGetPrevUserDeniedList() public {
-    //     listOfOwners();
-
-    //     keyperModule.addToList(owners);
-    //     for (uint256 i = 0; i < owners.length - 1; i++) {
-    //         assertEq(keyperModule.getPrevUser(owners[i + 1], false), owners[i]);
-    //     }
-    //     assertEq(keyperModule.getPrevUser(address(0), false), owners[4]);
-    //     // SENTINEL_WALLETS
-    //     assertEq(keyperModule.getPrevUser(owners[0], false), address(0x1));
-    // }
+    function testGetPrevUserList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableAllowlist(org1);
+        keyperModule.addToList(org1, owners);
+        assertEq(keyperModule.getPrevUser(org1, owners[1]), owners[0]);
+        assertEq(keyperModule.getPrevUser(org1, owners[2]), owners[1]);
+        assertEq(keyperModule.getPrevUser(org1, owners[3]), owners[2]);
+        assertEq(keyperModule.getPrevUser(org1, owners[4]), owners[3]);
+        assertEq(keyperModule.getPrevUser(org1, address(0)), owners[4]);
+        // SENTINEL_WALLETS
+        assertEq(keyperModule.getPrevUser(org1, owners[0]), address(0x1));
+        vm.stopPrank();
+    }
 
     function testEnableAllowlist() public {
         registerOrgWithRoles(org1, rootOrgName);
