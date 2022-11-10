@@ -9,7 +9,7 @@ import {Constants} from "../src/Constants.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import "./GnosisSafeHelper.t.sol";
-import {MockedContractA, MockedContractB} from "./MockedContract.t.sol";
+import {MockedContract} from "./MockedContract.t.sol";
 
 contract KeyperRolesTest is Test, Constants {
     using Address for address;
@@ -17,16 +17,15 @@ contract KeyperRolesTest is Test, Constants {
     GnosisSafeHelper gnosisHelper;
     KeyperRoles keyperRoles;
 
-    MockedContractA mockedContractA;
-    MockedContractB mockedContractB;
+    MockedContract masterCopyMocked;
+    MockedContract proxyFactoryMocked;
 
     address gnosisSafeAddr;
     address keyperModuleDeployed;
 
     function setUp() public {
-
-        mockedContractA = new MockedContractA();
-        mockedContractB = new MockedContractB();
+        masterCopyMocked = new MockedContract();
+        proxyFactoryMocked = new MockedContract();
 
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
@@ -36,8 +35,8 @@ contract KeyperRolesTest is Test, Constants {
         keyperRoles = new KeyperRoles(keyperModuleDeployed);
 
         bytes memory args = abi.encode(
-            address(mockedContractA), //Master copy address does not matter
-            address(mockedContractB), // Same proxy factory
+            address(masterCopyMocked), //Master copy address does not matter
+            address(proxyFactoryMocked), // Same proxy factory
             address(keyperRoles)
         );
 
@@ -47,20 +46,20 @@ contract KeyperRolesTest is Test, Constants {
         factory.deploy(salt, bytecode);
 
         gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv(0);
+        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
     }
 
     function testRolesModulesSetup() public {
         // Check KeyperModule has role capabilites
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                ADMIN_ADD_OWNERS_ROLE, keyperModuleDeployed, ADD_OWNER
+                uint8(Role.SAFE_LEAD), keyperModuleDeployed, ADD_OWNER
             ),
             true
         );
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                ADMIN_REMOVE_OWNERS_ROLE, keyperModuleDeployed, REMOVE_OWNER
+                uint8(Role.SAFE_LEAD), keyperModuleDeployed, REMOVE_OWNER
             ),
             true
         );
@@ -77,7 +76,7 @@ contract KeyperRolesTest is Test, Constants {
         // Check Role
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                SAFE_SET_ROLE, address(keyperModule), SET_USER_ADMIN
+                uint8(Role.ROOT_SAFE), address(keyperModule), ROLE_ASSIGMENT
             ),
             true
         );

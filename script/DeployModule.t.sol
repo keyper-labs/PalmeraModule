@@ -12,11 +12,11 @@ contract DeployModule is Script {
         address proxyFactory = vm.envAddress("PROXY_FACTORY_ADDRESS");
         address rolesAuthority = address(0xBEEF);
         vm.startBroadcast();
-        MockedContractA mockedContractA = new MockedContractA();
-        MockedContractB mockedContractB = new MockedContractB();
+        MockedContract masterCopyMocked = new MockedContract();
+        MockedContract proxyFactoryMocked = new MockedContract();
         KeyperModule keyperModule = new KeyperModule(
-            address(mockedContractA),
-            address(mockedContractB),
+            address(masterCopyMocked),
+            address(proxyFactoryMocked),
             rolesAuthority
         );
         vm.stopBroadcast();

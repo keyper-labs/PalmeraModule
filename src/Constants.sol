@@ -4,6 +4,14 @@ pragma solidity ^0.8.15;
 import {Context} from "@openzeppelin/utils/Context.sol";
 
 abstract contract Constants is Context {
+    enum Role {
+        SAFE_LEAD,
+        SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+        SAFE_LEAD_MODIFY_OWNERS_ONLY,
+        ROOT_SAFE,
+        SUPER_SAFE
+    }
+
     // keccak256(
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"
     // );
@@ -19,16 +27,47 @@ abstract contract Constants is Context {
     address internal constant FALLBACK_HANDLER =
         0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4;
 
-    uint8 internal constant ADMIN_ADD_OWNERS_ROLE = 0;
-    uint8 internal constant ADMIN_REMOVE_OWNERS_ROLE = 1;
-    uint8 internal constant SAFE_SET_ROLE = 2;
-
     bytes4 internal constant ADD_OWNER = bytes4(
-        keccak256(bytes("addOwnerWithThreshold(address,uint256,address)"))
+        keccak256(
+            bytes("addOwnerWithThreshold(address,uint256,address,address)")
+        )
     );
-    bytes4 internal constant REMOVE_OWNER =
-        bytes4(keccak256(bytes("removeOwner(address,address,uint256,address)")));
+    bytes4 internal constant REMOVE_OWNER = bytes4(
+        keccak256(bytes("removeOwner(address,address,uint256,address,address)"))
+    );
 
     bytes4 internal constant SET_USER_ADMIN =
-        bytes4(keccak256(bytes("setUserAdmin(address,bool)")));
+        bytes4(keccak256(bytes("setSafeLead(address,bool)")));
+
+    bytes4 internal constant ROLE_ASSIGMENT =
+        bytes4(keccak256(bytes("setRole(uint8,address,address,bool)")));
+
+    bytes4 internal constant ENABLE_ALLOWLIST =
+        bytes4(keccak256(bytes("enableAllowlist(address)")));
+
+    bytes4 internal constant ENABLE_DENYLIST =
+        bytes4(keccak256(bytes("enableDenylist(address)")));
+
+    bytes4 internal constant DISABLE_DENY_HELPER =
+        bytes4(keccak256(bytes("disableDenyHelper(address)")));
+
+    bytes4 internal constant ADD_TO_LIST =
+        bytes4(keccak256(bytes("addToList(address,address[])")));
+
+    bytes4 internal constant DROP_FROM_LIST =
+        bytes4(keccak256(bytes("dropFromList(address,address)")));
+
+    bytes4 internal constant UPDATE_SUPER_SAFE =
+        bytes4(keccak256(bytes("updateSuper(address,address)")));
+
+    bytes4 internal constant EXEC_ON_BEHALF = bytes4(
+        keccak256(
+            bytes(
+                "execTransactionOnBehalf(address,address,address,uint256,bytes,uint8,bytes)"
+            )
+        )
+    );
+
+    bytes4 internal constant REMOVE_GROUP =
+        bytes4(keccak256(bytes("removeGroup(address,address)")));
 }

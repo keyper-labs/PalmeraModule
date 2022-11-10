@@ -1,184 +1,299 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import {DenyHelper} from "../src/DenyHelper.sol";
 import {Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
+import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
 import {console} from "forge-std/console.sol";
-import {MockedContractA, MockedContractB} from "./MockedContract.t.sol";
+import {MockedContract} from "./MockedContract.t.sol";
+import "./GnosisSafeHelper.t.sol";
 
 contract DenyHelperTest is Test {
+    GnosisSafeHelper gnosisHelper;
     KeyperModule public keyperModule;
-    MockedContractA public mockedContractA;
-    MockedContractB public mockedContractB;
+    MockedContract public masterCopyMocked;
+    MockedContract public proxyFactoryMocked;
 
-    address public keyperModuleAddr;
-    address public keyperRolesDeployed;
+    address org1;
+    address groupA;
+    address keyperModuleAddr;
+    address keyperRolesDeployed;
     address[] public owners = new address[](5);
+    string rootOrgName;
 
+    // Function called before each test is run
     function setUp() public {
+        masterCopyMocked = new MockedContract();
+        proxyFactoryMocked = new MockedContract();
 
-        mockedContractA = new MockedContractA();
-        mockedContractB = new MockedContractB();
+        // Setup Gnosis Helper
+        gnosisHelper = new GnosisSafeHelper();
+        // Setup of all Safe for Testing
+        org1 = gnosisHelper.setupSeveralSafeEnv();
+        groupA = gnosisHelper.setupSeveralSafeEnv();
+        vm.label(org1, "Org 1");
+        vm.label(groupA, "GroupA");
 
-        // Gnosis safe call / keyperRoles are not used during the tests, no need deployed factory/mastercopy/keyperRoles
+        CREATE3Factory factory = new CREATE3Factory();
+        bytes32 salt = keccak256(abi.encode(0xafff));
+        // Predict the future address of keyper roles
+        keyperRolesDeployed = factory.getDeployed(address(this), salt);
+
+        // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
         keyperModule = new KeyperModule(
-            address(mockedContractA),
-            address(mockedContractB),
-            address(0x786946)
+            address(masterCopyMocked),
+            address(proxyFactoryMocked),
+            address(keyperRolesDeployed)
         );
+
+        rootOrgName = "Root Org";
+
+        keyperModuleAddr = address(keyperModule);
+
+        bytes memory args = abi.encode(address(keyperModuleAddr));
+
+        bytes memory bytecode =
+            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
+
+        factory.deploy(salt, bytecode);
     }
 
-    function testAddToAllowedList() public {
+    function testAddToList() public {
         listOfOwners();
-        keyperModule.addToAllowedList(owners);
-        assertEq(keyperModule.allowedCount(), owners.length);
-        assertEq(keyperModule.getAllAllowed().length, owners.length);
-        assertEq(keyperModule.isAllowed(owners[0]), true);
-        assertEq(keyperModule.isAllowed(owners[1]), true);
-        assertEq(keyperModule.isAllowed(owners[2]), true);
-        assertEq(keyperModule.isAllowed(owners[3]), true);
-        assertEq(keyperModule.isAllowed(owners[4]), true);
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableAllowlist(org1);
+        keyperModule.addToList(org1, owners);
+        assertEq(keyperModule.listCount(org1), owners.length);
+        assertEq(keyperModule.getAll(org1).length, owners.length);
+        for (uint256 i = 0; i < owners.length; i++) {
+            assertEq(keyperModule.isListed(org1, owners[i]), true);
+        }
     }
 
-    function testRevertAddToAllowedListZeroAddress() public {
-        address[] memory voidOwnersArray = new address[](0);
-
-        vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
-        keyperModule.addToAllowedList(voidOwnersArray);
+    function testRevertInvalidGnosisSafe() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
+        keyperModule.enableAllowlist(org1);
+        vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
+        keyperModule.enableDenylist(org1);
+        vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
+        keyperModule.addToList(org1, owners);
+        vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
+        keyperModule.addToList(org1, owners);
+        vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
+        keyperModule.dropFromList(org1, owners[2]);
+        vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
+        keyperModule.dropFromList(org1, owners[2]);
     }
 
-    function testRevertAddToAllowedListInvalidAddress() public {
-        listOfInvalidOwners();
+    function testRevertUnAuthorizedIfCallSuperSafe() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(groupA);
+        keyperModule.addGroup(org1, org1, "GroupA");
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.enableAllowlist(org1);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.enableDenylist(org1);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.addToList(org1, owners);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.addToList(org1, owners);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.dropFromList(org1, owners[2]);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.dropFromList(org1, owners[2]);
+        vm.stopPrank();
+    }
 
+    function testRevertUnAuthorizedIfCallAnotherSafe() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        address anotherWallet = gnosisHelper.setupSeveralSafeEnv();
+        vm.startPrank(anotherWallet);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.enableAllowlist(org1);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.enableDenylist(org1);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.addToList(org1, owners);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.addToList(org1, owners);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.dropFromList(org1, owners[2]);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.dropFromList(org1, owners[2]);
+        vm.stopPrank();
+    }
+
+    function testRevertIfDenyHelpersDisabled() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        vm.expectRevert(DenyHelper.DenyHelpersDisabled.selector);
+        keyperModule.addToList(org1, owners);
+        address dropOwner = owners[1];
+        vm.expectRevert(DenyHelper.DenyHelpersDisabled.selector);
+        keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+    function testRevertIfListEmptyForAllowList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        address dropOwner = owners[1];
+        keyperModule.enableAllowlist(org1);
+        vm.expectRevert(DenyHelper.ListEmpty.selector);
+        keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+    function testRevertIfListEmptyForDenyList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        address dropOwner = owners[1];
+        keyperModule.enableDenylist(org1);
+        vm.expectRevert(DenyHelper.ListEmpty.selector);
+        keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+    function testRevertIfInvalidAddressProvidedForAllowList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableAllowlist(org1);
+        keyperModule.addToList(org1, owners);
+        address dropOwner = address(0xFFF111);
         vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
-        keyperModule.addToAllowedList(owners);
+        keyperModule.dropFromList(org1, dropOwner);
+        vm.stopPrank();
     }
 
-    function testRevertAddToAllowedDuplicateAddress() public {
+    function testRevertIfInvalidAddressProvidedForDenyList() public {
         listOfOwners();
-        keyperModule.addToAllowedList(owners);
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableAllowlist(org1);
+        keyperModule.addToList(org1, owners);
+        assertEq(keyperModule.listCount(org1), owners.length);
+        assertEq(keyperModule.getAll(org1).length, owners.length);
+        for (uint256 i = 0; i < owners.length; i++) {
+            assertEq(keyperModule.isListed(org1, owners[i]), true);
+        }
+    }
+
+    function testRevertAddToListZeroAddress() public {
+        address[] memory voidOwnersArray = new address[](0);
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableDenylist(org1);
+        vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
+        keyperModule.addToList(org1, voidOwnersArray);
+        vm.stopPrank();
+    }
+
+    function testRevertAddToListInvalidAddress() public {
+        listOfInvalidOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableDenylist(org1);
+        vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
+        keyperModule.addToList(org1, owners);
+        vm.stopPrank();
+    }
+
+    function testRevertAddToDuplicateAddress() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableDenylist(org1);
+        keyperModule.addToList(org1, owners);
 
         address[] memory newOwner = new address[](1);
         newOwner[0] = address(0xDDD);
 
-        vm.expectRevert(DenyHelper.UserAlreadyOnAllowedList.selector);
-        keyperModule.addToAllowedList(newOwner);
+        vm.expectRevert(DenyHelper.UserAlreadyOnList.selector);
+        keyperModule.addToList(org1, newOwner);
+        vm.stopPrank();
     }
 
-    function testDropFromAllowedList() public {
+    function testDropFromList() public {
         listOfOwners();
-        keyperModule.addToAllowedList(owners);
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableDenylist(org1);
+        keyperModule.addToList(org1, owners);
+
+        // Must be Revert if drop not address (0)
+        address newOwner = address(0x0);
+        vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
+        keyperModule.dropFromList(org1, newOwner);
 
         // Must be the address(0xCCC)
         address ownerToRemove = owners[2];
 
-        keyperModule.dropFromAllowedList(ownerToRemove);
-        assertEq(keyperModule.isAllowed(ownerToRemove), false);
-        assertEq(keyperModule.getAllAllowed().length, 4);
+        keyperModule.dropFromList(org1, ownerToRemove);
+        assertEq(keyperModule.isListed(org1, ownerToRemove), false);
+        assertEq(keyperModule.getAll(org1).length, 4);
 
         // Must be the address(0xEEE)
         address secOwnerToRemove = owners[4];
 
-        keyperModule.dropFromAllowedList(secOwnerToRemove);
-        assertEq(keyperModule.isAllowed(secOwnerToRemove), false);
-        assertEq(keyperModule.getAllAllowed().length, 3);
+        keyperModule.dropFromList(org1, secOwnerToRemove);
+        assertEq(keyperModule.isListed(org1, secOwnerToRemove), false);
+        assertEq(keyperModule.getAll(org1).length, 3);
+        vm.stopPrank();
     }
 
-    function testAddToDeniedList() public {
-        listOfOwners();
-        keyperModule.addToDeniedList(owners);
-        assertEq(keyperModule.deniedCount(), owners.length);
-        assertEq(keyperModule.getAllDenied().length, owners.length);
-        assertEq(keyperModule.isDenied(owners[0]), true);
-        assertEq(keyperModule.isDenied(owners[1]), true);
-        assertEq(keyperModule.isDenied(owners[2]), true);
-        assertEq(keyperModule.isDenied(owners[3]), true);
-        assertEq(keyperModule.isDenied(owners[4]), true);
-    }
+    // function testGetPrevUserList() public {
+    //     listOfOwners();
+    //     registerOrgWithRoles(org1, rootOrgName);
+    //     vm.startPrank(org1);
+    //     keyperModule.addToList(org1, owners);
+    //     for (uint256 i = 0; i < owners.length - 1; i++) {
+    //         assertEq(keyperModule.getPrevUser(owners[i + 1], owners[i]));
+    //     }
+    //     assertEq(keyperModule.getPrevUser(address(0), owners[4]));
+    //     // SENTINEL_WALLETS
+    //     assertEq(keyperModule.getPrevUser(owners[0], address(0x1)));
+    // }
 
-    function testRevertAddToDenieddListZeroAddress() public {
-        address[] memory voidOwnersArray = new address[](0);
+    // function testGetPrevUserDeniedList() public {
+    //     listOfOwners();
 
-        vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
-        keyperModule.addToDeniedList(voidOwnersArray);
-    }
-
-    function testRevertAddToDeniedListInvalidAddress() public {
-        listOfInvalidOwners();
-
-        vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
-        keyperModule.addToDeniedList(owners);
-    }
-
-    function testRevertAddToDeniedDuplicateAddress() public {
-        listOfOwners();
-        keyperModule.addToDeniedList(owners);
-
-        address[] memory newOwner = new address[](1);
-        newOwner[0] = owners[3];
-
-        vm.expectRevert(DenyHelper.UserAlreadyOnDeniedList.selector);
-        keyperModule.addToDeniedList(newOwner);
-    }
-
-    function testDropFromDeniedList() public {
-        listOfOwners();
-
-        keyperModule.addToDeniedList(owners);
-
-        // Must be the address(0xBBB)
-        address ownerToRemove = owners[1];
-
-        keyperModule.dropFromDeniedList(ownerToRemove);
-        assertEq(keyperModule.isDenied(ownerToRemove), false);
-        assertEq(keyperModule.getAllDenied().length, owners.length - 1);
-
-        // Must be the address(0xEEE)
-        address secOwnerToRemove = owners[3];
-
-        keyperModule.dropFromDeniedList(secOwnerToRemove);
-        assertEq(keyperModule.isDenied(secOwnerToRemove), false);
-        assertEq(keyperModule.getAllDenied().length, owners.length - 2);
-    }
-
-    function testGetPrevUserAllowedList() public {
-        listOfOwners();
-
-        keyperModule.addToAllowedList(owners);
-        assertEq(keyperModule.getPrevUser(owners[1], true), owners[0]);
-        assertEq(keyperModule.getPrevUser(owners[2], true), owners[1]);
-        assertEq(keyperModule.getPrevUser(owners[3], true), owners[2]);
-        assertEq(keyperModule.getPrevUser(owners[4], true), owners[3]);
-        assertEq(keyperModule.getPrevUser(address(0), true), owners[4]);
-        // SENTINEL_WALLETS
-        assertEq(keyperModule.getPrevUser(owners[0], true), address(0x1));
-    }
-
-    function testGetPrevUserDeniedList() public {
-        listOfOwners();
-
-        keyperModule.addToDeniedList(owners);
-        assertEq(keyperModule.getPrevUser(owners[1], false), owners[0]);
-        assertEq(keyperModule.getPrevUser(owners[2], false), owners[1]);
-        assertEq(keyperModule.getPrevUser(owners[3], false), owners[2]);
-        assertEq(keyperModule.getPrevUser(owners[4], false), owners[3]);
-        assertEq(keyperModule.getPrevUser(address(0), false), owners[4]);
-        // SENTINEL_WALLETS
-        assertEq(keyperModule.getPrevUser(owners[0], false), address(0x1));
-    }
+    //     keyperModule.addToList(owners);
+    //     for (uint256 i = 0; i < owners.length - 1; i++) {
+    //         assertEq(keyperModule.getPrevUser(owners[i + 1], false), owners[i]);
+    //     }
+    //     assertEq(keyperModule.getPrevUser(address(0), false), owners[4]);
+    //     // SENTINEL_WALLETS
+    //     assertEq(keyperModule.getPrevUser(owners[0], false), address(0x1));
+    // }
 
     function testEnableAllowlist() public {
-        keyperModule.enableAllowlist();
-        assertEq(keyperModule.allowFeature(), true);
-        assertEq(keyperModule.denyFeature(), false);
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableAllowlist(org1);
+        assertEq(keyperModule.allowFeature(org1), true);
+        assertEq(keyperModule.denyFeature(org1), false);
+        vm.stopPrank();
     }
 
     function testEnableDenylist() public {
-        keyperModule.enableDenylist();
-        assertEq(keyperModule.allowFeature(), false);
-        assertEq(keyperModule.denyFeature(), true);
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableDenylist(org1);
+        assertEq(keyperModule.allowFeature(org1), false);
+        assertEq(keyperModule.denyFeature(org1), true);
+        vm.stopPrank();
     }
 
     function listOfOwners() internal {
@@ -197,5 +312,12 @@ contract DenyHelperTest is Test {
         owners[2] = address(0xCCC);
         owners[3] = address(0x1);
         owners[4] = address(0xEEE);
+    }
+
+    // Register org call with mocked call to KeyperRoles
+    function registerOrgWithRoles(address org, string memory name) public {
+        vm.startPrank(org);
+        keyperModule.registerOrg(name);
+        vm.stopPrank();
     }
 }
