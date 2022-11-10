@@ -74,6 +74,38 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         setRoleCapability(
             uint8(Role.ROOT_SAFE), keyperModule, ROLE_ASSIGMENT, true
         );
+        /// Target contract: KeyperModule
+
+        /// Auth function enable Allow List
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, ENABLE_ALLOWLIST, true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function enable Deny List
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, ENABLE_DENYLIST, true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function Disable Deny Helper
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, DISABLE_DENY_HELPER, true
+        );
+
+        /// Target contract: KeyperModule
+        /// Auth function Add to The List
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, ADD_TO_LIST, true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function Remove from List
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, DROP_FROM_LIST, true
+        );
+
+        /// Auth function updateSuper
+        setRoleCapability(
+            uint8(Role.ROOT_SAFE), keyperModule, UPDATE_SUPER_SAFE, true
+        );
 
         /// Define Role 4 - SUPER_SAFE
         /// Target contract: KeyperModule
@@ -109,7 +141,7 @@ contract KeyperRoles is RolesAuthority, Constants, DenyHelper {
         virtual
         override
         requiresAuth
-        Denied(user)
+        Denied(_msgSender(), user)
     {
         if (enabled) {
             getUserRoles[user] |= bytes32(1 << role);
