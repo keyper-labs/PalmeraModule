@@ -37,8 +37,6 @@ contract Attacker {
         external 
         returns (bool result) 
     {
-        console.log("Caller from attacker Contract: ", msg.sender);
-        gnosisHelper.newKeyperSafe(2, 1);
         result = keyperModule.execTransactionOnBehalf(
             org,
             targetSafe,
@@ -48,7 +46,6 @@ contract Attacker {
             operation,
             signatures
         );
-        console.log("Caller from attacker sec instance: ", msg.sender);
     }
 
     function getBalanceFromSafe(address _safe) external view returns (uint) {
@@ -57,5 +54,9 @@ contract Attacker {
     
     function getBalanceFromAttacker() external view returns (uint) {
         return address(this).balance;
+    }
+
+    function getThreshold() public pure returns (uint256) {
+        return uint256(1);
     }
 }
