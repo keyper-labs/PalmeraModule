@@ -156,56 +156,69 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
     }
 
-    function testCreateASafeFromAContract() public {
-        
-        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
-
-        // Attacker attackerSafe = Attacker(address(gnosisHelper.newKeyperSafe(2, 1)));
-        attackerAddr = gnosisHelper.newKeyperSafe(2, 1);
-        string memory nameAttacker = "Attacker";
-        keyperSafes[nameAttacker] = address(attackerAddr);
-
-        console.log("a1", address(attackerAddr));
-        console.log("a2", address(attackerContract));
-
-        bool result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, nameAttacker);
-        assertEq(result, true);
-
-    }
-
     function testReentrancyAttack() public {
         
         (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
 
-        // address attackerSafe = gnosisHelper.newKeyperSafe(2, 1);
-        // string memory nameAttacker = "Attacker";
-        // keyperSafes[nameAttacker] = address(attackerSafe);
+        gnosisHelper.updateSafeInterface(address(attackerAddr));
+        string memory nameAttacker = "Attacker";
+        keyperSafes[nameAttacker] = address(attackerAddr);
 
+        address att = keyperSafes[nameAttacker];
         address receiver = address(0xABC);
 
-        // Set keyperhelper gnosis safe to org
+        // console.log("a1", address(attackerAddr));
+        // console.log("a2", address(attackerContract));
+        // console.log("att3", address(att));
+
+        // bool result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, nameAttacker);
+        // assertEq(result, true);
+        vm.startPrank(att);
+        keyperModule.addGroup(orgAddr, groupSafe, nameAttacker);
+
+        (
+            string memory name,
+            address lead,
+            address safe,
+            address[] memory child,
+            address superSafe
+        ) = keyperModule.getGroupInfo(orgAddr, att);
+
+        assertEq(name, nameAttacker);
+        assertEq(lead, orgAddr);
+        assertEq(safe, att);
+        assertEq(child.length, 0);
+        assertEq(superSafe, groupSafe);
+        
+        vm.stopPrank();
+        vm.startPrank(orgAddr);
+        keyperModule.setRole(Role.SAFE_LEAD, address(att), groupSafe, true);
+
+        assertEq(keyperRolesContract.canCall(address(att), keyperModuleAddr, bytes4(0xb5b2b86f)), true);
+        // vm.stopPrank();
+
+        // TODO: At this point, the attacker contract was added as a child of groupSafe and orgAddr provided it with a SafeLead role, but despite of it the attacker still has not auth to exec on behalf. Must check if NotAuthorizedExecOnBehalf is working properly. Taking into account that the orgAddr is not able to set a SuperSafe role to anybody.
+
         keyperHelper.setGnosisSafe(orgAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             orgAddr, groupSafe, receiver, 5 gwei, emptyData, Enum.Operation(0)
         );
 
-         (  ,
-            address lead,
-            address safe,
-            address[] memory child,
-            address superSafe
-        ) = keyperModule.getGroupInfo(orgAddr, groupSafe);
+        assertEq(keyperModule.isSafeLead(orgAddr, att, groupSafe), true);
+        // assertEq(keyperModule.isSuperSafe(orgAddr, groupSafe, att), true);
 
-        console.log("lead", lead);
-        console.log("safe", safe);
-        console.log("child[0]", child.length);
-        console.log("superSafe", superSafe);
+        // bool result = attackerContract.performAttack(
+        //     orgAddr,
+        //     groupSafe,
+        //     receiver,
+        //     5 gwei,
+        //     emptyData,
+        //     Enum.Operation(0),
+        //     signatures
+        // );
+        // assertEq(result, true);
 
-        console.log("orgAddr: ", orgAddr);
-        console.log("groupSafe: ", groupSafe);
-        // Execute on behalf function
-        vm.startPrank(orgAddr);
         // bool result = keyperModule.execTransactionOnBehalf(
         //     orgAddr,
         //     groupSafe,
@@ -215,25 +228,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         //     Enum.Operation(0),
         //     signatures
         // );
-        keyperModule.setRole(Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY, address(attackerContract), groupSafe, true);
 
-        assertEq(keyperRolesContract.canCall(address(attackerContract), keyperModuleAddr, bytes4(0xb5b2b86f)), true);
-
-        bool result = attackerContract.performAttack(
-            orgAddr,
-            groupSafe,
-            receiver,
-            5 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-        assertEq(result, true);
-        // assertEq(receiver.balance, 5 gwei);
-
-        console.log("OrgAddr balance: ", address(orgAddr).balance);
-        console.log("groupSafe balance: ", address(groupSafe).balance);
-        console.log("receiver balance: ", address(receiver).balance);
     }
 
     function testLeadExecOnBehalf() public {
