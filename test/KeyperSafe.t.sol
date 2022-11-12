@@ -96,6 +96,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(superSafe, address(0));
         assertEq(child.length, 0);
         assertEq(keyperModule.isOrgRegistered(gnosisSafeAddr), true);
+        assertEq(keyperRolesContract.doesUserHaveRole(safe, uint8(Role.ROOT_SAFE)), true);
     }
 
     // superSafe == org
@@ -131,6 +132,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(safe, groupSafe);
         assertEq(child.length, 0);
         assertEq(superSafe, orgAddr);
+        assertEq(keyperRolesContract.doesUserHaveRole(orgAddr, uint8(Role.SUPER_SAFE)), true);
     }
 
     // superSafe != org
