@@ -955,4 +955,35 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(keyperRolesContract.doesUserHaveRole(superSafe, uint8(Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)), false);
         assertEq(keyperRolesContract.doesUserHaveRole(superSafe, uint8(Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)), false);
     }
+
+    // Deploy 4 keyperSafes : following structure
+    //           RootOrg1                    RootOrg2
+    //              |                            |
+    //           GroupA1                      GroupA2
+    // GroupA2 will be a safeLead of GroupA1
+    function testModifyFromAnotherOrg() public {
+        
+        (address orgAddr1, address groupA1) = setUpRootOrgAndOneGroup(orgName, groupA1Name);
+        (, address groupA2) = setUpRootOrgAndOneGroup(org2Name, groupA2Name);
+
+        vm.startPrank(orgAddr1);
+        keyperModule.setRole(Role.SAFE_LEAD, groupA2, groupA1, true);
+        vm.stopPrank();
+
+        assertEq(keyperModule.isSafeLead(orgAddr1, groupA1, groupA2), true);
+
+        address[] memory groupA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address newOwner = address(0xDEF);
+        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+
+        assertEq(keyperModule.isSafeOwner(IGnosisSafe(groupA1), groupA1Owners[1]), true);
+
+        vm.startPrank(groupA2);
+        
+        keyperModule.addOwnerWithThreshold(newOwner, threshold, groupA1, orgAddr1);
+        assertEq(keyperModule.isSafeOwner(IGnosisSafe(groupA1), newOwner), true);
+
+        keyperModule.removeOwner(groupA1Owners[0], groupA1Owners[1], threshold, groupA1, orgAddr1);
+        assertEq(keyperModule.isSafeOwner(IGnosisSafe(groupA1), groupA1Owners[1]), false);
+    }
 }

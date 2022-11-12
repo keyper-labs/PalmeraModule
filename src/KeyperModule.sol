@@ -837,7 +837,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     /// @param gnosisSafe GnosisSafe interface
     /// @param signer Address of the signer to verify
     function isSafeOwner(IGnosisSafe gnosisSafe, address signer)
-        private
+        public
         view
         returns (bool)
     {
