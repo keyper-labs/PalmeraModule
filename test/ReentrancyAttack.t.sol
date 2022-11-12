@@ -5,9 +5,10 @@ pragma solidity >=0.7.0 <0.9.0;
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import "./GnosisSafeHelper.t.sol";
+import "./SignersHelper.t.sol";
 import {console} from "forge-std/console.sol";
 
-contract Attacker {
+contract Attacker is SignersHelper {
 
     // KeyperModule is the contract to mock the attack
     KeyperModule public keyperModule;
@@ -15,6 +16,7 @@ contract Attacker {
     
     constructor(address _contractToAttackAddress) {
         keyperModule = KeyperModule(_contractToAttackAddress);
+        initOnwers(10);
     }
     
     //this is called when Attackee sends Ether to this contract (Attacker)
@@ -54,6 +56,14 @@ contract Attacker {
     
     function getBalanceFromAttacker() external view returns (uint) {
         return address(this).balance;
+    }
+    
+    function getOwners() public returns (address[] memory) {
+        address[] memory owners = new address[](3);
+        owners[0] = vm.addr(privateKeyOwners[0]);
+        owners[1] = vm.addr(privateKeyOwners[1]);
+        owners[2] = vm.addr(privateKeyOwners[2]);
+        return owners;
     }
 
     function getThreshold() public pure returns (uint256) {
