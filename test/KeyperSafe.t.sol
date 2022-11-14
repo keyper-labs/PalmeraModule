@@ -96,6 +96,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(superSafe, address(0));
         assertEq(child.length, 0);
         assertEq(keyperModule.isOrgRegistered(gnosisSafeAddr), true);
+        assertEq(keyperRolesContract.doesUserHaveRole(safe, uint8(Role.ROOT_SAFE)), true);
     }
 
     // superSafe == org
@@ -131,6 +132,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(safe, groupSafe);
         assertEq(child.length, 0);
         assertEq(superSafe, orgAddr);
+        assertEq(keyperRolesContract.doesUserHaveRole(orgAddr, uint8(Role.SUPER_SAFE)), true);
     }
 
     // superSafe != org
@@ -918,5 +920,30 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(child[0] == groupSafe, false);
         assertEq(child[0] == subSafeGroupA, true);
         assertEq(keyperModule.isChild(orgAddr, groupSafe, subSafeGroupA), false);
+    }
+
+    function testRevertSetRoleForbidden() public {
+
+        (address orgAddr, address groupA1) = setUpRootOrgAndOneGroup();
+
+        address user = address(0xABCDE);
+
+        vm.startPrank(orgAddr);
+        vm.expectRevert(abi.encodeWithSelector(KeyperModule.SetRoleForbidden.selector, 3));
+        keyperModule.setRole(Role.ROOT_SAFE, user, groupA1, true);
+
+        vm.expectRevert(abi.encodeWithSelector(KeyperModule.SetRoleForbidden.selector, 4));
+        keyperModule.setRole(Role.SUPER_SAFE, user, groupA1, true);
+    }
+
+    function testRevertSetRolesToOrgNotRegistered() public {
+
+        (, address groupA1) = setUpRootOrgAndOneGroup();
+
+        address user = address(0xABCDE);
+
+        vm.startPrank(groupA1);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.setRole(Role.SAFE_LEAD, user, groupA1, true);
     }
 }
