@@ -9,27 +9,34 @@ import {Constants} from "../src/Constants.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import "./GnosisSafeHelper.t.sol";
+import {MockedContract} from "./MockedContract.t.sol";
 
 contract KeyperRolesTest is Test, Constants {
     using Address for address;
 
     GnosisSafeHelper gnosisHelper;
     KeyperRoles keyperRoles;
+
+    MockedContract masterCopyMocked;
+    MockedContract proxyFactoryMocked;
+
     address gnosisSafeAddr;
     address keyperModuleDeployed;
 
     function setUp() public {
+        masterCopyMocked = new MockedContract();
+        proxyFactoryMocked = new MockedContract();
+
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
         // Predict the future address of keyper module
         keyperModuleDeployed = factory.getDeployed(address(this), salt);
-        // console.log("Deployed", keyperModuleDeployed);
         // Deployment with keyper module address
         keyperRoles = new KeyperRoles(keyperModuleDeployed);
 
         bytes memory args = abi.encode(
-            address(0xBEEF), //Master copy address does not matter
-            address(0xCAAF), // Same proxy factory
+            address(masterCopyMocked), //Master copy address does not matter
+            address(proxyFactoryMocked), // Same proxy factory
             address(keyperRoles)
         );
 

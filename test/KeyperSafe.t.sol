@@ -7,6 +7,7 @@ import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
 import {KeyperModule, IGnosisSafe, DenyHelper} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
+import {DenyHelper} from "../src/DenyHelper.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {console} from "forge-std/console.sol";
 
@@ -23,11 +24,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) keyperSafes;
     string orgName = "Main Org";
-    string orgBName = "Second Org";
-    string groupAName = "GroupA";
+    string org2Name = "Second Org";
+    string groupA1Name = "GroupA1";
+    string groupA2Name = "GroupA2";
     string groupBName = "GroupB";
-    string subGroupAName = "SubGroupA";
-    string subSubGroupAName = "SubSubGroupA";
+    string subGroupA1Name = "subGroupA1";
+    string subSubgroupA1Name = "SubSubGroupA";
 
     function setUp() public {
         CREATE3Factory factory = new CREATE3Factory();
@@ -82,14 +84,22 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // Create registerOrg calldata
         bool result = gnosisHelper.registerOrgTx(orgName);
         assertEq(result, true);
-        (string memory name, address lead, address safe,, address superSafe) =
-            keyperModule.getOrg(gnosisSafeAddr);
+        (
+            string memory name,
+            address lead,
+            address safe,
+            address[] memory child,
+            address superSafe
+        ) = keyperModule.getOrg(gnosisSafeAddr);
         assertEq(name, orgName);
-        assertEq(lead, gnosisSafeAddr);
+        assertEq(lead, address(0));
         assertEq(safe, gnosisSafeAddr);
         assertEq(superSafe, address(0));
+        assertEq(child.length, 0);
+        assertEq(keyperModule.isOrgRegistered(gnosisSafeAddr), true);
     }
 
+    // superSafe == org
     function testCreateGroupFromSafe() public {
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(orgName);
@@ -97,14 +107,13 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         vm.label(keyperSafes[orgName], orgName);
 
         // Create new safe with setup called while creating contract
-        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
+        address safeGroupA1 = gnosisHelper.newKeyperSafe(4, 2);
         // Create Group calldata
-        string memory groupName = groupAName;
-        keyperSafes[groupName] = address(groupSafe);
-        vm.label(keyperSafes[groupName], groupName);
+        keyperSafes[groupA1Name] = address(safeGroupA1);
+        vm.label(keyperSafes[groupA1Name], groupA1Name);
 
         address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupA1Name);
         assertEq(result, true);
 
         (
@@ -113,71 +122,137 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             address safe,
             address[] memory child,
             address superSafe
-        ) = keyperModule.getGroupInfo(orgAddr, groupSafe);
+        ) = keyperModule.getGroupInfo(orgAddr, safeGroupA1);
 
         (, address orgLead,,,) = keyperModule.getOrg(orgAddr);
 
-        assertEq(name, groupName);
+        assertEq(name, groupA1Name);
         assertEq(lead, orgLead);
-        assertEq(safe, groupSafe);
+        assertEq(safe, safeGroupA1);
         assertEq(child.length, 0);
         assertEq(superSafe, orgAddr);
     }
 
-    function testRevertChildAlreadyExistAddGroup() public {
-        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
+    // superSafe != org
+    function testCreateGroupFromSafeScenario2() public {
+        setUpBaseOrgTree();
+        address orgAddr = keyperSafes[orgName];
+        address safeGroupA1 = keyperSafes[groupA1Name];
+        address safeSubGroupA1 = keyperSafes[subGroupA1Name];
 
-        address subGroupSafe = gnosisHelper.newKeyperSafe(2, 1);
-        string memory subGroupName = subGroupAName;
-        keyperSafes[subGroupName] = address(subGroupSafe);
+        (
+            string memory name,
+            address lead,
+            address safe,
+            address[] memory child,
+            address superSafe
+        ) = keyperModule.getGroupInfo(orgAddr, safeGroupA1);
 
-        bool result =
-            gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
-        assertEq(result, true);
+        assertEq(name, groupA1Name);
+        assertEq(lead, address(0));
+        assertEq(safe, safeGroupA1);
+        assertEq(child.length, 1);
+        assertEq(child[0], safeSubGroupA1);
+        assertEq(superSafe, orgAddr);
 
-        vm.startPrank(subGroupSafe);
-        vm.expectRevert(KeyperModule.ChildAlreadyExist.selector);
-        keyperModule.addGroup(orgAddr, groupSafe, subGroupName);
+        (
+            string memory nameSubGroup,
+            address leadSubGroup,
+            address safeSubGroup,
+            address[] memory childSubGroup,
+            address superSubGroup
+        ) = keyperModule.getGroupInfo(orgAddr, safeSubGroupA1);
 
-        // TODO: Until this point the test is working, so I must check why this
-        // is not working with the following code:
-        // vm.deal(subGroupSafe, 100 gwei);
-        // gnosisHelper.updateSafeInterface(subGroupSafe);
-
-        // vm.expectRevert(KeyperModule.ChildAlreadyExist.selector);
-        // result = gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupName);
+        assertEq(nameSubGroup, subGroupA1Name);
+        assertEq(leadSubGroup, address(0));
+        assertEq(safeSubGroup, safeSubGroupA1);
+        assertEq(childSubGroup.length, 1);
+        assertEq(superSubGroup, safeGroupA1);
     }
 
-    function testLeadExecOnBehalf() public {
-        // Set initialsafe as org
-        bool result = gnosisHelper.registerOrgTx(orgName);
-        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+    function testRevertChildrenAlreadyExistAddGroup() public {
+        (address orgAddr, address safeGroupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
+        keyperSafes[subGroupA1Name] = address(safeSubGroupA1);
+
+        bool result =
+            gnosisHelper.createAddGroupTx(orgAddr, safeGroupA1, subGroupA1Name);
+        assertEq(result, true);
+
+        vm.startPrank(safeSubGroupA1);
+        vm.expectRevert(KeyperModule.ChildAlreadyExist.selector);
+        keyperModule.addGroup(orgAddr, safeGroupA1, subGroupA1Name);
+
+        vm.deal(safeSubGroupA1, 1 ether);
+        gnosisHelper.updateSafeInterface(safeSubGroupA1);
+
+        vm.expectRevert();
+        result =
+            gnosisHelper.createAddGroupTx(orgAddr, safeGroupA1, subGroupA1Name);
+    }
+
+    // Just deploy a root org and a Group
+    //           RootOrg
+    //              |
+    //           groupA1
+    function setUpRootOrgAndOneGroup(
+        string memory _orgName,
+        string memory _groupName
+    ) public returns (address, address) {
+        // Set initial safe as a rootOrg
+        bool result = gnosisHelper.registerOrgTx(_orgName);
+        keyperSafes[_orgName] = address(gnosisHelper.gnosisSafe());
 
         // Create new safe with setup called while creating contract
         address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         // Create Group calldata
-        string memory groupName = groupAName;
-        keyperSafes[groupName] = address(groupSafe);
+        keyperSafes[_groupName] = address(groupSafe);
 
-        address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
+        address orgAddr = keyperSafes[_orgName];
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, _groupName);
 
         // Send ETH to org&subgroup
         vm.deal(orgAddr, 100 gwei);
         vm.deal(groupSafe, 100 gwei);
+
+        return (orgAddr, groupSafe);
+    }
+
+    function setSafeLeadOfOrg() public returns (address, address) {
+        bool result = gnosisHelper.registerOrgTx(orgName);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+        vm.label(keyperSafes[orgName], orgName);
+        assertEq(result, true);
+
+        address orgAddr = keyperSafes[orgName];
+        address userLead = address(0x123);
+
+        vm.startPrank(orgAddr);
+        keyperModule.setRole(Role.SAFE_LEAD, userLead, orgAddr, true);
+        vm.stopPrank();
+
+        return (orgAddr, userLead);
+    }
+
+    function testLeadExecOnBehalf() public {
+        (address orgAddr, address safeGroupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
+
         address receiver = address(0xABC);
 
         // Set keyperhelper gnosis safe to org
         keyperHelper.setGnosisSafe(orgAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            orgAddr, groupSafe, receiver, 2 gwei, emptyData, Enum.Operation(0)
+            orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
         );
         // Execute on behalf function
         vm.startPrank(orgAddr);
-        result = keyperModule.execTransactionOnBehalf(
+        bool result = keyperModule.execTransactionOnBehalf(
             orgAddr,
-            groupSafe,
+            safeGroupA1,
             receiver,
             2 gwei,
             emptyData,
@@ -188,37 +263,172 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(receiver.balance, 2 gwei);
     }
 
+    // When to == address(0)
+    function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioOne()
+        public
+    {
+        (address orgAddr, address safeGroupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address receiver = address(0xABC);
+        address fakeReceiver = address(0);
+
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
+        );
+        // Execute on behalf function from a not authorized caller
+        vm.startPrank(orgAddr);
+        vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
+        keyperModule.execTransactionOnBehalf(
+            orgAddr,
+            safeGroupA1,
+            fakeReceiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
+    // When targetSafe == address(0)
+    function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo()
+        public
+    {
+        (address orgAddr, address safeGroupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address receiver = address(0xABC);
+
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
+        );
+        // Execute on behalf function from a not authorized caller
+        vm.startPrank(orgAddr);
+        vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
+        keyperModule.execTransactionOnBehalf(
+            orgAddr,
+            address(0),
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
+    // When org == address(0)
+    function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioThree()
+        public
+    {
+        (address orgAddr, address safeGroupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address receiver = address(0xABC);
+
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
+        );
+        // Execute on behalf function from a not authorized caller
+        vm.startPrank(orgAddr);
+        vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
+        keyperModule.execTransactionOnBehalf(
+            address(0),
+            safeGroupA1,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
+    function testRevertInvalidGnosisSafeExecTransactionOnBehalf() public {
+        (address orgAddr, address safeGroupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address receiver = address(0xABC);
+        address fakeTargetSafe = address(0xFFE);
+
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
+        );
+        // Execute on behalf function from a not authorized caller
+        vm.startPrank(orgAddr);
+        vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
+        keyperModule.execTransactionOnBehalf(
+            orgAddr,
+            fakeTargetSafe,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
+    // Conditions:
+    // SafeLead is an EOA
+    function testRevertNotAuthorizedExecTransactionOnBehalf() public {
+        (address orgAddr, address safeGroupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
+
+        // Random wallet instead of a safe
+        address fakeCaller = address(0xFED);
+        address receiver = address(0xABC);
+
+        // Set safe_lead role to fake caller
+        vm.startPrank(orgAddr);
+        keyperModule.setRole(Role.SAFE_LEAD, fakeCaller, orgAddr, true);
+        vm.stopPrank();
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
+        );
+        vm.startPrank(fakeCaller);
+        vm.expectRevert(KeyperModule.NotAuthorizedExecOnBehalf.selector);
+        keyperModule.execTransactionOnBehalf(
+            orgAddr,
+            safeGroupA1,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
     function testRevertInvalidSignatureExecOnBehalf() public {
-        // Set initialsafe as org
-        bool result = gnosisHelper.registerOrgTx(orgName);
-        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
-
-        // Create new safe with setup called while creating contract
-        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
-        // Create Group calldata
-        string memory groupName = groupAName;
-        keyperSafes[groupName] = address(groupSafe);
-
-        address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupName);
-        // Send ETH to org&subgroup
-        vm.deal(orgAddr, 100 gwei);
-        vm.deal(groupSafe, 100 gwei);
+        (address orgAddr, address safeGroupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
         address receiver = address(0xABC);
 
         // Try onbehalf with incorrect signers
         keyperHelper.setGnosisSafe(orgAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeInvalidSignaturesKeyperTx(
-            orgAddr, groupSafe, receiver, 2 gwei, emptyData, Enum.Operation(0)
+            orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
         );
 
         vm.expectRevert("GS026");
         // Execute invalid OnBehalf function
         vm.startPrank(orgAddr);
-        result = keyperModule.execTransactionOnBehalf(
+        bool result = keyperModule.execTransactionOnBehalf(
             orgAddr,
-            groupSafe,
+            safeGroupA1,
             receiver,
             2 gwei,
             emptyData,
@@ -231,75 +441,73 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // Deploy 4 keyperSafes : following structure
     //           RootOrg
     //          |      |
-    //      GroupA   GroupB
+    //      groupA1   GroupB
     //        |
-    //  SubGroupA
+    //  subGroupA1
+    //      |
+    //  SubSubGroupA1
     function setUpBaseOrgTree() public {
         // Set initialsafe as org
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
         // Create new safe with setup called while creating contract
-        address safeGroupA = gnosisHelper.newKeyperSafe(3, 1);
+        address safeGroupA1 = gnosisHelper.newKeyperSafe(3, 1);
         // Create AddGroup calldata
-        string memory nameGroupA = groupAName;
-        keyperSafes[nameGroupA] = address(safeGroupA);
+        keyperSafes[groupA1Name] = address(safeGroupA1);
 
         address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, nameGroupA);
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupA1Name);
 
         // Create new safe with setup called while creating contract
         address safeGroupB = gnosisHelper.newKeyperSafe(2, 1);
         // Create AddGroup calldata
-        string memory nameGroupB = groupBName;
-        keyperSafes[nameGroupB] = address(safeGroupB);
+        keyperSafes[groupBName] = address(safeGroupB);
 
         orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, nameGroupB);
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupBName);
 
         // Create new safe with setup called while creating contract
-        address safeSubGroupA = gnosisHelper.newKeyperSafe(2, 1);
+        address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
         // Create AddGroup calldata
-        string memory nameSubGroupA = subGroupAName;
-        keyperSafes[nameSubGroupA] = address(safeSubGroupA);
+        keyperSafes[subGroupA1Name] = address(safeSubGroupA1);
         orgAddr = keyperSafes[orgName];
         result =
-            gnosisHelper.createAddGroupTx(orgAddr, safeGroupA, nameSubGroupA);
+            gnosisHelper.createAddGroupTx(orgAddr, safeGroupA1, subGroupA1Name);
 
         // Create new safe with setup called while creating contract
-        address safeSubSubGroupA = gnosisHelper.newKeyperSafe(2, 1);
+        address safeSubSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
         // Create AddGroup calldata
-        string memory nameSubSubGroupA = subSubGroupAName;
-        keyperSafes[nameSubSubGroupA] = address(safeSubSubGroupA);
+        keyperSafes[subSubgroupA1Name] = address(safeSubSubGroupA1);
         orgAddr = keyperSafes[orgName];
         result = gnosisHelper.createAddGroupTx(
-            orgAddr, safeSubGroupA, nameSubSubGroupA
+            orgAddr, safeSubGroupA1, subSubgroupA1Name
         );
     }
 
     function testSuperSafeExecOnBehalf() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
-        address groupA = keyperSafes[groupAName];
-        address subGroupA = keyperSafes[subGroupAName];
+        address groupA1 = keyperSafes[groupA1Name];
+        address subGroupA1 = keyperSafes[subGroupA1Name];
 
         // Send ETH to group&subgroup
-        vm.deal(groupA, 100 gwei);
-        vm.deal(subGroupA, 100 gwei);
+        vm.deal(groupA1, 100 gwei);
+        vm.deal(subGroupA1, 100 gwei);
         address receiver = address(0xABC);
 
-        // Set keyperhelper gnosis safe to groupA
-        keyperHelper.setGnosisSafe(groupA);
+        // Set keyperhelper gnosis safe to groupA1
+        keyperHelper.setGnosisSafe(groupA1);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            groupA, subGroupA, receiver, 2 gwei, emptyData, Enum.Operation(0)
+            groupA1, subGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
         );
 
         // Execute on behalf function
-        vm.startPrank(groupA);
+        vm.startPrank(groupA1);
         bool result = keyperModule.execTransactionOnBehalf(
             orgAddr,
-            subGroupA,
+            subGroupA1,
             receiver,
             2 gwei,
             emptyData,
@@ -313,12 +521,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function testRevertSuperSafeExecOnBehalfIsNotAllowList() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
-        address groupA = keyperSafes[groupAName];
-        address subGroupA = keyperSafes[subGroupAName];
+        address groupA1 = keyperSafes[groupA1Name];
+        address subGroupA1 = keyperSafes[subGroupA1Name];
 
         // Send ETH to group&subgroup
-        vm.deal(groupA, 100 gwei);
-        vm.deal(subGroupA, 100 gwei);
+        vm.deal(groupA1, 100 gwei);
+        vm.deal(subGroupA1, 100 gwei);
         address receiver = address(0xABC);
 
         /// Enalbe allowlist
@@ -326,19 +534,19 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         keyperModule.enableAllowlist(orgAddr);
         vm.stopPrank();
 
-        // Set keyperhelper gnosis safe to groupA
-        keyperHelper.setGnosisSafe(groupA);
+        // Set keyperhelper gnosis safe to groupA1
+        keyperHelper.setGnosisSafe(groupA1);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            groupA, subGroupA, receiver, 2 gwei, emptyData, Enum.Operation(0)
+            groupA1, subGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
         );
 
         // Execute on behalf function
-        vm.startPrank(groupA);
+        vm.startPrank(groupA1);
         vm.expectRevert(DenyHelper.AddresNotAllowed.selector);
         keyperModule.execTransactionOnBehalf(
             orgAddr,
-            subGroupA,
+            subGroupA1,
             receiver,
             2 gwei,
             emptyData,
@@ -350,12 +558,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function testRevertSuperSafeExecOnBehalfIsDenyList() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
-        address groupA = keyperSafes[groupAName];
-        address subGroupA = keyperSafes[subGroupAName];
+        address groupA1 = keyperSafes[groupA1Name];
+        address subGroupA1 = keyperSafes[subGroupA1Name];
 
         // Send ETH to group&subgroup
-        vm.deal(groupA, 100 gwei);
-        vm.deal(subGroupA, 100 gwei);
+        vm.deal(groupA1, 100 gwei);
+        vm.deal(subGroupA1, 100 gwei);
         address[] memory receiver = new address[](1);
         receiver[0] = address(0xDDD);
 
@@ -365,19 +573,24 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         keyperModule.addToList(orgAddr, receiver);
         vm.stopPrank();
 
-        // Set keyperhelper gnosis safe to groupA
-        keyperHelper.setGnosisSafe(groupA);
+        // Set keyperhelper gnosis safe to groupA1
+        keyperHelper.setGnosisSafe(groupA1);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            groupA, subGroupA, receiver[0], 2 gwei, emptyData, Enum.Operation(0)
+            groupA1,
+            subGroupA1,
+            receiver[0],
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
         );
 
         // Execute on behalf function
-        vm.startPrank(groupA);
+        vm.startPrank(groupA1);
         vm.expectRevert(DenyHelper.AddressDenied.selector);
         keyperModule.execTransactionOnBehalf(
             orgAddr,
-            subGroupA,
+            subGroupA1,
             receiver[0],
             2 gwei,
             emptyData,
@@ -386,20 +599,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    // TODO: @Cristian implement this usecases
-    // function testSafeLeadExecOnBehalf()
-    //                  --> Case 1: Lead is a Safe
-    //                  --> Case 2: Lead is an EOA
-    //                  --> Case 3: Lead is an EOA but tries to call the function for a group that he's not the lead
-    // function testRootSafeExecOnBehalf
-    // function testRevertExecOnBehalfNoRole
-
     function testRevertSuperSafeExecOnBehalf() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
-        address groupA = keyperSafes[groupAName];
-        address subGroupA = keyperSafes[subGroupAName];
-        address subSubGroupA = keyperSafes[subSubGroupAName];
+        address groupA1 = keyperSafes[groupA1Name];
+        address subGroupA1 = keyperSafes[subGroupA1Name];
+        address subSubGroupA = keyperSafes[subSubgroupA1Name];
 
         assertEq(
             keyperRolesContract.doesUserHaveRole(
@@ -408,12 +613,14 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             true
         );
         assertEq(
-            keyperRolesContract.doesUserHaveRole(groupA, uint8(Role.SUPER_SAFE)),
+            keyperRolesContract.doesUserHaveRole(
+                groupA1, uint8(Role.SUPER_SAFE)
+            ),
             true
         );
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                subGroupA, uint8(Role.SUPER_SAFE)
+                subGroupA1, uint8(Role.SUPER_SAFE)
             ),
             true
         );
@@ -426,22 +633,22 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         // Send ETH to org&subgroup
         vm.deal(orgAddr, 100 gwei);
-        vm.deal(groupA, 100 gwei);
+        vm.deal(groupA1, 100 gwei);
         address receiver = address(0xABC);
 
-        // Set keyperhelper gnosis safe to subGroupA
-        keyperHelper.setGnosisSafe(subGroupA);
+        // Set keyperhelper gnosis safe to subGroupA1
+        keyperHelper.setGnosisSafe(subGroupA1);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            subGroupA, groupA, receiver, 2 gwei, emptyData, Enum.Operation(0)
+            subGroupA1, groupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
         );
 
         vm.expectRevert(KeyperModule.NotAuthorizedExecOnBehalf.selector);
 
-        vm.startPrank(subGroupA);
+        vm.startPrank(subGroupA1);
         bool result = keyperModule.execTransactionOnBehalf(
             orgAddr,
-            groupA,
+            groupA1,
             receiver,
             2 gwei,
             emptyData,
@@ -468,11 +675,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function testsetSafeLead() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
-        address groupA = keyperSafes[groupAName];
+        address groupA1 = keyperSafes[groupA1Name];
         address userLead = address(0x123);
 
         vm.startPrank(orgAddr);
-        keyperModule.setRole(Role.SAFE_LEAD, userLead, groupA, true);
+        keyperModule.setRole(Role.SAFE_LEAD, userLead, groupA1, true);
 
         assertEq(
             keyperRolesContract.doesUserHaveRole(
@@ -485,19 +692,19 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function testAddOwnerWithThreshold() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
-        address groupA = keyperSafes[groupAName];
+        address groupA1 = keyperSafes[groupA1Name];
         address userLeadModifyOwnersOnly = address(0x123);
 
         vm.startPrank(orgAddr);
         keyperModule.setRole(
             Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
             userLeadModifyOwnersOnly,
-            groupA,
+            groupA1,
             true
         );
         vm.stopPrank();
 
-        gnosisHelper.updateSafeInterface(groupA);
+        gnosisHelper.updateSafeInterface(groupA1);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
         address[] memory prevOwnersList = gnosisHelper.gnosisSafe().getOwners();
@@ -505,7 +712,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         vm.startPrank(userLeadModifyOwnersOnly);
         address newOwner = address(0xaaaf);
         keyperModule.addOwnerWithThreshold(
-            newOwner, threshold + 1, groupA, orgAddr
+            newOwner, threshold + 1, groupA1, orgAddr
         );
 
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold + 1);
@@ -522,17 +729,71 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(ownerTest, newOwner);
     }
 
+    function testIsUserLeadWithThreshold() public {
+        (address orgAddr, address safeLead) = setSafeLeadOfOrg();
+
+        assertEq(keyperModule.isSafeLead(orgAddr, orgAddr, safeLead), true);
+
+        address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
+        address newOwner;
+
+        for (uint256 i = 0; i < owners.length; i++) {
+            newOwner = owners[i];
+        }
+
+        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+
+        vm.startPrank(safeLead);
+        vm.expectRevert(KeyperModule.OwnerAlreadyExists.selector);
+        keyperModule.addOwnerWithThreshold(
+            newOwner, threshold + 1, orgAddr, orgAddr
+        );
+    }
+
+    // When threshold < 1
+    function testRevertInvalidThresholdAddOwnerWithThresholdScenarioOne()
+        public
+    {
+        (address orgAddr, address safeLead) = setSafeLeadOfOrg();
+
+        address newOwner = address(0xf1f1f1);
+        uint256 wrongThreshold = 0;
+
+        vm.startPrank(safeLead);
+        vm.expectRevert(KeyperModule.InvalidThreshold.selector);
+        keyperModule.addOwnerWithThreshold(
+            newOwner, wrongThreshold, orgAddr, orgAddr
+        );
+    }
+
+    // When threshold > (IGnosisSafe(targetSafe).getOwners().length.add(1))
+    function testRevertInvalidThresholdAddOwnerWithThresholdScenarioTwo()
+        public
+    {
+        (address orgAddr, address safeLead) = setSafeLeadOfOrg();
+
+        address newOwner = address(0xf1f1f1);
+        uint256 wrongThreshold =
+            gnosisHelper.gnosisSafe().getOwners().length + 2;
+
+        vm.startPrank(safeLead);
+        vm.expectRevert(KeyperModule.InvalidThreshold.selector);
+        keyperModule.addOwnerWithThreshold(
+            newOwner, wrongThreshold, orgAddr, orgAddr
+        );
+    }
+
     function testRemoveOwner() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
-        address groupA = keyperSafes[groupAName];
+        address groupA1 = keyperSafes[groupA1Name];
         address userLead = address(0x123);
 
         vm.startPrank(orgAddr);
-        keyperModule.setRole(Role.SAFE_LEAD, userLead, groupA, true);
+        keyperModule.setRole(Role.SAFE_LEAD, userLead, groupA1, true);
         vm.stopPrank();
 
-        gnosisHelper.updateSafeInterface(groupA);
+        gnosisHelper.updateSafeInterface(groupA1);
         address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
 
         address prevOwner = ownersList[0];
@@ -540,7 +801,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
         vm.startPrank(userLead);
-        keyperModule.removeOwner(prevOwner, owner, threshold, groupA, orgAddr);
+        keyperModule.removeOwner(prevOwner, owner, threshold, groupA1, orgAddr);
 
         address[] memory postRemoveOwnersList =
             gnosisHelper.gnosisSafe().getOwners();
@@ -555,19 +816,19 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
         gnosisHelper.newKeyperSafe(4, 2);
-        result = gnosisHelper.registerOrgTx(orgBName);
-        keyperSafes[orgBName] = address(gnosisHelper.gnosisSafe());
+        result = gnosisHelper.registerOrgTx(org2Name);
+        keyperSafes[org2Name] = address(gnosisHelper.gnosisSafe());
 
-        address orgAAddr = keyperSafes[orgName];
-        address orgBAddr = keyperSafes[orgBName];
+        address orgAddr = keyperSafes[orgName];
+        address org2Addr = keyperSafes[org2Name];
 
         address newOwnerOnOrgA = address(0xF1F1);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
         vm.expectRevert(KeyperModule.NotAuthorizedAsNotSafeLead.selector);
 
-        vm.startPrank(orgBAddr);
+        vm.startPrank(org2Addr);
         keyperModule.addOwnerWithThreshold(
-            newOwnerOnOrgA, threshold, orgAAddr, orgAAddr
+            newOwnerOnOrgA, threshold, orgAddr, orgAddr
         );
     }
 
@@ -576,11 +837,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
 
         gnosisHelper.newKeyperSafe(4, 2);
-        result = gnosisHelper.registerOrgTx(orgBName);
-        keyperSafes[orgBName] = address(gnosisHelper.gnosisSafe());
+        result = gnosisHelper.registerOrgTx(org2Name);
+        keyperSafes[org2Name] = address(gnosisHelper.gnosisSafe());
 
-        address orgAAddr = keyperSafes[orgName];
-        address orgBAddr = keyperSafes[orgBName];
+        address orgAddr = keyperSafes[orgName];
+        address org2Addr = keyperSafes[org2Name];
 
         address prevOwnerToRemoveOnOrgA =
             gnosisHelper.gnosisSafe().getOwners()[0];
@@ -589,70 +850,184 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
         vm.expectRevert(KeyperModule.NotAuthorizedAsNotSafeLead.selector);
 
-        vm.startPrank(orgBAddr);
+        vm.startPrank(org2Addr);
         keyperModule.removeOwner(
-            prevOwnerToRemoveOnOrgA,
-            ownerToRemove,
-            threshold,
-            orgAAddr,
-            orgAAddr
+            prevOwnerToRemoveOnOrgA, ownerToRemove, threshold, orgAddr, orgAddr
         );
     }
 
-    function setUpRootOrgAndOneGroup() public returns (address, address) {
-        // Set initial safe as a rootOrg
+    function testRevertOwnerNotFoundRemoveOwner() public {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+        vm.label(keyperSafes[orgName], orgName);
 
-        // Create a safe
-        address safeGroupA = gnosisHelper.newKeyperSafe(4, 2);
-        string memory nameGroupA = groupAName;
-        keyperSafes[nameGroupA] = address(safeGroupA);
+        assertEq(result, true);
 
         address orgAddr = keyperSafes[orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, nameGroupA);
+        address safeLead = address(0x123);
 
-        vm.deal(orgAddr, 100 gwei);
-        vm.deal(safeGroupA, 100 gwei);
+        vm.startPrank(orgAddr);
+        keyperModule.setRole(Role.SAFE_LEAD, safeLead, orgAddr, true);
+        vm.stopPrank();
 
-        return (orgAddr, safeGroupA);
+        address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
+
+        address prevOwner = ownersList[0];
+        address wrongOwnerToRemove = address(0xabdcf);
+        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+
+        assertEq(ownersList.length, 3);
+
+        vm.expectRevert(KeyperModule.OwnerNotFound.selector);
+
+        vm.startPrank(safeLead);
+
+        keyperModule.removeOwner(
+            prevOwner, wrongOwnerToRemove, threshold, orgAddr, orgAddr
+        );
+    }
+
+    // ! removeGroup
+
+    function testRemoveGroupFromOrg() public {
+        setUpBaseOrgTree();
+        address orgAddr = keyperSafes[orgName];
+        address groupA1 = keyperSafes[groupA1Name];
+        address subGroupA1 = keyperSafes[subGroupA1Name];
+
+        gnosisHelper.updateSafeInterface(orgAddr);
+        bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupA1);
+        assertEq(result, true);
+        assertEq(keyperModule.isSuperSafe(orgAddr, orgAddr, groupA1), false);
+
+        // Check subGroupA1 is now a child of org
+        assertEq(keyperModule.isChild(orgAddr, orgAddr, subGroupA1), true);
+        // Check org is parent of subGroupA1
+        assertEq(keyperModule.isSuperSafe(orgAddr, orgAddr, subGroupA1), true);
     }
 
     /// removeGroup when org == superSafe
     function testRemoveGroupFromSafeOrgEqSuperSafe() public {
-        (address orgAddr, address groupSafe) = setUpRootOrgAndOneGroup();
+        (address orgAddr, address groupSafe) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
         // Create a sub safe
         address subSafeGroupA = gnosisHelper.newKeyperSafe(3, 2);
-        keyperSafes[subGroupAName] = address(subSafeGroupA);
-        gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupAName);
+        keyperSafes[subGroupA1Name] = address(subSafeGroupA);
+        gnosisHelper.createAddGroupTx(orgAddr, groupSafe, subGroupA1Name);
 
         gnosisHelper.updateSafeInterface(orgAddr);
         bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupSafe);
+
         assertEq(result, true);
 
         result = keyperModule.isSuperSafe(orgAddr, orgAddr, groupSafe);
         assertEq(result, false);
 
-        // Check sub safe is a child of org
-        address[] memory newChild;
-        (,,, newChild,) = keyperModule.getOrg(orgAddr);
-        assertEq(newChild[0], subSafeGroupA);
+        address[] memory child;
+        (,,, child,) = keyperModule.getOrg(orgAddr);
+        // Check removed group parent has subSafeGroup A as child an not groupSafe
+        assertEq(child.length, 1);
+        assertEq(child[0] == groupSafe, false);
+        assertEq(child[0] == subSafeGroupA, true);
+        assertEq(keyperModule.isChild(orgAddr, groupSafe, subSafeGroupA), false);
     }
 
-    // TODO : test following usecases
-    // remove Group:
-    // Usecases for revert from Remove group
-    // -> Org call removeGRoup for a group of another org
-    // -> Group call removeGroup for a group that is not his children
-    // Role related usecases:
-    // -> Check that the roles have been disabled for the group/org and for his safe lead
+    // ? Org call removeGroup for a group of another org
+    // Deploy 4 keyperSafes : following structure
+    //           RootOrg1                    RootOrg2
+    //              |                            |
+    //           GroupA1                      GroupA2
+    // Must Revert if RootOrg1 attempt to remove GroupA2
+    function testRevertRemoveGroupFromAnotherOrg() public {
+        (address orgAddr1, address groupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
+        (address orgAddr2, address groupA2) =
+            setUpRootOrgAndOneGroup(org2Name, groupA2Name);
 
-    // UseCases missing (similar usecase testRevert...) :
-    // Create 2 Org: each with 1 group + 1 subgroup, then set a safe as safe_lead
-    // then try with that safe to modify from another org
+        vm.startPrank(orgAddr1);
+        vm.expectRevert(
+            KeyperModule.NotAuthorizedRemoveNonChildrenGroup.selector
+        );
+        keyperModule.removeGroup(orgAddr2, groupA2);
+        vm.stopPrank();
 
-    // Add Tests that checks that this roles has been assigned following this rules
-    // registerOrg => Give ROOT_SAFE role to safe registered
-    // addGroup => Give SUPER_SAFE role to added safe
-    // setRole(SAFE_LEAD,...., user) => Give SAFE_LEAD to role added
+        vm.startPrank(orgAddr2);
+        vm.expectRevert(
+            KeyperModule.NotAuthorizedRemoveNonChildrenGroup.selector
+        );
+        keyperModule.removeGroup(orgAddr1, groupA1);
+    }
+
+    // ? Check disableSafeLeadRoles method success
+    // groupA1 removed and it should not have any role
+    function testRemoveGroupAndCheckDisables() public {
+        (address orgAddr, address groupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
+
+        (,,,, address superSafe) = keyperModule.getGroupInfo(orgAddr, groupA1);
+
+        gnosisHelper.updateSafeInterface(orgAddr);
+        bool result = gnosisHelper.createRemoveGroupTx(orgAddr, groupA1);
+        assertEq(result, true);
+
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                groupA1, uint8(Role.SUPER_SAFE)
+            ),
+            false
+        );
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                superSafe, uint8(Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            false
+        );
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                superSafe, uint8(Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            false
+        );
+    }
+
+    // Deploy 4 keyperSafes : following structure
+    //           RootOrg1                    RootOrg2
+    //              |                            |
+    //           GroupA1                      GroupA2
+    // GroupA2 will be a safeLead of GroupA1
+    function testModifyFromAnotherOrg() public {
+        (address orgAddr1, address groupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
+        (, address groupA2) = setUpRootOrgAndOneGroup(org2Name, groupA2Name);
+
+        vm.startPrank(orgAddr1);
+        keyperModule.setRole(Role.SAFE_LEAD, groupA2, groupA1, true);
+        vm.stopPrank();
+
+        assertEq(keyperModule.isSafeLead(orgAddr1, groupA1, groupA2), true);
+
+        address[] memory groupA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address newOwner = address(0xDEF);
+        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+
+        assertEq(
+            keyperModule.isSafeOwner(IGnosisSafe(groupA1), groupA1Owners[1]),
+            true
+        );
+
+        vm.startPrank(groupA2);
+
+        keyperModule.addOwnerWithThreshold(
+            newOwner, threshold, groupA1, orgAddr1
+        );
+        assertEq(keyperModule.isSafeOwner(IGnosisSafe(groupA1), newOwner), true);
+
+        keyperModule.removeOwner(
+            groupA1Owners[0], groupA1Owners[1], threshold, groupA1, orgAddr1
+        );
+        assertEq(
+            keyperModule.isSafeOwner(IGnosisSafe(groupA1), groupA1Owners[1]),
+            false
+        );
+    }
 }

@@ -6,11 +6,16 @@ import {Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
+import {DenyHelper} from "../src/DenyHelper.sol";
+import {console} from "forge-std/console.sol";
+import {MockedContract} from "./MockedContract.t.sol";
 import "./GnosisSafeHelper.t.sol";
 
 contract DenyHelperTest is Test {
     GnosisSafeHelper gnosisHelper;
-    KeyperModule keyperModule;
+    KeyperModule public keyperModule;
+    MockedContract public masterCopyMocked;
+    MockedContract public proxyFactoryMocked;
 
     address org1;
     address groupA;
@@ -21,6 +26,9 @@ contract DenyHelperTest is Test {
 
     // Function called before each test is run
     function setUp() public {
+        masterCopyMocked = new MockedContract();
+        proxyFactoryMocked = new MockedContract();
+
         // Setup Gnosis Helper
         gnosisHelper = new GnosisSafeHelper();
         // Setup of all Safe for Testing
@@ -36,8 +44,8 @@ contract DenyHelperTest is Test {
 
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
         keyperModule = new KeyperModule(
-            address(0x112233),
-            address(0x445566),
+            address(masterCopyMocked),
+            address(proxyFactoryMocked),
             address(keyperRolesDeployed)
         );
 
@@ -59,9 +67,11 @@ contract DenyHelperTest is Test {
         vm.startPrank(org1);
         keyperModule.enableAllowlist(org1);
         keyperModule.addToList(org1, owners);
-        vm.stopPrank();
-        assertEq(keyperModule.listCount(org1), 5);
-        assertEq(keyperModule.getPrevUser(org1, owners[1]), owners[0]);
+        assertEq(keyperModule.listCount(org1), owners.length);
+        assertEq(keyperModule.getAll(org1).length, owners.length);
+        for (uint256 i = 0; i < owners.length; i++) {
+            assertEq(keyperModule.isListed(org1, owners[i]), true);
+        }
     }
 
     function testRevertInvalidGnosisSafe() public {
@@ -171,12 +181,13 @@ contract DenyHelperTest is Test {
         listOfOwners();
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
-        keyperModule.enableDenylist(org1);
+        keyperModule.enableAllowlist(org1);
         keyperModule.addToList(org1, owners);
-        address dropOwner = address(0xFFF111);
-        vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
-        keyperModule.dropFromList(org1, dropOwner);
-        vm.stopPrank();
+        assertEq(keyperModule.listCount(org1), owners.length);
+        assertEq(keyperModule.getAll(org1).length, owners.length);
+        for (uint256 i = 0; i < owners.length; i++) {
+            assertEq(keyperModule.isListed(org1, owners[i]), true);
+        }
     }
 
     function testRevertAddToListZeroAddress() public {
@@ -239,6 +250,40 @@ contract DenyHelperTest is Test {
         keyperModule.dropFromList(org1, secOwnerToRemove);
         assertEq(keyperModule.isListed(org1, secOwnerToRemove), false);
         assertEq(keyperModule.getAll(org1).length, 3);
+        vm.stopPrank();
+    }
+
+    function testGetPrevUserList() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableAllowlist(org1);
+        keyperModule.addToList(org1, owners);
+        assertEq(keyperModule.getPrevUser(org1, owners[1]), owners[0]);
+        assertEq(keyperModule.getPrevUser(org1, owners[2]), owners[1]);
+        assertEq(keyperModule.getPrevUser(org1, owners[3]), owners[2]);
+        assertEq(keyperModule.getPrevUser(org1, owners[4]), owners[3]);
+        assertEq(keyperModule.getPrevUser(org1, address(0)), owners[4]);
+        // SENTINEL_WALLETS
+        assertEq(keyperModule.getPrevUser(org1, owners[0]), address(0x1));
+        vm.stopPrank();
+    }
+
+    function testEnableAllowlist() public {
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableAllowlist(org1);
+        assertEq(keyperModule.allowFeature(org1), true);
+        assertEq(keyperModule.denyFeature(org1), false);
+        vm.stopPrank();
+    }
+
+    function testEnableDenylist() public {
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        keyperModule.enableDenylist(org1);
+        assertEq(keyperModule.allowFeature(org1), false);
+        assertEq(keyperModule.denyFeature(org1), true);
         vm.stopPrank();
     }
 
