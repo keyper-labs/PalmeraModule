@@ -9,7 +9,7 @@ import {Constants} from "../src/Constants.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import "./GnosisSafeHelper.t.sol";
-import {MockedContractA, MockedContractB} from "./MockedContract.t.sol";
+import {MockedContract} from "./MockedContract.t.sol";
 
 contract KeyperRolesTest is Test, Constants {
     using Address for address;
@@ -17,15 +17,15 @@ contract KeyperRolesTest is Test, Constants {
     GnosisSafeHelper gnosisHelper;
     KeyperRoles keyperRoles;
 
-    MockedContractA mockedContractA;
-    MockedContractB mockedContractB;
+    MockedContract masterCopyMocked;
+    MockedContract proxyFactoryMocked;
 
     address gnosisSafeAddr;
     address keyperModuleDeployed;
 
     function setUp() public {
-        mockedContractA = new MockedContractA();
-        mockedContractB = new MockedContractB();
+        masterCopyMocked = new MockedContract();
+        proxyFactoryMocked = new MockedContract();
 
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
@@ -35,8 +35,8 @@ contract KeyperRolesTest is Test, Constants {
         keyperRoles = new KeyperRoles(keyperModuleDeployed);
 
         bytes memory args = abi.encode(
-            address(mockedContractA), //Master copy address does not matter
-            address(mockedContractB), // Same proxy factory
+            address(masterCopyMocked), //Master copy address does not matter
+            address(proxyFactoryMocked), // Same proxy factory
             address(keyperRoles)
         );
 
