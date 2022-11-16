@@ -981,11 +981,9 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // ! Reentrancy Attack test to execOnBehalf
     function testReentrancyAttack() public {
-        (address orgAddr, address attacker, address victim) = setAttackerTree();
 
-        // keyperHelper.setGnosisSafe(victim);
+        (address orgAddr, address attacker, address victim) = setAttackerTree();
         gnosisHelper.updateSafeInterface(attacker);
-        address receiver = address(0xABC);
 
         vm.startPrank(attacker);
 
@@ -1003,8 +1001,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             Enum.Operation(0),
             signatures
         );
+
         assertEq(result, true);
-        assertEq(attacker.balance, 5 gwei);
+        console.log("victim balance", attackerContract.getBalanceFromSafe(victim));
+        console.log("attacker balance: ", attackerContract.getBalanceFromAttacker());
+        // assertEq(attacker.balance, 100 gwei);
     }
 
     function setAttackerTree() public returns (address, address, address) {
@@ -1030,7 +1031,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         keyperModule.addGroup(orgAddr, attacker, nameVictim);
         vm.stopPrank();
 
-        // vm.deal(attacker, 100 gwei);
         vm.deal(victim, 100 gwei);
 
         vm.startPrank(orgAddr);
