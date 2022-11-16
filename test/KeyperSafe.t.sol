@@ -278,45 +278,45 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function testLeadExecOnBehalfFromGroup() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
-        address safeGroupA1 = keyperSafes[groupA1Name];
-        address safeSubGroupA1 = keyperSafes[subGroupA1Name];
+        address safeSubSubGroupA1 = keyperSafes[subSubgroupA1Name];
+        address safeGroupB = keyperSafes[groupBName];
 
-        vm.deal(safeGroupA1, 100 gwei);
-        vm.deal(safeSubGroupA1, 100 gwei);
+        vm.deal(safeSubSubGroupA1, 100 gwei);
+        vm.deal(safeGroupB, 100 gwei);
         address receiver = address(0xABC);
 
         vm.startPrank(orgAddr);
-        keyperModule.setRole(Role.SAFE_LEAD, safeGroupA1, safeSubGroupA1, true);
+        keyperModule.setRole(Role.SAFE_LEAD, safeGroupB, safeSubSubGroupA1, true);
         vm.stopPrank();
 
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                safeGroupA1, uint8(Role.SAFE_LEAD)
+                safeGroupB, uint8(Role.SAFE_LEAD)
             ),
             true
         );
         assertEq(
-            keyperModule.isSafeLead(orgAddr, safeSubGroupA1, safeGroupA1), true
+            keyperModule.isSafeLead(orgAddr, safeSubSubGroupA1, safeGroupB), true
         );
         assertEq(
-            keyperModule.isSuperSafe(orgAddr, safeGroupA1, safeSubGroupA1), true
+            keyperModule.isSuperSafe(orgAddr, safeGroupB, safeSubSubGroupA1), false
         );
         // Set keyperhelper gnosis safe to org
-        keyperHelper.setGnosisSafe(safeGroupA1);
+        keyperHelper.setGnosisSafe(safeGroupB);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            safeGroupA1,
-            safeSubGroupA1,
+            safeGroupB,
+            safeSubSubGroupA1,
             receiver,
             12 gwei,
             emptyData,
             Enum.Operation(0)
         );
-        vm.startPrank(safeGroupA1);
-        // vm.expectRevert(KeyperModule.NotAuthorizedExecOnBehalf.selector);
+
+        vm.startPrank(safeGroupB);
         bool result = keyperModule.execTransactionOnBehalf(
             orgAddr,
-            safeSubGroupA1,
+            safeSubSubGroupA1,
             receiver,
             12 gwei,
             emptyData,
@@ -523,7 +523,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    // 3. SafeLead is an EOA but he's not the lead (no role provided)
+    // 3. Caller is an EOA but he's not the lead (no role provided)
     function testRevertNotAuthorizedExecTransactionOnBehalfScenarioThree()
         public
     {

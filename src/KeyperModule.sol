@@ -200,7 +200,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         address caller = _msgSender();
         /// Check caller is a lead of the target safe
         if (
-            !isSafeLead(org, caller, targetSafe)
+            !isSafeLead(org, targetSafe, caller)
                 && !isSuperSafe(org, caller, targetSafe)
         ) {
             revert NotAuthorizedExecOnBehalf();
