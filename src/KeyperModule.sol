@@ -383,9 +383,9 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         emit OrganizationCreated(caller, name);
     }
 
-    /// @notice Add a group to an organisation/group
+    /// @notice Add a group to an organization/group
     /// @dev Call coming from the group safe
-    /// @param org address of the organisation
+    /// @param org address of the organization
     /// @param superSafe address of the superSafe
     /// @param name name of the group
     /// TODO: how avoid any safe adding in the org or group?
@@ -424,7 +424,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
 
     /// @notice Remove group and reasign all child to the superSafe
     /// @dev All actions will be driven based on the caller of the method, and args
-    /// @param org address of the organisation
+    /// @param org address of the organization
     /// @param group address of the group to be removed
     function removeGroup(address org, address group)
         external
@@ -661,24 +661,24 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         );
     }
 
-    /// @notice check if the organisation is registered
+    /// @notice check if the organization is registered
     /// @param org address
     function isOrgRegistered(address org) public view returns (bool) {
         if (orgs[org].safe == address(0)) return false;
         return true;
     }
 
-    /// @notice Check if child address is part of the group within an organisation
+    /// @notice Check if child address is part of the group within an organization
     function isChild(address org, address superSafe, address child)
         public
         view
         returns (bool)
     {
-        /// Check within orgs first if superSafe is an organisation
+        /// Check within orgs first if superSafe is an organization
         if (org == superSafe) {
-            Group memory organisation = orgs[org];
-            for (uint256 i = 0; i < organisation.child.length; i++) {
-                if (organisation.child[i] == child) return true;
+            Group memory organization = orgs[org];
+            for (uint256 i = 0; i < organization.child.length; i++) {
+                if (organization.child[i] == child) return true;
             }
             return false;
         }
@@ -694,7 +694,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     }
 
     /// @notice Check if a user is an safe lead of a group/org
-    /// @param org address of the organisation
+    /// @param org address of the organization
     /// @param group address of the group
     /// @param user address of the user that is a lead or not
     function isSafeLead(address org, address group, address user)
@@ -711,7 +711,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     }
 
     /// @notice Check if the group is a superSafe of another group
-    /// @param org address of the organisation
+    /// @param org address of the organization
     /// @param superSafe address of the superSafe
     /// @param child address of the child group
     function isSuperSafe(address org, address superSafe, address child)
@@ -837,7 +837,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     /// @param gnosisSafe GnosisSafe interface
     /// @param signer Address of the signer to verify
     function isSafeOwner(IGnosisSafe gnosisSafe, address signer)
-        private
+        public
         view
         returns (bool)
     {
