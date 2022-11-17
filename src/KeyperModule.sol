@@ -8,7 +8,6 @@ import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Constants} from "./Constants.sol";
 import {DenyHelper, Address} from "./DenyHelper.sol";
-import {console} from "forge-std/console.sol";
 import {KeyperRoles} from "./KeyperRoles.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
@@ -198,41 +197,42 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
             revert InvalidGnosisSafe();
         }
         address caller = _msgSender();
-        /// Check caller is a lead of the target safe
-        if (
-            !isSafeLead(org, targetSafe, caller)
-                && !isSuperSafe(org, caller, targetSafe)
-        ) {
-            revert NotAuthorizedExecOnBehalf();
-        }
-
-        bytes memory keyperTxHashData = encodeTransactionData(
-            /// Keyper Info
-            caller,
-            targetSafe,
-            /// Transaction info
-            to,
-            value,
-            data,
-            operation,
-            /// Signature info
-            nonce
-        );
-        /// Increase nonce and execute transaction.
-        nonce++;
-        // If caller is a safe then check caller safe signatures.
         if (isSafe(caller)) {
-            IGnosisSafe gnosisLeadSafe = IGnosisSafe(caller);
-            gnosisLeadSafe.checkSignatures(
-                keccak256(keyperTxHashData), keyperTxHashData, signatures
-            );
+            // Check caller is a lead or superSafe of the target safe
+            if (
+                isSafeLead(org, targetSafe, caller)
+                    || isSuperSafe(org, caller, targetSafe)
+            ) {
+                // Caller is a safe then check caller's safe signatures.
+                bytes memory keyperTxHashData = encodeTransactionData(
+                    /// Keyper Info
+                    caller,
+                    targetSafe,
+                    /// Transaction info
+                    to,
+                    value,
+                    data,
+                    operation,
+                    /// Signature info
+                    nonce
+                );
+
+                IGnosisSafe gnosisLeadSafe = IGnosisSafe(caller);
+                gnosisLeadSafe.checkSignatures(
+                    keccak256(keyperTxHashData), keyperTxHashData, signatures
+                );
+            } else {
+                revert NotAuthorizedExecOnBehalf();
+            }
         } else {
-            // Caller is EAO (lead) : that has the rights over the target safe
+            // Caller is EAO (lead) : check if it has the rights over the target safe
             if (!isSafeLead(org, targetSafe, caller)) {
                 revert NotAuthorizedAsNotSafeLead();
             }
         }
 
+        /// Increase nonce and execute transaction.
+        nonce++;
         /// Execute transaction from target safe
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
         result = gnosisTargetSafe.execTransactionFromModule(

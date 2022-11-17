@@ -286,7 +286,9 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address receiver = address(0xABC);
 
         vm.startPrank(orgAddr);
-        keyperModule.setRole(Role.SAFE_LEAD, safeGroupB, safeSubSubGroupA1, true);
+        keyperModule.setRole(
+            Role.SAFE_LEAD, safeGroupB, safeSubSubGroupA1, true
+        );
         vm.stopPrank();
 
         assertEq(
@@ -296,10 +298,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             true
         );
         assertEq(
-            keyperModule.isSafeLead(orgAddr, safeSubSubGroupA1, safeGroupB), true
+            keyperModule.isSafeLead(orgAddr, safeSubSubGroupA1, safeGroupB),
+            true
         );
         assertEq(
-            keyperModule.isSuperSafe(orgAddr, safeGroupB, safeSubSubGroupA1), false
+            keyperModule.isSuperSafe(orgAddr, safeGroupB, safeSubSubGroupA1),
+            false
         );
         // Set keyperhelper gnosis safe to org
         keyperHelper.setGnosisSafe(safeGroupB);
@@ -489,7 +493,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // Conditions:
-    // 2. SafeLead is an EOA
+    // 2. Revert SafeLead as EOA
     function testRevertNotAuthorizedExecTransactionOnBehalfScenarioTwo()
         public
     {
@@ -500,18 +504,17 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         address fakeCaller = address(0xFED);
         address receiver = address(0xABC);
 
-        // Set safe_lead role to fake caller
-        vm.startPrank(orgAddr);
-        keyperModule.setRole(Role.SAFE_LEAD, fakeCaller, orgAddr, true);
-        vm.stopPrank();
         // Set keyperhelper gnosis safe to org
         keyperHelper.setGnosisSafe(orgAddr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
-        );
+        bytes memory signatures;
+
+        vm.startPrank(orgAddr);
+        keyperModule.setRole(Role.SAFE_LEAD, fakeCaller, orgAddr, true);
+        vm.stopPrank();
+
         vm.startPrank(fakeCaller);
-        vm.expectRevert(KeyperModule.NotAuthorizedExecOnBehalf.selector);
+        vm.expectRevert(KeyperModule.NotAuthorizedAsNotSafeLead.selector);
         keyperModule.execTransactionOnBehalf(
             orgAddr,
             safeGroupA1,
@@ -523,7 +526,35 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    // 3. Caller is an EOA but he's not the lead (no role provided)
+    // 3. SafeLead of an Org as EOA
+    function testEoaCallExecTransactionOnBehalfScenarioTwo() public {
+        (address orgAddr,) = setUpRootOrgAndOneGroup(orgName, groupA1Name);
+
+        // Random wallet instead of a safe (EOA)
+        address callerEOA = address(0xFED);
+        address receiver = address(0xABC);
+
+        // Set safe_lead role to fake caller
+        vm.startPrank(orgAddr);
+        keyperModule.setRole(Role.SAFE_LEAD, callerEOA, orgAddr, true);
+        vm.stopPrank();
+        bytes memory emptyData;
+        bytes memory signatures;
+        vm.startPrank(callerEOA);
+        bool result = keyperModule.execTransactionOnBehalf(
+            orgAddr,
+            orgAddr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        assertEq(result, true);
+        assertEq(receiver.balance, 2 gwei);
+    }
+
+    // 4. Caller is an EOA but he's not the lead (no role provided)
     function testRevertNotAuthorizedExecTransactionOnBehalfScenarioThree()
         public
     {
