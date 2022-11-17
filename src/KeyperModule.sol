@@ -8,7 +8,6 @@ import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Constants} from "./Constants.sol";
 import {DenyHelper, Address} from "./DenyHelper.sol";
-import {console} from "forge-std/console.sol";
 import {KeyperRoles} from "./KeyperRoles.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
@@ -198,41 +197,42 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
             revert InvalidGnosisSafe();
         }
         address caller = _msgSender();
-        /// Check caller is a lead of the target safe
-        if (
-            !isSafeLead(org, caller, targetSafe)
-                && !isSuperSafe(org, caller, targetSafe)
-        ) {
-            revert NotAuthorizedExecOnBehalf();
-        }
-
-        bytes memory keyperTxHashData = encodeTransactionData(
-            /// Keyper Info
-            caller,
-            targetSafe,
-            /// Transaction info
-            to,
-            value,
-            data,
-            operation,
-            /// Signature info
-            nonce
-        );
-        /// Increase nonce and execute transaction.
-        nonce++;
-        // If caller is a safe then check caller safe signatures.
         if (isSafe(caller)) {
-            IGnosisSafe gnosisLeadSafe = IGnosisSafe(caller);
-            gnosisLeadSafe.checkSignatures(
-                keccak256(keyperTxHashData), keyperTxHashData, signatures
-            );
+            // Check caller is a lead or superSafe of the target safe
+            if (
+                isSafeLead(org, targetSafe, caller)
+                    || isSuperSafe(org, caller, targetSafe)
+            ) {
+                // Caller is a safe then check caller's safe signatures.
+                bytes memory keyperTxHashData = encodeTransactionData(
+                    /// Keyper Info
+                    caller,
+                    targetSafe,
+                    /// Transaction info
+                    to,
+                    value,
+                    data,
+                    operation,
+                    /// Signature info
+                    nonce
+                );
+
+                IGnosisSafe gnosisLeadSafe = IGnosisSafe(caller);
+                gnosisLeadSafe.checkSignatures(
+                    keccak256(keyperTxHashData), keyperTxHashData, signatures
+                );
+            } else {
+                revert NotAuthorizedExecOnBehalf();
+            }
         } else {
-            // Caller is EAO (lead) : that has the rights over the target safe
+            // Caller is EAO (lead) : check if it has the rights over the target safe
             if (!isSafeLead(org, targetSafe, caller)) {
                 revert NotAuthorizedAsNotSafeLead();
             }
         }
 
+        /// Increase nonce and execute transaction.
+        nonce++;
         /// Execute transaction from target safe
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
         result = gnosisTargetSafe.execTransactionFromModule(
@@ -383,9 +383,9 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         emit OrganizationCreated(caller, name);
     }
 
-    /// @notice Add a group to an organisation/group
+    /// @notice Add a group to an organization/group
     /// @dev Call coming from the group safe
-    /// @param org address of the organisation
+    /// @param org address of the organization
     /// @param superSafe address of the superSafe
     /// @param name name of the group
     /// TODO: how avoid any safe adding in the org or group?
@@ -424,7 +424,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
 
     /// @notice Remove group and reasign all child to the superSafe
     /// @dev All actions will be driven based on the caller of the method, and args
-    /// @param org address of the organisation
+    /// @param org address of the organization
     /// @param group address of the group to be removed
     function removeGroup(address org, address group)
         external
@@ -661,24 +661,24 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         );
     }
 
-    /// @notice check if the organisation is registered
+    /// @notice check if the organization is registered
     /// @param org address
     function isOrgRegistered(address org) public view returns (bool) {
         if (orgs[org].safe == address(0)) return false;
         return true;
     }
 
-    /// @notice Check if child address is part of the group within an organisation
+    /// @notice Check if child address is part of the group within an organization
     function isChild(address org, address superSafe, address child)
         public
         view
         returns (bool)
     {
-        /// Check within orgs first if superSafe is an organisation
+        /// Check within orgs first if superSafe is an organization
         if (org == superSafe) {
-            Group memory organisation = orgs[org];
-            for (uint256 i = 0; i < organisation.child.length; i++) {
-                if (organisation.child[i] == child) return true;
+            Group memory organization = orgs[org];
+            for (uint256 i = 0; i < organization.child.length; i++) {
+                if (organization.child[i] == child) return true;
             }
             return false;
         }
@@ -694,7 +694,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     }
 
     /// @notice Check if a user is an safe lead of a group/org
-    /// @param org address of the organisation
+    /// @param org address of the organization
     /// @param group address of the group
     /// @param user address of the user that is a lead or not
     function isSafeLead(address org, address group, address user)
@@ -711,7 +711,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     }
 
     /// @notice Check if the group is a superSafe of another group
-    /// @param org address of the organisation
+    /// @param org address of the organization
     /// @param superSafe address of the superSafe
     /// @param child address of the child group
     function isSuperSafe(address org, address superSafe, address child)
@@ -837,7 +837,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     /// @param gnosisSafe GnosisSafe interface
     /// @param signer Address of the signer to verify
     function isSafeOwner(IGnosisSafe gnosisSafe, address signer)
-        private
+        public
         view
         returns (bool)
     {
