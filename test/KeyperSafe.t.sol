@@ -18,13 +18,10 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     GnosisSafeHelper gnosisHelper;
     KeyperModuleHelper keyperHelper;
     KeyperRoles keyperRolesContract;
-    Attacker attackerContract;
-    AttackerHelper attackerHelper;
 
     address gnosisSafeAddr;
     address keyperModuleAddr;
     address keyperRolesDeployed;
-    address attackerAddr;
 
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) keyperSafes;
@@ -73,12 +70,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
 
         keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
-
-        attackerContract = new Attacker(keyperModuleAddr);
-        attackerAddr = address(attackerContract);
-
-        attackerHelper = new AttackerHelper();
-        attackerHelper.initHelper(keyperModule, attackerContract, 30);
     }
 
     function testCreateSafeFromModule() public {
@@ -1270,7 +1261,13 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // ! Reentrancy Attack test to execOnBehalf
     function testReentrancyAttack() public {
-        (address orgAddr, address attacker, address victim) = setAttackerTree();
+        (
+            Attacker attackerContract,
+            AttackerHelper attackerHelper,
+            address orgAddr,
+            address attacker,
+            address victim
+        ) = setAttackerTree();
 
         gnosisHelper.updateSafeInterface(victim);
         attackerContract.setOwners(gnosisHelper.gnosisSafe().getOwners());
@@ -1295,16 +1292,22 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
 
         assertEq(result, true);
-        console.log(
-            "victim balance", attackerContract.getBalanceFromSafe(victim)
-        );
-        console.log(
-            "attacker balance: ", attackerContract.getBalanceFromAttacker()
-        );
-        // assertEq(attacker.balance, 100 gwei);
+
+        // This is the expected behavior since the nonReentrant modifier is blocking the attacker from draining the victim's funds nor transfer any amount
+        assertEq(attackerContract.getBalanceFromSafe(victim), 100 gwei);
+        assertEq(attackerContract.getBalanceFromAttacker(), 0);
     }
 
-    function setAttackerTree() public returns (address, address, address) {
+    function setAttackerTree()
+        internal
+        returns (Attacker, AttackerHelper, address, address, address)
+    {
+        Attacker attackerContract = new Attacker(keyperModuleAddr);
+        address attackerAddr = address(attackerContract);
+
+        AttackerHelper attackerHelper = new AttackerHelper();
+        attackerHelper.initHelper(keyperModule, attackerContract, 30);
+
         gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
         address orgAddr = keyperSafes[orgName];
@@ -1335,6 +1338,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
         vm.stopPrank();
 
-        return (orgAddr, attacker, victim);
+        return (attackerContract, attackerHelper, orgAddr, attacker, victim);
     }
 }
