@@ -11,18 +11,18 @@ import {console} from "forge-std/console.sol";
 import {MockedContract} from "./MockedContract.t.sol";
 import "./GnosisSafeHelper.t.sol";
 
-contract DenyHelperTest is Test {
-    GnosisSafeHelper gnosisHelper;
+contract DenyHelperTest is Test, DenyHelper {
+    GnosisSafeHelper public gnosisHelper;
     KeyperModule public keyperModule;
     MockedContract public masterCopyMocked;
     MockedContract public proxyFactoryMocked;
 
-    address org1;
-    address groupA;
-    address keyperModuleAddr;
-    address keyperRolesDeployed;
+    address public org1;
+    address public groupA;
+    address public keyperModuleAddr;
+    address public keyperRolesDeployed;
     address[] public owners = new address[](5);
-    string rootOrgName;
+    string public rootOrgName;
 
     // Function called before each test is run
     function setUp() public {
@@ -287,6 +287,28 @@ contract DenyHelperTest is Test {
         vm.stopPrank();
     }
 
+    // ! Test without keyperModule
+
+    function testAddToListNoModule() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        enableAllowlist(org1);
+        addToList(org1, owners);
+        // assertEq(keyperModule.listCount(org1), owners.length);
+        assertEq(getAll(org1).length, owners.length);
+        // for (uint256 i = 0; i < owners.length; i++) {
+        //     assertEq(keyperModule.isListed(org1, owners[i]), true);
+        // }
+    }
+
+    // Register org call with mocked call to KeyperRoles
+    function registerOrgWithRoles(address org, string memory name) public {
+        vm.startPrank(org);
+        keyperModule.registerOrg(name);
+        vm.stopPrank();
+    }
+
     function listOfOwners() internal {
         owners[0] = address(0xAAA);
         owners[1] = address(0xBBB);
@@ -303,12 +325,5 @@ contract DenyHelperTest is Test {
         owners[2] = address(0xCCC);
         owners[3] = address(0x1);
         owners[4] = address(0xEEE);
-    }
-
-    // Register org call with mocked call to KeyperRoles
-    function registerOrgWithRoles(address org, string memory name) public {
-        vm.startPrank(org);
-        keyperModule.registerOrg(name);
-        vm.stopPrank();
     }
 }
