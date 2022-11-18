@@ -9,7 +9,6 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 import {console} from "forge-std/console.sol";
 
 contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
-
     KeyperModule public keyper;
     Attacker public attacker;
 

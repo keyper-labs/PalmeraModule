@@ -21,10 +21,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     KeyperModule public keyper;
     GnosisSafe public gnosisSafe;
 
-    function initHelper(
-        KeyperModule _keyper,
-        uint256 numberOwners
-    ) public {
+    function initHelper(KeyperModule _keyper, uint256 numberOwners) public {
         keyper = _keyper;
         initOnwers(numberOwners);
     }

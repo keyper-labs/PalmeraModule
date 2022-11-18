@@ -1270,14 +1270,17 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // ! Reentrancy Attack test to execOnBehalf
     function testReentrancyAttack() public {
-
         (address orgAddr, address attacker, address victim) = setAttackerTree();
-        gnosisHelper.updateSafeInterface(attacker);
 
+        gnosisHelper.updateSafeInterface(victim);
+        attackerContract.setOwners(gnosisHelper.gnosisSafe().getOwners());
+
+        gnosisHelper.updateSafeInterface(attacker);
         vm.startPrank(attacker);
 
         bytes memory emptyData;
-        bytes memory signatures = attackerHelper.encodeSignaturesForAttackKeyperTx(
+        bytes memory signatures = attackerHelper
+            .encodeSignaturesForAttackKeyperTx(
             attacker, victim, attacker, 5 gwei, emptyData, Enum.Operation(0)
         );
 
@@ -1292,8 +1295,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
 
         assertEq(result, true);
-        console.log("victim balance", attackerContract.getBalanceFromSafe(victim));
-        console.log("attacker balance: ", attackerContract.getBalanceFromAttacker());
+        console.log(
+            "victim balance", attackerContract.getBalanceFromSafe(victim)
+        );
+        console.log(
+            "attacker balance: ", attackerContract.getBalanceFromAttacker()
+        );
         // assertEq(attacker.balance, 100 gwei);
     }
 

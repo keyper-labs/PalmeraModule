@@ -7,11 +7,12 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 import {console} from "forge-std/console.sol";
 
 contract Attacker {
-
     address public orgFromAttacker;
     address public targetSafeFromAttacker;
     bytes public dataFromAttacker;
     bytes public signaturesFromAttacker;
+
+    address[] public owners = new address[](2);
 
     KeyperModule public keyperModule;
 
@@ -21,14 +22,14 @@ contract Attacker {
 
     //this is called when Attackee sends Ether to this contract (Attacker)
     receive() external payable {
-        if(address(targetSafeFromAttacker).balance > 0 gwei) {
+        if (address(targetSafeFromAttacker).balance > 0 gwei) {
             keyperModule.execTransactionOnBehalf(
-                orgFromAttacker, 
+                orgFromAttacker,
                 targetSafeFromAttacker,
-                address(this), 
-                address(targetSafeFromAttacker).balance, 
-                dataFromAttacker, 
-                Enum.Operation(0), 
+                address(this),
+                address(targetSafeFromAttacker).balance,
+                dataFromAttacker,
+                Enum.Operation(0),
                 signaturesFromAttacker
             );
         }
@@ -45,15 +46,15 @@ contract Attacker {
     ) external returns (bool result) {
         setParamsForAttack(org, targetSafe, data, signatures);
         result = keyperModule.execTransactionOnBehalf(
-            org, 
-            targetSafe, 
-            to, 
-            value, 
-            data, 
-            operation, 
-            signatures
+            org, targetSafe, to, value, data, operation, signatures
         );
         return true;
+    }
+
+    function setOwners(address[] memory _owners) public {
+        for (uint256 i = 0; i < owners.length; i++) {
+            owners[i] = _owners[i];
+        }
     }
 
     function getBalanceFromSafe(address _safe)
@@ -64,25 +65,17 @@ contract Attacker {
         return address(_safe).balance;
     }
 
-    function getBalanceFromAttacker() 
-        external 
-        view 
-        returns (uint256) 
-    {
+    function getBalanceFromAttacker() external view returns (uint256) {
         return address(this).balance;
     }
 
     function checkSignatures(
-        bytes32 dataHash, 
-        bytes memory data, 
+        bytes32 dataHash,
+        bytes memory data,
         bytes memory signatures
     ) external view {}
 
-    function getOwners() public pure returns (address[] memory) {
-        address[] memory owners = new address[](2);
-        //The following address are hardcoded from victim's owners
-        owners[0] = 0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69;
-        owners[1] = 0xe1AB8145F7E55DC933d51a18c793F901A3A0b276;
+    function getOwners() public view returns (address[] memory) {
         return owners;
     }
 
