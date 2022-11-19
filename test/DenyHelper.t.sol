@@ -16,6 +16,7 @@ contract DenyHelperTest is Test, DenyHelper {
     KeyperModule public keyperModule;
     MockedContract public masterCopyMocked;
     MockedContract public proxyFactoryMocked;
+    MockedContract public denyTester;
 
     address public org1;
     address public groupA;
@@ -28,6 +29,9 @@ contract DenyHelperTest is Test, DenyHelper {
     function setUp() public {
         masterCopyMocked = new MockedContract();
         proxyFactoryMocked = new MockedContract();
+
+        // Deployed for being able to test DenyHelper for itself
+        denyTester = new MockedContract();
 
         // Setup Gnosis Helper
         gnosisHelper = new GnosisSafeHelper();
@@ -293,13 +297,134 @@ contract DenyHelperTest is Test, DenyHelper {
         listOfOwners();
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
-        enableAllowlist(org1);
-        addToList(org1, owners);
-        // assertEq(keyperModule.listCount(org1), owners.length);
-        assertEq(getAll(org1).length, owners.length);
-        // for (uint256 i = 0; i < owners.length; i++) {
-        //     assertEq(keyperModule.isListed(org1, owners[i]), true);
-        // }
+        denyTester.enableAllowlist(org1);
+        denyTester.addToList(org1, owners);
+        assertEq(denyTester.listCount(org1), owners.length);
+        assertEq(denyTester.getAll(org1).length, owners.length);
+        for (uint256 i = 0; i < owners.length; i++) {
+            assertEq(denyTester.isListed(org1, owners[i]), true);
+        }
+    }
+
+    function testRevertAddToListZeroAddressNoModule() public {
+        address[] memory voidOwnersArray = new address[](0);
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        denyTester.enableDenylist(org1);
+        vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
+        denyTester.addToList(org1, voidOwnersArray);
+        vm.stopPrank();
+    }
+
+    function testRevertIfDenyHelpersDisabledNoModule() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        vm.expectRevert(DenyHelper.DenyHelpersDisabled.selector);
+        denyTester.addToList(org1, owners);
+        address dropOwner = owners[1];
+        vm.expectRevert(DenyHelper.DenyHelpersDisabled.selector);
+        denyTester.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+    function testRevertIfInvalidAddressProvidedForAllowListNoModule() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        denyTester.enableAllowlist(org1);
+        denyTester.addToList(org1, owners);
+        address dropOwner = address(0xFFF111);
+        vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
+        denyTester.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+    function testRevertAddToDuplicateAddressNoModule() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        denyTester.enableDenylist(org1);
+        denyTester.addToList(org1, owners);
+
+        address[] memory newOwner = new address[](1);
+        newOwner[0] = address(0xDDD);
+
+        vm.expectRevert(DenyHelper.UserAlreadyOnList.selector);
+        denyTester.addToList(org1, newOwner);
+        vm.stopPrank();
+    }
+
+    function testDropFromListNoModule() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        denyTester.enableDenylist(org1);
+        denyTester.addToList(org1, owners);
+
+        // Must be Revert if drop not address (0)
+        address newOwner = address(0x0);
+        vm.expectRevert(DenyHelper.InvalidAddressProvided.selector);
+        denyTester.dropFromList(org1, newOwner);
+
+        // Must be the address(0xCCC)
+        address ownerToRemove = owners[2];
+
+        denyTester.dropFromList(org1, ownerToRemove);
+        assertEq(denyTester.isListed(org1, ownerToRemove), false);
+        assertEq(denyTester.getAll(org1).length, 4);
+
+        // Must be the address(0xEEE)
+        address secOwnerToRemove = owners[4];
+
+        denyTester.dropFromList(org1, secOwnerToRemove);
+        assertEq(denyTester.isListed(org1, secOwnerToRemove), false);
+        assertEq(denyTester.getAll(org1).length, 3);
+        vm.stopPrank();
+    }
+
+    function testRevertIfListEmptyForAllowListNoModule() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        address dropOwner = owners[1];
+        denyTester.enableAllowlist(org1);
+        vm.expectRevert(DenyHelper.ListEmpty.selector);
+        denyTester.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+    function testRevertIfListEmptyForDenyListNoModule() public {
+        listOfOwners();
+        registerOrgWithRoles(org1, rootOrgName);
+        vm.startPrank(org1);
+        address dropOwner = owners[1];
+        denyTester.enableDenylist(org1);
+        vm.expectRevert(DenyHelper.ListEmpty.selector);
+        denyTester.dropFromList(org1, dropOwner);
+        vm.stopPrank();
+    }
+
+    function testDisableDenyHelper() public {
+        registerOrgWithRoles(org1, rootOrgName);
+
+        vm.startPrank(org1);
+        denyTester.enableAllowlist(org1);
+        assertEq(denyTester.allowFeature(org1), true);
+        assertEq(denyTester.denyFeature(org1), false);
+
+        denyTester.disableDenyHelper(org1);
+        assertEq(denyTester.allowFeature(org1), false);
+        assertEq(denyTester.denyFeature(org1), false);
+
+        denyTester.enableDenylist(org1);
+        assertEq(denyTester.allowFeature(org1), false);
+        assertEq(denyTester.denyFeature(org1), true);
+
+        denyTester.disableDenyHelper(org1);
+        assertEq(denyTester.allowFeature(org1), false);
+        assertEq(denyTester.denyFeature(org1), false);
+        vm.stopPrank();
     }
 
     // Register org call with mocked call to KeyperRoles
