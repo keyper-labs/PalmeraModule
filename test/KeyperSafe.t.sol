@@ -5,10 +5,12 @@ import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
+import "./ReentrancyAttackHelper.t.sol";
 import {KeyperModule, IGnosisSafe, DenyHelper} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
+import {Attacker} from "../src/ReentrancyAttack.sol";
 import {console} from "forge-std/console.sol";
 
 contract TestKeyperSafe is Test, SigningUtils, Constants {
@@ -1255,5 +1257,87 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             keyperModule.isSafeOwner(IGnosisSafe(safeGroupA1), groupA1Owners[1]),
             false
         );
+    }
+
+    // ! Reentrancy Attack test to execOnBehalf
+    function testReentrancyAttack() public {
+        (
+            Attacker attackerContract,
+            AttackerHelper attackerHelper,
+            address orgAddr,
+            address attacker,
+            address victim
+        ) = setAttackerTree();
+
+        gnosisHelper.updateSafeInterface(victim);
+        attackerContract.setOwners(gnosisHelper.gnosisSafe().getOwners());
+
+        gnosisHelper.updateSafeInterface(attacker);
+        vm.startPrank(attacker);
+
+        bytes memory emptyData;
+        bytes memory signatures = attackerHelper
+            .encodeSignaturesForAttackKeyperTx(
+            attacker, victim, attacker, 5 gwei, emptyData, Enum.Operation(0)
+        );
+
+        bool result = attackerContract.performAttack(
+            orgAddr,
+            victim,
+            attacker,
+            5 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+
+        assertEq(result, true);
+
+        // This is the expected behavior since the nonReentrant modifier is blocking the attacker from draining the victim's funds nor transfer any amount
+        assertEq(attackerContract.getBalanceFromSafe(victim), 100 gwei);
+        assertEq(attackerContract.getBalanceFromAttacker(), 0);
+    }
+
+    function setAttackerTree()
+        internal
+        returns (Attacker, AttackerHelper, address, address, address)
+    {
+        Attacker attackerContract = new Attacker(keyperModuleAddr);
+        address attackerAddr = address(attackerContract);
+
+        AttackerHelper attackerHelper = new AttackerHelper();
+        attackerHelper.initHelper(keyperModule, attackerContract, 30);
+
+        gnosisHelper.registerOrgTx(orgName);
+        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+        address orgAddr = keyperSafes[orgName];
+
+        gnosisHelper.updateSafeInterface(address(attackerAddr));
+        string memory nameAttacker = "Attacker";
+        keyperSafes[nameAttacker] = address(attackerAddr);
+
+        address attacker = keyperSafes[nameAttacker];
+
+        vm.startPrank(attacker);
+        keyperModule.addGroup(orgAddr, orgAddr, nameAttacker);
+        vm.stopPrank();
+
+        address victim = gnosisHelper.newKeyperSafe(2, 1);
+        string memory nameVictim = "Victim";
+        keyperSafes[nameVictim] = address(victim);
+
+        vm.startPrank(victim);
+        keyperModule.addGroup(orgAddr, attacker, nameVictim);
+        vm.stopPrank();
+
+        vm.deal(victim, 100 gwei);
+
+        vm.startPrank(orgAddr);
+        keyperModule.setRole(
+            Role.SAFE_LEAD, address(attacker), address(victim), true
+        );
+        vm.stopPrank();
+
+        return (attackerContract, attackerHelper, orgAddr, attacker, victim);
     }
 }
