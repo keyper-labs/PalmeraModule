@@ -751,8 +751,9 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     }
 
     function domainSeparator() public view returns (bytes32) {
-        return
-            keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this));
+        return keccak256(
+            abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)
+        );
     }
 
     /// @dev Returns the chain id used by this contract.
