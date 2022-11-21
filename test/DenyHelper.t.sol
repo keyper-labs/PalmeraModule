@@ -9,6 +9,7 @@ import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
 import {console} from "forge-std/console.sol";
 import {MockedContract} from "./MockedContract.t.sol";
+import {DenyHelperMockedContract} from "./DenyHelperMockedContract.t.sol";
 import "./GnosisSafeHelper.t.sol";
 
 contract DenyHelperTest is Test, DenyHelper {
@@ -16,7 +17,7 @@ contract DenyHelperTest is Test, DenyHelper {
     KeyperModule public keyperModule;
     MockedContract public masterCopyMocked;
     MockedContract public proxyFactoryMocked;
-    MockedContract public denyTester;
+    DenyHelperMockedContract public denyTester;
 
     address public org1;
     address public groupA;
@@ -31,7 +32,7 @@ contract DenyHelperTest is Test, DenyHelper {
         proxyFactoryMocked = new MockedContract();
 
         // Deployed for being able to test DenyHelper for itself
-        denyTester = new MockedContract();
+        denyTester = new DenyHelperMockedContract();
 
         // Setup Gnosis Helper
         gnosisHelper = new GnosisSafeHelper();
