@@ -26,45 +26,64 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     address internal constant SENTINEL_OWNERS = address(0x1);
     /// @dev RoleAuthority
     address public rolesAuthority;
+	/// @dev Enum Types
+	enum Kinds {
+		GROUP, // 0
+		ROOT // 1
+	}
     /// @devStruct for Group
-
+	/// @param kind Kind of the group (at the momento only GROUP or ROOT)
+	/// @param name String name of the group (any kind of group)
+	/// @param lead Address of Safe Lead of the group (Safe Lead Role)
+	/// @param safe Address of Safe of the group (Safe Role)
+	/// @param child Array of ID's members of the group
+	/// @param superSafe ID of Superior Group (superSafe Role)
     struct Group {
+		Kinds kind;
         string name;
         address lead;
         address safe;
-        address[] child;
-        address superSafe;
+        uint256[] child;
+        uint256 superSafe;
     }
-    /// @dev Orgs -> Groups
+	/// @dev index of the group
+    uint256 public index;
+    /// @dev Index of Group
+	/// @dev Ens name -> ID's Groups
+    mapping(bytes32 => uint256[]) public indexGroup;
+    /// @dev Ens name -> Groups
+    /// bytes32: ens_hashed.   uint256:GroupId.   Group: Group Info
+    mapping(bytes32 => mapping(uint256 => Group)) public groups;
 
-    mapping(address => mapping(address => Group)) public groups;
-    /// @dev Orgs info
-    mapping(address => Group) public orgs;
     /// @dev Events
-
-    event OrganizationCreated(address indexed org, string name);
+    event OrganizationCreated(
+        address indexed creator,
+        uint256 indexed org,
+        string name
+    );
 
     event GroupCreated(
-        address indexed org,
-        address indexed group,
-        string name,
-        address indexed lead,
-        address superSafe
+        uint256 indexed org,
+        uint256 indexed group,
+        address admin,
+        address indexed caller,
+        address superSafe,
+        string name
     );
 
     event GroupRemoved(
-        address indexed org,
-        address indexed groupRemoved,
+        uint256 indexed org,
+        uint256 indexed groupRemoved,
         address indexed caller,
         address superSafe,
         string name
     );
 
     event GroupSuperUpdated(
-        address indexed org,
-        address indexed group,
+        uint256 indexed org,
+        uint256 indexed oldGroup,
         address indexed caller,
-        address superSafe
+        uint256 newSuperSafe
     );
 
     event TxOnBehalfExecuted(
@@ -96,18 +115,20 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     error InvalidGnosisSafe();
     error ChildNotFound();
     error SetRoleForbidden(Role role);
+	error EmptyOrgName();
+	error OrgAlreadyRegistered();
 
     /// @dev Modifier for Validate if Org Exist or Not
-    modifier OrgRegistered(address org) {
-        if (org == address(0) || orgs[org].safe == address(0)) {
+    modifier OrgRegistered(string calldata org) {
+        if (!isOrgRegistered(org)) {
             revert OrgNotRegistered();
         }
         _;
     }
 
     /// @dev Modifier for Validate if Org/Group Exist or SuperSafeNotRegistered Not
-    modifier GroupRegistered(address org, address group) {
-        if (group == address(0) || groups[org][group].safe == address(0)) {
+    modifier GroupRegistered(string memory org, uint256 group) {
+        if (groups[org][group].safe == address(0)) {
             revert GroupNotRegistered(group);
         }
         _;
@@ -175,7 +196,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     /// @param targetSafe Safe target address
     /// @param to data
     function execTransactionOnBehalf(
-        address org,
+        string calldata org,
         address targetSafe,
         address to,
         uint256 value,
@@ -260,7 +281,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         address owner,
         uint256 threshold,
         address targetSafe,
-        address org
+        string calldata org
     ) external OrgRegistered(org) requiresAuth IsGnosisSafe(targetSafe) {
         /// Check _msgSender() is an user lead of the target safe
         if (!isSafeLead(org, targetSafe, _msgSender())) {
@@ -298,7 +319,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         address owner,
         uint256 threshold,
         address targetSafe,
-        address org
+        string calldata org
     ) external requiresAuth IsGnosisSafe(targetSafe) {
         if (prevOwner == address(0) || owner == address(0) || org == address(0))
         {
@@ -330,57 +351,65 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     /// @notice Give user roles
     /// @dev Call must come from the root safe
     /// @param role Role to be assigned
-    /// @param user User that will have specific role
+    /// @param user User that will have specific role // TODO: validate ir this user can be a Safe or EOAs
     /// @param group Safe group which will have the user permissions on
-    function setRole(Role role, address user, address group, bool enabled)
+    function setRole(Role role, address user, string calldata org,uint256 group, bool enabled)
         external
+		OrgRegistered(org)
+		GroupRegistered(org,group)
         validAddress(user)
         requiresAuth
     {
-        if (role == Role.ROOT_SAFE || role == Role.SUPER_SAFE) {
+		RolesAuthority authority = RolesAuthority(rolesAuthority);
+		// TODO: validate if is or not redundant with modifier (requieresAuth)
+        if ((groups[org][getGroupIdBySafe(org,_msgSender())].kind != Kinds.ROOT ) && (role == Role.ROOT_SAFE || role == Role.SUPER_SAFE)) {
             revert SetRoleForbidden(role);
-        }
-        if (
+        } else if ((groups[org][getGroupIdBySafe(org,_msgSender())].kind == Kinds.ROOT ) && (role == Role.ROOT_SAFE)) {
+			groups[org][group].kind = Kinds.ROOT;
+			// TODO: validate if is or not redundant role assign
+			authority.setUserRole(user, uint8(Role.SUPER_SAFE), enabled);
+        } else if (
             role == Role.SAFE_LEAD || role == Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
                 || role == Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
         ) {
-            Group storage safeGroup;
-            if (_msgSender() == group) {
-                // Check org validity
-                if (!isOrgRegistered(_msgSender())) revert OrgNotRegistered();
-                safeGroup = orgs[_msgSender()];
-            } else {
-                // Check if group is part of the caller org
-                if (groups[_msgSender()][group].safe == address(0)) {
-                    revert GroupNotRegistered(group);
-                }
-                safeGroup = groups[_msgSender()][group];
-            }
             // Update group/org lead
-            safeGroup.lead = user;
+            groups[org][group].lead = user;
         }
-        RolesAuthority authority = RolesAuthority(rolesAuthority);
         authority.setUserRole(user, uint8(role), enabled);
     }
 
-    /// @notice Register an organisatin
+    /// @notice Register an organization
     /// @dev Call has to be done from a safe transaction
-    /// @param name of the org
-    function registerOrg(string memory name)
+    /// @param _name String with of the org (This name will be hashed into smart contract)
+    function registerOrg(string calldata _name)
         external
         IsGnosisSafe(_msgSender())
     {
+		if (_name.length == 0) {
+			revert EmptyOrgName();
+		}
+		bytes32 name = bytes32(keccak256(abi.encodePacked(_name)));
+		if (isOrgRegistered(name)) {
+			revert OrgAlreadyRegistered();
+		}
         address caller = _msgSender();
-        Group storage rootOrg = orgs[caller];
-        rootOrg.name = name;
-        rootOrg.safe = caller;
+		// when register an org, need to create the first root safe group
+        groups[name][index] = Group({
+			kind: Kinds.ROOT,
+			name: _name,
+			lead: caller,
+			safe: caller
+		});
+		indexGroup[name].push(index);
+		index++;
+
 
         /// Assign SUPER_SAFE Role + SAFE_ROOT Role
         RolesAuthority authority = RolesAuthority(rolesAuthority);
         authority.setUserRole(caller, uint8(Role.ROOT_SAFE), true);
         authority.setUserRole(caller, uint8(Role.SUPER_SAFE), true);
 
-        emit OrganizationCreated(caller, name);
+        emit OrganizationCreated(caller, name, _name);
     }
 
     /// @notice Add a group to an organization/group
@@ -389,7 +418,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     /// @param superSafe address of the superSafe
     /// @param name name of the group
     /// TODO: how avoid any safe adding in the org or group?
-    function addGroup(address org, address superSafe, string memory name)
+    function addGroup(string calldata org, uint256 superSafe, string memory name)
         external
         OrgRegistered(org)
         validAddress(superSafe)
@@ -397,13 +426,13 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     {
         address caller = _msgSender();
         if (isChild(org, superSafe, caller)) revert ChildAlreadyExist();
-        if (org != superSafe && groups[org][superSafe].safe == address(0)) {
+        if (groups[org][superSafe].safe == address(0)) {
             revert GroupNotRegistered(superSafe);
         }
         Group storage newGroup = groups[org][caller];
         /// Add to org root/group
-        Group storage superSafeOrgGroup =
-            (superSafe == org) ? orgs[org] : groups[org][superSafe];
+        Group storage superSafeOrgGroup = groups[org][superSafe];
+		/// Add child to superSafe
         superSafeOrgGroup.child.push(caller);
         /// By default Lead of the new group is the Lead of the superSafe (TODO check this)
         newGroup.lead = superSafeOrgGroup.lead;
@@ -426,7 +455,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     /// @dev All actions will be driven based on the caller of the method, and args
     /// @param org address of the organization
     /// @param group address of the group to be removed
-    function removeGroup(address org, address group)
+    function removeGroup(string calldata org, uint256 group)
         external
         OrgRegistered(org)
         GroupRegistered(org, group)
@@ -435,17 +464,13 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     {
         address caller = _msgSender();
         // RootSafe usecase : Check if the group is part of caller's org
-        if (caller == org) {
-            if (groups[caller][group].safe == address(0)) {
-                revert NotAuthorizedRemoveGroupFromOtherOrg();
-            }
-        } else {
-            // SuperSafe usecase : Check caller is superSafe of the group
-            if (!isSuperSafe(org, caller, group)) {
-                revert NotAuthorizedRemoveNonChildrenGroup();
-            }
-        }
-
+		if (groups[org][getGroupIdBySafe(org, caller)].safe == address(0)) {
+			revert NotAuthorizedRemoveGroupFromOtherOrg();
+		}
+		// SuperSafe usecase : Check caller is superSafe of the group
+		if (!isSuperSafe(org, getGroupIdBySafe(org, caller), group)) {
+			revert NotAuthorizedRemoveNonChildrenGroup();
+		}
         Group memory _group = groups[org][group];
 
         // superSafe is either an org or a group
@@ -645,12 +670,21 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
     }
 
     /// @notice Get all the information about a group
-    function getGroupInfo(address org, address group)
+    /// @dev Method for getting all info of a group
+    /// @param org uint256 of the organization
+    /// @param group uint256 of the group
+    function getGroupInfo(uint256 org, uint256 group)
         public
         view
         OrgRegistered(org)
         GroupRegistered(org, group)
-        returns (string memory, address, address, address[] memory, address)
+        returns (
+            string memory,
+            address,
+            address,
+            uint256[] memory,
+            uint256
+        )
     {
         return (
             groups[org][group].name,
@@ -661,36 +695,65 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         );
     }
 
-    /// @notice check if the organization is registered
+    /// @notice check if the organisation is registered
     /// @param org address
-    function isOrgRegistered(address org) public view returns (bool) {
-        if (orgs[org].safe == address(0)) return false;
+    function isOrgRegistered(string calldata org) public view returns (bool) {
+        if (groups[org][indexGroup[org][0]].safe == address(0)) return false;
         return true;
     }
 
     /// @notice Check if child address is part of the group within an organization
-    function isChild(address org, address superSafe, address child)
-        public
-        view
-        returns (bool)
-    {
-        /// Check within orgs first if superSafe is an organization
-        if (org == superSafe) {
-            Group memory organization = orgs[org];
-            for (uint256 i = 0; i < organization.child.length; i++) {
-                if (organization.child[i] == child) return true;
-            }
-            return false;
-        }
+    /// @param org uint256 of the organization
+    /// @param superSafe uint256 of the superSafe
+    /// @param child address of the child
+    function isChild(
+        string calldata org,
+        uint256 superSafe,
+        address child
+    ) public view returns (bool) {
+        /// Check within orgs first if superSafe is an organisation
+        if (!isOrgRegistered(org)) return false;
         /// Check within groups of the org
-        Group memory group = groups[org][superSafe];
-        if (group.safe == address(0)) {
-            return false;
+        if (groups[org][superSafe].safe == address(0)) {
+            revert SuperSafeNotRegistered();
         }
+        Group memory group = groups[org][superSafe];
         for (uint256 i = 0; i < group.child.length; i++) {
-            if (group.child[i] == child) return true;
+            if (group.child[i] == getGroupIdBySafe(org, child)) return true;
         }
         return false;
+    }
+
+    /// @notice Check if the group is a superSafe of another group
+    /// @param org uint256 of the organization
+    /// @param superSafe uint256 of the superSafe
+    /// @param child uint256 of the child
+    function isSuperSafe(
+        string calldata org,
+        uint256 superSafe,
+        uint256 child
+    ) public view returns (bool) {
+        return groups[org][child].superSafe == superSafe;
+    }
+
+    /// @dev Method to get Group ID by safe address
+    /// @param org uint256 index of Organization
+    /// @param safe Safe address
+    /// @return Group ID
+    function getGroupIdBySafe(uint256 org, address safe)
+        public
+        view
+        OrgRegistered(org)
+        returns (uint256)
+    {
+        /// Check if the Safe address is into an Org mapping
+        if (safe == orgs[org].safe) return org;
+        /// Check if the Safe address is into an Group mapping
+        for (uint256 i = 0; i < indexGroup[org].length; i++) {
+            if (groups[org][indexGroup[org][i]].safe == safe)
+                return indexGroup[org][i];
+        }
+        return 0;
     }
 
     /// @notice Check if a user is an safe lead of a group/org
@@ -748,6 +811,24 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         } else {
             return false;
         }
+    }
+
+	/// @notice Check if the signer is an owner of the safe
+    /// @dev Call has to be done from a safe transaction
+    /// @param gnosisSafe GnosisSafe interface
+    /// @param signer Address of the signer to verify
+    function isSafeOwner(IGnosisSafe gnosisSafe, address signer)
+        public
+        view
+        returns (bool)
+    {
+        address[] memory safeOwners = gnosisSafe.getOwners();
+        for (uint256 i = 0; i < safeOwners.length; i++) {
+            if (safeOwners[i] == signer) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function domainSeparator() public view returns (bytes32) {
@@ -832,21 +913,18 @@ contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
         }
     }
 
-    /// @notice Check if the signer is an owner of the safe
-    /// @dev Call has to be done from a safe transaction
-    /// @param gnosisSafe GnosisSafe interface
-    /// @param signer Address of the signer to verify
-    function isSafeOwner(IGnosisSafe gnosisSafe, address signer)
-        public
-        view
-        returns (bool)
-    {
-        address[] memory safeOwners = gnosisSafe.getOwners();
-        for (uint256 i = 0; i < safeOwners.length; i++) {
-            if (safeOwners[i] == signer) {
-                return true;
+	/// @notice Private method to remove index from mapping of indexes into organizations
+    /// @param org uint256 of the organization
+    /// @param group uint256 of the group
+    function removeIndexGroup(string calldata org, uint256 group) private {
+        for (uint256 i = 0; i < indexGroup[org].length; i++) {
+            if (indexGroup[org][i] == group) {
+                indexGroup[org][i] = indexGroup[org][
+                    indexGroup[org].length - 1
+                ];
+                indexGroup[org].pop();
+                break;
             }
         }
-        return false;
     }
 }
