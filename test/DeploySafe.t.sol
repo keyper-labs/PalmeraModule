@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
-import "./SignDigestHelper.t.sol";
-import "./GnosisSafeHelper.t.sol";
+import "./helpers/SignDigestHelper.t.sol";
+import "./helpers/GnosisSafeHelper.t.sol";
 
 contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
     GnosisSafeHelper gnosisHelper;

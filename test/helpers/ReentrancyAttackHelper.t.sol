@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
-import {KeyperModule} from "../src/KeyperModule.sol";
-import {Attacker} from "../src/ReentrancyAttack.sol";
+import {KeyperModule} from "../../src/KeyperModule.sol";
+import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {console} from "forge-std/console.sol";
 

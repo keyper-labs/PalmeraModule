@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "./GnosisSafeHelper.t.sol";
+import "./helpers/GnosisSafeHelper.t.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 
 contract TestEnableModule is Test {
