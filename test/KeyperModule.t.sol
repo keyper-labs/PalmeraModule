@@ -8,7 +8,7 @@ import {Constants} from "../src/Constants.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import "./GnosisSafeHelper.t.sol";
-import {MockedContract} from "./MockedContract.t.sol";
+import {MockedContract} from "./mocks/MockedContract.t.sol";
 
 contract KeyperModuleTest is Test, Constants {
     GnosisSafeHelper gnosisHelper;

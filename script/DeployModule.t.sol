@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 import "src/KeyperModule.sol";
-import "test/MockedContract.t.sol";
+import "test/mocks/MockedContract.t.sol";
 import "@solenv/Solenv.sol";
 
 contract DeployModule is Script {
