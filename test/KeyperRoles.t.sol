@@ -9,7 +9,7 @@ import {Constants} from "../src/Constants.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import "./GnosisSafeHelper.t.sol";
-import {MockedContract} from "./MockedContract.t.sol";
+import {MockedContract} from "./mocks/MockedContract.t.sol";
 
 contract KeyperRolesTest is Test, Constants {
     using Address for address;
