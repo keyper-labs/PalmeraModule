@@ -4,9 +4,9 @@ pragma solidity ^0.8.15;
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Authority} from "@solmate/auth/Auth.sol";
 import {ConstantsV2} from "./ConstantsV2.sol";
-import {DenyHelper} from "./DenyHelper.sol";
+import {DenyHelperV2} from "./DenyHelperV2.sol";
 
-contract KeyperRolesV2 is RolesAuthority, ConstantsV2, DenyHelper {
+contract KeyperRolesV2 is RolesAuthority, ConstantsV2, DenyHelperV2 {
     string public constant NAME = "Keyper Roles";
     string public constant VERSION = "0.2.0";
 
@@ -144,7 +144,6 @@ contract KeyperRolesV2 is RolesAuthority, ConstantsV2, DenyHelper {
         virtual
         override
         requiresAuth
-        Denied(_msgSender(), user)
     {
         if (enabled) {
             getUserRoles[user] |= bytes32(1 << role);
