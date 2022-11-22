@@ -11,7 +11,7 @@ import {console} from "forge-std/console.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
 import "./GnosisSafeHelper.t.sol";
 
-contract DenyHelperTest is Test {
+contract DenyHelperKeyperModuleTest is Test {
     GnosisSafeHelper public gnosisHelper;
     KeyperModule public keyperModule;
     MockedContract public masterCopyMocked;
