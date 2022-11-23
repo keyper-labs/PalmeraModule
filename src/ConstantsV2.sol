@@ -29,11 +29,11 @@ abstract contract ConstantsV2 is Context {
 
     bytes4 internal constant ADD_OWNER = bytes4(
         keccak256(
-            bytes("addOwnerWithThreshold(address,uint256,address,address)")
+            bytes("addOwnerWithThreshold(address,uint256,address,bytes32)")
         )
     );
     bytes4 internal constant REMOVE_OWNER = bytes4(
-        keccak256(bytes("removeOwner(address,address,uint256,address,address)"))
+        keccak256(bytes("removeOwner(address,address,uint256,address,bytes32)"))
     );
 
     bytes4 internal constant ROLE_ASSIGMENT =
@@ -58,7 +58,7 @@ abstract contract ConstantsV2 is Context {
         bytes4(keccak256(bytes("dropFromList(bytes32,address)")));
 
     bytes4 internal constant UPDATE_SUPER_SAFE =
-        bytes4(keccak256(bytes("updateSuper(bytes32,address)")));
+        bytes4(keccak256(bytes("updateSuper(bytes32,uint256,uint256)")));
 
     bytes4 internal constant EXEC_ON_BEHALF = bytes4(
         keccak256(
@@ -69,5 +69,5 @@ abstract contract ConstantsV2 is Context {
     );
 
     bytes4 internal constant REMOVE_GROUP =
-        bytes4(keccak256(bytes("removeGroup(bytes32,address)")));
+        bytes4(keccak256(bytes("removeGroup(bytes32,uint256)")));
 }
