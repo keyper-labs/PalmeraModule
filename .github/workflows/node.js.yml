@@ -24,6 +24,7 @@ jobs:
           OWNER_1: "0x9CDd325E49A6a8a82288fdC3B6C14b25221D1Cfa"
           OWNER_2: "0xEd4AD3605740D6a9232e05F4d8A2b3377f81a8AA"
           THRESHOLD: 1
+          FOUNDRY_VIA_IR: true
         run: |
           touch .env
           echo "MASTER_COPY_ADDRESS=$MASTER_COPY_ADDRESS" >> .env
@@ -32,9 +33,7 @@ jobs:
           echo "OWNER_1=$OWNER_1" >> .env
           echo "OWNER_2=$OWNER_2" >> .env
           echo "THRESHOLD=$THRESHOLD" >> .env
+          echo "FOUNDRY_VIA_IR=$FOUNDRY_VIA_IR" >> .env
 
       - name: Run tests
         run: forge test -vvv --gas-report
-
-      - name: Run coverage
-        run: forge coverage
