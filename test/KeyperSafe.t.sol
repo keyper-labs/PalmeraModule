@@ -76,7 +76,9 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         // TODO: This is the keyperSafeBuilder initialization. Still not in use
         // TODO: until get authorization
         keyperSafeBuilder = new KeyperSafeBuilder();
-        keyperSafeBuilder.setUpParams(KeyperModule(keyperModuleAddr), GnosisSafeHelper(gnosisHelper));
+        keyperSafeBuilder.setUpParams(
+            KeyperModule(keyperModuleAddr), GnosisSafeHelper(gnosisHelper)
+        );
     }
 
     // ! ********************** authority Test **********************************
@@ -103,7 +105,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // ! ********************** execTransactionOnBehalf Test ********************
 
-    // 
+    // execTransactionOnBehalf
     function testLeadExecOnBehalf() public {
         (address orgAddr, address safeGroupA1) =
             setUpRootOrgAndOneGroup(orgName, groupA1Name);
@@ -189,7 +191,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // execTransactionOnBehalf when Rootsafe is executing on subGroupA
-    //            rootSafe ----------- 
+    //            rootSafe -----------
     //               |                |
     //           safeGroupA1          |
     //              |                 |
@@ -477,11 +479,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // execTransactionOnBehalf when msg.sender is a superSafe
-    //            rootSafe 
-    //               |                
-    //           safeGroupA1 as superSafe ---         
+    //            rootSafe
+    //               |
+    //           safeGroupA1 as superSafe ---
     //              |                        |
-    //           safeSubGroupA1 <------------            
+    //           safeSubGroupA1 <------------
     function testSuperSafeExecOnBehalf() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
@@ -797,7 +799,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-
     // ! ********************* removeOwner Test ***********************************
 
     // removeOwner
@@ -1002,7 +1003,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(superSubGroup, safeGroupA1);
     }
 
-    // Revert ChildAlreadyExist() addGroup (Attempting to add a group when its child already exist) 
+    // Revert ChildAlreadyExist() addGroup (Attempting to add a group when its child already exist)
     function testRevertChildrenAlreadyExistAddGroup() public {
         (address orgAddr, address safeGroupA1) =
             setUpRootOrgAndOneGroup(orgName, groupA1Name);
@@ -1269,7 +1270,7 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // ! ****************** helper functions *************************************
 
-    // TODO: This section could be removed soon due to a builder contract that was 
+    // TODO: This section could be removed soon due to a builder contract that was
     // TODO: created but it has not been implemented yet (KeyperSafeBuilder.t.sol)
 
     // Just deploy a root org and a Group

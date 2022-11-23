@@ -9,14 +9,13 @@ import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {console} from "forge-std/console.sol";
 
 contract KeyperSafeBuilder is Test, Constants {
-
     KeyperModule public keyperModule;
     GnosisSafeHelper public gnosisHelper;
 
     mapping(string => address) public keyperSafes;
 
     function setUpParams(
-        KeyperModule _keyperModule,  
+        KeyperModule _keyperModule,
         GnosisSafeHelper _gnosisHelper
     ) public {
         keyperModule = _keyperModule;
@@ -102,10 +101,15 @@ contract KeyperSafeBuilder is Test, Constants {
             orgAddr, safeSubGroupA1, _subSubGroupA1Name
         );
 
-        return (orgAddr, safeGroupA1, safeGroupB, safeSubGroupA1, safeSubSubGroupA1);
+        return (
+            orgAddr, safeGroupA1, safeGroupB, safeSubGroupA1, safeSubSubGroupA1
+        );
     }
 
-    function setSafeLeadOfOrg(string memory _orgName) public returns (address, address) {
+    function setSafeLeadOfOrg(string memory _orgName)
+        public
+        returns (address, address)
+    {
         bool result = gnosisHelper.registerOrgTx(_orgName);
         keyperSafes[_orgName] = address(gnosisHelper.gnosisSafe());
         vm.label(keyperSafes[_orgName], _orgName);
