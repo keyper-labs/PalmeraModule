@@ -524,8 +524,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         /// Add child to superSafe
         uint256 newIndex = indexId;
         superSafeOrgGroup.child.push(newIndex);
-        /// By default Lead of the new group is the Lead of the superSafe (TODO check this)
-        newGroup.lead = superSafeOrgGroup.lead;
+
         newGroup.safe = caller;
         newGroup.name = name;
         newGroup.superSafe = superSafe;
@@ -766,7 +765,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
 
     // List of Helpers
 
-    function getGroupByString(string calldata org, uint256 group)
+    function getGroupByName(string calldata org, uint256 group)
         public
         view
         OrgRegistered(bytes32(keccak256(abi.encodePacked(org))))
@@ -780,14 +779,14 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
             uint256
         )
     {
-        bytes32 _org = bytes32(keccak256(abi.encodePacked(org)));
+        bytes32 orgID = bytes32(keccak256(abi.encodePacked(org)));
         return (
-            groups[_org][group].tier,
-            groups[_org][group].name,
-            groups[_org][group].lead,
-            groups[_org][group].safe,
-            groups[_org][group].child,
-            groups[_org][group].superSafe
+            groups[orgID][group].tier,
+            groups[orgID][group].name,
+            groups[orgID][group].lead,
+            groups[orgID][group].safe,
+            groups[orgID][group].child,
+            groups[orgID][group].superSafe
         );
     }
 
@@ -1064,7 +1063,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     function disableSafeLeadRoles(address user) private {
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         if (_authority.doesUserHaveRole(user, uint8(Role.SAFE_LEAD))) {
-            _authority.setUserRole(user, uint8(Role.SUPER_SAFE), false);
+            _authority.setUserRole(user, uint8(Role.SAFE_LEAD), false);
         } else if (
             _authority.doesUserHaveRole(
                 user, uint8(Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
