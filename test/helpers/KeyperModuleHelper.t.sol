@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
-import {KeyperModule} from "../src/KeyperModule.sol";
+import {KeyperModule} from "../../src/KeyperModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
-import {DeploySafeFactory} from "../script/DeploySafeFactory.t.sol";
+import {DeploySafeFactory} from "../../script/DeploySafeFactory.t.sol";
 
 contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     struct KeyperTransaction {

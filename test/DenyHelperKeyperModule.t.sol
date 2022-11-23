@@ -9,7 +9,7 @@ import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
 import {console} from "forge-std/console.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
-import "./GnosisSafeHelper.t.sol";
+import "./helpers/GnosisSafeHelper.t.sol";
 
 contract DenyHelperKeyperModuleTest is Test {
     GnosisSafeHelper public gnosisHelper;
