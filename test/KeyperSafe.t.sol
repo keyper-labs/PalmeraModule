@@ -6,7 +6,6 @@ import "../src/SigningUtils.sol";
 import "./helpers/GnosisSafeHelper.t.sol";
 import "./helpers/KeyperModuleHelper.t.sol";
 import "./helpers/ReentrancyAttackHelper.t.sol";
-import "./helpers/KeyperSafeBuilder.t.sol";
 import {KeyperModule, IGnosisSafe, DenyHelper} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
@@ -19,7 +18,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     GnosisSafeHelper gnosisHelper;
     KeyperModuleHelper keyperHelper;
     KeyperRoles keyperRolesContract;
-    KeyperSafeBuilder keyperSafeBuilder;
 
     address gnosisSafeAddr;
     address keyperModuleAddr;
@@ -72,13 +70,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
 
         keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
-
-        // TODO: This is the keyperSafeBuilder initialization. Still not in use
-        // TODO: until get authorization
-        keyperSafeBuilder = new KeyperSafeBuilder();
-        keyperSafeBuilder.setUpParams(
-            KeyperModule(keyperModuleAddr), GnosisSafeHelper(gnosisHelper)
-        );
     }
 
     // ! ********************** authority Test **********************************
@@ -1269,9 +1260,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // ! ****************** helper functions *************************************
-
-    // TODO: This section could be removed soon due to a builder contract that was
-    // TODO: created but it has not been implemented yet (KeyperSafeBuilder.t.sol)
 
     // Just deploy a root org and a Group
     //           RootOrg
