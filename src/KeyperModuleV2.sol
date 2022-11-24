@@ -85,8 +85,8 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
 
     event GroupSuperUpdated(
         bytes32 indexed org,
-        uint256 indexed oldGroup,
-        uint256 callerId,
+        uint256 indexed groupId,
+        address lead,
         address indexed updater,
         uint256 newSuperSafe
     );
@@ -218,7 +218,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     }
 
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
-    /// @param org Organisation
+    /// @param org ID's Organization
     /// @param targetSafe Safe target address
     /// @param to data
     function execTransactionOnBehalf(
@@ -232,14 +232,11 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     )
         external
         payable
-        Denied(org, to)
         nonReentrant
+        Denied(org, to)
         requiresAuth
         returns (bool result)
     {
-        if (targetSafe == address(0) || to == address(0)) {
-            revert ZeroAddressProvided();
-        }
         if (isOrgRegistered(org)) {
             revert OrgNotRegistered(org);
         }
@@ -251,8 +248,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
             // Check caller is a lead or superSafe of the target safe (checking with isTreeMember because is the same method!!)
             if (
                 isSafeLead(org, getGroupIdBySafe(org, targetSafe), caller)
-                    || isTreeMember(
-                        org,
+                    || isTreeMember(org, 
                         getGroupIdBySafe(org, caller),
                         getGroupIdBySafe(org, targetSafe)
                     )
@@ -618,13 +614,11 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     /// @param newSuper address of the new superSafe
     function updateSuper(bytes32 org, uint256 group, uint256 newSuper)
         public
-        GroupRegistered(org, group)
         GroupRegistered(org, newSuper)
         IsRootSafe(org, _msgSender())
         requiresAuth
     {
         address caller = _msgSender();
-        uint256 callerId = getGroupIdBySafe(org, caller);
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
         if (isRootSafeOf(org, caller, group)) {
             revert NotAuthorizedUpdateNonChildrenGroup();
@@ -663,7 +657,13 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
             );
         }
         newSuperGroup.child.push(group);
-        emit GroupSuperUpdated(org, group, callerId, caller, newSuper);
+        emit GroupSuperUpdated(
+            org,
+            group,
+            _group.lead,
+            caller,
+            newSuper
+            );
     }
 
     /// List of the Methods of DenyHelpers override
@@ -765,31 +765,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
 
     // List of Helpers
 
-    function getGroupByName(string calldata org, uint256 group)
-        public
-        view
-        OrgRegistered(bytes32(keccak256(abi.encodePacked(org))))
-        GroupRegistered(bytes32(keccak256(abi.encodePacked(org))), group)
-        returns (
-            Tier,
-            string memory,
-            address,
-            address,
-            uint256[] memory,
-            uint256
-        )
-    {
-        bytes32 orgID = bytes32(keccak256(abi.encodePacked(org)));
-        return (
-            groups[orgID][group].tier,
-            groups[orgID][group].name,
-            groups[orgID][group].lead,
-            groups[orgID][group].safe,
-            groups[orgID][group].child,
-            groups[orgID][group].superSafe
-        );
-    }
-
     /// @notice Get all the information about a group
     /// @dev Method for getting all info of a group
     /// @param org uint256 of the organization
@@ -797,8 +772,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     function getGroupInfo(bytes32 org, uint256 group)
         public
         view
-        OrgRegistered(org)
-        GroupRegistered(org, group)
         returns (
             Tier,
             string memory,
@@ -857,6 +830,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     function isRootSafeOf(bytes32 org, address root, uint256 group)
         public
         view
+		GroupRegistered(org, group)
         returns (bool)
     {
         uint256 rootSafe = getGroupIdBySafe(org, root);
