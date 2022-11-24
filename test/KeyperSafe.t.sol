@@ -1242,13 +1242,15 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // ! ****************** Reentrancy Attack Test to execOnBehalf ***************
 
     function testReentrancyAttack() public {
+        Attacker attackerContract = new Attacker(address(keyperModule));
+        AttackerHelper attackerHelper = new AttackerHelper();
+        attackerHelper.initHelper(keyperModule, attackerContract, gnosisHelper, 30);
+
         (
-            Attacker attackerContract,
-            AttackerHelper attackerHelper,
             address orgAddr,
             address attacker,
             address victim
-        ) = keyperSafeBuilder.setAttackerTree(orgName);
+        ) = attackerHelper.setAttackerTree(orgName);
 
         gnosisHelper.updateSafeInterface(victim);
         attackerContract.setOwners(gnosisHelper.gnosisSafe().getOwners());

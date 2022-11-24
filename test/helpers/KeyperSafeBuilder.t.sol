@@ -15,11 +15,11 @@ contract KeyperSafeBuilder is Test, Constants {
     mapping(string => address) public keyperSafes;
 
     function setUpParams(
-        KeyperModule _keyperModule,
-        GnosisSafeHelper _gnosisHelper
+        KeyperModule keyperModuleArg,
+        GnosisSafeHelper gnosisHelperArg
     ) public {
-        keyperModule = _keyperModule;
-        gnosisHelper = _gnosisHelper;
+        keyperModule = keyperModuleArg;
+        gnosisHelper = gnosisHelperArg;
     }
 
     // Just deploy a root org and a Group
@@ -123,48 +123,5 @@ contract KeyperSafeBuilder is Test, Constants {
         vm.stopPrank();
 
         return (orgAddr, userLead);
-    }
-
-    function setAttackerTree(string memory _orgName)
-        public
-        returns (Attacker, AttackerHelper, address, address, address)
-    {
-        Attacker attackerContract = new Attacker(address(keyperModule));
-        address attackerAddr = address(attackerContract);
-
-        AttackerHelper attackerHelper = new AttackerHelper();
-        attackerHelper.initHelper(keyperModule, attackerContract, 30);
-
-        gnosisHelper.registerOrgTx(_orgName);
-        keyperSafes[_orgName] = address(gnosisHelper.gnosisSafe());
-        address orgAddr = keyperSafes[_orgName];
-
-        gnosisHelper.updateSafeInterface(address(attackerAddr));
-        string memory nameAttacker = "Attacker";
-        keyperSafes[nameAttacker] = address(attackerAddr);
-
-        address attacker = keyperSafes[nameAttacker];
-
-        vm.startPrank(attacker);
-        keyperModule.addGroup(orgAddr, orgAddr, nameAttacker);
-        vm.stopPrank();
-
-        address victim = gnosisHelper.newKeyperSafe(2, 1);
-        string memory nameVictim = "Victim";
-        keyperSafes[nameVictim] = address(victim);
-
-        vm.startPrank(victim);
-        keyperModule.addGroup(orgAddr, attacker, nameVictim);
-        vm.stopPrank();
-
-        vm.deal(victim, 100 gwei);
-
-        vm.startPrank(orgAddr);
-        keyperModule.setRole(
-            Role.SAFE_LEAD, address(attacker), address(victim), true
-        );
-        vm.stopPrank();
-
-        return (attackerContract, attackerHelper, orgAddr, attacker, victim);
     }
 }
