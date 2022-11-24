@@ -47,7 +47,7 @@ abstract contract DenyHelperV2 {
 
     /// @dev Modifier for Valid if wallet is Denied/Allowed or Not
     modifier Denied(bytes32 org, address _user) {
-	    if (_user == address(0) || _user == SENTINEL_WALLETS) {
+        if (_user == address(0) || _user == SENTINEL_WALLETS) {
             revert InvalidAddressProvided();
         } else if (allowFeature[org]) {
             if (!isListed(org, _user)) revert AddresNotAllowed();

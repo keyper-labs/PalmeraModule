@@ -248,7 +248,8 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
             // Check caller is a lead or superSafe of the target safe (checking with isTreeMember because is the same method!!)
             if (
                 isSafeLead(org, getGroupIdBySafe(org, targetSafe), caller)
-                    || isTreeMember(org, 
+                    || isTreeMember(
+                        org,
                         getGroupIdBySafe(org, caller),
                         getGroupIdBySafe(org, targetSafe)
                     )
@@ -657,13 +658,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
             );
         }
         newSuperGroup.child.push(group);
-        emit GroupSuperUpdated(
-            org,
-            group,
-            _group.lead,
-            caller,
-            newSuper
-            );
+        emit GroupSuperUpdated(org, group, _group.lead, caller, newSuper);
     }
 
     /// List of the Methods of DenyHelpers override
@@ -830,7 +825,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     function isRootSafeOf(bytes32 org, address root, uint256 group)
         public
         view
-		GroupRegistered(org, group)
+        GroupRegistered(org, group)
         returns (bool)
     {
         uint256 rootSafe = getGroupIdBySafe(org, root);
