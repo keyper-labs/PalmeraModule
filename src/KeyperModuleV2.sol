@@ -548,15 +548,15 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
 
     /// @notice Remove group and reasign all child to the superSafe
     /// @dev All actions will be driven based on the caller of the method, and args
-    /// @param org id's of the organization
     /// @param group address of the group to be removed
-    function removeGroup(bytes32 org, uint256 group)
+    function removeGroup(uint256 group)
         external
-        OrgRegistered(org)
-        GroupRegistered(org, group)
+        OrgRegistered(getOrgByGroup(group))
+        GroupRegistered(getOrgByGroup(group), group)
         IsGnosisSafe(_msgSender())
         requiresAuth
     {
+		bytes32 org = getOrgByGroup(group);
         uint256 rootSafe = getGroupIdBySafe(org, _msgSender());
         /// RootSafe usecase : Check if the group is part of caller's org
         /// TODO: i think this check is redundant because only care if is or not Tree Member
@@ -615,13 +615,14 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     /// @dev Update the superSafe of a group with a new superSafe, Call must come from the root safe
     /// @param group address of the group to be updated
     /// @param newSuper address of the new superSafe
-    function updateSuper(bytes32 org, uint256 group, uint256 newSuper)
+    function updateSuper(uint256 group, uint256 newSuper)
         public
-        GroupRegistered(org, group)
-        GroupRegistered(org, newSuper)
-        IsRootSafe(org, _msgSender())
+        GroupRegistered(getOrgByGroup(group), group)
+        GroupRegistered(getOrgByGroup(group), newSuper)
+        IsRootSafe(getOrgByGroup(group), _msgSender())
         requiresAuth
     {
+		bytes32 org = getOrgByGroup(group);
         address caller = _msgSender();
         uint256 callerId = getGroupIdBySafe(org, caller);
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
