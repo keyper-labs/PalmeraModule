@@ -49,7 +49,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         uint256 superSafe;
     }
     /// @dev Array of Orgs (based on Hash(DAO's name))
-
     bytes32[] private orgId;
     /// @dev indexId of the group
     uint256 public indexId;
@@ -927,6 +926,22 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         return 0;
     }
 
+    /// @notice call to get the orgId based on group id
+    /// @dev Method to get the hashed orgId based on group id
+    /// @param group uint256 of the group
+    /// @return orgGroup bytes32
+    function getOrgByGroup(uint256 group)
+        public
+        view
+        returns (bytes32 orgGroup)
+    {
+        orgGroup = bytes32(0);
+        for (uint256 i = 0; i < orgId.length; i++) {
+            if (groups[orgId[i]][group].safe != address(0)) orgGroup = orgId[i];
+        }
+        if (orgGroup == bytes32(0)) revert GroupNotRegistered(group);
+    }
+
     /// @notice Check if a user is an safe lead of a group/org
     /// @param org ID's of the organization
     /// @param group address of the group
@@ -982,22 +997,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
             }
         }
         return false;
-    }
-
-    /// @notice call to get the orgId based on group id
-    /// @dev Method to get the hashed orgId based on group id
-    /// @param group uint256 of the group
-    /// @return orgGroup bytes32
-    function getOrgByGroup(uint256 group)
-        public
-        view
-        returns (bytes32 orgGroup)
-    {
-        orgGroup = bytes32(0);
-        for (uint256 i = 0; i < orgId.length; i++) {
-            if (groups[orgId[i]][group].safe != address(0)) orgGroup = orgId[i];
-        }
-        if (orgGroup == bytes32(0)) revert GroupNotRegistered(group);
     }
 
     function domainSeparator() public view returns (bytes32) {
