@@ -49,6 +49,51 @@ contract KeyperSafeBuilder is Test, Constants {
         return (orgAddr, groupSafe);
     }
 
+    // Deploy 3 keyperSafes : following structure
+    //           RootOrg
+    //              |
+    //         safeGroupA1
+    //              |
+    //        safeSubGroupA1
+    function setupOrgThreeTiersTree(
+        string memory _orgName,
+        string memory _groupA1Name,
+        string memory _subGroupA1Name
+    ) public returns (address, address, address) {
+        (address orgAddr, address safeGroupA1) =
+            setUpRootOrgAndOneGroup(_orgName, _groupA1Name);
+
+        address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
+        keyperSafes[_subGroupA1Name] = address(safeSubGroupA1);
+        gnosisHelper.createAddGroupTx(orgAddr, safeGroupA1, _subGroupA1Name);
+
+        return (orgAddr, safeGroupA1, safeSubGroupA1);
+    }
+
+    // Deploy 4 keyperSafes : following structure
+    //           RootOrg
+    //              |
+    //         safeGroupA1
+    //              |
+    //        safeSubGroupA1
+    //              |
+    //      safeSubSubGroupA1
+    function setupOrgFourTiersTree(
+        string memory _orgName,
+        string memory _groupA1Name,
+        string memory _subGroupA1Name,
+        string memory _subSubGroupA1Name
+    ) public returns (address, address, address, address) {
+        (address orgAddr, address safeGroupA1, address safeSubGroupA1) =
+            setupOrgThreeTiersTree(_orgName, _groupA1Name, _subGroupA1Name);
+
+        address safeSubSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
+        keyperSafes[_subSubGroupA1Name] = address(safeSubSubGroupA1);
+        gnosisHelper.createAddGroupTx(orgAddr, safeSubGroupA1, _subSubGroupA1Name);
+
+        return (orgAddr, safeGroupA1, safeSubGroupA1, safeSubSubGroupA1);
+    }
+
     // Deploy 4 keyperSafes : following structure
     //           RootOrg
     //          |      |
@@ -64,42 +109,17 @@ contract KeyperSafeBuilder is Test, Constants {
         string memory _subGroupA1Name,
         string memory _subSubGroupA1Name
     ) public returns (address, address, address, address, address) {
-        // Set initialsafe as org
-        bool result = gnosisHelper.registerOrgTx(_orgName);
-        keyperSafes[_orgName] = address(gnosisHelper.gnosisSafe());
-
-        // Create new safe with setup called while creating contract
-        address safeGroupA1 = gnosisHelper.newKeyperSafe(3, 1);
-        // Create AddGroup calldata
-        keyperSafes[_groupA1Name] = address(safeGroupA1);
-
-        address orgAddr = keyperSafes[_orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, _groupA1Name);
-
-        // Create new safe with setup called while creating contract
-        address safeGroupB = gnosisHelper.newKeyperSafe(2, 1);
-        // Create AddGroup calldata
-        keyperSafes[_groupBName] = address(safeGroupB);
-
-        orgAddr = keyperSafes[_orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, _groupBName);
-
-        // Create new safe with setup called while creating contract
-        address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
-        // Create AddGroup calldata
-        keyperSafes[_subGroupA1Name] = address(safeSubGroupA1);
-        orgAddr = keyperSafes[_orgName];
-        result =
-            gnosisHelper.createAddGroupTx(orgAddr, safeGroupA1, _subGroupA1Name);
-
-        // Create new safe with setup called while creating contract
-        address safeSubSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
-        // Create AddGroup calldata
-        keyperSafes[_subSubGroupA1Name] = address(safeSubSubGroupA1);
-
-        result = gnosisHelper.createAddGroupTx(
-            orgAddr, safeSubGroupA1, _subSubGroupA1Name
+        (
+            address orgAddr,
+            address safeGroupA1,
+            address safeSubGroupA1,
+            address safeSubSubGroupA1
+        ) = setupOrgFourTiersTree(
+            _orgName, _groupA1Name, _subGroupA1Name, _subSubGroupA1Name
         );
+
+        (, address safeGroupB) =
+            setUpRootOrgAndOneGroup(_orgName, _groupBName);
 
         return (
             orgAddr, safeGroupA1, safeGroupB, safeSubGroupA1, safeSubSubGroupA1
