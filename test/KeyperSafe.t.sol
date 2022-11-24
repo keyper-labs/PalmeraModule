@@ -615,7 +615,9 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             address safeGroupA1,
             address safeSubGroupA1,
             address safeSubSubGroupA1
-        ) = keyperSafeBuilder.setupOrgFourTiersTree(orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name);
+        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
+        );
 
         assertEq(
             keyperRolesContract.doesUserHaveRole(

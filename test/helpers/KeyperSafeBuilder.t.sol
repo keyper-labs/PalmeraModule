@@ -27,20 +27,20 @@ contract KeyperSafeBuilder is Test, Constants {
     //              |
     //           groupA1
     function setUpRootOrgAndOneGroup(
-        string memory _orgName,
-        string memory _groupName
+        string memory orgNameArg,
+        string memory groupA1NameArg
     ) public returns (address, address) {
         // Set initial safe as a rootOrg
-        bool result = gnosisHelper.registerOrgTx(_orgName);
-        keyperSafes[_orgName] = address(gnosisHelper.gnosisSafe());
+        bool result = gnosisHelper.registerOrgTx(orgNameArg);
+        keyperSafes[orgNameArg] = address(gnosisHelper.gnosisSafe());
 
         // Create new safe with setup called while creating contract
         address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         // Create Group calldata
-        keyperSafes[_groupName] = address(groupSafe);
+        keyperSafes[groupA1NameArg] = address(groupSafe);
 
-        address orgAddr = keyperSafes[_orgName];
-        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, _groupName);
+        address orgAddr = keyperSafes[orgNameArg];
+        result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupA1NameArg);
 
         // Send ETH to org&subgroup
         vm.deal(orgAddr, 100 gwei);
@@ -56,16 +56,16 @@ contract KeyperSafeBuilder is Test, Constants {
     //              |
     //        safeSubGroupA1
     function setupOrgThreeTiersTree(
-        string memory _orgName,
-        string memory _groupA1Name,
-        string memory _subGroupA1Name
+        string memory orgNameArg,
+        string memory groupA1NameArg,
+        string memory subGroupA1NameArg
     ) public returns (address, address, address) {
         (address orgAddr, address safeGroupA1) =
-            setUpRootOrgAndOneGroup(_orgName, _groupA1Name);
+            setUpRootOrgAndOneGroup(orgNameArg, groupA1NameArg);
 
         address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
-        keyperSafes[_subGroupA1Name] = address(safeSubGroupA1);
-        gnosisHelper.createAddGroupTx(orgAddr, safeGroupA1, _subGroupA1Name);
+        keyperSafes[subGroupA1NameArg] = address(safeSubGroupA1);
+        gnosisHelper.createAddGroupTx(orgAddr, safeGroupA1, subGroupA1NameArg);
 
         return (orgAddr, safeGroupA1, safeSubGroupA1);
     }
@@ -79,17 +79,19 @@ contract KeyperSafeBuilder is Test, Constants {
     //              |
     //      safeSubSubGroupA1
     function setupOrgFourTiersTree(
-        string memory _orgName,
-        string memory _groupA1Name,
-        string memory _subGroupA1Name,
-        string memory _subSubGroupA1Name
+        string memory orgNameArg,
+        string memory groupA1NameArg,
+        string memory subGroupA1NameArg,
+        string memory subSubGroupA1NameArg
     ) public returns (address, address, address, address) {
         (address orgAddr, address safeGroupA1, address safeSubGroupA1) =
-            setupOrgThreeTiersTree(_orgName, _groupA1Name, _subGroupA1Name);
+        setupOrgThreeTiersTree(orgNameArg, groupA1NameArg, subGroupA1NameArg);
 
         address safeSubSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
-        keyperSafes[_subSubGroupA1Name] = address(safeSubSubGroupA1);
-        gnosisHelper.createAddGroupTx(orgAddr, safeSubGroupA1, _subSubGroupA1Name);
+        keyperSafes[subSubGroupA1NameArg] = address(safeSubSubGroupA1);
+        gnosisHelper.createAddGroupTx(
+            orgAddr, safeSubGroupA1, subSubGroupA1NameArg
+        );
 
         return (orgAddr, safeGroupA1, safeSubGroupA1, safeSubSubGroupA1);
     }
@@ -103,11 +105,11 @@ contract KeyperSafeBuilder is Test, Constants {
     //      |
     //  SubSubGroupA1
     function setUpBaseOrgTree(
-        string memory _orgName,
-        string memory _groupA1Name,
-        string memory _groupBName,
-        string memory _subGroupA1Name,
-        string memory _subSubGroupA1Name
+        string memory orgNameArg,
+        string memory groupA1NameArg,
+        string memory groupBNameArg,
+        string memory subGroupA1NameArg,
+        string memory subSubGroupA1NameArg
     ) public returns (address, address, address, address, address) {
         (
             address orgAddr,
@@ -115,11 +117,11 @@ contract KeyperSafeBuilder is Test, Constants {
             address safeSubGroupA1,
             address safeSubSubGroupA1
         ) = setupOrgFourTiersTree(
-            _orgName, _groupA1Name, _subGroupA1Name, _subSubGroupA1Name
+            orgNameArg, groupA1NameArg, subGroupA1NameArg, subSubGroupA1NameArg
         );
 
         (, address safeGroupB) =
-            setUpRootOrgAndOneGroup(_orgName, _groupBName);
+            setUpRootOrgAndOneGroup(orgNameArg, groupBNameArg);
 
         return (
             orgAddr, safeGroupA1, safeGroupB, safeSubGroupA1, safeSubSubGroupA1
