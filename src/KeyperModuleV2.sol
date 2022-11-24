@@ -102,6 +102,10 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     /// @dev Event Fire when update SuperSafe of a Group (Tier 0) from the organization
     /// @param org Hash(DAO's name)
     /// @param groupId ID of the group updated
+    /// @param lead Address of Safe Lead of the group
+    /// @param updater Address of the updater of the group
+    /// @param oldSuperSafe ID of old Super Safe Group
+	/// @param newSuperSafe ID of new Super Safe Group
     event GroupSuperUpdated(
         bytes32 indexed org,
         uint256 indexed groupId,
@@ -153,6 +157,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     error UserNotGroup(address user);
 
     /// @dev Modifier for Validate if Org Exist or Not
+	/// @param org Hash(DAO's name)
     modifier OrgRegistered(bytes32 org) {
         if (!isOrgRegistered(org)) {
             revert OrgNotRegistered(org);
@@ -161,6 +166,8 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     }
 
     /// @dev Modifier for Validate if Org/Group Exist or SuperSafeNotRegistered Not
+	/// @param org Hash(DAO's name)
+	/// @param group ID of the group
     modifier GroupRegistered(bytes32 org, uint256 group) {
         if (groups[org][group].safe == address(0)) {
             revert GroupNotRegistered(group);
@@ -169,6 +176,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     }
 
     /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet
+	/// @param safe Address of the Gnosis Safe Multisig Wallet
     modifier IsGnosisSafe(address safe) {
         if (safe == address(0) || !isSafe(safe)) {
             revert InvalidGnosisSafe(safe);
@@ -177,6 +185,8 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     }
 
     /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet and Root Safe
+	/// @param org Hash(DAO's name)
+	/// @param safe Address of the Gnosis Safe Multisig Wallet
     modifier IsRootSafe(bytes32 org, address safe) {
         if (
             safe == address(0) || !isSafe(safe)
@@ -204,9 +214,13 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         masterCopy = masterCopyAddress;
         proxyFactory = proxyFactoryAddress;
         rolesAuthority = authorityAddress;
+		/// Index of Groups starts in 1 Always
         indexId = 1;
     }
 
+	/// @dev Function to create Gnosis Safe Multisig Wallet with our module enabled
+	/// @param owners Array of owners of the Gnosis Safe Multisig Wallet
+	/// @param threshold Threshold of the Gnosis Safe Multisig Wallet
     function createSafeProxy(address[] memory owners, uint256 threshold)
         external
         returns (address safe)
@@ -238,9 +252,13 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     }
 
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
-    /// @param org Organisation
+    /// @param org Organization
     /// @param targetSafe Safe target address
-    /// @param to data
+    /// @param to Address to which the transaction is being sent
+	/// @param value Value (ETH) that is being sent with the transaction
+	/// @param data Data payload of the transaction
+	/// @param operation kind of operation (call or delegatecall)
+	/// @param signatures Packed signatures data (v, r, s)
     function execTransactionOnBehalf(
         bytes32 org,
         address targetSafe,
@@ -316,6 +334,8 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         emit TxOnBehalfExecuted(org, caller, targetSafe, result);
     }
 
+	/// @dev Function for enable Keyper module in a Gnosis Safe Multisig Wallet
+	/// @param module Address of Keyper module
     function internalEnableModule(address module)
         external
         validAddress(module)
@@ -324,12 +344,18 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     }
 
     /// @dev Non-executed code, function called by the new safe
+	/// @param module Address of Keyper module
     function enableModule(address module) external validAddress(module) {
         emit ModuleEnabled(address(this), module);
     }
 
-    /// @notice This function will allow Safe Lead & Safe Lead modify only roles to to add owner and set a threshold without passing by normal multisig check
-    /// @dev For instance role
+    /// @notice This function will allow Safe Lead & Safe Lead modify only roles
+	/// @notice to to add owner and set a threshold without passing by normal multisig check
+    /// @dev For instance addOwnerWithThreshold can be called by Safe Lead & Safe Lead modify only roles
+	/// @param ownerAdded Address of the owner to be added
+	/// @param threshold Threshold of the Gnosis Safe Multisig Wallet
+	/// @param targetSafe Address of the Gnosis Safe Multisig Wallet
+	/// @param org Hash(DAO's name)
     function addOwnerWithThreshold(
         address ownerAdded,
         uint256 threshold,
@@ -634,6 +660,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
 
     /// @notice update superSafe of a group
     /// @dev Update the superSafe of a group with a new superSafe, Call must come from the root safe
+	/// @param org bytes32 of the organization
     /// @param group address of the group to be updated
     /// @param newSuper address of the new superSafe
     function updateSuper(bytes32 org, uint256 group, uint256 newSuper)
@@ -644,7 +671,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         requiresAuth
     {
         address caller = _msgSender();
-        uint256 callerId = getGroupIdBySafe(org, caller);
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
         if (isRootSafeOf(org, caller, group)) {
             revert NotAuthorizedUpdateNonChildrenGroup();
