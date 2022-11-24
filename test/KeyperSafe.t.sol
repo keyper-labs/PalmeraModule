@@ -1175,6 +1175,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // ! ******************** removeGroup Test *************************************
 
     // removeGroup
+    // Caller: orgAddr
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
     function testRemoveGroupFromOrg() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
@@ -1195,6 +1200,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     /// removeGroup when org == superSafe
+    // Caller: orgAddr
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
     function testRemoveGroupFromSafeOrgEqSuperSafe() public {
         (address orgAddr, address safeGroupA1) =
             setUpRootOrgAndOneGroup(orgName, groupA1Name);
