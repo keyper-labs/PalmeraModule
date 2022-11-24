@@ -225,9 +225,11 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     }
 
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
+    /// @param org ID's Organization
     /// @param targetSafe Safe target address
     /// @param to data
     function execTransactionOnBehalf(
+        bytes32 org,
         address targetSafe,
         address to,
         uint256 value,
@@ -238,15 +240,12 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         external
         payable
         nonReentrant
-        validAddress(to)
         SafeRegistered(targetSafe)
-        SafeRegistered(_msgSender())
-        Denied(getOrgBySafe(targetSafe), to)
+        Denied(org, to)
         requiresAuth
         returns (bool result)
     {
         address caller = _msgSender();
-        bytes32 org = getOrgBySafe(caller);
         if (isSafe(caller)) {
             // Check caller is a lead or superSafe of the target safe (checking with isTreeMember because is the same method!!)
             if (
@@ -406,7 +405,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     function setRole(Role role, address user, uint256 group, bool enabled)
         external
         validAddress(user)
-        SafeRegistered(_msgSender())
+        IsRootSafe(_msgSender())
         requiresAuth
     {
         address caller = _msgSender();
@@ -425,8 +424,8 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
             // Update group/org lead
             safeGroup.lead = user;
         }
-        RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(user, uint8(role), enabled);
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        _authority.setUserRole(user, uint8(role), enabled);
     }
 
     /// @notice Register an organization
@@ -468,13 +467,9 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
 
     /// @notice Call has to be done from another root safe to the organization
     /// @dev Call has to be done from a safe transaction
-    /// @param org bytes32 of the organization
+    /// @param newRootSafe Address of new Root Safe
     /// @param name string name of the group
-    function createRootSafeGroup(
-        bytes32 org,
-        address newRootSafe,
-        string calldata name
-    )
+    function createRootSafeGroup(address newRootSafe, string calldata name)
         external
         IsGnosisSafe(newRootSafe)
         SafeRegistered(_msgSender())
@@ -485,6 +480,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         }
         bytes32 _name = bytes32(keccak256(abi.encodePacked(name)));
         address caller = _msgSender();
+        bytes32 org = getOrgBySafe(caller);
         if (isOrgRegistered(_name)) {
             revert OrgAlreadyRegistered();
         }
@@ -502,9 +498,9 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         indexId++;
 
         /// Assign SUPER_SAFE Role + SAFE_ROOT Role
-        RolesAuthority authority = RolesAuthority(rolesAuthority);
-        authority.setUserRole(newRootSafe, uint8(Role.ROOT_SAFE), true);
-        authority.setUserRole(newRootSafe, uint8(Role.SUPER_SAFE), true);
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        _authority.setUserRole(newRootSafe, uint8(Role.ROOT_SAFE), true);
+        _authority.setUserRole(newRootSafe, uint8(Role.SUPER_SAFE), true);
 
         emit RootSafeGroupCreated(org, newIndex, caller, newRootSafe, name);
     }
@@ -564,10 +560,10 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         SafeRegistered(_msgSender())
         requiresAuth
     {
-        bytes32 org = getOrgByGroup(group);
-        uint256 rootSafe = getGroupIdBySafe(org, _msgSender());
+        address caller = _msgSender();
+        bytes32 org = getOrgBySafe(caller);
+        uint256 rootSafe = getGroupIdBySafe(org, caller);
         /// RootSafe usecase : Check if the group is part of caller's org
-        /// TODO: i think this check is redundant because only care if is or not Tree Member
         if (
             (groups[org][rootSafe].tier == Tier.ROOT)
                 && (!isTreeMember(rootSafe, group))
@@ -608,12 +604,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
 
         // Store the name before to delete the Group
         emit GroupRemoved(
-            org,
-            group,
-            superSafe.safe,
-            _msgSender(),
-            _group.superSafe,
-            _group.name
+            org, group, superSafe.safe, caller, _group.superSafe, _group.name
             );
         removeIndexGroup(org, group);
         delete groups[org][group];
@@ -874,7 +865,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
                 return orgId[i];
             }
         }
-        return bytes32(0);
+        revert OrgNotRegistered(0);
     }
 
     /// @dev Method to get Group ID by safe address
