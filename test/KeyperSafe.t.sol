@@ -97,6 +97,11 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // ! ********************** execTransactionOnBehalf Test ********************
 
     // execTransactionOnBehalf
+    // Caller: orgAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SUPER_SAFE
+    // TargetSafe Type: Child
+    // Result: Success
     function testLeadExecOnBehalf() public {
         (address orgAddr, address safeGroupA1) =
             setUpRootOrgAndOneGroup(orgName, groupA1Name);
@@ -125,6 +130,19 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // execTransactionOnBehalf when msg.sender is a lead (not a RootSafe)
+    // Caller: safeGroupB
+    // Caller Type: safe
+    // Caller Role: SAFE_LEAD
+    // TargerSafe: safeSubSubGroupA1
+    // TargetSafe Type: Child
+    //            rootSafe
+    //           |        |
+    //  safeGroupA1       safeGroupB
+    //      |
+    // safeSubGroupA1
+    //      |
+    // safeSubSubGroupA1
+    // Result: Sucess
     function testLeadExecOnBehalfFromGroup() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
@@ -182,11 +200,18 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // execTransactionOnBehalf when Rootsafe is executing on subGroupA
+    // execTransactionOnBehalf when msg.sender is a lead (not a RootSafe)
+    // Caller: orgAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SAFE_LEAD
+    // TargerSafe: safeSubGroupA1
+    // TargetSafe Type: safe as a child
     //            rootSafe -----------
     //               |                |
     //           safeGroupA1          |
     //              |                 |
     //           safeSubGroupA1 <-----
+    // Result: Sucess
     function testRootSafeExecOnBehalf() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
@@ -234,6 +259,15 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // Revert ZeroAddressProvided() execTransactionOnBehalf when to == address(0)
     // Scenario 1
+    // Caller: orgAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SAFE_LEAD
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe as a Child
+    //            rootSafe -----------
+    //               |                |
+    //           safeGroupA1 <--------
+    // Result: Revert
     function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioOne()
         public
     {
@@ -263,8 +297,19 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    // Revert ZeroAddressProvided() execTransactionOnBehalf when targetSafe == address(0)
+    // Revert ZeroAddressProvided() execTransactionOnBehalf when targetSafe as an arg of the function == address(0)
     // Scenario 2
+    // Revert ZeroAddressProvided() execTransactionOnBehalf when to == address(0)
+    // Scenario 1
+    // Caller: orgAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SAFE_LEAD
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe as a Child
+    //            rootSafe -----------
+    //               |                |
+    //           safeGroupA1 <--------
+    // Result: Revert
     function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo()
         public
     {
@@ -295,6 +340,17 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // Revert ZeroAddressProvided() execTransactionOnBehalf when org == address(0)
     // Scenario 3
+    // Revert ZeroAddressProvided() execTransactionOnBehalf when to == address(0)
+    // Scenario 1
+    // Caller: orgAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SAFE_LEAD
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe as a Child
+    //            rootSafe -----------
+    //               |                |
+    //           safeGroupA1 <--------
+    // Result: Revert
     function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioThree()
         public
     {
@@ -324,6 +380,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // Revert InvalidGnosisSafe() execTransactionOnBehalf
+    // Caller: orgAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SAFE_LEAD
+    // TargerSafe: fakeTargetSafe
+    // TargetSafe Type: EOA
+    // Result: Revert
     function testRevertInvalidGnosisSafeExecTransactionOnBehalf() public {
         (address orgAddr, address safeGroupA1) =
             setUpRootOrgAndOneGroup(orgName, groupA1Name);
@@ -352,6 +414,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // Revert NotAuthorizedAsNotSafeLead() execTransactionOnBehalf (SafeLead as EOA)
+    // Caller: fakeCaller
+    // Caller Type: EOA
+    // Caller Role: SAFE_LEAD
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
+    // Result: Revert
     function testRevertNotAuthorizedExecTransactionOnBehalfScenarioTwo()
         public
     {
@@ -385,6 +453,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // execTransactionOnBehalf when SafeLead of an Org as EOA
+    // Caller: callerEOA
+    // Caller Type: EOA
+    // Caller Role: SAFE_LEAD
+    // TargerSafe: orgAddr
+    // TargetSafe Type: rootSafe
+    // Result: Sucess
     function testEoaCallExecTransactionOnBehalfScenarioTwo() public {
         (address orgAddr,) = setUpRootOrgAndOneGroup(orgName, groupA1Name);
 
@@ -413,6 +487,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // Revert "UNAUTHORIZED" execTransactionOnBehalf (Caller is an EOA but he's not the lead (no role provided to EOA))
+    // Caller: fakeCaller
+    // Caller Type: EOA
+    // Caller Role: N/A (NO ROLE PROVIDED)
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
+    // Result: Revert
     function testRevertNotAuthorizedExecTransactionOnBehalfScenarioThree()
         public
     {
@@ -442,6 +522,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // Revert "GS026" execTransactionOnBehalf (invalid signatures provided)
+    // Caller: orgAddr
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SUPER_SAFE
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
+    // Result: Revert
     function testRevertInvalidSignatureExecOnBehalf() public {
         (address orgAddr, address safeGroupA1) =
             setUpRootOrgAndOneGroup(orgName, groupA1Name);
@@ -470,11 +556,17 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // execTransactionOnBehalf when msg.sender is a superSafe
+    // Caller: safeGroupA1
+    // Caller Type: safe
+    // Caller Role: SUPER_SAFE
+    // TargerSafe: safeSubGroupA1
+    // TargetSafe Type: safe
     //            rootSafe
     //               |
     //           safeGroupA1 as superSafe ---
     //              |                        |
     //           safeSubGroupA1 <------------
+    // Result: Revert
     function testSuperSafeExecOnBehalf() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
@@ -513,7 +605,18 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         assertEq(receiver.balance, 2 gwei);
     }
 
-    // Revert AddresNotAllowed() execTransactionOnBehalf (superSafe is not on AllowList)
+    // Revert AddresNotAllowed() execTransactionOnBehalf (safeGroupA1 is not on AllowList)
+    // Caller: safeGroupA1
+    // Caller Type: safe
+    // Caller Role: N/A
+    // TargerSafe: safeSubGroupA1
+    // TargetSafe Type: safe
+    //            rootSafe
+    //               |
+    //           safeGroupA1 as superSafe ---
+    //              |                        |
+    //           safeSubGroupA1 <------------
+    // Result: Revert
     function testRevertSuperSafeExecOnBehalfIsNotAllowList() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
@@ -556,7 +659,18 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    // Revert AddressDenied() execTransactionOnBehalf (superSafe is on DeniedList)
+    // Revert AddressDenied() execTransactionOnBehalf (safeGroupA1 is on DeniedList)
+    // Caller: safeGroupA1
+    // Caller Type: safe
+    // Caller Role: N/A
+    // TargerSafe: safeSubGroupA1
+    // TargetSafe Type: safe
+    //            rootSafe
+    //               |
+    //           safeGroupA1 as superSafe ---
+    //              |                        |
+    //           safeSubGroupA1 <------------
+    // Result: Revert
     function testRevertSuperSafeExecOnBehalfIsDenyList() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
@@ -602,6 +716,19 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // Revert NotAuthorizedExecOnBehalf() execTransactionOnBehalf (safeSubGroupA1 is attempting to execute on its superSafe)
+    // Caller: safeSubGroupA1
+    // Caller Type: safe
+    // Caller Role: SUPER_SAFE
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe as lead
+    //            rootSafe
+    //           |
+    //  safeGroupA1 <----
+    //      |            |
+    // safeSubGroupA1 ---
+    //      |
+    // safeSubSubGroupA1
+    // Result: Revert
     function testRevertSuperSafeExecOnBehalf() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
@@ -671,6 +798,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // addOwnerWithThreshold
     // userLeadModifyOwnersOnly with SAFE_LEAD_MODIFY_OWNERS_ONLY role
     // newOwner is the address to add
+    // Caller: userLeadModifyOwnersOnly
+    // Caller Type: EOA
+    // Caller Role: SAFE_LEAD_MODIFY_OWNERS_ONLY
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
+    // Result: Success
     function testAddOwnerWithThreshold() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
@@ -712,6 +845,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // Revert OwnerAlreadyExists() addOwnerWithThreshold (Attempting to add an existing owner)
+    // Caller: safeLead
+    // Caller Type: EOA
+    // Caller Role: SAFE_LEAD
+    // TargerSafe: orgAddr
+    // TargetSafe Type: rootSafe
+    // Result: Revert
     function testIsUserLeadWithThreshold() public {
         (address orgAddr, address safeLead) = setSafeLeadOfOrg();
 
@@ -735,6 +874,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // Revert InvalidThreshold() addOwnerWithThreshold (When threshold < 1)
     // Scenario 1
+    // Caller: safeLead
+    // Caller Type: EOA
+    // Caller Role: SAFE_LEAD
+    // TargerSafe: orgAddr
+    // TargetSafe Type: rootSafe
+    // Result: Revert
     function testRevertInvalidThresholdAddOwnerWithThresholdScenarioOne()
         public
     {
@@ -752,6 +897,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // Revert InvalidThreshold() addOwnerWithThreshold (When threshold > (IGnosisSafe(targetSafe).getOwners().length.add(1)))
     // Scenario 2
+    // Caller: safeLead
+    // Caller Type: EOA
+    // Caller Role: SAFE_LEAD
+    // TargerSafe: orgAddr
+    // TargetSafe Type: rootSafe
+    // Result: Revert
     function testRevertInvalidThresholdAddOwnerWithThresholdScenarioTwo()
         public
     {
@@ -769,6 +920,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // Revert NotAuthorizedAsNotSafeLead() addOwnerWithThreshold (Attempting to add an owner from an external org)
+    // Caller: org2Addr
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SUPER_SAFE
+    // TargerSafe: orgAddr
+    // TargetSafe Type: rootSafe
+    // Result: Revert
     function testRevertRootSafesAttemptToAddToExternalSafeOrg() public {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
@@ -793,6 +950,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     // ! ********************* removeOwner Test ***********************************
 
     // removeOwner
+    // Caller: userLead
+    // Caller Type: EOA
+    // Caller Role: SAFE_LEAD
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
+    // Result: Success
     function testRemoveOwner() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
@@ -824,6 +987,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // Revert NotAuthorizedAsNotSafeLead() removeOwner (Attempting to remove an owner from an external org)
+    // Caller: org2Addr
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SUPER_SAFE
+    // TargerSafe: orgAddr
+    // TargetSafe Type: rootSafe
+    // Result: Revert
     function testRevertRootSafesToAttemptToRemoveFromExternalOrg() public {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
@@ -849,6 +1018,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // Revert OwnerNotFound() removeOwner (attempting to remove an owner that is not exist as an owner of the safe)
+    // Caller: safeLead
+    // Caller Type: EOA
+    // Caller Role: SAFE_LEAD
+    // TargerSafe: orgAddr
+    // TargetSafe Type: rootSafe
+    // Result: Revert
     function testRevertOwnerNotFoundRemoveOwner() public {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
@@ -995,6 +1170,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     }
 
     // Revert ChildAlreadyExist() addGroup (Attempting to add a group when its child already exist)
+    // Caller: safeSubGroupA1
+    // Caller Type: safe
+    // Caller Role: N/A
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
+    // Result: Revert
     function testRevertChildrenAlreadyExistAddGroup() public {
         (address orgAddr, address safeGroupA1) =
             setUpRootOrgAndOneGroup(orgName, groupA1Name);
@@ -1068,30 +1249,18 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
-    function testRevertSetRoleForbidden() public {
-        (address orgAddr, address safeGroupA1) =
-            setUpRootOrgAndOneGroup(orgName, groupA1Name);
-
-        address user = address(0xABCDE);
-
-        vm.startPrank(orgAddr);
-        vm.expectRevert(
-            abi.encodeWithSelector(KeyperModule.SetRoleForbidden.selector, 3)
-        );
-        keyperModule.setRole(Role.ROOT_SAFE, user, safeGroupA1, true);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(KeyperModule.SetRoleForbidden.selector, 4)
-        );
-        keyperModule.setRole(Role.SUPER_SAFE, user, safeGroupA1, true);
-    }
-
     // ? Org call removeGroup for a group of another org
+    // Caller: orgAddr, orgAddr2
+    // Caller Type: rootSafe
+    // Caller Role: N/A
+    // TargerSafe: safeGroupA1, safeGroupA2
+    // TargetSafe Type: safe as a child
     // Deploy 4 keyperSafes : following structure
     //           RootOrg1                    RootOrg2
     //              |                            |
-    //           GroupA1                      GroupA2
+    //         safeGroupA1                 safeGroupA2
     // Must Revert if RootOrg1 attempt to remove GroupA2
+    // Result: Revert
     function testRevertRemoveGroupFromAnotherOrg() public {
         (address orgAddr1, address safeGroupA1) =
             setUpRootOrgAndOneGroup(orgName, groupA1Name);
@@ -1110,16 +1279,6 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             KeyperModule.NotAuthorizedRemoveNonChildrenGroup.selector
         );
         keyperModule.removeGroup(orgAddr1, safeGroupA1);
-    }
-
-    function testRevertSetRolesToOrgNotRegistered() public {
-        (, address safeGroupA1) = setUpRootOrgAndOneGroup(orgName, groupA1Name);
-
-        address user = address(0xABCDE);
-
-        vm.startPrank(safeGroupA1);
-        vm.expectRevert("UNAUTHORIZED");
-        keyperModule.setRole(Role.SAFE_LEAD, user, safeGroupA1, true);
     }
 
     // ? Check disableSafeLeadRoles method success
@@ -1157,6 +1316,13 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // ! ******************* setRole Test *****************************************
 
+    // setLead as a role at setRole Test
+    // Caller: orgAddr
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SUPER_SAFE
+    // TargerSafe: userLead
+    // TargetSafe Type: EOA
+    // Result: Success
     function testsetSafeLead() public {
         setUpBaseOrgTree();
         address orgAddr = keyperSafes[orgName];
@@ -1174,11 +1340,18 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
         );
     }
 
+    // Empower a safe to modify another safe from another org
+    // Caller: safeGroupA2
+    // Caller Type: safe
+    // Caller Role: SAFE_LEAD
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
     // Deploy 4 keyperSafes : following structure
     //           RootOrg1                    RootOrg2
     //              |                            |
-    //           safeGroupA1                      GroupA2
+    //           safeGroupA1                safeGroupA2
     // safeGroupA2 will be a safeLead of safeGroupA1
+    // Result: Success
     function testModifyFromAnotherOrg() public {
         (address orgAddr1, address safeGroupA1) =
             setUpRootOrgAndOneGroup(orgName, groupA1Name);
@@ -1217,6 +1390,41 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
             keyperModule.isSafeOwner(IGnosisSafe(safeGroupA1), groupA1Owners[1]),
             false
         );
+    }
+
+    // Attempt to set a forbidden role to an EOA
+    // Caller: orgAddr
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SUPER_SAFE
+    // TargerSafe: user
+    // TargetSafe Type: EOA
+    // Result: Revert
+    function testRevertSetRoleForbidden() public {
+        (address orgAddr, address safeGroupA1) =
+            setUpRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address user = address(0xABCDE);
+
+        vm.startPrank(orgAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(KeyperModule.SetRoleForbidden.selector, 3)
+        );
+        keyperModule.setRole(Role.ROOT_SAFE, user, safeGroupA1, true);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(KeyperModule.SetRoleForbidden.selector, 4)
+        );
+        keyperModule.setRole(Role.SUPER_SAFE, user, safeGroupA1, true);
+    }
+
+    function testRevertSetRolesToOrgNotRegistered() public {
+        (, address safeGroupA1) = setUpRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address user = address(0xABCDE);
+
+        vm.startPrank(safeGroupA1);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.setRole(Role.SAFE_LEAD, user, safeGroupA1, true);
     }
 
     // ! ****************** Reentrancy Attack Test to execOnBehalf ***************
