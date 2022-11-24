@@ -37,3 +37,6 @@ jobs:
 
       - name: Run tests
         run: forge test -vvv --gas-report
+
+      - name: Run coverage
+        run: forge coverage
