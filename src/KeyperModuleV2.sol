@@ -816,7 +816,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     function isRootSafeOf(address root, uint256 group)
         public
         view
-        GroupRegistered(org, group)
+        GroupRegistered(group)
         returns (bool)
     {
         bytes32 org = getOrgByGroup(group);
