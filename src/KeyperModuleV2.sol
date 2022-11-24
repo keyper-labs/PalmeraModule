@@ -26,7 +26,9 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     address internal constant SENTINEL_OWNERS = address(0x1);
     /// @dev RoleAuthority
     address public rolesAuthority;
-    /// @dev Enum Types
+    /// @dev Enum Tier
+    /// @dev Tier 0: Normal Group Safe (can be Child, Lead or Super safe)
+    /// @dev Tier 1: Root Safe
 
     enum Tier {
         GROUP, // 0
@@ -49,6 +51,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         uint256 superSafe;
     }
     /// @dev Array of Orgs (based on Hash(DAO's name))
+
     bytes32[] private orgId;
     /// @dev indexId of the group
     uint256 public indexId;
@@ -64,15 +67,29 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         address indexed creator, bytes32 indexed org, string name
     );
 
+    /// @dev Event Fire when create a New Group (Tier 0) into the organization
+    /// @param org Hash(DAO's name)
+    /// @param groupId ID of the group
+    /// @param lead Address of Safe Lead of the group
+    /// @param creator Address of the creator of the group
+    /// @param superSafe ID of Superior Group
+    /// @param name String name of the group
     event GroupCreated(
         bytes32 indexed org,
-        uint256 indexed group,
+        uint256 indexed groupId,
         address lead,
         address indexed creator,
         uint256 superSafe,
         string name
     );
 
+    /// @dev Event Fire when remove a Group (Tier 0) from the organization
+    /// @param org Hash(DAO's name)
+    /// @param groupRemoved ID of the group removed
+    /// @param lead Address of Safe Lead of the group
+    /// @param remover Address of the creator of the group
+    /// @param superSafe ID of Superior Group
+    /// @param name String name of the group
     event GroupRemoved(
         bytes32 indexed org,
         uint256 indexed groupRemoved,
@@ -82,11 +99,15 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         string name
     );
 
+    /// @dev Event Fire when update SuperSafe of a Group (Tier 0) from the organization
+    /// @param org Hash(DAO's name)
+    /// @param groupId ID of the group updated
     event GroupSuperUpdated(
         bytes32 indexed org,
-        uint256 indexed oldGroup,
-        uint256 callerId,
+        uint256 indexed groupId,
+        address lead,
         address indexed updater,
+        uint256 oldSuperSafe,
         uint256 newSuperSafe
     );
 
@@ -628,8 +649,9 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         if (isRootSafeOf(org, caller, group)) {
             revert NotAuthorizedUpdateNonChildrenGroup();
         }
+        /// create instance for update group
         Group storage _group = groups[org][group];
-        /// SuperSafe is either an Org or a Group
+        /// create instance for old Super Safe
         Group storage oldSuper = groups[org][_group.superSafe];
 
         /// Remove child from superSafe
@@ -662,7 +684,14 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
             );
         }
         newSuperGroup.child.push(group);
-        emit GroupSuperUpdated(org, group, callerId, caller, newSuper);
+        emit GroupSuperUpdated(
+            org,
+            group,
+            _group.lead,
+            caller,
+            getGroupIdBySafe(org, oldSuper.safe),
+            newSuper
+            );
     }
 
     /// List of the Methods of DenyHelpers override
