@@ -728,11 +728,16 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
 
     // Revert OwnerAlreadyExists() addOwnerWithThreshold (Attempting to add an existing owner)
     function testIsUserLeadWithThreshold() public {
-        (address orgAddr, address safeLead) =
-            keyperSafeBuilder.setSafeLeadOfOrg(orgName);
+        (address orgAddr,) = keyperSafeBuilder.setUpRootOrgAndOneGroup(orgName, groupA1Name);
+        address safeLead = address(0x123);
+
+        vm.startPrank(orgAddr);
+        keyperModule.setRole(Role.SAFE_LEAD, safeLead, orgAddr, true);
+        vm.stopPrank();
 
         assertEq(keyperModule.isSafeLead(orgAddr, orgAddr, safeLead), true);
 
+        gnosisHelper.updateSafeInterface(orgAddr);
         address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
         address newOwner;
 
@@ -754,8 +759,12 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function testRevertInvalidThresholdAddOwnerWithThresholdScenarioOne()
         public
     {
-        (address orgAddr, address safeLead) =
-            keyperSafeBuilder.setSafeLeadOfOrg(orgName);
+        (address orgAddr,) = keyperSafeBuilder.setUpRootOrgAndOneGroup(orgName, groupA1Name);
+        address safeLead = address(0x123);
+
+        vm.startPrank(orgAddr);
+        keyperModule.setRole(Role.SAFE_LEAD, safeLead, orgAddr, true);
+        vm.stopPrank();
 
         address newOwner = address(0xf1f1f1);
         uint256 wrongThreshold = 0;
@@ -772,9 +781,14 @@ contract TestKeyperSafe is Test, SigningUtils, Constants {
     function testRevertInvalidThresholdAddOwnerWithThresholdScenarioTwo()
         public
     {
-        (address orgAddr, address safeLead) =
-            keyperSafeBuilder.setSafeLeadOfOrg(orgName);
+        (address orgAddr,) = keyperSafeBuilder.setUpRootOrgAndOneGroup(orgName, groupA1Name);
+        address safeLead = address(0x123);
 
+        vm.startPrank(orgAddr);
+        keyperModule.setRole(Role.SAFE_LEAD, safeLead, orgAddr, true);
+        vm.stopPrank();
+
+        gnosisHelper.updateSafeInterface(orgAddr);
         address newOwner = address(0xf1f1f1);
         uint256 wrongThreshold =
             gnosisHelper.gnosisSafe().getOwners().length + 2;

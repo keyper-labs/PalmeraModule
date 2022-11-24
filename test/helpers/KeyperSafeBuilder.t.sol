@@ -105,23 +105,4 @@ contract KeyperSafeBuilder is Test, Constants {
             orgAddr, safeGroupA1, safeGroupB, safeSubGroupA1, safeSubSubGroupA1
         );
     }
-
-    function setSafeLeadOfOrg(string memory _orgName)
-        public
-        returns (address, address)
-    {
-        bool result = gnosisHelper.registerOrgTx(_orgName);
-        keyperSafes[_orgName] = address(gnosisHelper.gnosisSafe());
-        vm.label(keyperSafes[_orgName], _orgName);
-        assertEq(result, true);
-
-        address orgAddr = keyperSafes[_orgName];
-        address userLead = address(0x123);
-
-        vm.startPrank(orgAddr);
-        keyperModule.setRole(Role.SAFE_LEAD, userLead, orgAddr, true);
-        vm.stopPrank();
-
-        return (orgAddr, userLead);
-    }
 }
