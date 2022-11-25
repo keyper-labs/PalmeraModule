@@ -147,7 +147,9 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     /// @dev Modifier for Validate if safe caller is Registered
     /// @param safe Safe address
     modifier SafeRegistered(address safe) {
-        if ((safe == address(0)) || !isSafe(safe) || !isSafeRegistered(safe)) {
+        if ((safe == address(0)) || safe == SENTINEL_OWNERS || !isSafe(safe)) {
+            revert InvalidGnosisSafe(safe);
+        } else if (!isSafeRegistered(safe)) {
             revert SafeNotRegistered(safe);
         }
         _;
@@ -155,7 +157,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
 
     /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet
     modifier IsGnosisSafe(address safe) {
-        if (safe == address(0) || !isSafe(safe)) {
+        if (safe == address(0) || safe == SENTINEL_OWNERS || !isSafe(safe)) {
             revert InvalidGnosisSafe(safe);
         }
         _;
@@ -163,11 +165,14 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
 
     /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet and Root Safe
     modifier IsRootSafe(address safe) {
-        if (
-            safe == address(0) || !isSafe(safe) || !isSafeRegistered(safe)
-                || groups[getOrgBySafe(safe)][getGroupIdBySafe(
-                    getOrgBySafe(safe), safe
-                )].tier != Tier.ROOT
+        if ((safe == address(0)) || safe == SENTINEL_OWNERS || !isSafe(safe)) {
+            revert InvalidGnosisSafe(safe);
+        } else if (!isSafeRegistered(safe)) {
+            revert SafeNotRegistered(safe);
+        } else if (
+            groups[getOrgBySafe(safe)][getGroupIdBySafe(
+                getOrgBySafe(safe), safe
+            )].tier != Tier.ROOT
         ) {
             revert InvalidGnosisRootSafe(safe);
         }
@@ -311,7 +316,8 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     function addOwnerWithThreshold(
         address ownerAdded,
         uint256 threshold,
-        address targetSafe
+        address targetSafe,
+        bytes32 org
     )
         external
         validAddress(ownerAdded)
@@ -319,7 +325,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         requiresAuth
     {
         address caller = _msgSender();
-        bytes32 org = getOrgBySafe(targetSafe);
         /// Check _msgSender() is an Root/Super/Lead safe of the target safe
         if (
             !isRootSafeOf(caller, getGroupIdBySafe(org, targetSafe))
@@ -360,9 +365,9 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         address prevOwner,
         address ownerRemoved,
         uint256 threshold,
-        address targetSafe
+        address targetSafe,
+        bytes32 org
     ) external SafeRegistered(targetSafe) requiresAuth {
-        bytes32 org = getOrgBySafe(targetSafe);
         if (prevOwner == address(0) || ownerRemoved == address(0)) {
             revert ZeroAddressProvided();
         }
@@ -400,7 +405,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     /// @notice Give user roles
     /// @dev Call must come from the root safe
     /// @param role Role to be assigned
-    /// @param user User that will have specific role
+    /// @param user User that will have specific role (Can be EAO or safe)
     /// @param group Safe group which will have the user permissions on
     function setRole(Role role, address user, uint256 group, bool enabled)
         external
@@ -794,14 +799,11 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     function isChild(uint256 superSafe, address child)
         public
         view
-        SafeRegistered(child)
         returns (bool)
     {
         bytes32 org = getOrgBySafe(child);
         /// Check within groups of the org
-        if (groups[org][superSafe].safe == address(0)) {
-            revert SuperSafeNotRegistered(superSafe);
-        }
+        if (groups[org][superSafe].safe == address(0)) return false;
         Group memory group = groups[org][superSafe];
         for (uint256 i = 0; i < group.child.length; i++) {
             if (group.child[i] == getGroupIdBySafe(org, child)) return true;
@@ -860,7 +862,12 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     /// @dev Method to get Org by Safe
     /// @param safe address of Safe
     /// @return Org Hashed ID
-    function getOrgBySafe(address safe) public view returns (bytes32) {
+    function getOrgBySafe(address safe)
+        public
+        view
+        SafeRegistered(safe)
+        returns (bytes32)
+    {
         for (uint256 i = 0; i < orgId.length; i++) {
             if (getGroupIdBySafe(orgId[i], safe) != 0) {
                 return orgId[i];
