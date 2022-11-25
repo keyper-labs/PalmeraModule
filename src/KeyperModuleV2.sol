@@ -663,7 +663,8 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
             );
     }
 
-    /// List of the Methods of DenyHelpers override
+    /// List of the Methods of DenyHelpers
+    /// Any changes in this five methods, must be validate into the DenyHelper
 
     /// @dev Funtion to Add Wallet to the List based on Approach of Safe Contract - Owner Manager
     /// @param users Array of Address of the Wallet to be added to the List
