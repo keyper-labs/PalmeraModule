@@ -126,7 +126,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     error CreateSafeProxyFailed();
     error InvalidGnosisSafe(address safe);
     error InvalidGnosisRootSafe(address safe);
-    error InvalidThreshold();
     error InvalidGroupId();
     error TxExecutionModuleFaild();
     error SetRoleForbidden(Role role);
@@ -340,14 +339,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
             revert OwnerAlreadyExists();
         }
 
-        /// if threshold is invalid
-        if (
-            threshold < 1
-                || threshold > (IGnosisSafe(targetSafe).getOwners().length.add(1))
-        ) {
-            revert InvalidThreshold();
-        }
-
         bytes memory data = abi.encodeWithSelector(
             IGnosisSafe.addOwnerWithThreshold.selector, ownerAdded, threshold
         );
@@ -370,13 +361,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     ) external SafeRegistered(targetSafe) requiresAuth {
         if (prevOwner == address(0) || ownerRemoved == address(0)) {
             revert ZeroAddressProvided();
-        }
-        /// if threshold is invalid
-        if (
-            threshold < 1
-                || threshold > (IGnosisSafe(targetSafe).getOwners().length.sub(1))
-        ) {
-            revert InvalidThreshold();
         }
 
         /// Check _msgSender() is an user lead of the target safe
@@ -528,7 +512,9 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         address caller = _msgSender();
         if (isSafeRegistered(caller)) revert SafeAlreadyRegistered(caller);
         // check to verify if the caller is already exist in the org
-        if (isTreeMember(superSafe, getGroupIdBySafe(org, caller))) revert GroupAlreadyRegistered();
+        if (isTreeMember(superSafe, getGroupIdBySafe(org, caller))) {
+            revert GroupAlreadyRegistered();
+        }
         /// Create a new group
         Group storage newGroup = groups[org][indexId];
         /// Add to org root/group
@@ -794,26 +780,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         return true;
     }
 
-    // /// @notice Check if child address is part of the group within an organization
-    // /// @param superSafe uint256 of the superSafe
-    // /// @param child address of the child
-    // /// @return bool
-    // function isChild(uint256 superSafe, address child)
-    //     public
-    //     view
-    //     SafeRegistered(child)
-    //     returns (bool)
-    // {
-    //     bytes32 org = getOrgBySafe(child);
-    //     /// Check within groups of the org
-    //     if (groups[org][superSafe].safe == address(0)) return false;
-    //     Group memory group = groups[org][superSafe];
-    //     for (uint256 i = 0; i < group.child.length; i++) {
-    //         if (group.child[i] == getGroupIdBySafe(org, child)) return true;
-    //     }
-    //     return false;
-    // }
-
     /// @notice Check if the address, is a superSafe of the group within an organization
     /// @param group ID's of the child group/safe
     /// @param root address of Root Safe of the group
@@ -843,7 +809,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     {
         bytes32 org = getOrgByGroup(superSafe);
         Group memory childGroup = groups[org][group];
-		if (childGroup.safe == address(0)) return false;
+        if (childGroup.safe == address(0)) return false;
         uint256 currentSuperSafe = childGroup.superSafe;
         /// TODO: probably more efficient to just create a superSafes mapping instead of this iterations
         while (currentSuperSafe != 0) {
