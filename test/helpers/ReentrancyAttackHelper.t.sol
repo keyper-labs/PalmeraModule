@@ -3,22 +3,29 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
+import "./GnosisSafeHelper.t.sol";
 import {KeyperModule} from "../../src/KeyperModule.sol";
 import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
+import {Constants} from "../../src/Constants.sol";
 import {console} from "forge-std/console.sol";
 
-contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
+contract AttackerHelper is Test, SignDigestHelper, SignersHelper, Constants {
     KeyperModule public keyper;
+    GnosisSafeHelper public gnosisHelper;
     Attacker public attacker;
 
+    mapping(string => address) public keyperSafes;
+
     function initHelper(
-        KeyperModule _keyper,
-        Attacker _attacker,
+        KeyperModule keyperArg,
+        Attacker attackerArg,
+        GnosisSafeHelper gnosisHelperArg,
         uint256 numberOwners
     ) public {
-        keyper = _keyper;
-        attacker = _attacker;
+        keyper = keyperArg;
+        attacker = attackerArg;
+        gnosisHelper = gnosisHelperArg;
         initOnwers(numberOwners);
     }
 
@@ -47,5 +54,42 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         bytes memory signatures = signDigestTx(ownersPKFromAttacker, txHashed);
 
         return signatures;
+    }
+
+    function setAttackerTree(string memory _orgName)
+        public
+        returns (address, address, address)
+    {
+        gnosisHelper.registerOrgTx(_orgName);
+        keyperSafes[_orgName] = address(gnosisHelper.gnosisSafe());
+        address orgAddr = keyperSafes[_orgName];
+
+        gnosisHelper.updateSafeInterface(address(attacker));
+        string memory nameAttacker = "Attacker";
+        keyperSafes[nameAttacker] = address(attacker);
+
+        address attackerSafe = keyperSafes[nameAttacker];
+
+        vm.startPrank(attackerSafe);
+        keyper.addGroup(orgAddr, orgAddr, nameAttacker);
+        vm.stopPrank();
+
+        address victim = gnosisHelper.newKeyperSafe(2, 1);
+        string memory nameVictim = "Victim";
+        keyperSafes[nameVictim] = address(victim);
+
+        vm.startPrank(victim);
+        keyper.addGroup(orgAddr, attackerSafe, nameVictim);
+        vm.stopPrank();
+
+        vm.deal(victim, 100 gwei);
+
+        vm.startPrank(orgAddr);
+        keyper.setRole(
+            Role.SAFE_LEAD, address(attackerSafe), address(victim), true
+        );
+        vm.stopPrank();
+
+        return (orgAddr, attackerSafe, victim);
     }
 }
