@@ -130,9 +130,9 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     error InvalidGroupId();
     error TxExecutionModuleFaild();
     error SetRoleForbidden(Role role);
-    error OrgAlreadyRegistered();
+    error OrgAlreadyRegistered(bytes32 name);
     error GroupAlreadyRegistered();
-    error SafeAlreadyRegistered();
+    error SafeAlreadyRegistered(address safe);
     error EmptyName();
     error UserNotGroup(address user);
 
@@ -446,9 +446,9 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         bytes32 name = bytes32(keccak256(abi.encodePacked(daoName)));
         address caller = _msgSender();
         if (isOrgRegistered(name)) {
-            revert OrgAlreadyRegistered();
+            revert OrgAlreadyRegistered(name);
         }
-        if (isSafeRegistered(caller)) revert SafeAlreadyRegistered();
+        if (isSafeRegistered(caller)) revert SafeAlreadyRegistered(caller);
         // when register an org, need to create the first root safe group
         groups[name][indexId] = Group({
             tier: Tier.ROOT,
@@ -477,7 +477,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     function createRootSafeGroup(address newRootSafe, string calldata name)
         external
         IsGnosisSafe(newRootSafe)
-        SafeRegistered(_msgSender())
+        IsRootSafe(_msgSender())
         requiresAuth
     {
         if (bytes(name).length == 0) {
@@ -487,9 +487,11 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         address caller = _msgSender();
         bytes32 org = getOrgBySafe(caller);
         if (isOrgRegistered(_name)) {
-            revert OrgAlreadyRegistered();
+            revert OrgAlreadyRegistered(_name);
         }
-        if (isSafeRegistered(newRootSafe)) revert SafeAlreadyRegistered();
+        if (isSafeRegistered(newRootSafe)) {
+            revert SafeAlreadyRegistered(newRootSafe);
+        }
         uint256 newIndex = indexId;
         groups[org][newIndex] = Group({
             tier: Tier.ROOT,
@@ -522,11 +524,11 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     {
         // check the name of group is not empty
         if (bytes(name).length == 0) revert EmptyName();
-        if (isSafeRegistered(_msgSender())) revert SafeAlreadyRegistered();
         bytes32 org = getOrgByGroup(superSafe);
         address caller = _msgSender();
+        if (isSafeRegistered(caller)) revert SafeAlreadyRegistered(caller);
         // check to verify if the caller is already exist in the org
-        if (isChild(superSafe, caller)) revert GroupAlreadyRegistered();
+        if (isTreeMember(superSafe, getGroupIdBySafe(org, caller))) revert GroupAlreadyRegistered();
         /// Create a new group
         Group storage newGroup = groups[org][indexId];
         /// Add to org root/group
@@ -792,24 +794,25 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
         return true;
     }
 
-    /// @notice Check if child address is part of the group within an organization
-    /// @param superSafe uint256 of the superSafe
-    /// @param child address of the child
-    /// @return bool
-    function isChild(uint256 superSafe, address child)
-        public
-        view
-        returns (bool)
-    {
-        bytes32 org = getOrgBySafe(child);
-        /// Check within groups of the org
-        if (groups[org][superSafe].safe == address(0)) return false;
-        Group memory group = groups[org][superSafe];
-        for (uint256 i = 0; i < group.child.length; i++) {
-            if (group.child[i] == getGroupIdBySafe(org, child)) return true;
-        }
-        return false;
-    }
+    // /// @notice Check if child address is part of the group within an organization
+    // /// @param superSafe uint256 of the superSafe
+    // /// @param child address of the child
+    // /// @return bool
+    // function isChild(uint256 superSafe, address child)
+    //     public
+    //     view
+    //     SafeRegistered(child)
+    //     returns (bool)
+    // {
+    //     bytes32 org = getOrgBySafe(child);
+    //     /// Check within groups of the org
+    //     if (groups[org][superSafe].safe == address(0)) return false;
+    //     Group memory group = groups[org][superSafe];
+    //     for (uint256 i = 0; i < group.child.length; i++) {
+    //         if (group.child[i] == getGroupIdBySafe(org, child)) return true;
+    //     }
+    //     return false;
+    // }
 
     /// @notice Check if the address, is a superSafe of the group within an organization
     /// @param group ID's of the child group/safe
@@ -840,6 +843,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     {
         bytes32 org = getOrgByGroup(superSafe);
         Group memory childGroup = groups[org][group];
+		if (childGroup.safe == address(0)) return false;
         uint256 currentSuperSafe = childGroup.superSafe;
         /// TODO: probably more efficient to just create a superSafes mapping instead of this iterations
         while (currentSuperSafe != 0) {
@@ -854,7 +858,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     /// @param safe address of Safe
     /// @return bool
     function isSafeRegistered(address safe) public view returns (bool) {
-        if ((safe == address(0))) return false;
+        if ((safe == address(0)) || safe == SENTINEL_OWNERS) return false;
         if (getGroupIdBySafe(getOrgBySafe(safe), safe) == 0) return false;
         return true;
     }
@@ -862,18 +866,13 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, ConstantsV2, DenyHelperV2 {
     /// @dev Method to get Org by Safe
     /// @param safe address of Safe
     /// @return Org Hashed ID
-    function getOrgBySafe(address safe)
-        public
-        view
-        SafeRegistered(safe)
-        returns (bytes32)
-    {
+    function getOrgBySafe(address safe) public view returns (bytes32) {
         for (uint256 i = 0; i < orgId.length; i++) {
             if (getGroupIdBySafe(orgId[i], safe) != 0) {
                 return orgId[i];
             }
         }
-        revert OrgNotRegistered(0);
+        return bytes32(0);
     }
 
     /// @dev Method to get Group ID by safe address

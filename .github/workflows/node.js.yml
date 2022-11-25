@@ -40,3 +40,6 @@ jobs:
 
       - name: Run coverage
         run: forge coverage
+
+      - name: Generate gas diff
+        uses: Rubilmax/foundry-gas-diff@v3.11
