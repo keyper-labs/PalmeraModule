@@ -30,19 +30,15 @@ contract KeyperSafeBuilder is Test, Constants {
         string memory orgNameArg,
         string memory groupA1NameArg
     ) public returns (address, address) {
-        // Set initial safe as a rootOrg
         bool result = gnosisHelper.registerOrgTx(orgNameArg);
         keyperSafes[orgNameArg] = address(gnosisHelper.gnosisSafe());
 
-        // Create new safe with setup called while creating contract
         address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
-        // Create Group calldata
         keyperSafes[groupA1NameArg] = address(groupSafe);
 
         address orgAddr = keyperSafes[orgNameArg];
         result = gnosisHelper.createAddGroupTx(orgAddr, orgAddr, groupA1NameArg);
 
-        // Send ETH to org&subgroup
         vm.deal(orgAddr, 100 gwei);
         vm.deal(groupSafe, 100 gwei);
 
