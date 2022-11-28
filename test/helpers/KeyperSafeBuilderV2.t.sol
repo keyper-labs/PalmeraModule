@@ -10,9 +10,7 @@ contract KeyperSafeBuilderV2 is Test {
 
     mapping(string => address) public keyperSafes;
 
-    function setGnosisHelper(
-        GnosisSafeHelperV2 gnosisHelperArg
-    ) public {
+    function setGnosisHelper(GnosisSafeHelperV2 gnosisHelperArg) public {
         gnosisHelper = gnosisHelperArg;
     }
 
