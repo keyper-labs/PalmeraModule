@@ -8,6 +8,13 @@ library Events {
         address indexed creator, bytes32 indexed org, string name
     );
 
+    /// @dev Event Fire when create a New Group (Tier 0) into the organization
+    /// @param org Hash(DAO's name)
+    /// @param groupCreated ID of the group
+    /// @param lead Address of Safe Lead of the group
+    /// @param creator Address of the creator of the group
+    /// @param superSafe ID of Superior Group
+    /// @param name String name of the group
     event GroupCreated(
         bytes32 indexed org,
         uint256 indexed groupCreated,
@@ -17,6 +24,13 @@ library Events {
         string name
     );
 
+    /// @dev Event Fire when remove a Group (Tier 0) from the organization
+    /// @param org Hash(DAO's name)
+    /// @param groupRemoved ID of the group removed
+    /// @param lead Address of Safe Lead of the group
+    /// @param remover Address of the creator of the group
+    /// @param superSafe ID of Superior Group
+    /// @param name String name of the group
     event GroupRemoved(
         bytes32 indexed org,
         uint256 indexed groupRemoved,
@@ -26,6 +40,13 @@ library Events {
         string name
     );
 
+    /// @dev Event Fire when update SuperSafe of a Group (Tier 0) from the organization
+    /// @param org Hash(DAO's name)
+    /// @param groupUpdated ID of the group updated
+    /// @param lead Address of Safe Lead of the group
+    /// @param updater Address of the updater of the group
+    /// @param oldSuperSafe ID of old Super Safe Group
+	/// @param newSuperSafe ID of new Super Safe Group
     event GroupSuperUpdated(
         bytes32 indexed org,
         uint256 indexed groupUpdated,
