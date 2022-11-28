@@ -52,7 +52,10 @@ library Events {
         string name
     );
 
-    /// @dev Events
+    /// @dev Events Deny Helpers
     event AddedToList(address[] users);
     event DroppedFromList(address indexed user);
+
+	/// @dev Event when a new keyperModule is setting up
+    event KeyperModuleSetup(address keyperModule, address caller);
 }

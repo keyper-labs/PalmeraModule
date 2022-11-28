@@ -3,11 +3,8 @@ pragma solidity ^0.8.15;
 
 library Constants {
 
-    /// @dev Wallet Sentinel
-    address internal constant SENTINEL_WALLETS = address(0x1);
-
 	// Sentinel Owners for Gnosis Safe
-    address internal constant SENTINEL_OWNERS = address(0x1);
+    address internal constant SENTINEL_ADDRESS = address(0x1);
     // keccak256(
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"
     // );

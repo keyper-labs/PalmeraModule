@@ -51,7 +51,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @param safe Safe address
     modifier SafeRegistered(address safe) {
         if (
-            (safe == address(0)) || safe == Constants.SENTINEL_OWNERS
+            (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
                 || !isSafe(safe)
         ) {
             revert Errors.InvalidGnosisSafe(safe);
@@ -64,7 +64,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet
     modifier IsGnosisSafe(address safe) {
         if (
-            safe == address(0) || safe == Constants.SENTINEL_OWNERS
+            safe == address(0) || safe == Constants.SENTINEL_ADDRESS
                 || !isSafe(safe)
         ) {
             revert Errors.InvalidGnosisSafe(safe);
@@ -75,7 +75,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet and Root Safe
     modifier IsRootSafe(address safe) {
         if (
-            (safe == address(0)) || safe == Constants.SENTINEL_OWNERS
+            (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
                 || !isSafe(safe)
         ) {
             revert Errors.InvalidGnosisSafe(safe);
@@ -611,11 +611,11 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         if (!allowFeature[org] && !denyFeature[org]) {
             revert Errors.DenyHelpersDisabled();
         }
-        address currentWallet = Constants.SENTINEL_WALLETS;
+        address currentWallet = Constants.SENTINEL_ADDRESS;
         for (uint256 i = 0; i < users.length; i++) {
             address wallet = users[i];
             if (
-                wallet == address(0) || wallet == Constants.SENTINEL_WALLETS
+                wallet == address(0) || wallet == Constants.SENTINEL_ADDRESS
                     || wallet == address(this) || currentWallet == wallet
             ) revert Errors.InvalidAddressProvided();
             // Avoid duplicate wallet
@@ -626,7 +626,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
             listed[org][currentWallet] = wallet;
             currentWallet = wallet;
         }
-        listed[org][currentWallet] = Constants.SENTINEL_WALLETS;
+        listed[org][currentWallet] = Constants.SENTINEL_ADDRESS;
         listCount[org] += users.length;
         emit Events.AddedToList(users);
     }
@@ -758,7 +758,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @param safe address of Safe
     /// @return bool
     function isSafeRegistered(address safe) public view returns (bool) {
-        if ((safe == address(0)) || safe == Constants.SENTINEL_OWNERS) {
+        if ((safe == address(0)) || safe == Constants.SENTINEL_ADDRESS) {
             return false;
         }
         if (getGroupIdBySafe(getOrgBySafe(safe), safe) == 0) return false;

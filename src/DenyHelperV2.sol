@@ -27,7 +27,7 @@ abstract contract DenyHelperV2 is Context {
 
     /// @dev Modifier for Valid if wallet is Zero Address or Not
     modifier validAddress(address to) {
-        if (to == address(0) || to == Constants.SENTINEL_WALLETS) {
+        if (to == address(0) || to == Constants.SENTINEL_ADDRESS) {
             revert Errors.InvalidAddressProvided();
         }
         _;
@@ -35,7 +35,7 @@ abstract contract DenyHelperV2 is Context {
 
     /// @dev Modifier for Valid if wallet is Denied/Allowed or Not
     modifier Denied(bytes32 org, address _user) {
-        if (_user == address(0) || _user == Constants.SENTINEL_WALLETS) {
+        if (_user == address(0) || _user == Constants.SENTINEL_ADDRESS) {
             revert Errors.InvalidAddressProvided();
         } else if (allowFeature[org]) {
             if (!isListed(org, _user)) revert Errors.AddresNotAllowed();
@@ -49,7 +49,7 @@ abstract contract DenyHelperV2 is Context {
     }
 
     function isListed(bytes32 org, address wallet) public view returns (bool) {
-        return wallet != Constants.SENTINEL_WALLETS
+        return wallet != Constants.SENTINEL_ADDRESS
             && listed[org][wallet] != address(0) && wallet != address(0);
     }
 
@@ -65,9 +65,9 @@ abstract contract DenyHelperV2 is Context {
             return new address[](0);
         }
         result = new address[](count);
-        address currentWallet = listed[org][Constants.SENTINEL_WALLETS];
+        address currentWallet = listed[org][Constants.SENTINEL_ADDRESS];
         uint256 i = 0;
-        while (currentWallet != Constants.SENTINEL_WALLETS) {
+        while (currentWallet != Constants.SENTINEL_ADDRESS) {
             result[i] = currentWallet;
             currentWallet = listed[org][currentWallet];
             i++;
@@ -83,10 +83,10 @@ abstract contract DenyHelperV2 is Context {
         view
         returns (address prevUser)
     {
-        prevUser = Constants.SENTINEL_WALLETS;
+        prevUser = Constants.SENTINEL_ADDRESS;
         address currentWallet = listed[org][prevUser];
         while (
-            (currentWallet != Constants.SENTINEL_WALLETS)
+            (currentWallet != Constants.SENTINEL_ADDRESS)
                 && (currentWallet != address(0)) && (listCount[org] > 0)
         ) {
             if (currentWallet == wallet) {

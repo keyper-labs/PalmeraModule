@@ -6,13 +6,11 @@ import {Authority} from "@solmate/auth/Auth.sol";
 import {DenyHelperV2} from "./DenyHelperV2.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
+import {Events} from "../libraries/Events.sol";
 
 contract KeyperRolesV2 is RolesAuthority, DenyHelperV2 {
     string public constant NAME = "Keyper Roles";
     string public constant VERSION = "0.2.0";
-
-    /// @dev Event when a new keyperModule is setting up
-    event KeyperModuleSetup(address keyperModule, address caller);
 
     constructor(address keyperModule)
         RolesAuthority(_msgSender(), Authority(address(0)))
@@ -182,7 +180,7 @@ contract KeyperRolesV2 is RolesAuthority, DenyHelperV2 {
 
         /// Transfer ownership of authority to keyper module
         setOwner(keyperModule);
-        emit KeyperModuleSetup(keyperModule, _msgSender());
+        emit Events.KeyperModuleSetup(keyperModule, _msgSender());
     }
 
     /*//////////////////////////////////////////////////////////////
