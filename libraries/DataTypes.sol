@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
+/// @title Library DataTypes
+/// @custom:security-contact general@palmeradao.xyz
 library DataTypes {
     /// @dev typos of Roles into Keyper Modules
     enum Role {

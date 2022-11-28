@@ -5,6 +5,8 @@ import "forge-std/console.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 import "@solenv/Solenv.sol";
 
+/// @title DeployKeyperSafe
+/// @custom:security-contact general@palmeradao.xyz
 contract DeployKeyperSafe is Script {
     function run() public {
         Solenv.config();

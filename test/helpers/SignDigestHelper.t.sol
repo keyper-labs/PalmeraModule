@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+/// @title SignDigestHelper
+/// @custom:security-contact general@palmeradao.xyz
 abstract contract SignDigestHelper is Test {
     function signDigestTx(uint256[] memory _privateKeyOwners, bytes32 digest)
         public

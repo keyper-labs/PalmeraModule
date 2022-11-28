@@ -8,6 +8,8 @@ import {Constants} from "../../src/Constants.sol";
 import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {console} from "forge-std/console.sol";
 
+/// @title KeyperSafeBuilder
+/// @custom:security-contact general@palmeradao.xyz
 contract KeyperSafeBuilder is Test, Constants {
     KeyperModule public keyperModule;
     GnosisSafeHelper public gnosisHelper;

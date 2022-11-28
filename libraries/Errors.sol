@@ -3,6 +3,8 @@ pragma solidity ^0.8.15;
 
 import {DataTypes} from "./DataTypes.sol";
 
+/// @title Library DataTypes
+/// @custom:security-contact general@palmeradao.xyz
 library Errors {
     /// @dev Errors Keyper Modules
     error OrgNotRegistered(bytes32 org);
@@ -10,6 +12,7 @@ library Errors {
     error SuperSafeNotRegistered(uint256 superSafe);
     error SafeNotRegistered(address safe);
     error NotAuthorizedAddOwnerWithThreshold();
+	error NotAuthorizedRemoveOwnerSafe();
     error NotAuthorizedRemoveGroupFromOtherTree();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedAsNotSafeLead();

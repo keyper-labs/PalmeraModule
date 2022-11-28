@@ -10,6 +10,8 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 import {Constants} from "../../src/Constants.sol";
 import {console} from "forge-std/console.sol";
 
+/// @title AttackerHelper
+/// @custom:security-contact general@palmeradao.xyz
 contract AttackerHelper is Test, SignDigestHelper, SignersHelper, Constants {
     KeyperModule public keyper;
     GnosisSafeHelper public gnosisHelper;

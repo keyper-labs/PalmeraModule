@@ -11,6 +11,8 @@ import {console} from "forge-std/console.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
 import "./helpers/GnosisSafeHelper.t.sol";
 
+/// @title DenyHelperKeyperModuleTest
+/// @custom:security-contact general@palmeradao.xyz
 contract DenyHelperKeyperModuleTest is Test {
     GnosisSafeHelper public gnosisHelper;
     KeyperModule public keyperModule;

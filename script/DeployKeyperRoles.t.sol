@@ -5,8 +5,8 @@ import "forge-std/Script.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import "src/KeyperRoles.sol";
 
-// import "@solenv/Solenv.sol";
-
+/// @title DeployKeyperRoles
+/// @custom:security-contact general@palmeradao.xyz
 contract DeployKeyperRoles is Script {
     function run() public {
         // Solenv.config();

@@ -14,11 +14,13 @@ import {DataTypes} from "../libraries/DataTypes.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {Events} from "../libraries/Events.sol";
 
+/// @title KeyperModuleV2
+/// @custom:security-contact general@palmeradao.xyz
 contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     using GnosisSafeMath for uint256;
     using Address for address;
-    /// @dev Definition of Safe module
 
+    /// @dev Definition of Safe module
     string public constant NAME = "Keyper Module";
     string public constant VERSION = "0.2.0";
     /// @dev Control Nonce of the module
@@ -28,8 +30,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     address public immutable proxyFactory;
     /// @dev RoleAuthority
     address public rolesAuthority;
-    /// @dev Array of Orgs (based on Hash(DAO's name))
-
+    /// @dev Array of Orgs (based on Hash(DAO's name) of the Org)
     bytes32[] private orgId;
     /// @dev indexId of the group
     uint256 public indexId;
@@ -119,6 +120,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @dev Function to create Gnosis Safe Multisig Wallet with our module enabled
     /// @param owners Array of owners of the Gnosis Safe Multisig Wallet
     /// @param threshold Threshold of the Gnosis Safe Multisig Wallet
+    /// @return safe Address of Safe created with the module enabled
     function createSafeProxy(address[] memory owners, uint256 threshold)
         external
         returns (address safe)
@@ -157,6 +159,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @param data Data payload of the transaction
     /// @param operation kind of operation (call or delegatecall)
     /// @param signatures Packed signatures data (v, r, s)
+    /// @return result true if transaction was successful.
     function execTransactionOnBehalf(
         bytes32 org,
         address targetSafe,
@@ -283,8 +286,13 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         if (!result) revert Errors.TxExecutionModuleFaild();
     }
 
-    /// @notice This function will allow UserLead to remove an owner
-    /// @dev For instance role
+    /// @notice This function will allow User Lead/Super/Root to remove an owner
+    /// @dev For instance of Remove Owner of Gnosis Safe, the user lead/super/root can remove an owner without passing by normal multisig check signature
+    /// @param prevOwner Address of the previous owner
+    /// @param ownerRemoved Address of the owner to be removed
+    /// @param threshold Threshold of the Gnosis Safe Multisig Wallet
+    /// @param targetSafe Address of the Gnosis Safe Multisig Wallet
+    /// @param org Hash(DAO's name)
     function removeOwner(
         address prevOwner,
         address ownerRemoved,
@@ -324,6 +332,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @param role Role to be assigned
     /// @param user User that will have specific role (Can be EAO or safe)
     /// @param group Safe group which will have the user permissions on
+    /// @param enabled Enable or disable the role
     function setRole(
         DataTypes.Role role,
         address user,
@@ -445,7 +454,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @dev Call coming from the group safe
     /// @param superSafe address of the superSafe
     /// @param name string name of the group
-    /// TODO: how avoid any safe adding in the org or group?
     function addGroup(uint256 superSafe, string memory name)
         external
         GroupRegistered(superSafe)
@@ -617,7 +625,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     }
 
     /// List of the Methods of DenyHelpers
-    /// Any changes in this five methods, must be validate into the DenyHelper
+    /// Any changes in this five methods, must be validate into the abstract contract DenyHelper
 
     /// @dev Funtion to Add Wallet to the List based on Approach of Safe Contract - Owner Manager
     /// @param users Array of Address of the Wallet to be added to the List
@@ -702,6 +710,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @notice Get all the information about a group
     /// @dev Method for getting all info of a group
     /// @param group uint256 of the group
+    /// @return all the information about a group
     function getGroupInfo(uint256 group)
         public
         view
@@ -787,7 +796,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
 
     /// @dev Method to get Org by Safe
     /// @param safe address of Safe
-    /// @return Org Hashed ID
+    /// @return Hash (Dao's Name)
     function getOrgBySafe(address safe) public view returns (bytes32) {
         for (uint256 i = 0; i < orgId.length; i++) {
             if (getGroupIdBySafe(orgId[i], safe) != 0) {
@@ -821,7 +830,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @notice call to get the orgId based on group id
     /// @dev Method to get the hashed orgId based on group id
     /// @param group uint256 of the group
-    /// @return orgGroup Org Hashed ID
+    /// @return orgGroup Hash (Dao's Name)
     function getOrgByGroup(uint256 group)
         public
         view
@@ -891,6 +900,8 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         return false;
     }
 
+    /// @dev Method to get the domain separator for Keyper Module
+    /// @return Hash of the domain separator
     function domainSeparator() public view returns (bytes32) {
         return keccak256(
             abi.encode(Constants.DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)
@@ -898,6 +909,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     }
 
     /// @dev Returns the chain id used by this contract.
+    /// @return The Chain ID
     function getChainId() public view returns (uint256) {
         uint256 id;
         // solhint-disable-next-line no-inline-assembly
@@ -907,6 +919,15 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         return id;
     }
 
+    /// @dev Method to get the Encoded Packed Data for Keyper Transaction
+    /// @param caller address of the caller
+    /// @param safe address of the Safe
+    /// @param to address of the receiver
+    /// @param value value of the transaction
+    /// @param data data of the transaction
+    /// @param operation operation of the transaction
+    /// @param _nonce nonce of the transaction
+    /// @return Hash of the encoded data
     function encodeTransactionData(
         address caller,
         address safe,
@@ -933,6 +954,15 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         );
     }
 
+    /// @dev Method to get the Hash Encoded Packed Data for Keyper Transaction
+    /// @param caller address of the caller
+    /// @param safe address of the Safe
+    /// @param to address of the receiver
+    /// @param value value of the transaction
+    /// @param data data of the transaction
+    /// @param operation operation of the transaction
+    /// @param _nonce nonce of the transaction
+    /// @return Hash of the encoded packed data
     function getTransactionHash(
         address caller,
         address safe,

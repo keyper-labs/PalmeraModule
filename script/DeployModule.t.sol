@@ -5,6 +5,8 @@ import "src/KeyperModule.sol";
 import "test/mocks/MockedContract.t.sol";
 import "@solenv/Solenv.sol";
 
+/// @title DeployModule
+/// @custom:security-contact general@palmeradao.xyz
 contract DeployModule is Script {
     function run() public {
         Solenv.config();
