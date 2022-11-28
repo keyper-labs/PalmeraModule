@@ -10,7 +10,7 @@ library Events {
 
     event GroupCreated(
         bytes32 indexed org,
-        uint256 indexed group,
+        uint256 indexed groupCreated,
         address lead,
         address indexed creator,
         uint256 superSafe,
@@ -28,9 +28,10 @@ library Events {
 
     event GroupSuperUpdated(
         bytes32 indexed org,
-        uint256 indexed oldGroup,
-        uint256 callerId,
+        uint256 indexed groupUpdated,
+        address lead,
         address indexed updater,
+		uint256 oldSuperSafe,
         uint256 newSuperSafe
     );
 

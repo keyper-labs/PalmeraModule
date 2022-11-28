@@ -8,6 +8,7 @@ library Errors {
     error OrgNotRegistered(bytes32 org);
     error GroupNotRegistered(uint256 group);
     error SuperSafeNotRegistered(uint256 superSafe);
+	error SafeNotRegistered(address safe);
     error NotAuthorizedAddOwnerWithThreshold();
     error NotAuthorizedRemoveGroupFromOtherTree();
     error NotAuthorizedExecOnBehalf();
@@ -23,8 +24,11 @@ library Errors {
     error ChildAlreadyExist();
     error InvalidGnosisSafe(address safe);
     error InvalidGnosisRootSafe(address safe);
+	error InvalidGroupId();
     error SetRoleForbidden(DataTypes.Role role);
-    error OrgAlreadyRegistered();
+	error OrgAlreadyRegistered(bytes32 safe);
+	error GroupAlreadyRegistered();
+	error SafeAlreadyRegistered(address safe);
     error EmptyName();
     error UserNotGroup(address user);
 	/// @dev Errors Module DenyHelpers
