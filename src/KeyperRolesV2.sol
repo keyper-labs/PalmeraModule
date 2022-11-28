@@ -12,17 +12,16 @@ contract KeyperRolesV2 is RolesAuthority, DenyHelperV2 {
     string public constant NAME = "Keyper Roles";
     string public constant VERSION = "0.2.0";
 
-    constructor(address keyperModule)
-        RolesAuthority(_msgSender(), Authority(address(0)))
-    {
+    constructor(
+        address keyperModule
+    ) RolesAuthority(_msgSender(), Authority(address(0))) {
         setupRoles(keyperModule);
     }
 
     /// Configure roles access control on Authority
-    function setupRoles(address keyperModule)
-        internal
-        validAddress(keyperModule)
-    {
+    function setupRoles(
+        address keyperModule
+    ) internal validAddress(keyperModule) {
         /// Define Role 0 - SAFE_LEAD
 
         /// Target contract: KeyperModule
@@ -187,12 +186,11 @@ contract KeyperRolesV2 is RolesAuthority, DenyHelperV2 {
                        USER ROLE (OVERRIDE) ASSIGNMENT LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    function setUserRole(address user, uint8 role, bool enabled)
-        public
-        virtual
-        override
-        requiresAuth
-    {
+    function setUserRole(
+        address user,
+        uint8 role,
+        bool enabled
+    ) public virtual override requiresAuth {
         if (enabled) {
             getUserRoles[user] |= bytes32(1 << role);
         } else {
