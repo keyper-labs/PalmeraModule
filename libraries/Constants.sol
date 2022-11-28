@@ -1,17 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
-import {Context} from "@openzeppelin/utils/Context.sol";
-
-abstract contract ConstantsV2 is Context {
-    enum Role {
-        SAFE_LEAD,
-        SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
-        SAFE_LEAD_MODIFY_OWNERS_ONLY,
-        ROOT_SAFE,
-        SUPER_SAFE
-    }
-
+library Constants {
+    // Sentinel Owners for Gnosis Safe
+    address internal constant SENTINEL_ADDRESS = address(0x1);
     // keccak256(
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"
     // );
@@ -27,14 +19,18 @@ abstract contract ConstantsV2 is Context {
     address internal constant FALLBACK_HANDLER =
         0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4;
 
-    bytes4 internal constant ADD_OWNER = bytes4(
-        keccak256(
-            bytes("addOwnerWithThreshold(address,uint256,address,bytes32)")
-        )
-    );
-    bytes4 internal constant REMOVE_OWNER = bytes4(
-        keccak256(bytes("removeOwner(address,address,uint256,address,bytes32)"))
-    );
+    bytes4 internal constant ADD_OWNER =
+        bytes4(
+            keccak256(
+                bytes("addOwnerWithThreshold(address,uint256,address,bytes32)")
+            )
+        );
+    bytes4 internal constant REMOVE_OWNER =
+        bytes4(
+            keccak256(
+                bytes("removeOwner(address,address,uint256,address,bytes32)")
+            )
+        );
 
     bytes4 internal constant ROLE_ASSIGMENT =
         bytes4(keccak256(bytes("setRole(uint8,address,bytes32,uint256,bool)")));
@@ -60,13 +56,14 @@ abstract contract ConstantsV2 is Context {
     bytes4 internal constant UPDATE_SUPER_SAFE =
         bytes4(keccak256(bytes("updateSuper(bytes32,uint256,uint256)")));
 
-    bytes4 internal constant EXEC_ON_BEHALF = bytes4(
-        keccak256(
-            bytes(
-                "execTransactionOnBehalf(bytes32,address,address,uint256,bytes,uint8,bytes)"
+    bytes4 internal constant EXEC_ON_BEHALF =
+        bytes4(
+            keccak256(
+                bytes(
+                    "execTransactionOnBehalf(bytes32,address,address,uint256,bytes,uint8,bytes)"
+                )
             )
-        )
-    );
+        );
 
     bytes4 internal constant REMOVE_GROUP =
         bytes4(keccak256(bytes("removeGroup(bytes32,uint256)")));

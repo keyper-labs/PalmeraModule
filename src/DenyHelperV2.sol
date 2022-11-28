@@ -3,13 +3,14 @@ pragma solidity ^0.8.15;
 
 import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
+import {Context} from "@openzeppelin/utils/Context.sol";
+import {Errors} from "../libraries/Errors.sol";
+import {Constants} from "../libraries/Constants.sol";
+import {Events} from "../libraries/Events.sol";
 
-abstract contract DenyHelperV2 {
+abstract contract DenyHelperV2 is Context {
     using GnosisSafeMath for uint256;
     using Address for address;
-    /// @dev Wallet Sentinel
-
-    address internal constant SENTINEL_WALLETS = address(0x1);
 
     /// @dev Deny/Allowlist Flags by Org
     /// @dev Org ID ---> Flag
@@ -24,36 +25,23 @@ abstract contract DenyHelperV2 {
     /// @dev Org ID ---> Mapping of Orgs to Wallets Deny or Allowed
     mapping(bytes32 => mapping(address => address)) internal listed;
 
-    /// @dev Events
-    event AddedToList(address[] users);
-    event DroppedFromList(address indexed user);
-
-    /// @dev Errors
-    error ZeroAddressProvided();
-    error InvalidAddressProvided();
-    error UserAlreadyOnList();
-    error AddresNotAllowed();
-    error AddressDenied();
-    error DenyHelpersDisabled();
-    error ListEmpty();
-
     /// @dev Modifier for Valid if wallet is Zero Address or Not
     modifier validAddress(address to) {
-        if (to == address(0) || to == SENTINEL_WALLETS) {
-            revert InvalidAddressProvided();
+        if (to == address(0) || to == Constants.SENTINEL_ADDRESS) {
+            revert Errors.InvalidAddressProvided();
         }
         _;
     }
 
     /// @dev Modifier for Valid if wallet is Denied/Allowed or Not
     modifier Denied(bytes32 org, address _user) {
-        if (_user == address(0) || _user == SENTINEL_WALLETS) {
-            revert InvalidAddressProvided();
+        if (_user == address(0) || _user == Constants.SENTINEL_ADDRESS) {
+            revert Errors.InvalidAddressProvided();
         } else if (allowFeature[org]) {
-            if (!isListed(org, _user)) revert AddresNotAllowed();
+            if (!isListed(org, _user)) revert Errors.AddresNotAllowed();
             _;
         } else if (denyFeature[org]) {
-            if (isListed(org, _user)) revert AddressDenied();
+            if (isListed(org, _user)) revert Errors.AddressDenied();
             _;
         } else {
             _;
@@ -61,25 +49,23 @@ abstract contract DenyHelperV2 {
     }
 
     function isListed(bytes32 org, address wallet) public view returns (bool) {
-        return wallet != SENTINEL_WALLETS && listed[org][wallet] != address(0)
-            && wallet != address(0);
+        return
+            wallet != Constants.SENTINEL_ADDRESS &&
+            listed[org][wallet] != address(0) &&
+            wallet != address(0);
     }
 
     /// @dev Method to get All Wallet of the List
     /// @param org Address of Org where to get the List of All Wallet
-    function getAll(bytes32 org)
-        public
-        view
-        returns (address[] memory result)
-    {
+    function getAll(bytes32 org) public view returns (address[] memory result) {
         uint256 count = listCount[org];
         if (count == 0) {
             return new address[](0);
         }
         result = new address[](count);
-        address currentWallet = listed[org][SENTINEL_WALLETS];
+        address currentWallet = listed[org][Constants.SENTINEL_ADDRESS];
         uint256 i = 0;
-        while (currentWallet != SENTINEL_WALLETS) {
+        while (currentWallet != Constants.SENTINEL_ADDRESS) {
             result[i] = currentWallet;
             currentWallet = listed[org][currentWallet];
             i++;
@@ -90,16 +76,16 @@ abstract contract DenyHelperV2 {
     /// @dev Function to get the Previous User of the Wallet
     /// @param org Address of Org where get the Previous User of the Wallet
     /// @param wallet Address of the Wallet
-    function getPrevUser(bytes32 org, address wallet)
-        public
-        view
-        returns (address prevUser)
-    {
-        prevUser = SENTINEL_WALLETS;
+    function getPrevUser(
+        bytes32 org,
+        address wallet
+    ) public view returns (address prevUser) {
+        prevUser = Constants.SENTINEL_ADDRESS;
         address currentWallet = listed[org][prevUser];
         while (
-            (currentWallet != SENTINEL_WALLETS) && (currentWallet != address(0))
-                && (listCount[org] > 0)
+            (currentWallet != Constants.SENTINEL_ADDRESS) &&
+            (currentWallet != address(0)) &&
+            (listCount[org] > 0)
         ) {
             if (currentWallet == wallet) {
                 return prevUser;
