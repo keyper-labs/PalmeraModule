@@ -340,10 +340,11 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     function registerOrg(string calldata daoName)
         external
         IsGnosisSafe(_msgSender())
+        returns (uint256 groupId)
     {
         bytes32 name = keccak256(abi.encodePacked(daoName));
         address caller = _msgSender();
-        _createOrgOrRoot(daoName, caller, caller);
+        groupId = _createOrgOrRoot(daoName, caller, caller);
         orgId.push(name);
 
         emit Events.OrganizationCreated(caller, name, daoName);
@@ -358,11 +359,12 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         IsGnosisSafe(newRootSafe)
         IsRootSafe(_msgSender())
         requiresAuth
+        returns (uint256 groupId)
     {
         address caller = _msgSender();
         bytes32 org = getOrgBySafe(caller);
         uint256 newIndex = indexId;
-        _createOrgOrRoot(name, caller, newRootSafe);
+        groupId = _createOrgOrRoot(name, caller, newRootSafe);
 
         emit Events.RootSafeGroupCreated(
             org, newIndex, caller, newRootSafe, name
@@ -926,22 +928,21 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         string memory name,
         address caller,
         address newRootSafe
-    ) private {
+    ) private returns (uint256 groupId) {
         if (bytes(name).length == 0) {
             revert Errors.EmptyName();
         }
-        bytes32 _name = bytes32(keccak256(abi.encodePacked(name)));
         bytes32 org = caller == newRootSafe
-            ? keccak256(abi.encodePacked(newRootSafe))
+            ? bytes32(keccak256(abi.encodePacked(name)))
             : getOrgBySafe(caller);
-        if (isOrgRegistered(_name)) {
-            revert Errors.OrgAlreadyRegistered(_name);
+        if (isOrgRegistered(org)) {
+            revert Errors.OrgAlreadyRegistered(org);
         }
         if (isSafeRegistered(newRootSafe)) {
             revert Errors.SafeAlreadyRegistered(newRootSafe);
         }
-        uint256 newIndex = indexId;
-        groups[org][newIndex] = DataTypes.Group({
+        groupId = indexId;
+        groups[org][groupId] = DataTypes.Group({
             tier: DataTypes.Tier.ROOT,
             name: name,
             lead: address(0),
@@ -949,7 +950,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
             child: new uint256[](0),
             superSafe: 0
         });
-        indexGroup[org].push(newIndex);
+        indexGroup[org].push(groupId);
         indexId++;
 
         /// Assign SUPER_SAFE Role + SAFE_ROOT Role
