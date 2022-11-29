@@ -24,7 +24,6 @@ contract KeyperSafeBuilderV2 is Test {
     ) public returns (address, address) {
         bool result = gnosisHelper.registerOrgTx(orgNameArg);
         keyperSafes[orgNameArg] = address(gnosisHelper.gnosisSafe());
-
         address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         keyperSafes[groupA1NameArg] = address(groupSafe);
 
