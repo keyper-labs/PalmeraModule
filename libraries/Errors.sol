@@ -11,6 +11,7 @@ library Errors {
     error SafeNotRegistered(address safe);
     error NotAuthorizedAddOwnerWithThreshold();
     error NotAuthorizedRemoveGroupFromOtherTree();
+	error NotAuthorizedRemoveOwner();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedAsNotSafeLead();
     error NotAuthorizedAsNotSuperSafe();
