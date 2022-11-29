@@ -369,35 +369,12 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     function registerOrg(string calldata daoName)
         external
         IsGnosisSafe(_msgSender())
+        returns (uint256 groupId)
     {
-        if (bytes(daoName).length == 0) {
-            revert Errors.EmptyName();
-        }
-        bytes32 name = bytes32(keccak256(abi.encodePacked(daoName)));
+        bytes32 name = keccak256(abi.encodePacked(daoName));
         address caller = _msgSender();
-        if (isOrgRegistered(name)) {
-            revert Errors.OrgAlreadyRegistered(name);
-        }
-        if (isSafeRegistered(caller)) {
-            revert Errors.SafeAlreadyRegistered(caller);
-        }
-        // when register an org, need to create the first root safe group
-        groups[name][indexId] = DataTypes.Group({
-            tier: DataTypes.Tier.ROOT,
-            name: daoName,
-            lead: address(0),
-            safe: caller,
-            child: new uint256[](0),
-            superSafe: 0
-        });
+        groupId = _createOrgOrRoot(daoName, caller, caller);
         orgId.push(name);
-        indexGroup[name].push(indexId);
-        indexId++;
-
-        /// Assign SUPER_SAFE Role + SAFE_ROOT Role
-        RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        _authority.setUserRole(caller, uint8(DataTypes.Role.ROOT_SAFE), true);
-        _authority.setUserRole(caller, uint8(DataTypes.Role.SUPER_SAFE), true);
 
         emit Events.OrganizationCreated(caller, name, daoName);
     }
@@ -411,39 +388,12 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         IsGnosisSafe(newRootSafe)
         IsRootSafe(_msgSender())
         requiresAuth
+        returns (uint256 groupId)
     {
-        if (bytes(name).length == 0) {
-            revert Errors.EmptyName();
-        }
-        bytes32 _name = bytes32(keccak256(abi.encodePacked(name)));
         address caller = _msgSender();
         bytes32 org = getOrgBySafe(caller);
-        if (isOrgRegistered(_name)) {
-            revert Errors.OrgAlreadyRegistered(_name);
-        }
-        if (isSafeRegistered(newRootSafe)) {
-            revert Errors.SafeAlreadyRegistered(newRootSafe);
-        }
         uint256 newIndex = indexId;
-        groups[org][newIndex] = DataTypes.Group({
-            tier: DataTypes.Tier.ROOT,
-            name: name,
-            lead: address(0),
-            safe: newRootSafe,
-            child: new uint256[](0),
-            superSafe: 0
-        });
-        indexGroup[org].push(newIndex);
-        indexId++;
-
-        /// Assign SUPER_SAFE Role + SAFE_ROOT Role
-        RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        _authority.setUserRole(
-            newRootSafe, uint8(DataTypes.Role.ROOT_SAFE), true
-        );
-        _authority.setUserRole(
-            newRootSafe, uint8(DataTypes.Role.SUPER_SAFE), true
-        );
+        groupId = _createOrgOrRoot(name, caller, newRootSafe);
 
         emit Events.RootSafeGroupCreated(
             org, newIndex, caller, newRootSafe, name
@@ -1018,5 +968,49 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
                 break;
             }
         }
+    }
+
+    /// @notice Refactoring method for Create Org or RootSafe
+    /// @dev Method Internal for Create Org or RootSafe
+    /// @param name String Name of the Organization
+    /// @param caller Safe Caller to Create Org or RootSafe
+    /// @param newRootSafe Safe Address to Create Org or RootSafe
+    function _createOrgOrRoot(
+        string memory name,
+        address caller,
+        address newRootSafe
+    ) private returns (uint256 groupId) {
+        if (bytes(name).length == 0) {
+            revert Errors.EmptyName();
+        }
+        bytes32 org = caller == newRootSafe
+            ? bytes32(keccak256(abi.encodePacked(name)))
+            : getOrgBySafe(caller);
+        if (isOrgRegistered(org)) {
+            revert Errors.OrgAlreadyRegistered(org);
+        }
+        if (isSafeRegistered(newRootSafe)) {
+            revert Errors.SafeAlreadyRegistered(newRootSafe);
+        }
+        groupId = indexId;
+        groups[org][groupId] = DataTypes.Group({
+            tier: DataTypes.Tier.ROOT,
+            name: name,
+            lead: address(0),
+            safe: newRootSafe,
+            child: new uint256[](0),
+            superSafe: 0
+        });
+        indexGroup[org].push(groupId);
+        indexId++;
+
+        /// Assign SUPER_SAFE Role + SAFE_ROOT Role
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        _authority.setUserRole(
+            newRootSafe, uint8(DataTypes.Role.ROOT_SAFE), true
+        );
+        _authority.setUserRole(
+            newRootSafe, uint8(DataTypes.Role.SUPER_SAFE), true
+        );
     }
 }
