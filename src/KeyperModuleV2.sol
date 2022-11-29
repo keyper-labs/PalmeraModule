@@ -689,7 +689,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @param org address
     /// @return bool
     function isOrgRegistered(bytes32 org) public view returns (bool) {
-        if (groups[org][indexGroup[org][0]].safe == address(0)) return false;
+        if (indexGroup[org].length == 0) return false;
         return true;
     }
 
