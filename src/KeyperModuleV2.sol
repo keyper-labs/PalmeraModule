@@ -790,6 +790,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         if ((safe == address(0)) || safe == Constants.SENTINEL_ADDRESS) {
             return false;
         }
+        if (getOrgBySafe(safe) == bytes32(0)) return false;
         if (getGroupIdBySafe(getOrgBySafe(safe), safe) == 0) return false;
         return true;
     }

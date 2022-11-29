@@ -12,7 +12,7 @@ library Errors {
     error SuperSafeNotRegistered(uint256 superSafe);
     error SafeNotRegistered(address safe);
     error NotAuthorizedAddOwnerWithThreshold();
-	error NotAuthorizedRemoveOwnerSafe();
+    error NotAuthorizedRemoveOwnerSafe();
     error NotAuthorizedRemoveGroupFromOtherTree();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedAsNotSafeLead();
