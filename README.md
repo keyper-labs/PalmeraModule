@@ -11,6 +11,10 @@ Foundry is used as the development framework. Please install it following the in
 https://book.getfoundry.sh/getting-started/installation
 ```
 
+### Pre commit hooks
+
+Follow instructions https://github.com/0xYYY/foundry-pre-commit
+
 ### Init submodules
 The external smart contracts dependencies are place in the lib/ folder. In order to initialize them use this command:
 ```

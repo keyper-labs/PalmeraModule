@@ -49,15 +49,17 @@ abstract contract DenyHelperV2 is Context {
     }
 
     function isListed(bytes32 org, address wallet) public view returns (bool) {
-        return
-            wallet != Constants.SENTINEL_ADDRESS &&
-            listed[org][wallet] != address(0) &&
-            wallet != address(0);
+        return wallet != Constants.SENTINEL_ADDRESS
+            && listed[org][wallet] != address(0) && wallet != address(0);
     }
 
     /// @dev Method to get All Wallet of the List
     /// @param org Address of Org where to get the List of All Wallet
-    function getAll(bytes32 org) public view returns (address[] memory result) {
+    function getAll(bytes32 org)
+        public
+        view
+        returns (address[] memory result)
+    {
         uint256 count = listCount[org];
         if (count == 0) {
             return new address[](0);
@@ -76,16 +78,16 @@ abstract contract DenyHelperV2 is Context {
     /// @dev Function to get the Previous User of the Wallet
     /// @param org Address of Org where get the Previous User of the Wallet
     /// @param wallet Address of the Wallet
-    function getPrevUser(
-        bytes32 org,
-        address wallet
-    ) public view returns (address prevUser) {
+    function getPrevUser(bytes32 org, address wallet)
+        public
+        view
+        returns (address prevUser)
+    {
         prevUser = Constants.SENTINEL_ADDRESS;
         address currentWallet = listed[org][prevUser];
         while (
-            (currentWallet != Constants.SENTINEL_ADDRESS) &&
-            (currentWallet != address(0)) &&
-            (listCount[org] > 0)
+            (currentWallet != Constants.SENTINEL_ADDRESS)
+                && (currentWallet != address(0)) && (listCount[org] > 0)
         ) {
             if (currentWallet == wallet) {
                 return prevUser;
