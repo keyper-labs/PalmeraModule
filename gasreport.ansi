@@ -1,0 +1,162 @@
+No files changed, compilation skipped
+
+Running 9 tests for test/DenyHelper.t.sol:DenyHelperTest
+[32m[PASS][0m testAddToListNoModule() (gas: 231790)
+[32m[PASS][0m testDisableDenyHelper() (gas: 51645)
+[32m[PASS][0m testDropFromListNoModule() (gas: 206619)
+[32m[PASS][0m testRevertAddToDuplicateAddressNoModule() (gas: 217379)
+[32m[PASS][0m testRevertAddToListZeroAddressNoModule() (gas: 37361)
+[32m[PASS][0m testRevertIfDenyHelpersDisabledNoModule() (gas: 36387)
+[32m[PASS][0m testRevertIfInvalidAddressProvidedForAllowListNoModule() (gas: 218144)
+[32m[PASS][0m testRevertIfListEmptyForAllowListNoModule() (gas: 43595)
+[32m[PASS][0m testRevertIfListEmptyForDenyListNoModule() (gas: 43809)
+Test result: [32mok[0m. 9 passed; 0 failed; finished in 4.87ms
+
+Running 2 tests for test/EnableModule.t.sol:TestEnableModule
+[32m[PASS][0m testEnableKeyperModule() (gas: 120597)
+[32m[PASS][0m testNewSafeWithKeyperModule() (gas: 434041)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 10.65ms
+
+Running 1 test for test/helpers/GnosisSafeHelper.t.sol:GnosisSafeHelper
+[32m[PASS][0m testNewKeyperSafe() (gas: 11926356)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 13.48ms
+
+Running 2 tests for test/KeyperRoles.t.sol:KeyperRolesTest
+[32m[PASS][0m testRolesModulesSetup() (gas: 17489)
+[32m[PASS][0m testSetSafeRoleOnOrgRegister() (gas: 114211)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 12.61ms
+
+Running 1 test for test/DeploySafe.t.sol:TestDeploySafe
+[32m[PASS][0m testTransferFundsSafe() (gas: 107527)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 12.76ms
+
+Running 12 tests for test/KeyperModule.t.sol:KeyperModuleTest
+[32m[PASS][0m testAddGroup() (gas: 266685)
+[32m[PASS][0m testAddSubGroup() (gas: 416567)
+[32m[PASS][0m testCreateRootOrg() (gas: 124549)
+[32m[PASS][0m testExecKeeperTransaction() (gas: 240647)
+[32m[PASS][0m testExpectOrgNotRegistered() (gas: 15959)
+[32m[PASS][0m testIsSuperSafe() (gas: 778724)
+[32m[PASS][0m testRevertUpdateSuperIfActualGroupNotRegistered() (gas: 528245)
+[32m[PASS][0m testRevertUpdateSuperIfCallerIsNotSafe() (gas: 526982)
+[32m[PASS][0m testRevertUpdateSuperIfCallerNotPartofTheOrg() (gas: 617327)
+[32m[PASS][0m testRevertUpdateSuperIfNewGroupNotRegistered() (gas: 529114)
+[32m[PASS][0m testTreeOrgs() (gas: 647217)
+[32m[PASS][0m testUpdateSuper() (gas: 645709)
+Test result: [32mok[0m. 12 passed; 0 failed; finished in 39.75ms
+
+Running 16 tests for test/DenyHelperKeyperModule.t.sol:DenyHelperKeyperModuleTest
+[32m[PASS][0m testAddToList() (gas: 455459)
+[32m[PASS][0m testDropFromList() (gas: 439722)
+[32m[PASS][0m testEnableAllowlist() (gas: 151057)
+[32m[PASS][0m testEnableDenylist() (gas: 151078)
+[32m[PASS][0m testGetPrevUserList() (gas: 461878)
+[32m[PASS][0m testRevertAddToDuplicateAddress() (gas: 444867)
+[32m[PASS][0m testRevertAddToListInvalidAddress() (gas: 345996)
+[32m[PASS][0m testRevertAddToListZeroAddress() (gas: 158696)
+[32m[PASS][0m testRevertIfDenyHelpersDisabled() (gas: 261602)
+[32m[PASS][0m testRevertIfInvalidAddressProvidedForAllowList() (gas: 449647)
+[32m[PASS][0m testRevertIfInvalidAddressProvidedForDenyList() (gas: 455483)
+[32m[PASS][0m testRevertIfListEmptyForAllowList() (gas: 274797)
+[32m[PASS][0m testRevertIfListEmptyForDenyList() (gas: 275009)
+[32m[PASS][0m testRevertInvalidGnosisSafe() (gas: 247726)
+[32m[PASS][0m testRevertUnAuthorizedIfCallAnotherSafe() (gas: 9363247)
+[32m[PASS][0m testRevertUnAuthorizedIfCallSuperSafe() (gas: 463830)
+Test result: [32mok[0m. 16 passed; 0 failed; finished in 56.79ms
+
+Running 39 tests for test/KeyperSafe.t.sol:TestKeyperSafe
+[32m[PASS][0m testAddOwnerWithThreshold() (gas: 933948)
+[32m[PASS][0m testAuthorityAddress() (gas: 9959)
+[32m[PASS][0m testCreateGroupFromSafe() (gas: 814256)
+[32m[PASS][0m testCreateGroupFromSafeScenario2() (gas: 1337769)
+[32m[PASS][0m testCreateSafeFromModule() (gas: 13550304)
+[32m[PASS][0m testEoaCallExecTransactionOnBehalfScenarioTwo() (gas: 942501)
+[32m[PASS][0m testLeadExecOnBehalf() (gas: 946462)
+[32m[PASS][0m testLeadExecOnBehalfFromGroup() (gas: 2766354)
+[32m[PASS][0m testModifyFromAnotherOrg() (gas: 1670665)
+[32m[PASS][0m testReentrancyAttack() (gas: 7760934)
+[32m[PASS][0m testRegisterOrgFromSafe() (gas: 186631)
+[32m[PASS][0m testRemoveGroupAndCheckDisables() (gas: 773981)
+[32m[PASS][0m testRemoveGroupFromOrg() (gas: 1271930)
+[32m[PASS][0m testRemoveGroupFromSafeOrgEqSuperSafe() (gas: 1315471)
+[32m[PASS][0m testRemoveOwner() (gas: 885334)
+[32m[PASS][0m testRevertAuthForRegisterOrgTx() (gas: 13808)
+[32m[PASS][0m testRevertChildrenAlreadyExistAddGroup() (gas: 1363810)
+[32m[PASS][0m testRevertInvalidGnosisSafeExecTransactionOnBehalf() (gas: 874051)
+[32m[PASS][0m testRevertInvalidSignatureExecOnBehalf() (gas: 887205)
+[32m[PASS][0m testRevertInvalidThresholdAddOwnerWithThresholdScenarioOne() (gas: 874954)
+[32m[PASS][0m testRevertInvalidThresholdAddOwnerWithThresholdScenarioTwo() (gas: 884543)
+[32m[PASS][0m testRevertNotAuthorizedExecTransactionOnBehalfScenarioThree() (gas: 875512)
+[32m[PASS][0m testRevertNotAuthorizedExecTransactionOnBehalfScenarioTwo() (gas: 910222)
+[32m[PASS][0m testRevertOwnerAlreadyExists() (gas: 886077)
+[32m[PASS][0m testRevertOwnerNotFoundRemoveOwner() (gas: 279765)
+[32m[PASS][0m testRevertRemoveGroupFromAnotherOrg() (gas: 1576514)
+[32m[PASS][0m testRevertRootSafesAttemptToAddToExternalSafeOrg() (gas: 768416)
+[32m[PASS][0m testRevertRootSafesToAttemptToRemoveFromExternalOrg() (gas: 779880)
+[32m[PASS][0m testRevertSetRoleForbidden() (gas: 822313)
+[32m[PASS][0m testRevertSetRolesToOrgNotRegistered() (gas: 815395)
+[32m[PASS][0m testRevertSuperSafeExecOnBehalf() (gas: 1944501)
+[32m[PASS][0m testRevertSuperSafeExecOnBehalfIsDenyList() (gas: 1497824)
+[32m[PASS][0m testRevertSuperSafeExecOnBehalfIsNotAllowList() (gas: 1419322)
+[32m[PASS][0m testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioOne() (gas: 871362)
+[32m[PASS][0m testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioThree() (gas: 871287)
+[32m[PASS][0m testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo() (gas: 871322)
+[32m[PASS][0m testRootSafeExecOnBehalf() (gas: 1481234)
+[32m[PASS][0m testSuperSafeExecOnBehalf() (gas: 1477403)
+[32m[PASS][0m testsetSafeLead() (gas: 860976)
+Test result: [32mok[0m. 39 passed; 0 failed; finished in 55.85ms
+
+Running 1 test for test/deploy.t.sol:TestDeploy
+[32m[PASS][0m testDeploy() (gas: 5612474)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 108.89ms
+| src/KeyperModule.sol:KeyperModule contract |                 |        |        |        |         |
+|--------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                            | Deployment Size |        |        |        |         |
+| 4741656                                    | 24010           |        |        |        |         |
+| Function Name                              | min             | avg    | median | max    | # calls |
+| addGroup                                   | 3203            | 129893 | 127453 | 156454 | 78      |
+| addOwnerWithThreshold                      | 15615           | 29147  | 19307  | 54147  | 6       |
+| addToList                                  | 2848            | 76407  | 16173  | 173078 | 17      |
+| allowFeature                               | 594             | 594    | 594    | 594    | 2       |
+| authority                                  | 2449            | 2449   | 2449   | 2449   | 1       |
+| createSafeProxy                            | 328914          | 328914 | 328914 | 328914 | 1       |
+| denyFeature                                | 637             | 637    | 637    | 637    | 2       |
+| dropFromList                               | 588             | 10323  | 11612  | 15192  | 13      |
+| enableAllowlist                            | 1725            | 27670  | 35057  | 35057  | 10      |
+| enableDenylist                             | 1726            | 27671  | 35058  | 35058  | 10      |
+| execTransactionOnBehalf                    | 2016            | 43285  | 23244  | 98526  | 17      |
+| getAll                                     | 3096            | 3853   | 4005   | 4308   | 4       |
+| getGroupInfo                               | 3392            | 4869   | 5392   | 5392   | 7       |
+| getOrg                                     | 3225            | 5487   | 3225   | 8880   | 5       |
+| getPrevUser                                | 1238            | 2853   | 2903   | 4272   | 6       |
+| getTransactionHash                         | 2133            | 2133   | 2133   | 2133   | 14      |
+| internalEnableModule                       | 25552           | 25552  | 25552  | 25552  | 1       |
+| isChild                                    | 2301            | 2877   | 2741   | 4504   | 12      |
+| isListed                                   | 938             | 957    | 961    | 961    | 12      |
+| isOrgRegistered                            | 661             | 661    | 661    | 661    | 1       |
+| isSafeLead                                 | 2678            | 4057   | 4516   | 4521   | 4       |
+| isSafeOwner                                | 6105            | 6143   | 6119   | 6206   | 3       |
+| isSuperSafe                                | 2202            | 5562   | 4237   | 18064  | 21      |
+| listCount                                  | 625             | 625    | 625    | 625    | 2       |
+| nonce                                      | 2385            | 2385   | 2385   | 2385   | 14      |
+| registerOrg                                | 79325           | 93339  | 91825  | 98325  | 71      |
+| removeGroup                                | 24129           | 37723  | 26472  | 55771  | 5       |
+| removeOwner                                | 18599           | 19693  | 19768  | 20636  | 4       |
+| setRole                                    | 9033            | 45299  | 55630  | 57630  | 15      |
+| updateSuper                                | 2902            | 16232  | 2902   | 69208  | 5       |
+
+
+| src/KeyperRoles.sol:KeyperRoles contract |                 |       |        |       |         |
+|------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                          | Deployment Size |       |        |       |         |
+| 1559738                                  | 8508            |       |        |       |         |
+| Function Name                            | min             | avg   | median | max   | # calls |
+| canCall                                  | 1433            | 5660  | 5433   | 7433  | 88      |
+| doesRoleHaveCapability                   | 2926            | 2926  | 2926   | 2926  | 3       |
+| doesUserHaveRole                         | 752             | 1256  | 752    | 2752  | 103     |
+| owner                                    | 2404            | 2404  | 2404   | 2404  | 1       |
+| setRoleCapability                        | 5118            | 5118  | 5118   | 5118  | 1       |
+| setUserRole                              | 2821            | 18836 | 23433  | 33433 | 182     |
+
+
+
