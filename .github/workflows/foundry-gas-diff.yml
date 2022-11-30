@@ -32,8 +32,11 @@ jobs:
           # due to non-deterministic fuzzing (but still use pseudo-random fuzzing seeds)
           # gasreport.ansi <- this file name should be unique in your repository!
           FOUNDRY_FUZZ_SEED: 0x${{ github.event.pull_request.base.sha || github.sha }}
+          FOUNDRY_VIA_IR: false
         run: |
+          touch .env
           echo "FOUNDRY_FUZZ_SEED=$FOUNDRY_FUZZ_SEED" >> .env
+          echo "FOUNDRY_VIA_IR=$FOUNDRY_VIA_IR" >> .env
           forge test --gas-report > gasreport.ansi
 
       - name: Compare gas reports
