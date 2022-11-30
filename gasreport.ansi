@@ -10,40 +10,25 @@ Running 9 tests for test/DenyHelper.t.sol:DenyHelperTest
 [32m[PASS][0m testRevertIfInvalidAddressProvidedForAllowListNoModule() (gas: 218144)
 [32m[PASS][0m testRevertIfListEmptyForAllowListNoModule() (gas: 43595)
 [32m[PASS][0m testRevertIfListEmptyForDenyListNoModule() (gas: 43809)
-Test result: [32mok[0m. 9 passed; 0 failed; finished in 4.87ms
-
-Running 2 tests for test/EnableModule.t.sol:TestEnableModule
-[32m[PASS][0m testEnableKeyperModule() (gas: 120597)
-[32m[PASS][0m testNewSafeWithKeyperModule() (gas: 434041)
-Test result: [32mok[0m. 2 passed; 0 failed; finished in 10.65ms
+Test result: [32mok[0m. 9 passed; 0 failed; finished in 5.07ms
 
 Running 1 test for test/helpers/GnosisSafeHelper.t.sol:GnosisSafeHelper
 [32m[PASS][0m testNewKeyperSafe() (gas: 11926356)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 13.48ms
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 6.67ms
 
 Running 2 tests for test/KeyperRoles.t.sol:KeyperRolesTest
 [32m[PASS][0m testRolesModulesSetup() (gas: 17489)
 [32m[PASS][0m testSetSafeRoleOnOrgRegister() (gas: 114211)
-Test result: [32mok[0m. 2 passed; 0 failed; finished in 12.61ms
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 10.70ms
 
 Running 1 test for test/DeploySafe.t.sol:TestDeploySafe
 [32m[PASS][0m testTransferFundsSafe() (gas: 107527)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 12.76ms
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 15.03ms
 
-Running 12 tests for test/KeyperModule.t.sol:KeyperModuleTest
-[32m[PASS][0m testAddGroup() (gas: 266685)
-[32m[PASS][0m testAddSubGroup() (gas: 416567)
-[32m[PASS][0m testCreateRootOrg() (gas: 124549)
-[32m[PASS][0m testExecKeeperTransaction() (gas: 240647)
-[32m[PASS][0m testExpectOrgNotRegistered() (gas: 15959)
-[32m[PASS][0m testIsSuperSafe() (gas: 778724)
-[32m[PASS][0m testRevertUpdateSuperIfActualGroupNotRegistered() (gas: 528245)
-[32m[PASS][0m testRevertUpdateSuperIfCallerIsNotSafe() (gas: 526982)
-[32m[PASS][0m testRevertUpdateSuperIfCallerNotPartofTheOrg() (gas: 617327)
-[32m[PASS][0m testRevertUpdateSuperIfNewGroupNotRegistered() (gas: 529114)
-[32m[PASS][0m testTreeOrgs() (gas: 647217)
-[32m[PASS][0m testUpdateSuper() (gas: 645709)
-Test result: [32mok[0m. 12 passed; 0 failed; finished in 39.75ms
+Running 2 tests for test/EnableModule.t.sol:TestEnableModule
+[32m[PASS][0m testEnableKeyperModule() (gas: 120597)
+[32m[PASS][0m testNewSafeWithKeyperModule() (gas: 434041)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 12.20ms
 
 Running 16 tests for test/DenyHelperKeyperModule.t.sol:DenyHelperKeyperModuleTest
 [32m[PASS][0m testAddToList() (gas: 455459)
@@ -62,7 +47,22 @@ Running 16 tests for test/DenyHelperKeyperModule.t.sol:DenyHelperKeyperModuleTes
 [32m[PASS][0m testRevertInvalidGnosisSafe() (gas: 247726)
 [32m[PASS][0m testRevertUnAuthorizedIfCallAnotherSafe() (gas: 9363247)
 [32m[PASS][0m testRevertUnAuthorizedIfCallSuperSafe() (gas: 463830)
-Test result: [32mok[0m. 16 passed; 0 failed; finished in 56.79ms
+Test result: [32mok[0m. 16 passed; 0 failed; finished in 34.86ms
+
+Running 12 tests for test/KeyperModule.t.sol:KeyperModuleTest
+[32m[PASS][0m testAddGroup() (gas: 266685)
+[32m[PASS][0m testAddSubGroup() (gas: 416567)
+[32m[PASS][0m testCreateRootOrg() (gas: 124549)
+[32m[PASS][0m testExecKeeperTransaction() (gas: 240647)
+[32m[PASS][0m testExpectOrgNotRegistered() (gas: 15959)
+[32m[PASS][0m testIsSuperSafe() (gas: 778724)
+[32m[PASS][0m testRevertUpdateSuperIfActualGroupNotRegistered() (gas: 528245)
+[32m[PASS][0m testRevertUpdateSuperIfCallerIsNotSafe() (gas: 526982)
+[32m[PASS][0m testRevertUpdateSuperIfCallerNotPartofTheOrg() (gas: 617327)
+[32m[PASS][0m testRevertUpdateSuperIfNewGroupNotRegistered() (gas: 529114)
+[32m[PASS][0m testTreeOrgs() (gas: 647217)
+[32m[PASS][0m testUpdateSuper() (gas: 645709)
+Test result: [32mok[0m. 12 passed; 0 failed; finished in 52.60ms
 
 Running 39 tests for test/KeyperSafe.t.sol:TestKeyperSafe
 [32m[PASS][0m testAddOwnerWithThreshold() (gas: 933948)
@@ -104,11 +104,11 @@ Running 39 tests for test/KeyperSafe.t.sol:TestKeyperSafe
 [32m[PASS][0m testRootSafeExecOnBehalf() (gas: 1481234)
 [32m[PASS][0m testSuperSafeExecOnBehalf() (gas: 1477403)
 [32m[PASS][0m testsetSafeLead() (gas: 860976)
-Test result: [32mok[0m. 39 passed; 0 failed; finished in 55.85ms
+Test result: [32mok[0m. 39 passed; 0 failed; finished in 54.43ms
 
 Running 1 test for test/deploy.t.sol:TestDeploy
-[32m[PASS][0m testDeploy() (gas: 5612474)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 108.89ms
+[32m[PASS][0m testDeploy() (gas: 5636861)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 105.82ms
 | src/KeyperModule.sol:KeyperModule contract |                 |        |        |        |         |
 |--------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                            | Deployment Size |        |        |        |         |
