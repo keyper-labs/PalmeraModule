@@ -18,7 +18,7 @@ library Errors {
     error NotAuthorizedAddOwnerWithThreshold();
 	/// @dev Error messages when the Safe is not Autorized to Remove Owner like Lead/Safe/Root Safe
     error NotAuthorizedRemoveGroupFromOtherTree();
-	/// @dev Error messages when the Caller is not Autorized to execute a Transacction on Behalf like Lead/Safe/Root Safe
+	error NotAuthorizedRemoveOwner();
     error NotAuthorizedExecOnBehalf();
 	/// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
     error NotAuthorizedAsNotSafeLead();

@@ -166,11 +166,11 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         if (isSafe(caller)) {
             // Check caller is a lead or superSafe of the target safe (checking with isTreeMember because is the same method!!)
             if (
-                isSafeLead(getGroupIdBySafe(org, targetSafe), caller)
-                    || isTreeMember(
+                isRootSafeOf(caller, getGroupIdBySafe(org, targetSafe))
+                    || isSuperSafe(
                         getGroupIdBySafe(org, caller),
                         getGroupIdBySafe(org, targetSafe)
-                    )
+                    ) || isSafeLead(getGroupIdBySafe(org, targetSafe), caller)
             ) {
                 // Caller is a safe then check caller's safe signatures.
                 bytes memory keyperTxHashData = encodeTransactionData(
@@ -240,7 +240,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         /// Check _msgSender() is an Root/Super/Lead safe of the target safe
         if (
             !isRootSafeOf(caller, getGroupIdBySafe(org, targetSafe))
-                && !isTreeMember(
+                && !isSuperSafe(
                     getGroupIdBySafe(org, caller), getGroupIdBySafe(org, targetSafe)
                 ) && !isSafeLead(getGroupIdBySafe(org, targetSafe), caller)
         ) {
@@ -272,13 +272,18 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         address targetSafe,
         bytes32 org
     ) external SafeRegistered(targetSafe) requiresAuth {
+        address caller = _msgSender();
         if (prevOwner == address(0) || ownerRemoved == address(0)) {
             revert Errors.ZeroAddressProvided();
         }
-
-        /// Check _msgSender() is an user lead of the target safe
-        if (!isSafeLead(getGroupIdBySafe(org, targetSafe), _msgSender())) {
-            revert Errors.NotAuthorizedAsNotSafeLead();
+        /// Check _msgSender() is an Root/Super/Lead safe of the target safe
+        if (
+            !isRootSafeOf(caller, getGroupIdBySafe(org, targetSafe))
+                && !isSuperSafe(
+                    getGroupIdBySafe(org, caller), getGroupIdBySafe(org, targetSafe)
+                ) && !isSafeLead(getGroupIdBySafe(org, targetSafe), caller)
+        ) {
+            revert Errors.NotAuthorizedRemoveOwner();
         }
 
         /// if Owner Not found
@@ -375,7 +380,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @dev Call coming from the group safe
     /// @param superSafe address of the superSafe
     /// @param name string name of the group
-    /// TODO: how avoid any safe adding in the org or group?
     function addGroup(uint256 superSafe, string memory name)
         external
         GroupRegistered(superSafe)
@@ -704,14 +708,27 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         return false;
     }
 
-    /// @dev Method to Validate is Safe exist in Keyper Module
-    /// @param safe address of Safe
+    /// @dev Method to Validate is ID Group a SuperSafe of a Group
+    /// @param group ID's of the group
+    /// @param superSafe ID's of the Safe
     /// @return bool
+    function isSuperSafe(uint256 superSafe, uint256 group)
+        public
+        view
+        returns (bool)
+    {
+        bytes32 org = getOrgByGroup(superSafe);
+        DataTypes.Group memory childGroup = groups[org][group];
+        if (childGroup.safe == address(0)) return false;
+        uint256 currentSuperSafe = childGroup.superSafe;
+        return (currentSuperSafe == superSafe);
+    }
+
     function isSafeRegistered(address safe) public view returns (bool) {
         if ((safe == address(0)) || safe == Constants.SENTINEL_ADDRESS) {
             return false;
         }
-		if (getOrgBySafe(safe) == bytes32(0)) return false;
+        if (getOrgBySafe(safe) == bytes32(0)) return false;
         if (getGroupIdBySafe(getOrgBySafe(safe), safe) == 0) return false;
         return true;
     }
