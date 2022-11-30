@@ -70,8 +70,9 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
 
         bytes memory args = abi.encode(address(keyperModuleAddr));
 
-        bytes memory bytecode =
-            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
+        bytes memory bytecode = abi.encodePacked(
+            vm.getCode("KeyperRolesV2.sol:KeyperRolesV2"), args
+        );
 
         keyperRolesContract = KeyperRolesV2(factory.deploy(salt, bytecode));
 

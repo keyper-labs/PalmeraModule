@@ -252,7 +252,7 @@ contract GnosisSafeHelperV2 is
         string memory name
     ) public returns (bool) {
         bytes memory data = abi.encodeWithSignature(
-            "addGroup(address,address,string)", org, superSafe, name
+            "addGroup(uint256,string)", org, superSafe, name
         );
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
@@ -267,7 +267,7 @@ contract GnosisSafeHelperV2 is
         returns (bool)
     {
         bytes memory data =
-            abi.encodeWithSignature("removeGroup(address,address)", org, group);
+            abi.encodeWithSignature("removeGroup(uint256)", org, group);
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx

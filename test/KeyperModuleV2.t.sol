@@ -65,8 +65,9 @@ contract KeyperModuleTestV2 is Test {
 
         bytes memory args = abi.encode(address(keyperModuleAddr));
 
-        bytes memory bytecode =
-            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
+        bytes memory bytecode = abi.encodePacked(
+            vm.getCode("KeyperRolesV2.sol:KeyperRolesV2"), args
+        );
 
         factory.deploy(salt, bytecode);
     }
