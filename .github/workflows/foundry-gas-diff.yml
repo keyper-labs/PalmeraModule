@@ -35,6 +35,7 @@ jobs:
           FOUNDRY_VIA_IR: false
         run: |
           touch .env
+          touch gasreport.ansi
           echo "FOUNDRY_FUZZ_SEED=$FOUNDRY_FUZZ_SEED" >> .env
           echo "FOUNDRY_VIA_IR=$FOUNDRY_VIA_IR" >> .env
           forge test --gas-report > gasreport.ansi
