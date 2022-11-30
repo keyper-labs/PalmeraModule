@@ -353,6 +353,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         orgId.push(name);
 
         emit Events.OrganizationCreated(caller, name, daoName);
+        return groupId;
     }
 
     /// @notice Call has to be done from another root safe to the organization
@@ -735,7 +736,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
 
     /// @dev Method to get Org by Safe
     /// @param safe address of Safe
-    /// @return Org Hashed ID
+    /// @return Org Hashed Name
     function getOrgBySafe(address safe) public view returns (bytes32) {
         for (uint256 i = 0; i < orgId.length; i++) {
             if (getGroupIdBySafe(orgId[i], safe) != 0) {
@@ -746,7 +747,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     }
 
     /// @dev Method to get Group ID by safe address
-    /// @param org uint256 indexId of Organization
+    /// @param org bytes32 hashed name of the Organization
     /// @param safe Safe address
     /// @return Group ID
     function getGroupIdBySafe(bytes32 org, address safe)
