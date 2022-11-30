@@ -345,35 +345,12 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     function registerOrg(string calldata daoName)
         external
         IsGnosisSafe(_msgSender())
+        returns (uint256 groupId)
     {
-        if (bytes(daoName).length == 0) {
-            revert Errors.EmptyName();
-        }
-        bytes32 name = bytes32(keccak256(abi.encodePacked(daoName)));
+        bytes32 name = keccak256(abi.encodePacked(daoName));
         address caller = _msgSender();
-        if (isOrgRegistered(name)) {
-            revert Errors.OrgAlreadyRegistered(name);
-        }
-        if (isSafeRegistered(caller)) {
-            revert Errors.SafeAlreadyRegistered(caller);
-        }
-        // when register an org, need to create the first root safe group
-        groups[name][indexId] = DataTypes.Group({
-            tier: DataTypes.Tier.ROOT,
-            name: daoName,
-            lead: address(0),
-            safe: caller,
-            child: new uint256[](0),
-            superSafe: 0
-        });
+        groupId = _createOrgOrRoot(daoName, caller, caller);
         orgId.push(name);
-        indexGroup[name].push(indexId);
-        indexId++;
-
-        /// Assign SUPER_SAFE Role + SAFE_ROOT Role
-        RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        _authority.setUserRole(caller, uint8(DataTypes.Role.ROOT_SAFE), true);
-        _authority.setUserRole(caller, uint8(DataTypes.Role.SUPER_SAFE), true);
 
         emit Events.OrganizationCreated(caller, name, daoName);
     }
@@ -387,39 +364,12 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         IsGnosisSafe(newRootSafe)
         IsRootSafe(_msgSender())
         requiresAuth
+        returns (uint256 groupId)
     {
-        if (bytes(name).length == 0) {
-            revert Errors.EmptyName();
-        }
-        bytes32 _name = bytes32(keccak256(abi.encodePacked(name)));
         address caller = _msgSender();
         bytes32 org = getOrgBySafe(caller);
-        if (isOrgRegistered(_name)) {
-            revert Errors.OrgAlreadyRegistered(_name);
-        }
-        if (isSafeRegistered(newRootSafe)) {
-            revert Errors.SafeAlreadyRegistered(newRootSafe);
-        }
         uint256 newIndex = indexId;
-        groups[org][newIndex] = DataTypes.Group({
-            tier: DataTypes.Tier.ROOT,
-            name: name,
-            lead: address(0),
-            safe: newRootSafe,
-            child: new uint256[](0),
-            superSafe: 0
-        });
-        indexGroup[org].push(newIndex);
-        indexId++;
-
-        /// Assign SUPER_SAFE Role + SAFE_ROOT Role
-        RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        _authority.setUserRole(
-            newRootSafe, uint8(DataTypes.Role.ROOT_SAFE), true
-        );
-        _authority.setUserRole(
-            newRootSafe, uint8(DataTypes.Role.SUPER_SAFE), true
-        );
+        groupId = _createOrgOrRoot(name, caller, newRootSafe);
 
         emit Events.RootSafeGroupCreated(
             org, newIndex, caller, newRootSafe, name
@@ -714,7 +664,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @param org address
     /// @return bool
     function isOrgRegistered(bytes32 org) public view returns (bool) {
-        if (groups[org][indexGroup[org][0]].safe == address(0)) return false;
+        if (indexGroup[org].length == 0) return false;
         return true;
     }
 
@@ -774,6 +724,64 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         return (currentSuperSafe == superSafe);
     }
 
+    function isSafeRegistered(address safe) public view returns (bool) {
+        if ((safe == address(0)) || safe == Constants.SENTINEL_ADDRESS) {
+            return false;
+        }
+        if (getOrgBySafe(safe) == bytes32(0)) return false;
+        if (getGroupIdBySafe(getOrgBySafe(safe), safe) == 0) return false;
+        return true;
+    }
+
+    /// @dev Method to get Org by Safe
+    /// @param safe address of Safe
+    /// @return Org Hashed ID
+    function getOrgBySafe(address safe) public view returns (bytes32) {
+        for (uint256 i = 0; i < orgId.length; i++) {
+            if (getGroupIdBySafe(orgId[i], safe) != 0) {
+                return orgId[i];
+            }
+        }
+        return bytes32(0);
+    }
+
+    /// @dev Method to get Group ID by safe address
+    /// @param org uint256 indexId of Organization
+    /// @param safe Safe address
+    /// @return Group ID
+    function getGroupIdBySafe(bytes32 org, address safe)
+        public
+        view
+        returns (uint256)
+    {
+        if (!isOrgRegistered(org)) {
+            revert Errors.OrgNotRegistered(org);
+        }
+        /// Check if the Safe address is into an Group mapping
+        for (uint256 i = 0; i < indexGroup[org].length; i++) {
+            if (groups[org][indexGroup[org][i]].safe == safe) {
+                return indexGroup[org][i];
+            }
+        }
+        return 0;
+    }
+
+    /// @notice call to get the orgId based on group id
+    /// @dev Method to get the hashed orgId based on group id
+    /// @param group uint256 of the group
+    /// @return orgGroup Org Hashed ID
+    function getOrgByGroup(uint256 group)
+        public
+        view
+        returns (bytes32 orgGroup)
+    {
+        if ((group == 0) || (group > indexId)) revert Errors.InvalidGroupId();
+        for (uint256 i = 0; i < orgId.length; i++) {
+            if (groups[orgId[i]][group].safe != address(0)) orgGroup = orgId[i];
+        }
+        if (orgGroup == bytes32(0)) revert Errors.GroupNotRegistered(group);
+    }
+
     /// @notice Check if a user is an safe lead of a group/org
     /// @param group address of the group
     /// @param user address of the user that is a lead or not
@@ -829,66 +837,6 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
             }
         }
         return false;
-    }
-
-    /// @dev Method to Validate is Safe exist in Keyper Module
-    /// @param safe address of Safe
-    /// @return bool
-    function isSafeRegistered(address safe) public view returns (bool) {
-        if ((safe == address(0)) || safe == Constants.SENTINEL_ADDRESS) {
-            return false;
-        }
-        if (getGroupIdBySafe(getOrgBySafe(safe), safe) == 0) return false;
-        return true;
-    }
-
-    /// @dev Method to get Org by Safe
-    /// @param safe address of Safe
-    /// @return Org Hashed ID
-    function getOrgBySafe(address safe) public view returns (bytes32) {
-        for (uint256 i = 0; i < orgId.length; i++) {
-            if (getGroupIdBySafe(orgId[i], safe) != 0) {
-                return orgId[i];
-            }
-        }
-        return bytes32(0);
-    }
-
-    /// @dev Method to get Group ID by safe address
-    /// @param org uint256 indexId of Organization
-    /// @param safe Safe address
-    /// @return Group ID
-    function getGroupIdBySafe(bytes32 org, address safe)
-        public
-        view
-        returns (uint256)
-    {
-        if (!isOrgRegistered(org)) {
-            revert Errors.OrgNotRegistered(org);
-        }
-        /// Check if the Safe address is into an Group mapping
-        for (uint256 i = 0; i < indexGroup[org].length; i++) {
-            if (groups[org][indexGroup[org][i]].safe == safe) {
-                return indexGroup[org][i];
-            }
-        }
-        return 0;
-    }
-
-    /// @notice call to get the orgId based on group id
-    /// @dev Method to get the hashed orgId based on group id
-    /// @param group uint256 of the group
-    /// @return orgGroup Org Hashed ID
-    function getOrgByGroup(uint256 group)
-        public
-        view
-        returns (bytes32 orgGroup)
-    {
-        if ((group == 0) || (group > indexId)) revert Errors.InvalidGroupId();
-        for (uint256 i = 0; i < orgId.length; i++) {
-            if (groups[orgId[i]][group].safe != address(0)) orgGroup = orgId[i];
-        }
-        if (orgGroup == bytes32(0)) revert Errors.GroupNotRegistered(group);
     }
 
     function domainSeparator() public view returns (bytes32) {
@@ -987,5 +935,49 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
                 break;
             }
         }
+    }
+
+    /// @notice Refactoring method for Create Org or RootSafe
+    /// @dev Method Internal for Create Org or RootSafe
+    /// @param name String Name of the Organization
+    /// @param caller Safe Caller to Create Org or RootSafe
+    /// @param newRootSafe Safe Address to Create Org or RootSafe
+    function _createOrgOrRoot(
+        string memory name,
+        address caller,
+        address newRootSafe
+    ) private returns (uint256 groupId) {
+        if (bytes(name).length == 0) {
+            revert Errors.EmptyName();
+        }
+        bytes32 org = caller == newRootSafe
+            ? bytes32(keccak256(abi.encodePacked(name)))
+            : getOrgBySafe(caller);
+        if (isOrgRegistered(org)) {
+            revert Errors.OrgAlreadyRegistered(org);
+        }
+        if (isSafeRegistered(newRootSafe)) {
+            revert Errors.SafeAlreadyRegistered(newRootSafe);
+        }
+        groupId = indexId;
+        groups[org][groupId] = DataTypes.Group({
+            tier: DataTypes.Tier.ROOT,
+            name: name,
+            lead: address(0),
+            safe: newRootSafe,
+            child: new uint256[](0),
+            superSafe: 0
+        });
+        indexGroup[org].push(groupId);
+        indexId++;
+
+        /// Assign SUPER_SAFE Role + SAFE_ROOT Role
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        _authority.setUserRole(
+            newRootSafe, uint8(DataTypes.Role.ROOT_SAFE), true
+        );
+        _authority.setUserRole(
+            newRootSafe, uint8(DataTypes.Role.SUPER_SAFE), true
+        );
     }
 }
