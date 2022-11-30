@@ -36,25 +36,25 @@ library Constants {
         bytes4(keccak256(bytes("setRole(uint8,address,bytes32,uint256,bool)")));
 
     bytes4 internal constant CREATE_ROOT_SAFE =
-        bytes4(keccak256(bytes("createRootSafeGroup(bytes32,address,string)")));
+        bytes4(keccak256(bytes("createRootSafeGroup(address,string)")));
 
     bytes4 internal constant ENABLE_ALLOWLIST =
-        bytes4(keccak256(bytes("enableAllowlist(bytes32)")));
+        bytes4(keccak256(bytes("enableAllowlist()")));
 
     bytes4 internal constant ENABLE_DENYLIST =
-        bytes4(keccak256(bytes("enableDenylist(bytes32)")));
+        bytes4(keccak256(bytes("enableDenylist()")));
 
     bytes4 internal constant DISABLE_DENY_HELPER =
-        bytes4(keccak256(bytes("disableDenyHelper(bytes32)")));
+        bytes4(keccak256(bytes("disableDenyHelper()")));
 
     bytes4 internal constant ADD_TO_LIST =
-        bytes4(keccak256(bytes("addToList(bytes32,address[])")));
+        bytes4(keccak256(bytes("addToList(address[])")));
 
     bytes4 internal constant DROP_FROM_LIST =
-        bytes4(keccak256(bytes("dropFromList(bytes32,address)")));
+        bytes4(keccak256(bytes("dropFromList(address)")));
 
     bytes4 internal constant UPDATE_SUPER_SAFE =
-        bytes4(keccak256(bytes("updateSuper(bytes32,uint256,uint256)")));
+        bytes4(keccak256(bytes("updateSuper(uint256,uint256)")));
 
     bytes4 internal constant EXEC_ON_BEHALF =
         bytes4(
@@ -66,5 +66,5 @@ library Constants {
         );
 
     bytes4 internal constant REMOVE_GROUP =
-        bytes4(keccak256(bytes("removeGroup(bytes32,uint256)")));
+        bytes4(keccak256(bytes("removeGroup(uint256)")));
 }

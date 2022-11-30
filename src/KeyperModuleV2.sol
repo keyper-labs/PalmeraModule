@@ -7,7 +7,6 @@ import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {DenyHelperV2, Address} from "./DenyHelperV2.sol";
-import {KeyperRoles} from "./KeyperRoles.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";

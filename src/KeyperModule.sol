@@ -8,7 +8,6 @@ import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Constants} from "./Constants.sol";
 import {DenyHelper, Address} from "./DenyHelper.sol";
-import {KeyperRoles} from "./KeyperRoles.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
 contract KeyperModule is Auth, ReentrancyGuard, Constants, DenyHelper {
