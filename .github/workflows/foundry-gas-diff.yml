@@ -38,7 +38,7 @@ jobs:
           touch gasreport.ansi
           echo "FOUNDRY_FUZZ_SEED=$FOUNDRY_FUZZ_SEED" >> .env
           echo "FOUNDRY_VIA_IR=$FOUNDRY_VIA_IR" >> .env
-          forge test --gas-report > gasreport.ansi
+          forge test --gas-report >> gasreport.ansi
 
       - name: Compare gas reports
         uses: Rubilmax/foundry-gas-diff@v3.11
