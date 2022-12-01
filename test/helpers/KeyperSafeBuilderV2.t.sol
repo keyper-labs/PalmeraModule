@@ -115,27 +115,33 @@ contract KeyperSafeBuilderV2 is Test {
     //  subGroupA1
     //      |
     //  SubSubGroupA1
-    // function setUpBaseOrgTree(
-    //     string memory orgNameArg,
-    //     string memory groupA1NameArg,
-    //     string memory groupBNameArg,
-    //     string memory subGroupA1NameArg,
-    //     string memory subSubGroupA1NameArg
-    // ) public returns (address, address, address, address, address) {
-    //     (
-    //         address orgAddr,
-    //         address safeGroupA1,
-    //         address safeSubGroupA1,
-    //         address safeSubSubGroupA1
-    //     ) = setupOrgFourTiersTree(
-    //         orgNameArg, groupA1NameArg, subGroupA1NameArg, subSubGroupA1NameArg
-    //     );
+    function setUpBaseOrgTree(
+        string memory orgNameArg,
+        string memory groupA1NameArg,
+        string memory groupBNameArg,
+        string memory subGroupA1NameArg,
+        string memory subSubGroupA1NameArg
+    )
+        public
+        returns (
+            uint256 rootId,
+            uint256 groupIdA1,
+            uint256 groupIdB,
+            uint256 subGroupIdA1,
+            uint256 subSubGroupIdA1
+        )
+    {
+        (rootId, groupIdA1, subGroupIdA1, subSubGroupIdA1) =
+        setupOrgFourTiersTree(
+            orgNameArg, groupA1NameArg, subGroupA1NameArg, subSubGroupA1NameArg
+        );
 
-    //     (, address safeGroupB) =
-    //         setUpRootOrgAndOneGroup(orgNameArg, groupBNameArg);
+        address safeGroupB = gnosisHelper.newKeyperSafe(2, 1);
+        gnosisHelper.createAddGroupTx(rootId, groupBNameArg);
+        bytes32 orgId = keyperModule.getOrgByGroup(groupIdA1);
+        // Get groupIdB Id
+        groupIdB = keyperModule.getGroupIdBySafe(orgId, safeGroupB);
 
-    //     return (
-    //         orgAddr, safeGroupA1, safeGroupB, safeSubGroupA1, safeSubSubGroupA1
-    //     );
-    // }
+        return (rootId, groupIdA1, groupIdB, subGroupIdA1, subSubGroupIdA1);
+    }
 }

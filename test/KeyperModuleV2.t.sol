@@ -209,22 +209,16 @@ contract KeyperModuleTestV2 is Test {
     }
 
     function testUpdateSuperV2() public {
-        // (
-        //     address orgAddr,
-        //     address safeGroupA1,
-        //     address safeSubGroupA1,
-        //     address safeSubSubGroupA1,
-        //     address tests
-        // ) = keyperSafeBuilder.setUpBaseOrgTree(
-        //     orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name, "tes");
         (
             uint256 orgId,
             uint256 groupIdA1,
+            uint256 groupIdB,
             uint256 subGroupIdA1,
             uint256 subsubGroupIdA1
-        ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
+        ) = keyperSafeBuilder.setUpBaseOrgTree(
+            orgName, groupA1Name, groupBName, subGroupA1Name, subSubgroupA1Name
         );
+
         vm.stopPrank();
         // (,,,, address superSafeA) = keyperModule.getGroupInfo(org1, groupC);
         //     //     (tier, groupName, lead, safe, child, superSafe) =
@@ -236,15 +230,15 @@ contract KeyperModuleTestV2 is Test {
         // assertEq(keyperModule.isSuperSafe(org1, groupA, groupC), true);
         // assertEq(keyperModule.isSuperSafe(org1, groupC, groupB), false);
         // assertEq(keyperModule.isSuperSafe(org1, groupC, groupA), false);
-        // KeyperRoles authority = KeyperRoles(keyperRolesDeployed);
+        // KeyperRolesV2 authority = KeyperRolesV2(keyperRolesDeployed);
         // assertEq(
-        //     authority.doesUserHaveRole(groupA, uint8(Role.SUPER_SAFE)), true
+        //     authority.doesUserHaveRole(groupA, uint8(DataTypes.Role.SUPER_SAFE)), true
         // );
         // assertEq(
-        //     authority.doesUserHaveRole(groupB, uint8(Role.SUPER_SAFE)), false
+        //     authority.doesUserHaveRole(groupB, uint8(DataTypes.Role.SUPER_SAFE)), false
         // );
         // assertEq(
-        //     authority.doesUserHaveRole(groupC, uint8(Role.SUPER_SAFE)), false
+        //     authority.doesUserHaveRole(groupC, uint8(DataTypes.Role.SUPER_SAFE)), false
         // );
         // vm.startPrank(org1);
         // keyperModule.updateSuper(groupC, groupB);
