@@ -77,7 +77,10 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         keyperRolesContract = KeyperRolesV2(factory.deploy(salt, bytecode));
 
         keyperSafeBuilder = new KeyperSafeBuilderV2();
-        keyperSafeBuilder.setGnosisHelper(GnosisSafeHelperV2(gnosisHelper));
+        // keyperSafeBuilder.setGnosisHelper(GnosisSafeHelperV2(gnosisHelper));
+        keyperSafeBuilder.setUpParams(
+            KeyperModuleV2(keyperModule), GnosisSafeHelperV2(gnosisHelper)
+        );
     }
 
     // ! ********************** authority Test **********************************

@@ -384,6 +384,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         external
         GroupRegistered(superSafe)
         IsGnosisSafe(_msgSender())
+        returns (uint256 groupId)
     {
         // check the name of group is not empty
         if (bytes(name).length == 0) revert Errors.EmptyName();
@@ -401,13 +402,13 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         /// Add to org root/group
         DataTypes.Group storage superSafeOrgGroup = groups[org][superSafe];
         /// Add child to superSafe
-        uint256 newIndex = indexId;
-        superSafeOrgGroup.child.push(newIndex);
+        groupId = indexId;
+        superSafeOrgGroup.child.push(groupId);
 
         newGroup.safe = caller;
         newGroup.name = name;
         newGroup.superSafe = superSafe;
-        indexGroup[org].push(newIndex);
+        indexGroup[org].push(groupId);
         indexId++;
         /// Give Role SuperSafe
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
@@ -424,8 +425,9 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         }
 
         emit Events.GroupCreated(
-            org, newIndex, newGroup.lead, caller, superSafe, name
+            org, groupId, newGroup.lead, caller, superSafe, name
             );
+        return groupId;
     }
 
     /// @notice Remove group and reasign all child to the superSafe
