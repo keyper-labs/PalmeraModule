@@ -32,7 +32,7 @@ contract KeyperModuleHelperV2 is Test, SignDigestHelper, SignersHelper {
 
     /// @notice Encode signatures for a keypertx
     function encodeSignaturesKeyperTx(
-        address org,
+        address caller,
         address safe,
         address to,
         uint256 value,
@@ -42,7 +42,7 @@ contract KeyperModuleHelperV2 is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
-            org, safe, to, value, data, operation, nonce
+            caller, safe, to, value, data, operation, nonce
         );
 
         address[] memory owners = gnosisSafe.getOwners();
@@ -63,7 +63,7 @@ contract KeyperModuleHelperV2 is Test, SignDigestHelper, SignersHelper {
 
     /// @notice Sign keyperTx with invalid signatures (do not belong to any safe owner)
     function encodeInvalidSignaturesKeyperTx(
-        address org,
+        address caller,
         address safe,
         address to,
         uint256 value,
@@ -73,7 +73,7 @@ contract KeyperModuleHelperV2 is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
-            org, safe, to, value, data, operation, nonce
+            caller, safe, to, value, data, operation, nonce
         );
 
         uint256 threshold = gnosisSafe.getThreshold();
@@ -89,7 +89,7 @@ contract KeyperModuleHelperV2 is Test, SignDigestHelper, SignersHelper {
     }
 
     function createKeyperTxHash(
-        address org,
+        address caller,
         address safe,
         address to,
         uint256 value,
@@ -98,7 +98,7 @@ contract KeyperModuleHelperV2 is Test, SignDigestHelper, SignersHelper {
         uint256 nonce
     ) public view returns (bytes32) {
         bytes32 txHashed = keyper.getTransactionHash(
-            org, safe, to, value, data, operation, nonce
+            caller, safe, to, value, data, operation, nonce
         );
         return txHashed;
     }

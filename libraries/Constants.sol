@@ -33,7 +33,7 @@ library Constants {
         );
 
     bytes4 internal constant ROLE_ASSIGMENT =
-        bytes4(keccak256(bytes("setRole(uint8,address,bytes32,uint256,bool)")));
+        bytes4(keccak256(bytes("setRole(uint8,address,uint256,bool)")));
 
     bytes4 internal constant CREATE_ROOT_SAFE =
         bytes4(keccak256(bytes("createRootSafeGroup(address,string)")));
