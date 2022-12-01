@@ -232,246 +232,296 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         assertEq(receiver.balance, 12 gwei);
     }
 
-    //     // execTransactionOnBehalf when Rootsafe is executing on subGroupA
-    //     // Caller: orgAddr (org)
-    //     // Caller Type: rootSafe
-    //     // Caller Role: ROOT_SAFE
-    //     // TargerSafe: safeSubGroupA1
-    //     // TargetSafe Type: safe as a sub child
-    //     //            rootSafe -----------
-    //     //               |                |
-    //     //           safeGroupA1          |
-    //     //              |                 |
-    //     //           safeSubGroupA1 <-----
-    //     function testRootSafeExecOnBehalf() public {
-    //         (address orgAddr,, address safeSubGroupA1) = keyperSafeBuilder
-    //             .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
+    // execTransactionOnBehalf when Rootsafe is executing on subGroupA
+    // Caller: orgAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeSubGroupA1
+    // TargetSafe Type: safe as a sub child
+    //            rootSafe -----------
+    //               |                |
+    //           safeGroupA1          |
+    //              |                 |
+    //           safeSubGroupA1 <-----
+    function testRootSafeExecOnBehalf() public {
+        (uint256 orgRootId,, uint256 safeSubGroupA1Id) = keyperSafeBuilder
+            .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
 
-    //         vm.deal(orgAddr, 100 gwei);
-    //         vm.deal(safeSubGroupA1, 100 gwei);
-    //         address receiver = address(0xABC);
+        (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
+        (,,, address safeSubGroupA1Addr,,) =
+            keyperModule.getGroupInfo(safeSubGroupA1Id);
 
-    //         assertEq(
-    //             keyperRolesContract.doesUserHaveRole(orgAddr, uint8(Role.ROOT_SAFE)),
-    //             true
-    //         );
-    //         assertEq(
-    //             keyperModule.isSafeLead(orgAddr, safeSubGroupA1, orgAddr), false
-    //         );
-    //         assertEq(
-    //             keyperModule.isSuperSafe(orgAddr, orgAddr, safeSubGroupA1), true
-    //         );
+        vm.deal(orgAddr, 100 gwei);
+        vm.deal(safeSubGroupA1Addr, 100 gwei);
+        address receiver = address(0xABC);
 
-    //         // Set keyperhelper gnosis safe to org
-    //         keyperHelper.setGnosisSafe(orgAddr);
-    //         bytes memory emptyData;
-    //         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-    //             orgAddr,
-    //             safeSubGroupA1,
-    //             receiver,
-    //             25 gwei,
-    //             emptyData,
-    //             Enum.Operation(0)
-    //         );
-    //         vm.startPrank(orgAddr);
-    //         bool result = keyperModule.execTransactionOnBehalf(
-    //             orgAddr,
-    //             safeSubGroupA1,
-    //             receiver,
-    //             25 gwei,
-    //             emptyData,
-    //             Enum.Operation(0),
-    //             signatures
-    //         );
-    //         assertEq(result, true);
-    //         assertEq(receiver.balance, 25 gwei);
-    //     }
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                orgAddr, uint8(DataTypes.Role.ROOT_SAFE)
+            ),
+            true
+        );
+        assertEq(keyperModule.isRootSafeOf(orgAddr, safeSubGroupA1Id), true);
+        assertEq(keyperModule.isSuperSafe(orgRootId, safeSubGroupA1Id), false);
+        assertEq(keyperModule.isSafeLead(orgRootId, safeSubGroupA1Addr), false);
 
-    //     // Revert ZeroAddressProvided() execTransactionOnBehalf when arg "to" is address(0)
-    //     // Scenario 1
-    //     // Caller: orgAddr (org)
-    //     // Caller Type: rootSafe
-    //     // Caller Role: ROOT_SAFE
-    //     // TargerSafe: safeGroupA1
-    //     // TargetSafe Type: safe as a Child
-    //     //            rootSafe -----------
-    //     //               |                |
-    //     //           safeGroupA1 <--------
-    // function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioOne()
+        // Set keyperhelper gnosis safe to org
+        bytes32 orgId = keyperModule.getOrgBySafe(orgAddr);
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr,
+            safeSubGroupA1Addr,
+            receiver,
+            25 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        vm.startPrank(orgAddr);
+        bool result = keyperModule.execTransactionOnBehalf(
+            orgId,
+            safeSubGroupA1Addr,
+            receiver,
+            25 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        assertEq(result, true);
+        assertEq(receiver.balance, 25 gwei);
+    }
+
+    // Revert ZeroAddressProvided() execTransactionOnBehalf when arg "to" is address(0)
+    // Scenario 1
+    // Caller: orgAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe as a Child
+    //            rootSafe -----------
+    //               |                |
+    //           safeGroupA1 <--------
+    function testRevertInvalidAddressProvidedExecTransactionOnBehalfScenarioOne(
+    ) public {
+        (uint256 orgRootId, uint256 safeGroupA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address receiver = address(0xABC);
+        (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
+        (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);
+        address fakeReceiver = address(0);
+
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr,
+            safeGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        bytes32 orgId = keyperModule.getOrgBySafe(orgAddr);
+        // Execute on behalf function from a not authorized caller
+        vm.startPrank(orgAddr);
+        vm.expectRevert(Errors.InvalidAddressProvided.selector);
+        keyperModule.execTransactionOnBehalf(
+            orgId,
+            safeGroupA1Addr,
+            fakeReceiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
+    // Revert ZeroAddressProvided() execTransactionOnBehalf when param "targetSafe" is address(0)
+    // Scenario 2
+    // Caller: orgAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe as a Child
+    //            rootSafe -----------
+    //               |                |
+    //           safeGroupA1 <--------
+    function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo()
+        public
+    {
+        (uint256 orgRootId, uint256 safeGroupA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address receiver = address(0xABC);
+        (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
+        (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);
+
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr,
+            safeGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        bytes32 orgId = keyperModule.getOrgBySafe(orgAddr);
+        // Execute on behalf function from a not authorized caller
+        vm.startPrank(orgAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.InvalidGnosisSafe.selector, address(0)
+            )
+        );
+        keyperModule.execTransactionOnBehalf(
+            orgId,
+            address(0),
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
+    // Revert ZeroAddressProvided() execTransactionOnBehalf when param "org" is address(0)
+    // Scenario 3
+    // Caller: orgAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe as a Child
+    //            rootSafe -----------
+    //               |                |
+    //           safeGroupA1 <--------
+    function testRevertOrgNotRegisteredExecTransactionOnBehalfScenarioThree()
+        public
+    {
+        (uint256 orgRootId, uint256 safeGroupA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address receiver = address(0xABC);
+        (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
+        (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);
+
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr,
+            safeGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        // Execute on behalf function from a not authorized caller
+        vm.startPrank(orgAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.OrgNotRegistered.selector, address(0))
+        );
+        keyperModule.execTransactionOnBehalf(
+            bytes32(0),
+            safeGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
+    // Revert InvalidGnosisSafe() execTransactionOnBehalf : when param "targetSafe" is not a safe
+    // Caller: orgAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SAFE_LEAD
+    // TargerSafe: fakeTargetSafe
+    // TargetSafe Type: EOA
+    function testRevertInvalidGnosisSafeExecTransactionOnBehalf() public {
+        (uint256 orgRootId, uint256 safeGroupA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address receiver = address(0xABC);
+        (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
+        (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);
+        address fakeTargetSafe = address(0xFFE);
+
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(orgAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgAddr,
+            safeGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        // Execute on behalf function from a not authorized caller
+        vm.startPrank(orgAddr);
+        bytes32 orgId = keyperModule.getOrgBySafe(orgAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.InvalidGnosisSafe.selector, fakeTargetSafe
+            )
+        );
+        keyperModule.execTransactionOnBehalf(
+            orgId,
+            fakeTargetSafe,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
+    // // Revert NotAuthorizedAsNotSafeLead() execTransactionOnBehalf : safe lead of another org/group
+    // // Caller: fakeCaller
+    // // Caller Type: EOA
+    // // Caller Role: SAFE_LEAD of the org
+    // // TargerSafe: safeGroupA1
+    // // TargetSafe Type: safe
+    // function testRevertNotAuthorizedExecTransactionOnBehalfScenarioTwo()
     //     public
     // {
-    //     (address orgAddr, address safeGroupA1) =
-    //         keyperSafeBuilder.setUpRootOrgAndOneGroup(orgName, groupA1Name);
+    //     (uint256 orgRootId, uint256 safeGroupA1) =
+    //         keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
+    //     (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
+    //     (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);
+
+    //     // Random wallet instead of a safe (EOA)
+    //     address fakeCaller = address(0xFED);
     //     address receiver = address(0xABC);
-    //     address fakeReceiver = address(0);
 
     //     // Set keyperhelper gnosis safe to org
     //     keyperHelper.setGnosisSafe(orgAddr);
     //     bytes memory emptyData;
-    //     bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-    //         orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
-    //     );
-    //     // Execute on behalf function from a not authorized caller
+    //     bytes memory signatures;
+
     //     vm.startPrank(orgAddr);
-    //     vm.expectRevert(Errors.ZeroAddressProvided.selector);
+    //     keyperModule.setRole(
+    //         DataTypes.Role.SAFE_LEAD, fakeCaller, orgRootId, true
+    //     );
+    //     vm.stopPrank();
+
+    //     vm.startPrank(fakeCaller);
+    //     bytes32 orgId = keyperModule.getOrgBySafe(orgAddr);
+    //     vm.expectRevert(Errors.NotAuthorizedAsNotSafeLead.selector);
     //     keyperModule.execTransactionOnBehalf(
-    //         orgAddr,
-    //         safeGroupA1,
-    //         fakeReceiver,
+    //         orgId,
+    //         safeGroupA1Addr,
+    //         receiver,
     //         2 gwei,
     //         emptyData,
     //         Enum.Operation(0),
     //         signatures
     //     );
     // }
-
-    //     // Revert ZeroAddressProvided() execTransactionOnBehalf when param "targetSafe" is address(0)
-    //     // Scenario 2
-    //     // Caller: orgAddr (org)
-    //     // Caller Type: rootSafe
-    //     // Caller Role: ROOT_SAFE
-    //     // TargerSafe: safeGroupA1
-    //     // TargetSafe Type: safe as a Child
-    //     //            rootSafe -----------
-    //     //               |                |
-    //     //           safeGroupA1 <--------
-    //     function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo()
-    //         public
-    //     {
-    //         (address orgAddr, address safeGroupA1) =
-    //             keyperSafeBuilder.setUpRootOrgAndOneGroup(orgName, groupA1Name);
-
-    //         address receiver = address(0xABC);
-
-    //         // Set keyperhelper gnosis safe to org
-    //         keyperHelper.setGnosisSafe(orgAddr);
-    //         bytes memory emptyData;
-    //         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-    //             orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
-    //         );
-    //         // Execute on behalf function from a not authorized caller
-    //         vm.startPrank(orgAddr);
-    //         vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
-    //         keyperModule.execTransactionOnBehalf(
-    //             orgAddr,
-    //             address(0),
-    //             receiver,
-    //             2 gwei,
-    //             emptyData,
-    //             Enum.Operation(0),
-    //             signatures
-    //         );
-    //     }
-
-    //     // Revert ZeroAddressProvided() execTransactionOnBehalf when param "org" is address(0)
-    //     // Scenario 3
-    //     // Caller: orgAddr (org)
-    //     // Caller Type: rootSafe
-    //     // Caller Role: ROOT_SAFE
-    //     // TargerSafe: safeGroupA1
-    //     // TargetSafe Type: safe as a Child
-    //     //            rootSafe -----------
-    //     //               |                |
-    //     //           safeGroupA1 <--------
-    //     function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioThree()
-    //         public
-    //     {
-    //         (address orgAddr, address safeGroupA1) =
-    //             keyperSafeBuilder.setUpRootOrgAndOneGroup(orgName, groupA1Name);
-
-    //         address receiver = address(0xABC);
-
-    //         // Set keyperhelper gnosis safe to org
-    //         keyperHelper.setGnosisSafe(orgAddr);
-    //         bytes memory emptyData;
-    //         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-    //             orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
-    //         );
-    //         // Execute on behalf function from a not authorized caller
-    //         vm.startPrank(orgAddr);
-    //         vm.expectRevert(DenyHelper.ZeroAddressProvided.selector);
-    //         keyperModule.execTransactionOnBehalf(
-    //             address(0),
-    //             safeGroupA1,
-    //             receiver,
-    //             2 gwei,
-    //             emptyData,
-    //             Enum.Operation(0),
-    //             signatures
-    //         );
-    //     }
-
-    //     // Revert InvalidGnosisSafe() execTransactionOnBehalf : when param "targetSafe" is not a safe
-    //     // Caller: orgAddr (org)
-    //     // Caller Type: rootSafe
-    //     // Caller Role: ROOT_SAFE, SAFE_LEAD
-    //     // TargerSafe: fakeTargetSafe
-    //     // TargetSafe Type: EOA
-    //     function testRevertInvalidGnosisSafeExecTransactionOnBehalf() public {
-    //         (address orgAddr, address safeGroupA1) =
-    //             keyperSafeBuilder.setUpRootOrgAndOneGroup(orgName, groupA1Name);
-
-    //         address receiver = address(0xABC);
-    //         address fakeTargetSafe = address(0xFFE);
-
-    //         // Set keyperhelper gnosis safe to org
-    //         keyperHelper.setGnosisSafe(orgAddr);
-    //         bytes memory emptyData;
-    //         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-    //             orgAddr, safeGroupA1, receiver, 2 gwei, emptyData, Enum.Operation(0)
-    //         );
-    //         // Execute on behalf function from a not authorized caller
-    //         vm.startPrank(orgAddr);
-    //         vm.expectRevert(KeyperModule.InvalidGnosisSafe.selector);
-    //         keyperModule.execTransactionOnBehalf(
-    //             orgAddr,
-    //             fakeTargetSafe,
-    //             receiver,
-    //             2 gwei,
-    //             emptyData,
-    //             Enum.Operation(0),
-    //             signatures
-    //         );
-    //     }
-
-    //     // Revert NotAuthorizedAsNotSafeLead() execTransactionOnBehalf : safe lead of another org/group
-    //     // Caller: fakeCaller
-    //     // Caller Type: EOA
-    //     // Caller Role: SAFE_LEAD of the org
-    //     // TargerSafe: safeGroupA1
-    //     // TargetSafe Type: safe
-    //     function testRevertNotAuthorizedExecTransactionOnBehalfScenarioTwo()
-    //         public
-    //     {
-    //         (address orgAddr, address safeGroupA1) =
-    //             keyperSafeBuilder.setUpRootOrgAndOneGroup(orgName, groupA1Name);
-
-    //         // Random wallet instead of a safe (EOA)
-    //         address fakeCaller = address(0xFED);
-    //         address receiver = address(0xABC);
-
-    //         // Set keyperhelper gnosis safe to org
-    //         keyperHelper.setGnosisSafe(orgAddr);
-    //         bytes memory emptyData;
-    //         bytes memory signatures;
-
-    //         vm.startPrank(orgAddr);
-    //         keyperModule.setRole(Role.SAFE_LEAD, fakeCaller, orgAddr, true);
-    //         vm.stopPrank();
-
-    //         vm.startPrank(fakeCaller);
-    //         vm.expectRevert(KeyperModule.NotAuthorizedAsNotSafeLead.selector);
-    //         keyperModule.execTransactionOnBehalf(
-    //             orgAddr,
-    //             safeGroupA1,
-    //             receiver,
-    //             2 gwei,
-    //             emptyData,
-    //             Enum.Operation(0),
-    //             signatures
-    //         );
-    //     }
 
     //     // execTransactionOnBehalf when SafeLead of an Org as EOA
     //     // Caller: callerEOA
