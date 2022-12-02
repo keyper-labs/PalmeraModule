@@ -503,7 +503,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         bytes32 org = getOrgByGroup(group);
         address caller = _msgSender();
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
-        if (isRootSafeOf(caller, group)) {
+        if (!isRootSafeOf(caller, group)) {
             revert Errors.NotAuthorizedUpdateNonChildrenGroup();
         }
         DataTypes.Group storage _group = groups[org][group];
