@@ -11,7 +11,7 @@ import {Constants} from "../../libraries/Constants.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 import {console} from "forge-std/console.sol";
 
-contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
+contract AttackerHelperV2 is Test, SignDigestHelper, SignersHelper {
     KeyperModuleV2 public keyper;
     GnosisSafeHelperV2 public gnosisHelper;
     AttackerV2 public attacker;

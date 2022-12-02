@@ -260,7 +260,7 @@ contract GnosisSafeHelperV2 is
         return result;
     }
 
-    function createRemoveGroupTx(address group) public returns (bool) {
+    function createRemoveGroupTx(uint256 group) public returns (bool) {
         bytes memory data =
             abi.encodeWithSignature("removeGroup(uint256)", group);
         // Create module safe tx

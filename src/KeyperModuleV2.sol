@@ -503,7 +503,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         bytes32 org = getOrgByGroup(group);
         address caller = _msgSender();
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
-        if (isRootSafeOf(caller, group)) {
+        if (!isRootSafeOf(caller, group)) {
             revert Errors.NotAuthorizedUpdateNonChildrenGroup();
         }
         DataTypes.Group storage _group = groups[org][group];
@@ -666,7 +666,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @param org address
     /// @return bool
     function isOrgRegistered(bytes32 org) public view returns (bool) {
-        if (indexGroup[org].length == 0) return false;
+        if (indexGroup[org].length == 0 || org == bytes32(0)) return false;
         return true;
     }
 
@@ -680,8 +680,10 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         GroupRegistered(group)
         returns (bool)
     {
+        if (root == address(0) || group == 0) return false;
         bytes32 org = getOrgByGroup(group);
         uint256 rootSafe = getGroupIdBySafe(org, root);
+        if (rootSafe == 0) return false;
         return (
             (groups[org][rootSafe].tier == DataTypes.Tier.ROOT)
                 && (isTreeMember(rootSafe, group))
@@ -697,9 +699,14 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         view
         returns (bool)
     {
+        if (superSafe == 0 || group == 0) return false;
         bytes32 org = getOrgByGroup(superSafe);
         DataTypes.Group memory childGroup = groups[org][group];
         if (childGroup.safe == address(0)) return false;
+        /// TODO: verify if is not redundant
+        if (groups[org][superSafe].safe == address(0)) return false;
+        /// TODO: verify is open a back door
+        if (childGroup.safe == groups[org][superSafe].safe) return true;
         uint256 currentSuperSafe = childGroup.superSafe;
         /// TODO: probably more efficient to just create a superSafes mapping instead of this iterations
         while (currentSuperSafe != 0) {
@@ -719,6 +726,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         view
         returns (bool)
     {
+        if (superSafe == 0 || group == 0) return false;
         bytes32 org = getOrgByGroup(superSafe);
         DataTypes.Group memory childGroup = groups[org][group];
         if (childGroup.safe == address(0)) return false;
