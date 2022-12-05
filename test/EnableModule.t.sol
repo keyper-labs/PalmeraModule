@@ -5,6 +5,8 @@ import "forge-std/Test.sol";
 import "./helpers/GnosisSafeHelper.t.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 
+/// @title TestEnableModule
+/// @custom:security-contact general@palmeradao.xyz
 contract TestEnableModule is Test {
     KeyperModule keyperModule;
     GnosisSafeHelper gnosisHelper;

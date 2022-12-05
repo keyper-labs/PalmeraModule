@@ -6,6 +6,8 @@ pragma solidity ^0.8.0;
 import {ECDSA} from "@openzeppelin/utils/cryptography/ECDSA.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 
+/// @title SigningUtils
+/// @custom:security-contact general@palmeradao.xyz
 abstract contract SigningUtils {
     struct Transaction {
         address to;

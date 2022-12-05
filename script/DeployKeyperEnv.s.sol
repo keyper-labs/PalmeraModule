@@ -9,7 +9,9 @@ import {GnosisSafeProxyFactory} from
     "@safe-contracts/proxies/GnosisSafeProxyFactory.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
-// Deployement of Gnosis Safe contracts, KeyperRoles and KeyperModule
+/// @notice Deployement of Gnosis Safe contracts, KeyperRoles and KeyperModule
+/// @title DeployKeyperEnv
+/// @custom:security-contact general@palmeradao.xyz
 contract DeployKeyperEnv is Script {
     function run() public {
         vm.startBroadcast();

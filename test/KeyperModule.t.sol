@@ -10,6 +10,8 @@ import {KeyperRoles} from "../src/KeyperRoles.sol";
 import "./helpers/GnosisSafeHelper.t.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
 
+/// @title KeyperModuleTest
+/// @custom:security-contact general@palmeradao.xyz
 contract KeyperModuleTest is Test, Constants {
     GnosisSafeHelper gnosisHelper;
     KeyperModule keyperModule;

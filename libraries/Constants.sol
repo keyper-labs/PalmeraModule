@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
+/// @title Library Constants
+/// @custom:security-contact general@palmeradao.xyz
 library Constants {
     // Sentinel Owners for Gnosis Safe
     address internal constant SENTINEL_ADDRESS = address(0x1);

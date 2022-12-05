@@ -11,6 +11,8 @@ import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import "./helpers/GnosisSafeHelper.t.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
 
+/// @title KeyperRolesTest
+/// @custom:security-contact general@palmeradao.xyz
 contract KeyperRolesTest is Test, Constants {
     using Address for address;
 

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
+/// @title Library Events
+/// @custom:security-contact general@palmeradao.xyz
 library Events {
     /// @dev Events
     event OrganizationCreated(
@@ -57,6 +59,11 @@ library Events {
         uint256 newSuperSafe
     );
 
+    /// @dev Event Fire when Keyper Module execute a transaction on behalf of a Safe
+    /// @param org Hash(DAO's name)
+	/// @param executor Address of the executor
+	/// @param target Address of the Target Safe
+	/// @param result Result of the execution of transaction on behalf of the Safe (true or false)
     event TxOnBehalfExecuted(
         bytes32 indexed org,
         address indexed executor,
@@ -64,8 +71,15 @@ library Events {
         bool result
     );
 
+	/// @dev Event Fire when any Gnosis Safe enable the Keyper Module
     event ModuleEnabled(address indexed safe, address indexed module);
 
+	/// @dev Event Fire when any Root Safe create a new Root Safe
+	/// @param org Hash(DAO's name)
+	/// @param newIdRootSafeGroup New ID of the Root Safe Group
+	/// @param creator Address of the creator
+	/// @param newRootSafeGroup Address of the new Root Safe
+	/// @param name String name of the new Root Safe
     event RootSafeGroupCreated(
         bytes32 indexed org,
         uint256 indexed newIdRootSafeGroup,
@@ -74,10 +88,18 @@ library Events {
         string name
     );
 
-    /// @dev Events Deny Helpers
+    /// @notice Events Deny Helpers
+
+	/// @dev Event Fire when add several wallet into the deny/allow list
+	/// @param users Array of wallets
     event AddedToList(address[] users);
+
+	/// @dev Event Fire when drop a wallet into the deny/allow list
+	/// @param user Wallet to drop of the deny/allow list
     event DroppedFromList(address indexed user);
 
     /// @dev Event when a new keyperModule is setting up
+	/// @param keyperModule Address of the new keyperModule
+	/// @param caller Address of the deployer
     event KeyperModuleSetup(address keyperModule, address caller);
 }
