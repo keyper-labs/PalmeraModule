@@ -252,17 +252,16 @@ contract KeyperModuleTestV2 is Test {
         vm.stopPrank();
     }
 
-    // function testRevertUpdateSuperIfCallerNotPartofTheOrgV2() public {
-    //     (, uint256 groupIdA1) =
-    //         keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-    //     (uint256 rootId2,) =
-    //         keyperSafeBuilder.setupRootOrgAndOneGroup(org2Name, groupBName);
-    //     // Get root2 info
-    //     (,,, address rootSafe2,,) = keyperModule.getGroupInfo(rootId2);
-
-    //     vm.startPrank(rootSafe2);
-    //     vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenGroup.selector);
-    //     keyperModule.updateSuper(rootId2, groupIdA1);
-    //     vm.stopPrank();
-    // }
+    function testRevertUpdateSuperIfCallerNotPartofTheOrgV2() public {
+        (uint256 rootId, uint256 groupIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (uint256 rootId2,) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(org2Name, groupBName);
+        // Get root2 info
+        (,,, address rootSafe2,,) = keyperModule.getGroupInfo(rootId2);
+        vm.startPrank(rootSafe2);
+        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenGroup.selector);
+        keyperModule.updateSuper(groupIdA1, rootId);
+        vm.stopPrank();
+    }
 }
