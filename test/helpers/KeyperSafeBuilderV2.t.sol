@@ -29,8 +29,9 @@ contract KeyperSafeBuilderV2 is Test {
         string memory groupA1NameArg
     ) public returns (uint256 rootId, uint256 groupIdA1) {
         // Register Org through safe tx
+        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
         bool result = gnosisHelper.registerOrgTx(orgNameArg);
-        address rootAddr = address(gnosisHelper.gnosisSafe());
+        // address rootAddr = address(gnosisHelper.gnosisSafe());
         address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         // Get org Id
         bytes32 orgId = keyperModule.getOrgBySafe(rootAddr);
