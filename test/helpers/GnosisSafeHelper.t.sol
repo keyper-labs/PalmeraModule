@@ -9,7 +9,9 @@ import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {Constants} from "../../src/Constants.sol";
 import {KeyperRoles} from "../../src/KeyperRoles.sol";
 
-// Helper contract handling deployment Gnosis Safe contracts
+/// @notice Helper contract handling deployment Gnosis Safe contracts
+/// @title GnosisSafeHelper
+/// @custom:security-contact general@palmeradao.xyz
 contract GnosisSafeHelper is
     Test,
     SigningUtils,

@@ -5,6 +5,8 @@ import {Test} from "forge-std/Test.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
 import {DenyHelperMockedContract} from "./mocks/DenyHelperMockedContract.t.sol";
 
+/// @title DenyHelperTest
+/// @custom:security-contact general@palmeradao.xyz
 contract DenyHelperTest is Test {
     DenyHelperMockedContract public denyTester;
 

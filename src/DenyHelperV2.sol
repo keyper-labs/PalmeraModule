@@ -8,6 +8,8 @@ import {Errors} from "../libraries/Errors.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {Events} from "../libraries/Events.sol";
 
+/// @title DenyHelperV2
+/// @custom:security-contact general@palmeradao.xyz
 abstract contract DenyHelperV2 is Context {
     using GnosisSafeMath for uint256;
     using Address for address;
@@ -26,6 +28,7 @@ abstract contract DenyHelperV2 is Context {
     mapping(bytes32 => mapping(address => address)) internal listed;
 
     /// @dev Modifier for Valid if wallet is Zero Address or Not
+    /// @param to Address to check
     modifier validAddress(address to) {
         if (to == address(0) || to == Constants.SENTINEL_ADDRESS) {
             revert Errors.InvalidAddressProvided();
@@ -34,27 +37,34 @@ abstract contract DenyHelperV2 is Context {
     }
 
     /// @dev Modifier for Valid if wallet is Denied/Allowed or Not
-    modifier Denied(bytes32 org, address _user) {
-        if (_user == address(0) || _user == Constants.SENTINEL_ADDRESS) {
+    /// @param org Hash (Dao's name) of the Org
+    /// @param wallet Address to check if Denied/Allowed
+    modifier Denied(bytes32 org, address wallet) {
+        if (wallet == address(0) || wallet == Constants.SENTINEL_ADDRESS) {
             revert Errors.InvalidAddressProvided();
         } else if (allowFeature[org]) {
-            if (!isListed(org, _user)) revert Errors.AddresNotAllowed();
+            if (!isListed(org, wallet)) revert Errors.AddresNotAllowed();
             _;
         } else if (denyFeature[org]) {
-            if (isListed(org, _user)) revert Errors.AddressDenied();
+            if (isListed(org, wallet)) revert Errors.AddressDenied();
             _;
         } else {
             _;
         }
     }
 
+    /// @dev Function to check if a wallet is Denied/Allowed
+    /// @param org Hash (Dao's name) of the Org
+    /// @param wallet Address to check the wallet is Listed
+    /// @return True if the wallet is Listed
     function isListed(bytes32 org, address wallet) public view returns (bool) {
         return wallet != Constants.SENTINEL_ADDRESS
             && listed[org][wallet] != address(0) && wallet != address(0);
     }
 
     /// @dev Method to get All Wallet of the List
-    /// @param org Address of Org where to get the List of All Wallet
+    /// @param org Hash (Dao's name) of the Org
+    /// @return result returns Array of Wallets
     function getAll(bytes32 org)
         public
         view
@@ -78,6 +88,7 @@ abstract contract DenyHelperV2 is Context {
     /// @dev Function to get the Previous User of the Wallet
     /// @param org Address of Org where get the Previous User of the Wallet
     /// @param wallet Address of the Wallet
+    /// @return prevUser Address of the Previous User of the Wallet
     function getPrevUser(bytes32 org, address wallet)
         public
         view

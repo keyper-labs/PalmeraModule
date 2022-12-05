@@ -14,6 +14,8 @@ import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {Attacker} from "../src/ReentrancyAttack.sol";
 import {console} from "forge-std/console.sol";
 
+/// @title TestKeyperSafe
+/// @custom:security-contact general@palmeradao.xyz
 contract TestKeyperSafe is Test, SigningUtils, Constants {
     KeyperModule keyperModule;
     GnosisSafeHelper gnosisHelper;

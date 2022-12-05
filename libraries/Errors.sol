@@ -3,6 +3,8 @@ pragma solidity ^0.8.15;
 
 import {DataTypes} from "./DataTypes.sol";
 
+/// @title Library DataTypes
+/// @custom:security-contact general@palmeradao.xyz
 library Errors {
 	/// @notice Error codes for the Keyper module
     /// @dev Errors Keyper Modules

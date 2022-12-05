@@ -6,6 +6,8 @@ import "../src/SigningUtils.sol";
 import "./helpers/SignDigestHelper.t.sol";
 import "./helpers/GnosisSafeHelper.t.sol";
 
+/// @title TestDeploySafe
+/// @custom:security-contact general@palmeradao.xyz
 contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
     GnosisSafeHelper gnosisHelper;
     address gnosisSafeAddr;

@@ -10,6 +10,8 @@ import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {IProxyCreationCallback} from
     "@safe-contracts/proxies/IProxyCreationCallback.sol";
 
+/// @title DeploySafeFactory
+/// @custom:security-contact general@palmeradao.xyz
 contract DeploySafeFactory is Script {
     GnosisSafeProxyFactory public proxyFactory;
     GnosisSafe public gnosisSafeContract;
