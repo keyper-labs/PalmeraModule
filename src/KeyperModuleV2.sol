@@ -7,7 +7,6 @@ import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {DenyHelperV2, Address} from "./DenyHelperV2.sol";
-import {KeyperRoles} from "./KeyperRoles.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
@@ -382,6 +381,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         orgId.push(name);
 
         emit Events.OrganizationCreated(caller, name, daoName);
+        return groupId;
     }
 
     /// @notice Call has to be done from another root safe to the organization
@@ -413,6 +413,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         external
         GroupRegistered(superSafe)
         IsGnosisSafe(_msgSender())
+        returns (uint256 groupId)
     {
         // check the name of group is not empty
         if (bytes(name).length == 0) revert Errors.EmptyName();
@@ -430,13 +431,13 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         /// Add to org root/group
         DataTypes.Group storage superSafeOrgGroup = groups[org][superSafe];
         /// Add child to superSafe
-        uint256 newIndex = indexId;
-        superSafeOrgGroup.child.push(newIndex);
+        groupId = indexId;
+        superSafeOrgGroup.child.push(groupId);
 
         newGroup.safe = caller;
         newGroup.name = name;
         newGroup.superSafe = superSafe;
-        indexGroup[org].push(newIndex);
+        indexGroup[org].push(groupId);
         indexId++;
         /// Give Role SuperSafe
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
@@ -453,8 +454,9 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         }
 
         emit Events.GroupCreated(
-            org, newIndex, newGroup.lead, caller, superSafe, name
+            org, groupId, newGroup.lead, caller, superSafe, name
             );
+        return groupId;
     }
 
     /// @notice Remove group and reasign all child to the superSafe
@@ -530,7 +532,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         bytes32 org = getOrgByGroup(group);
         address caller = _msgSender();
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
-        if (isRootSafeOf(caller, group)) {
+        if (!isRootSafeOf(caller, group)) {
             revert Errors.NotAuthorizedUpdateNonChildrenGroup();
         }
         DataTypes.Group storage _group = groups[org][group];
@@ -694,7 +696,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     /// @param org address
     /// @return bool
     function isOrgRegistered(bytes32 org) public view returns (bool) {
-        if (indexGroup[org].length == 0) return false;
+        if (indexGroup[org].length == 0 || org == bytes32(0)) return false;
         return true;
     }
 
@@ -708,8 +710,10 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         GroupRegistered(group)
         returns (bool)
     {
+        if (root == address(0) || group == 0) return false;
         bytes32 org = getOrgByGroup(group);
         uint256 rootSafe = getGroupIdBySafe(org, root);
+        if (rootSafe == 0) return false;
         return (
             (groups[org][rootSafe].tier == DataTypes.Tier.ROOT)
                 && (isTreeMember(rootSafe, group))
@@ -725,9 +729,14 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         view
         returns (bool)
     {
+        if (superSafe == 0 || group == 0) return false;
         bytes32 org = getOrgByGroup(superSafe);
         DataTypes.Group memory childGroup = groups[org][group];
         if (childGroup.safe == address(0)) return false;
+        /// TODO: verify if is not redundant
+        if (groups[org][superSafe].safe == address(0)) return false;
+        /// TODO: verify is open a back door
+        if (childGroup.safe == groups[org][superSafe].safe) return true;
         uint256 currentSuperSafe = childGroup.superSafe;
         /// TODO: probably more efficient to just create a superSafes mapping instead of this iterations
         while (currentSuperSafe != 0) {
@@ -747,6 +756,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         view
         returns (bool)
     {
+        if (superSafe == 0 || group == 0) return false;
         bytes32 org = getOrgByGroup(superSafe);
         DataTypes.Group memory childGroup = groups[org][group];
         if (childGroup.safe == address(0)) return false;
@@ -765,7 +775,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
 
     /// @dev Method to get Org by Safe
     /// @param safe address of Safe
-    /// @return Hash (Dao's Name)
+    /// @return Org Hashed Name
     function getOrgBySafe(address safe) public view returns (bytes32) {
         for (uint256 i = 0; i < orgId.length; i++) {
             if (getGroupIdBySafe(orgId[i], safe) != 0) {
@@ -776,7 +786,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     }
 
     /// @dev Method to get Group ID by safe address
-    /// @param org uint256 indexId of Organization
+    /// @param org bytes32 hashed name of the Organization
     /// @param safe Safe address
     /// @return Group ID
     function getGroupIdBySafe(bytes32 org, address safe)
