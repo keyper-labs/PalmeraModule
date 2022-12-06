@@ -178,35 +178,28 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
     {
         address caller = _msgSender();
         if (isSafe(caller)) {
-            // Check caller is a lead or superSafe of the target safe (checking with isTreeMember because is the same method!!)
-            if (
-                isRootSafeOf(caller, getGroupIdBySafe(org, targetSafe))
-                    || isSuperSafe(
-                        getGroupIdBySafe(org, caller),
-                        getGroupIdBySafe(org, targetSafe)
-                    ) || isSafeLead(getGroupIdBySafe(org, targetSafe), caller)
-            ) {
-                // Caller is a safe then check caller's safe signatures.
-                bytes memory keyperTxHashData = encodeTransactionData(
-                    /// Keyper Info
-                    caller,
-                    targetSafe,
-                    /// Transaction info
-                    to,
-                    value,
-                    data,
-                    operation,
-                    /// Signature info
-                    nonce
-                );
-
-                IGnosisSafe gnosisLeadSafe = IGnosisSafe(caller);
-                gnosisLeadSafe.checkSignatures(
-                    keccak256(keyperTxHashData), keyperTxHashData, signatures
-                );
-            } else {
+            // Check if caller is a lead or superSafe of the target safe (checking with isTreeMember because is the same method!!)
+            if (hasNotPermissionOverTarget(caller, org, targetSafe)) {
                 revert Errors.NotAuthorizedExecOnBehalf();
             }
+            // Caller is a safe then check caller's safe signatures.
+            bytes memory keyperTxHashData = encodeTransactionData(
+                /// Keyper Info
+                caller,
+                targetSafe,
+                /// Transaction info
+                to,
+                value,
+                data,
+                operation,
+                /// Signature info
+                nonce
+            );
+
+            IGnosisSafe gnosisLeadSafe = IGnosisSafe(caller);
+            gnosisLeadSafe.checkSignatures(
+                keccak256(keyperTxHashData), keyperTxHashData, signatures
+            );
         } else {
             // Caller is EAO (lead) : check if it has the rights over the target safe
             if (!isSafeLead(getGroupIdBySafe(org, targetSafe), caller)) {
@@ -259,13 +252,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         requiresAuth
     {
         address caller = _msgSender();
-        /// Check _msgSender() is an Root/Super/Lead safe of the target safe
-        if (
-            !isRootSafeOf(caller, getGroupIdBySafe(org, targetSafe))
-                && !isSuperSafe(
-                    getGroupIdBySafe(org, caller), getGroupIdBySafe(org, targetSafe)
-                ) && !isSafeLead(getGroupIdBySafe(org, targetSafe), caller)
-        ) {
+        if (hasNotPermissionOverTarget(caller, org, targetSafe)) {
             revert Errors.NotAuthorizedAddOwnerWithThreshold();
         }
 
@@ -303,16 +290,10 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         if (prevOwner == address(0) || ownerRemoved == address(0)) {
             revert Errors.ZeroAddressProvided();
         }
-        /// Check _msgSender() is an Root/Super/Lead safe of the target safe
-        if (
-            !isRootSafeOf(caller, getGroupIdBySafe(org, targetSafe))
-                && !isSuperSafe(
-                    getGroupIdBySafe(org, caller), getGroupIdBySafe(org, targetSafe)
-                ) && !isSafeLead(getGroupIdBySafe(org, targetSafe), caller)
-        ) {
+
+        if (hasNotPermissionOverTarget(caller, org, targetSafe)) {
             revert Errors.NotAuthorizedRemoveOwner();
         }
-
         /// if Owner Not found
         if (!isSafeOwner(IGnosisSafe(targetSafe), ownerRemoved)) {
             revert Errors.OwnerNotFound();
@@ -329,6 +310,22 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
             targetSafe, uint256(0), data, Enum.Operation.Call
         );
         if (!result) revert Errors.TxExecutionModuleFaild();
+    }
+
+    /// @notice This function checks that caller has permission (as Root/Super/Lead safe) of the target safe
+    /// @param caller Caller's address
+    /// @param org Hash(DAO's name)
+    /// @param targetSafe Address of the target Gnosis Safe Multisig Wallet
+    function hasNotPermissionOverTarget(
+        address caller,
+        bytes32 org,
+        address targetSafe
+    ) internal view returns (bool hasPermission) {
+        hasPermission = !isRootSafeOf(caller, getGroupIdBySafe(org, targetSafe))
+            && !isSuperSafe(
+                getGroupIdBySafe(org, caller), getGroupIdBySafe(org, targetSafe)
+            ) && !isSafeLead(getGroupIdBySafe(org, targetSafe), caller);
+        return hasPermission;
     }
 
     /// @notice Give user roles
@@ -700,7 +697,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         return true;
     }
 
-    /// @notice Check if the address, is a superSafe of the group within an organization
+    /// @notice Check if the address, is a rootSafe of the group within an organization
     /// @param group ID's of the child group/safe
     /// @param root address of Root Safe of the group
     /// @return bool
