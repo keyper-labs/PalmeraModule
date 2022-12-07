@@ -147,6 +147,6 @@ TestKeyperSafeV2:testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo
 TestKeyperSafeV2:testRootSafeExecOnBehalf() (gas: 2034746)
 TestKeyperSafeV2:testSuperSafeExecOnBehalf() (gas: 2027212)
 TestKeyperSafeV2:testsetSafeLead() (gas: 1371712)
-TestDeploy:testDeploy() (gas: 5557258)
+TestDeploy:testDeploy() (gas: 5636861)
 GnosisSafeHelper:testNewKeyperSafe() (gas: 11926356)
 GnosisSafeHelperV2:testNewKeyperSafe() (gas: 11926356)

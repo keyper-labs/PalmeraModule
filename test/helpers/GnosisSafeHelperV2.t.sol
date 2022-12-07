@@ -6,7 +6,6 @@ import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import "../../script/DeploySafeFactory.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
-// import {KeyperRolesV2} from "../../src/KeyperRolesV2.sol";
 import {Constants} from "../../libraries/Constants.sol";
 
 // Helper contract handling deployment Gnosis Safe contracts
