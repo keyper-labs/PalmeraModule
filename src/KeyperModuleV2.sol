@@ -1011,7 +1011,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         bytes32 org = caller == newRootSafe
             ? bytes32(keccak256(abi.encodePacked(name)))
             : getOrgBySafe(caller);
-        if (isOrgRegistered(org)) {
+        if (isOrgRegistered(org) && caller == newRootSafe) {
             revert Errors.OrgAlreadyRegistered(org);
         }
         if (isSafeRegistered(newRootSafe)) {
