@@ -6,7 +6,6 @@ import {Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
-import {DenyHelper} from "../src/DenyHelper.sol";
 import {console} from "forge-std/console.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
 import "./helpers/GnosisSafeHelper.t.sol";

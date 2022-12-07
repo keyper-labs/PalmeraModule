@@ -35,8 +35,8 @@ jobs:
           echo "THRESHOLD=$THRESHOLD" >> .env
           echo "FOUNDRY_VIA_IR=$FOUNDRY_VIA_IR" >> .env
 
-      - name: Run tests
-        run: forge test -vvv --gas-report
+      - name: Run Tests
+        run: forge test
 
-      - name: Run coverage
+      - name: Run Coverage
         run: forge coverage
