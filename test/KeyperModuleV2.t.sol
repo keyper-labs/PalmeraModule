@@ -17,6 +17,7 @@ contract KeyperModuleTestV2 is Test {
     GnosisSafeHelperV2 gnosisHelper;
     KeyperModuleV2 keyperModule;
     KeyperSafeBuilderV2 keyperSafeBuilder;
+    KeyperRolesV2 keyperRolesContract;
 
     MockedContract public masterCopyMocked;
     MockedContract public proxyFactoryMocked;
@@ -46,7 +47,7 @@ contract KeyperModuleTestV2 is Test {
         bytes32 salt = keccak256(abi.encode(0xafff));
         // Predict the future address of keyper roles
         keyperRolesDeployed = factory.getDeployed(address(this), salt);
-
+        keyperRolesContract = KeyperRolesV2(keyperRolesDeployed);
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
         keyperModule = new KeyperModuleV2(
             address(masterCopyMocked),
@@ -77,15 +78,21 @@ contract KeyperModuleTestV2 is Test {
         DataTypes.Tier tier;
         string memory rootOrgName;
         address lead;
-        address safe;
+        address rootAddr;
         uint256[] memory child;
         uint256 superSafe;
-        (tier, rootOrgName, lead, safe, child, superSafe) =
+        (tier, rootOrgName, lead, rootAddr, child, superSafe) =
             keyperModule.getGroupInfo(rootId);
         assertEq(uint256(tier), uint256(DataTypes.Tier.ROOT));
         assertEq(orgName, rootOrgName);
         assertEq(lead, address(0));
         assertEq(superSafe, 0);
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
+            ),
+            true
+        );
     }
 
     function testAddGroupV2() public {
@@ -185,21 +192,20 @@ contract KeyperModuleTestV2 is Test {
         (,,, address groupBB,,) = keyperModule.getGroupInfo(groupIdB);
         (,,, address subGroupA1,,) = keyperModule.getGroupInfo(subGroupIdA1);
 
-        KeyperRolesV2 authority = KeyperRolesV2(keyperRolesDeployed);
         assertEq(
-            authority.doesUserHaveRole(
+            keyperRolesContract.doesUserHaveRole(
                 groupA1, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
         assertEq(
-            authority.doesUserHaveRole(
+            keyperRolesContract.doesUserHaveRole(
                 groupBB, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
         assertEq(
-            authority.doesUserHaveRole(
+            keyperRolesContract.doesUserHaveRole(
                 subGroupA1, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
@@ -215,13 +221,13 @@ contract KeyperModuleTestV2 is Test {
         assertEq(keyperModule.isTreeMember(groupIdA1, subsubGroupIdA1), false);
         assertEq(keyperModule.isTreeMember(groupIdB, subsubGroupIdA1), true);
         assertEq(
-            authority.doesUserHaveRole(
+            keyperRolesContract.doesUserHaveRole(
                 groupA1, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
         assertEq(
-            authority.doesUserHaveRole(
+            keyperRolesContract.doesUserHaveRole(
                 groupBB, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true

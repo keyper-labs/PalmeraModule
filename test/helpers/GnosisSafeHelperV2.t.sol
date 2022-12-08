@@ -270,6 +270,34 @@ contract GnosisSafeHelperV2 is
         return result;
     }
 
+    function execTransactionOnBehalfTx(
+        bytes32 org,
+        address targetSafe,
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation,
+        bytes memory signaturesExec
+    ) public returns (bool) {
+        bytes memory internalData = abi.encodeWithSignature(
+            "execTransactionOnBehalf(bytes32,address,address,uint256,bytes,uint8,bytes)",
+            org,
+            targetSafe,
+            to,
+            value,
+            data,
+            operation,
+            signaturesExec
+        );
+        // Create module safe tx
+        Transaction memory mockTx =
+            createDefaultTx(keyperModuleAddr, internalData);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
     function encodeSignaturesModuleSafeTx(Transaction memory mockTx)
         public
         returns (bytes memory)

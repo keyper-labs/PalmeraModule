@@ -27,6 +27,7 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
     address gnosisSafeAddr;
     address keyperModuleAddr;
     address keyperRolesDeployed;
+    address receiver = address(0xABC);
 
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) keyperSafes;
@@ -108,16 +109,13 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
 
     // ! ********************** execTransactionOnBehalf Test ********************
 
-    // execTransactionOnBehalf
-    // Caller: orgAddr (org)
-    // Caller Type: rootSafe
-    // Caller Role: ROOT_SAFE
-    // TargetSafe Type: Child
-    function testLeadExecOnBehalfV2() public {
+    // Caller Info: ROOT_SAFE(role), SAFE(type), rootSafe(hierachie)
+    // TargetSafe Type: Child from same hierachical tree
+    function testCan_ExecTransactionOnBehalf_ROOT_SAFE_and_Target_Root_SameTree(
+    ) public {
         (uint256 orgRootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
-        address receiver = address(0xABC);
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
         (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);
 
@@ -133,9 +131,9 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
             Enum.Operation(0)
         );
         // Execute on behalf function
-        vm.startPrank(orgAddr);
         bytes32 orgId = keyperModule.getOrgBySafe(orgAddr);
-        bool result = keyperModule.execTransactionOnBehalf(
+        gnosisHelper.updateSafeInterface(orgAddr);
+        bool result = gnosisHelper.execTransactionOnBehalfTx(
             orgId,
             safeGroupA1Addr,
             receiver,
@@ -173,7 +171,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
 
         vm.deal(safeSubSubGroupA1Addr, 100 gwei);
         vm.deal(safeGroupBAddr, 100 gwei);
-        address receiver = address(0xABC);
 
         vm.startPrank(orgAddr);
         bytes32 orgId = keyperModule.getOrgByGroup(orgRootId);
@@ -232,18 +229,15 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         assertEq(receiver.balance, 12 gwei);
     }
 
-    // execTransactionOnBehalf when Rootsafe is executing on subGroupA
-    // Caller: orgAddr (org)
-    // Caller Type: rootSafe
-    // Caller Role: ROOT_SAFE
-    // TargerSafe: safeSubGroupA1
-    // TargetSafe Type: safe as a sub child
+    // Caller Info: ROOT_SAFE(role), SAFE(type), rootSafe(hierachie)
+    // TargerSafe: safeSubGroupA1, same hierachical tree with 2 levels diff
     //            rootSafe -----------
     //               |                |
     //           safeGroupA1          |
     //              |                 |
     //           safeSubGroupA1 <-----
-    function testRootSafeExecOnBehalf() public {
+    function testCan_ExecTransactionOnBehalf_ROOT_SAFE_and_Target_Root_SameTree_2_levels(
+    ) public {
         (uint256 orgRootId,, uint256 safeSubGroupA1Id) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
 
@@ -253,17 +247,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
 
         vm.deal(orgAddr, 100 gwei);
         vm.deal(safeSubGroupA1Addr, 100 gwei);
-        address receiver = address(0xABC);
-
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                orgAddr, uint8(DataTypes.Role.ROOT_SAFE)
-            ),
-            true
-        );
-        assertEq(keyperModule.isRootSafeOf(orgAddr, safeSubGroupA1Id), true);
-        assertEq(keyperModule.isSuperSafe(orgRootId, safeSubGroupA1Id), false);
-        assertEq(keyperModule.isSafeLead(orgRootId, safeSubGroupA1Addr), false);
 
         // Set keyperhelper gnosis safe to org
         bytes32 orgId = keyperModule.getOrgBySafe(orgAddr);
@@ -277,8 +260,8 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
             emptyData,
             Enum.Operation(0)
         );
-        vm.startPrank(orgAddr);
-        bool result = keyperModule.execTransactionOnBehalf(
+        gnosisHelper.updateSafeInterface(orgAddr);
+        bool result = gnosisHelper.execTransactionOnBehalfTx(
             orgId,
             safeSubGroupA1Addr,
             receiver,
@@ -306,7 +289,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         (uint256 orgRootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
-        address receiver = address(0xABC);
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
         (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);
         address fakeReceiver = address(0);
@@ -353,7 +335,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         (uint256 orgRootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
-        address receiver = address(0xABC);
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
         (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);
 
@@ -403,7 +384,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         (uint256 orgRootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
-        address receiver = address(0xABC);
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
         (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);
 
@@ -444,7 +424,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         (uint256 orgRootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
-        address receiver = address(0xABC);
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
         (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);
         address fakeTargetSafe = address(0xFFE);
@@ -502,7 +481,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         bool result = gnosisHelper.createAddGroupTx(safeGroupA1, "fakeGroup");
         vm.stopPrank();
         assertEq(result, true);
-        address receiver = address(0xABC);
 
         // Set keyperhelper gnosis safe to org
         bytes memory emptyData;
@@ -546,7 +524,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
 
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
-        address receiver = address(0xABC);
 
         // Set safe_lead role to fake caller
         vm.startPrank(orgAddr);
@@ -589,7 +566,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
 
         // Random wallet instead of a safe (EOA)
         address fakeCaller = address(0xFED);
-        address receiver = address(0xABC);
 
         keyperHelper.setGnosisSafe(orgAddr);
         bytes memory emptyData;
@@ -628,7 +604,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
         (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);
         keyperHelper.setGnosisSafe(orgAddr);
-        address receiver = address(0xABC);
 
         // Try onbehalf with incorrect signers
         keyperHelper.setGnosisSafe(orgAddr);
@@ -684,7 +659,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         // Send ETH to group&subgroup
         vm.deal(safeGroupA1Addr, 100 gwei);
         vm.deal(safeSubGroupA1Addr, 100 gwei);
-        address receiver = address(0xABC);
 
         // Set keyperhelper gnosis safe to safeGroupA1
         keyperHelper.setGnosisSafe(safeGroupA1Addr);
@@ -779,7 +753,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         // Send ETH to org&subgroup
         vm.deal(orgAddr, 100 gwei);
         vm.deal(safeGroupA1Addr, 100 gwei);
-        address receiver = address(0xABC);
 
         // Set keyperhelper gnosis safe to safeSubGroupA1
         keyperHelper.setGnosisSafe(safeSubGroupA1Addr);
@@ -809,6 +782,8 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         assertEq(result, false);
     }
 
+    // ! ********************** Allow/Deny list Test ********************
+
     // Revert AddresNotAllowed() execTransactionOnBehalf (safeGroupA1 is not on AllowList)
     // Caller: safeGroupA1
     // Caller Type: safe
@@ -835,7 +810,6 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         // Send ETH to group&subgroup
         vm.deal(safeGroupA1Addr, 100 gwei);
         vm.deal(safeSubGroupA1Addr, 100 gwei);
-        address receiver = address(0xABC);
 
         /// Enalbe allowlist
         vm.startPrank(orgAddr);
@@ -895,13 +869,13 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         // Send ETH to group&subgroup
         vm.deal(safeGroupA1Addr, 100 gwei);
         vm.deal(safeSubGroupA1Addr, 100 gwei);
-        address[] memory receiver = new address[](1);
-        receiver[0] = address(0xDDD);
+        address[] memory receiverList = new address[](1);
+        receiverList[0] = address(0xDDD);
 
         /// Enalbe allowlist
         vm.startPrank(orgAddr);
         keyperModule.enableDenylist();
-        keyperModule.addToList(receiver);
+        keyperModule.addToList(receiverList);
         vm.stopPrank();
 
         // Set keyperhelper gnosis safe to safeGroupA1
@@ -910,7 +884,7 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             safeGroupA1Addr,
             safeSubGroupA1Addr,
-            receiver[0],
+            receiverList[0],
             2 gwei,
             emptyData,
             Enum.Operation(0)
@@ -923,7 +897,7 @@ contract TestKeyperSafeV2 is Test, SigningUtils {
         keyperModule.execTransactionOnBehalf(
             orgId,
             safeSubGroupA1Addr,
-            receiver[0],
+            receiverList[0],
             2 gwei,
             emptyData,
             Enum.Operation(0),
