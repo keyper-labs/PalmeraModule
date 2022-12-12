@@ -259,6 +259,21 @@ contract GnosisSafeHelperV2 is
         return result;
     }
 
+    function createRootSafeTx(address newRootSafe, string memory name)
+        public
+        returns (bool)
+    {
+        bytes memory data = abi.encodeWithSignature(
+            "createRootSafeGroup(address,string)", newRootSafe, name
+        );
+        // Create module safe tx
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
     function createRemoveGroupTx(uint256 group) public returns (bool) {
         bytes memory data =
             abi.encodeWithSignature("removeGroup(uint256)", group);

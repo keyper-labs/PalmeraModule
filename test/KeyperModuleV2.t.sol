@@ -72,7 +72,7 @@ contract KeyperModuleTestV2 is Test {
     }
 
     function testCreateRootOrg() public {
-        (uint256 rootId,) =
+        (uint256 rootId,,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
         DataTypes.Tier tier;
         string memory rootOrgName;
@@ -89,7 +89,7 @@ contract KeyperModuleTestV2 is Test {
     }
 
     function testAddGroupV2() public {
-        (uint256 rootId, uint256 groupIdA1) =
+        (uint256 rootId, uint256 groupIdA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         DataTypes.Tier tier;
@@ -125,7 +125,7 @@ contract KeyperModuleTestV2 is Test {
     }
 
     function testAddSubGroup() public {
-        (uint256 rootId, uint256 groupIdA1) =
+        (uint256 rootId, uint256 groupIdA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
         address groupBaddr = gnosisHelper.newKeyperSafe(4, 2);
         vm.startPrank(groupBaddr);
@@ -143,7 +143,7 @@ contract KeyperModuleTestV2 is Test {
         );
         assertEq(keyperModule.isTreeMember(rootId, groupIdA1), true);
         assertEq(keyperModule.isTreeMember(groupIdA1, subGroupIdA1), true);
-        (uint256 rootId2, uint256 groupIdB) =
+        (uint256 rootId2, uint256 groupIdB,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(org2Name, groupBName);
         assertEq(keyperModule.isTreeMember(rootId2, groupIdB), true);
         assertEq(keyperModule.isTreeMember(rootId2, rootId), false);
@@ -229,7 +229,7 @@ contract KeyperModuleTestV2 is Test {
     }
 
     function testRevertUpdateSuperInvalidGroupIdV2() public {
-        (uint256 rootId, uint256 groupIdA1) =
+        (uint256 rootId, uint256 groupIdA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
         // Get root info
         (,,, address rootSafe,,) = keyperModule.getGroupInfo(rootId);
@@ -240,7 +240,7 @@ contract KeyperModuleTestV2 is Test {
     }
 
     function testRevertUpdateSuperIfCallerIsNotSafeV2() public {
-        (uint256 rootId, uint256 groupIdA1) =
+        (uint256 rootId, uint256 groupIdA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
         vm.startPrank(address(0xDDD));
         vm.expectRevert(
@@ -253,9 +253,9 @@ contract KeyperModuleTestV2 is Test {
     }
 
     function testRevertUpdateSuperIfCallerNotPartofTheOrgV2() public {
-        (uint256 rootId, uint256 groupIdA1) =
+        (uint256 rootId, uint256 groupIdA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-        (uint256 rootId2,) =
+        (uint256 rootId2,,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(org2Name, groupBName);
         // Get root2 info
         (,,, address rootSafe2,,) = keyperModule.getGroupInfo(rootId2);
