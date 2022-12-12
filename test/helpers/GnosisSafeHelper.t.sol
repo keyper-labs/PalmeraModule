@@ -6,18 +6,14 @@ import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import "../../script/DeploySafeFactory.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
-import {Constants} from "../../src/Constants.sol";
-import {KeyperRoles} from "../../src/KeyperRoles.sol";
+import {Constants} from "../../libraries/Constants.sol";
 
-/// @notice Helper contract handling deployment Gnosis Safe contracts
-/// @title GnosisSafeHelper
-/// @custom:security-contact general@palmeradao.xyz
+// Helper contract handling deployment Gnosis Safe contracts
 contract GnosisSafeHelper is
     Test,
     SigningUtils,
     SignDigestHelper,
-    SignersHelper,
-    Constants
+    SignersHelper
 {
     GnosisSafe public gnosisSafe;
     DeploySafeFactory public safeFactory;
@@ -249,14 +245,12 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createAddGroupTx(
-        address org,
-        address superSafe,
-        string memory name
-    ) public returns (bool) {
-        bytes memory data = abi.encodeWithSignature(
-            "addGroup(address,address,string)", org, superSafe, name
-        );
+    function createAddGroupTx(uint256 superSafe, string memory name)
+        public
+        returns (bool)
+    {
+        bytes memory data =
+            abi.encodeWithSignature("addGroup(uint256,string)", superSafe, name);
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
@@ -265,12 +259,9 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createRemoveGroupTx(address org, address group)
-        public
-        returns (bool)
-    {
+    function createRemoveGroupTx(uint256 group) public returns (bool) {
         bytes memory data =
-            abi.encodeWithSignature("removeGroup(address,address)", org, group);
+            abi.encodeWithSignature("removeGroup(uint256)", group);
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
