@@ -13,7 +13,7 @@ import {DataTypes} from "../libraries/DataTypes.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {Events} from "../libraries/Events.sol";
 
-/// @title KeyperModule
+/// @title Keyper Module
 /// @custom:security-contact general@palmeradao.xyz
 contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     using GnosisSafeMath for uint256;

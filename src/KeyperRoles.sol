@@ -8,7 +8,7 @@ import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 import {Events} from "../libraries/Events.sol";
 
-/// @title KeyperRoles
+/// @title Keyper Roles
 /// @custom:security-contact general@palmeradao.xyz
 contract KeyperRoles is RolesAuthority, DenyHelper {
     string public constant NAME = "Keyper Roles";
