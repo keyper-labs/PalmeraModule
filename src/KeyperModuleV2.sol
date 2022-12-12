@@ -287,7 +287,11 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
         bytes32 org
     ) external SafeRegistered(targetSafe) requiresAuth {
         address caller = _msgSender();
-        if (prevOwner == address(0) || ownerRemoved == address(0)) {
+        if (
+            prevOwner == address(0) || ownerRemoved == address(0)
+                || prevOwner == Constants.SENTINEL_ADDRESS
+                || ownerRemoved == Constants.SENTINEL_ADDRESS
+        ) {
             revert Errors.ZeroAddressProvided();
         }
 
@@ -475,7 +479,7 @@ contract KeyperModuleV2 is Auth, ReentrancyGuard, DenyHelperV2 {
             revert Errors.NotAuthorizedRemoveGroupFromOtherTree();
         }
         // SuperSafe usecase : Check caller is superSafe of the group
-        if (!isTreeMember(rootSafe, group)) {
+        if (!isSuperSafe(rootSafe, group)) {
             revert Errors.NotAuthorizedAsNotSuperSafe();
         }
         DataTypes.Group memory _group = groups[org][group];
