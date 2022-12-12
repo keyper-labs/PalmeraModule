@@ -113,7 +113,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // Caller Role: ROOT_SAFE
     // TargetSafe Type: Child
     function testLeadExecOnBehalf() public {
-        (uint256 orgRootId, uint256 safeGroupA1) =
+        (uint256 orgRootId, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         address receiver = address(0xABC);
@@ -302,7 +302,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     //           safeGroupA1 <--------
     function testRevertInvalidAddressProvidedExecTransactionOnBehalfScenarioOne(
     ) public {
-        (uint256 orgRootId, uint256 safeGroupA1) =
+        (uint256 orgRootId, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         address receiver = address(0xABC);
@@ -349,7 +349,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo()
         public
     {
-        (uint256 orgRootId, uint256 safeGroupA1) =
+        (uint256 orgRootId, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         address receiver = address(0xABC);
@@ -399,7 +399,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     function testRevertOrgNotRegisteredExecTransactionOnBehalfScenarioThree()
         public
     {
-        (uint256 orgRootId, uint256 safeGroupA1) =
+        (uint256 orgRootId, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         address receiver = address(0xABC);
@@ -440,7 +440,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // TargerSafe: fakeTargetSafe
     // TargetSafe Type: EOA
     function testRevertInvalidGnosisSafeExecTransactionOnBehalf() public {
-        (uint256 orgRootId, uint256 safeGroupA1) =
+        (uint256 orgRootId, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         address receiver = address(0xABC);
@@ -487,7 +487,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     function testRevertNotAuthorizedExecTransactionOnBehalfScenarioTwo()
         public
     {
-        (uint256 orgRootId, uint256 safeGroupA1) =
+        (uint256 orgRootId, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
@@ -537,7 +537,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // TargerSafe: orgAddr
     // TargetSafe Type: rootSafe
     function testEoaCallExecTransactionOnBehalfScenarioTwo() public {
-        (uint256 orgRootId,) =
+        (uint256 orgRootId,,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
@@ -579,7 +579,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     function testRevertNotAuthorizedExecTransactionOnBehalfScenarioThree()
         public
     {
-        (uint256 orgRootId, uint256 safeGroupA1) =
+        (uint256 orgRootId, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
@@ -621,7 +621,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // TargerSafe: safeGroupA1
     // TargetSafe Type: safe
     function testRevertInvalidSignatureExecOnBehalf() public {
-        (uint256 orgRootId, uint256 safeGroupA1) =
+        (uint256 orgRootId, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(orgRootId);
@@ -939,7 +939,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // TargerSafe: safeGroupA1
     // TargetSafe Type: safe
     function testAddOwnerWithThreshold() public {
-        (uint256 rootId, uint256 groupIdA1) =
+        (uint256 rootId, uint256 groupIdA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(rootId);
@@ -989,7 +989,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // TargerSafe: orgAddr
     // TargetSafe Type: rootSafe
     function testRevertOwnerAlreadyExists() public {
-        (uint256 rootId,) =
+        (uint256 rootId,,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(rootId);
@@ -1029,7 +1029,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     function testRevertInvalidThresholdAddOwnerWithThresholdScenarioOne()
         public
     {
-        (uint256 rootId,) =
+        (uint256 rootId,,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(rootId);
@@ -1060,7 +1060,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     function testRevertInvalidThresholdAddOwnerWithThresholdScenarioTwo()
         public
     {
-        (uint256 rootId,) =
+        (uint256 rootId,,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(rootId);
@@ -1120,7 +1120,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // TargerSafe: safeGroupA1
     // TargetSafe Type: safe
     function testRemoveOwner() public {
-        (uint256 rootId, uint256 groupIdA1) =
+        (uint256 rootId, uint256 groupIdA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(rootId);
@@ -1363,7 +1363,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // TargerSafe: safeGroupA1
     // TargetSafe Type: safe
     function testRevertGroupAlreadyRegisteredAddGroup() public {
-        (uint256 rootId, uint256 groupIdA1) =
+        (uint256 rootId, uint256 groupIdA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(groupIdA1);
@@ -1425,7 +1425,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // TargerSafe: safeGroupA1
     // TargetSafe Type: safe
     function testRemoveGroupFromSafeOrgEqSuperSafe() public {
-        (uint256 rootId, uint256 groupIdA1) =
+        (uint256 rootId, uint256 groupIdA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr,,) = keyperModule.getGroupInfo(rootId);
@@ -1510,7 +1510,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // ? Check disableSafeLeadRoles method success
     // groupA1 removed and it should not have any role
     function testRemoveGroupAndCheckDisables() public {
-        (uint256 orgAddr1, uint256 safeGroupA1) =
+        (uint256 orgAddr1, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr1Addr,,) = keyperModule.getGroupInfo(orgAddr1);
@@ -1555,7 +1555,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // TargerSafe: userLead
     // TargetSafe Type: EOA
     function testsetSafeLead() public {
-        (uint256 orgAddr1, uint256 safeGroupA1) =
+        (uint256 orgAddr1, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr1Addr,,) = keyperModule.getGroupInfo(orgAddr1);
@@ -1669,7 +1669,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // TargerSafe: user
     // TargetSafe Type: EOA
     function testRevertSetRoleForbidden() public {
-        (uint256 orgAddr1, uint256 safeGroupA1) =
+        (uint256 orgAddr1, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address orgAddr1Addr,,) = keyperModule.getGroupInfo(orgAddr1);
@@ -1695,7 +1695,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // TargerSafe: user
     // TargetSafe Type: EOA
     function testRevertSetRolesToOrgNotRegistered() public {
-        (, uint256 safeGroupA1) =
+        (, uint256 safeGroupA1,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         (,,, address safeGroupA1Addr,,) = keyperModule.getGroupInfo(safeGroupA1);

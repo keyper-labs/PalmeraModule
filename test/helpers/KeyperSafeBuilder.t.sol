@@ -27,7 +27,7 @@ contract KeyperSafeBuilder is Test {
     function setupRootOrgAndOneGroup(
         string memory orgNameArg,
         string memory groupA1NameArg
-    ) public returns (uint256 rootId, uint256 groupIdA1) {
+    ) public returns (uint256 rootId, uint256 groupIdA1, uint256 rootSafeId) {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
         bool result = gnosisHelper.registerOrgTx(orgNameArg);
@@ -40,10 +40,19 @@ contract KeyperSafeBuilder is Test {
         result = gnosisHelper.createAddGroupTx(rootId, groupA1NameArg);
         groupIdA1 = keyperModule.getGroupIdBySafe(orgId, groupSafe);
 
+        // Create Another Safe like Root Safe
+        address rootSafe = gnosisHelper.newKeyperSafe(3, 2);
+        // update safe of gonsis helper
+        gnosisHelper.updateSafeInterface(rootAddr);
+        // Create Root Safe Group
+        string memory rootSafeName = "AnoterRootSafe";
+        result = gnosisHelper.createRootSafeTx(rootSafe, rootSafeName);
+        rootSafeId = keyperModule.getGroupIdBySafe(orgId, rootSafe);
+
         vm.deal(rootAddr, 100 gwei);
         vm.deal(groupSafe, 100 gwei);
 
-        return (rootId, groupIdA1);
+        return (rootId, groupIdA1, rootSafeId);
     }
 
     // Deploy 3 keyperSafes : following structure
@@ -61,7 +70,7 @@ contract KeyperSafeBuilder is Test {
         returns (uint256 rootId, uint256 groupIdA1, uint256 subGroupIdA1)
     {
         // Create root & groupA1
-        (rootId, groupIdA1) =
+        (rootId, groupIdA1,) =
             setupRootOrgAndOneGroup(orgNameArg, groupA1NameArg);
         address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
         // Create subgroupA1
