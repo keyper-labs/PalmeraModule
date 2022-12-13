@@ -2,16 +2,14 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
-import "src/KeyperRoles.sol";
-import "src/KeyperModule.sol";
+import "../src/KeyperRoles.sol";
+import "../src/KeyperModule.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {GnosisSafeProxyFactory} from
     "@safe-contracts/proxies/GnosisSafeProxyFactory.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
-/// @notice Deployement of Gnosis Safe contracts, KeyperRoles and KeyperModule
-/// @title DeployKeyperEnv
-/// @custom:security-contact general@palmeradao.xyz
+// Deployement of Gnosis Safe contracts, KeyperRoles and KeyperModule
 contract DeployKeyperEnv is Script {
     function run() public {
         vm.startBroadcast();

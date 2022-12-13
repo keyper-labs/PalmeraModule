@@ -7,12 +7,11 @@ import "./GnosisSafeHelper.t.sol";
 import {KeyperModule} from "../../src/KeyperModule.sol";
 import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
-import {Constants} from "../../src/Constants.sol";
+import {Constants} from "../../libraries/Constants.sol";
+import {DataTypes} from "../../libraries/DataTypes.sol";
 import {console} from "forge-std/console.sol";
 
-/// @title AttackerHelper
-/// @custom:security-contact general@palmeradao.xyz
-contract AttackerHelper is Test, SignDigestHelper, SignersHelper, Constants {
+contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
     KeyperModule public keyper;
     GnosisSafeHelper public gnosisHelper;
     Attacker public attacker;
@@ -71,24 +70,28 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper, Constants {
         keyperSafes[nameAttacker] = address(attacker);
 
         address attackerSafe = keyperSafes[nameAttacker];
+        bytes32 orgId = keccak256(abi.encodePacked(_orgName));
+        uint256 rootOrgId = keyper.getGroupIdBySafe(orgId, orgAddr);
 
         vm.startPrank(attackerSafe);
-        keyper.addGroup(orgAddr, orgAddr, nameAttacker);
+        keyper.addGroup(rootOrgId, nameAttacker);
         vm.stopPrank();
 
         address victim = gnosisHelper.newKeyperSafe(2, 1);
         string memory nameVictim = "Victim";
         keyperSafes[nameVictim] = address(victim);
+        uint256 attackerGroupId = keyper.getGroupIdBySafe(orgId, attackerSafe);
 
         vm.startPrank(victim);
-        keyper.addGroup(orgAddr, attackerSafe, nameVictim);
+        keyper.addGroup(attackerGroupId, nameVictim);
         vm.stopPrank();
+        uint256 victimGroupId = keyper.getGroupIdBySafe(orgId, victim);
 
         vm.deal(victim, 100 gwei);
 
         vm.startPrank(orgAddr);
         keyper.setRole(
-            Role.SAFE_LEAD, address(attackerSafe), address(victim), true
+            DataTypes.Role.SAFE_LEAD, address(attackerSafe), victimGroupId, true
         );
         vm.stopPrank();
 

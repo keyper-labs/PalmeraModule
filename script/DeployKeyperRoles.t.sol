@@ -3,10 +3,10 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
-import "src/KeyperRoles.sol";
+import "../src/KeyperRoles.sol";
 
-/// @title DeployKeyperRoles
-/// @custom:security-contact general@palmeradao.xyz
+// import "@solenv/Solenv.sol";
+
 contract DeployKeyperRoles is Script {
     function run() public {
         // Solenv.config();
