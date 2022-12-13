@@ -4,46 +4,41 @@ pragma solidity ^0.8.13;
 import {console} from "forge-std/console.sol";
 import {stdStorage, StdStorage, Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
-import {Constants} from "../src/Constants.sol";
+import {Constants} from "../libraries/Constants.sol";
+import {DataTypes} from "../libraries/DataTypes.sol";
+import {Errors} from "../libraries/Errors.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import "./helpers/GnosisSafeHelper.t.sol";
+import "./helpers/KeyperSafeBuilder.t.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
 
-/// @title KeyperModuleTest
-/// @custom:security-contact general@palmeradao.xyz
-contract KeyperModuleTest is Test, Constants {
+contract KeyperModuleTest is Test {
     GnosisSafeHelper gnosisHelper;
     KeyperModule keyperModule;
+    KeyperSafeBuilder keyperSafeBuilder;
+    KeyperRoles keyperRolesContract;
 
     MockedContract public masterCopyMocked;
     MockedContract public proxyFactoryMocked;
 
-    address org1;
-    address org2;
-    address groupA;
-    address groupB;
-    address groupC;
-    address groupD;
-    address keyperModuleAddr;
-    address keyperRolesDeployed;
-    string rootOrgName;
+    address public keyperModuleAddr;
+    address public keyperRolesDeployed;
+
+    string public orgName = "Main Org";
+    string public org2Name = "Second Org";
+    string public groupA1Name = "GroupA1";
+    string public groupA2Name = "GroupA2";
+    string public groupBName = "GroupB";
+    string public subGroupA1Name = "subGroupA1";
+    string public subSubgroupA1Name = "SubSubGroupA";
 
     // Function called before each test is run
     function setUp() public {
         // Setup Gnosis Helper
         gnosisHelper = new GnosisSafeHelper();
-        // Setup of all Safe for Testing
-        org1 = gnosisHelper.setupSafeEnv();
-        org2 = gnosisHelper.setupSafeEnv();
-        groupA = gnosisHelper.setupSafeEnv();
-        groupB = gnosisHelper.setupSafeEnv();
-        groupC = gnosisHelper.setupSafeEnv();
-        groupD = gnosisHelper.setupSafeEnv();
-        vm.label(org1, "Org 1");
-        vm.label(org2, "Org 2");
-        vm.label(groupA, "GroupA");
-        vm.label(groupB, "GroupB");
+        // Setup Gnosis Helper
+        gnosisHelper.setupSafeEnv();
 
         masterCopyMocked = new MockedContract();
         proxyFactoryMocked = new MockedContract();
@@ -52,6 +47,7 @@ contract KeyperModuleTest is Test, Constants {
         bytes32 salt = keccak256(abi.encode(0xafff));
         // Predict the future address of keyper roles
         keyperRolesDeployed = factory.getDeployed(address(this), salt);
+        keyperRolesContract = KeyperRoles(keyperRolesDeployed);
 
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
         keyperModule = new KeyperModule(
@@ -59,8 +55,6 @@ contract KeyperModuleTest is Test, Constants {
             address(proxyFactoryMocked),
             address(keyperRolesDeployed)
         );
-
-        rootOrgName = "Root Org";
 
         keyperModuleAddr = address(keyperModule);
 
@@ -70,219 +64,210 @@ contract KeyperModuleTest is Test, Constants {
             abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
 
         factory.deploy(salt, bytecode);
+
+        keyperSafeBuilder = new KeyperSafeBuilder();
+        keyperSafeBuilder.setUpParams(
+            KeyperModule(keyperModule), GnosisSafeHelper(gnosisHelper)
+        );
+        gnosisHelper.setKeyperModule(keyperModuleAddr);
     }
 
     function testCreateRootOrg() public {
-        registerOrgWithRoles(org1, rootOrgName);
-        string memory orgname;
+        (uint256 rootId,,) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        DataTypes.Tier tier;
+        string memory rootOrgName;
         address lead;
-        address safe;
-        address[] memory child;
-        address superSafe;
-        (orgname, lead, safe, child, superSafe) = keyperModule.getOrg(org1);
-        assertEq(orgname, rootOrgName);
+        address rootAddr;
+        uint256[] memory child;
+        uint256 superSafe;
+        (tier, rootOrgName, lead, rootAddr, child, superSafe) =
+            keyperModule.getGroupInfo(rootId);
+        assertEq(uint256(tier), uint256(DataTypes.Tier.ROOT));
+        assertEq(orgName, rootOrgName);
         assertEq(lead, address(0));
-        assertEq(safe, org1);
-        assertEq(superSafe, address(0));
+        assertEq(superSafe, 0);
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
+            ),
+            true
+        );
     }
 
     function testAddGroup() public {
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(groupA);
-        keyperModule.addGroup(org1, org1, "GroupA");
+        (uint256 rootId, uint256 groupIdA1,) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        DataTypes.Tier tier;
         string memory groupName;
         address lead;
-        address safe;
-        address[] memory child;
-        address superSafe;
-        (groupName, lead, safe, child, superSafe) =
-            keyperModule.getGroupInfo(org1, groupA);
-        (, address orgLead,,,) = keyperModule.getOrg(org1);
-        assertEq(groupName, "GroupA");
-        assertEq(safe, groupA);
-        assertEq(lead, orgLead);
-        assertEq(superSafe, org1);
-        assertEq(keyperModule.isChild(org1, org1, groupA), true);
+        uint256[] memory child;
+        uint256 superSafe;
+        (tier, groupName, lead,, child, superSafe) =
+            keyperModule.getGroupInfo(groupIdA1);
+        assertEq(uint256(tier), uint256(DataTypes.Tier.GROUP));
+        assertEq(groupName, groupA1Name);
+        assertEq(lead, address(0));
+        assertEq(superSafe, rootId);
+        (,,, address rootSafe,,) = keyperModule.getGroupInfo(rootId);
+        assertEq(keyperModule.isRootSafeOf(rootSafe, groupIdA1), true);
+        vm.stopPrank();
     }
 
-    function testExpectOrgNotRegistered() public {
-        vm.startPrank(groupA);
-        vm.expectRevert(KeyperModule.OrgNotRegistered.selector);
-        keyperModule.addGroup(org1, org1, "GroupA");
+    function testExpectInvalidGroupId() public {
+        uint256 orgIdNotRegistered = 2;
+        vm.expectRevert(Errors.InvalidGroupId.selector);
+        keyperModule.addGroup(orgIdNotRegistered, groupA1Name);
+    }
+
+    function testExpectGroupNotRegistered() public {
+        uint256 orgIdNotRegistered = 1;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.GroupNotRegistered.selector, orgIdNotRegistered
+            )
+        );
+        keyperModule.addGroup(orgIdNotRegistered, groupA1Name);
     }
 
     function testAddSubGroup() public {
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(groupA);
-        keyperModule.addGroup(org1, org1, "GroupA");
-        vm.stopPrank();
-        vm.startPrank(groupB);
-        keyperModule.addGroup(org1, groupA, "Group B");
-        assertEq(keyperModule.isChild(org1, org1, groupA), true);
-        assertEq(keyperModule.isChild(org1, groupA, groupB), true);
+        (uint256 rootId, uint256 groupIdA1,) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        address groupBaddr = gnosisHelper.newKeyperSafe(4, 2);
+        vm.startPrank(groupBaddr);
+        uint256 groupIdB = keyperModule.addGroup(groupIdA1, groupBName);
+        assertEq(keyperModule.isTreeMember(rootId, groupIdA1), true);
+        assertEq(keyperModule.isSuperSafe(rootId, groupIdA1), true);
+        assertEq(keyperModule.isTreeMember(groupIdA1, groupIdB), true);
+        assertEq(keyperModule.isSuperSafe(groupIdA1, groupIdB), true);
     }
 
-    // Test tree structure for groups
-    //                  org1        org2
-    //                  |            |
-    //              groupA          groupB
-    //                |
-    //              groupC
-    function testTreeOrgs() public {
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(groupA);
-        keyperModule.addGroup(org1, org1, "GroupA");
-        vm.stopPrank();
-        vm.startPrank(groupC);
-        keyperModule.addGroup(org1, groupA, "Group C");
-        assertEq(keyperModule.isChild(org1, org1, groupA), true);
-        assertEq(keyperModule.isChild(org1, groupA, groupC), true);
-        vm.stopPrank();
-        registerOrgWithRoles(org2, "RootOrg2");
-        vm.startPrank(groupB);
-        keyperModule.addGroup(org2, org2, "GroupB");
-        assertEq(keyperModule.isChild(org2, org2, groupB), true);
-    }
-
-    // Test transaction execution
-    function testExecKeeperTransaction() public {
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(org1);
-        keyperModule.addGroup(org1, org1, "GroupA");
+    function testTreeOrgsTreeMember() public {
+        (uint256 rootId, uint256 groupIdA1, uint256 subGroupIdA1) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, groupA1Name, subGroupA1Name
+        );
+        assertEq(keyperModule.isTreeMember(rootId, groupIdA1), true);
+        assertEq(keyperModule.isTreeMember(groupIdA1, subGroupIdA1), true);
+        (uint256 rootId2, uint256 groupIdB,) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(org2Name, groupBName);
+        assertEq(keyperModule.isTreeMember(rootId2, groupIdB), true);
+        assertEq(keyperModule.isTreeMember(rootId2, rootId), false);
+        assertEq(keyperModule.isTreeMember(rootId2, groupIdA1), false);
+        assertEq(keyperModule.isTreeMember(rootId, groupIdB), false);
     }
 
     // Test is SuperSafe function
     function testIsSuperSafe() public {
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(groupA);
-        keyperModule.addGroup(org1, org1, "GroupA");
-        vm.stopPrank();
-        vm.startPrank(groupB);
-        keyperModule.addGroup(org1, groupA, "groupB");
-        vm.stopPrank();
-        vm.startPrank(groupC);
-        keyperModule.addGroup(org1, groupB, "GroupC");
-        vm.stopPrank();
-        vm.startPrank(groupD);
-        keyperModule.addGroup(org1, groupC, "groupD");
-        assertEq(keyperModule.isSuperSafe(org1, org1, groupA), true);
-        assertEq(keyperModule.isSuperSafe(org1, groupA, groupB), true);
-        assertEq(keyperModule.isSuperSafe(org1, groupB, groupC), true);
-        assertEq(keyperModule.isSuperSafe(org1, groupC, groupD), true);
-        assertEq(keyperModule.isSuperSafe(org1, groupB, groupD), true);
-        assertEq(keyperModule.isSuperSafe(org1, groupA, groupD), true);
-        assertEq(keyperModule.isSuperSafe(org1, groupD, groupA), false);
-        assertEq(keyperModule.isSuperSafe(org1, groupB, groupA), false);
+        (
+            uint256 rootId,
+            uint256 groupIdA1,
+            uint256 subGroupIdA1,
+            uint256 subsubGroupIdA1
+        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
+        );
+        assertEq(keyperModule.isSuperSafe(rootId, groupIdA1), true);
+        assertEq(keyperModule.isSuperSafe(groupIdA1, subGroupIdA1), true);
+        assertEq(keyperModule.isSuperSafe(subGroupIdA1, subsubGroupIdA1), true);
+        assertEq(keyperModule.isSuperSafe(subsubGroupIdA1, subGroupIdA1), false);
+        assertEq(keyperModule.isSuperSafe(subsubGroupIdA1, groupIdA1), false);
+        assertEq(keyperModule.isSuperSafe(subsubGroupIdA1, rootId), false);
+        assertEq(keyperModule.isSuperSafe(subGroupIdA1, groupIdA1), false);
     }
 
     function testUpdateSuper() public {
-        setUpBaseOrgTree();
+        (
+            uint256 rootId,
+            uint256 groupIdA1,
+            uint256 groupIdB,
+            uint256 subGroupIdA1,
+            uint256 subsubGroupIdA1
+        ) = keyperSafeBuilder.setUpBaseOrgTree(
+            orgName, groupA1Name, groupBName, subGroupA1Name, subSubgroupA1Name
+        );
+        (,,, address rootSafe,,) = keyperModule.getGroupInfo(rootId);
+        (,,, address groupA1,,) = keyperModule.getGroupInfo(groupIdA1);
+        (,,, address groupBB,,) = keyperModule.getGroupInfo(groupIdB);
+        (,,, address subGroupA1,,) = keyperModule.getGroupInfo(subGroupIdA1);
+
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                groupA1, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            true
+        );
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                groupBB, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            false
+        );
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                subGroupA1, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            true
+        );
+        assertEq(keyperModule.isTreeMember(rootId, subGroupIdA1), true);
+        vm.startPrank(rootSafe);
+        keyperModule.updateSuper(subGroupIdA1, groupIdB);
         vm.stopPrank();
-        (,,,, address superSafeA) = keyperModule.getGroupInfo(org1, groupC);
-        assertEq(superSafeA, groupA);
-        assertEq(keyperModule.isChild(org1, groupB, groupC), false);
-        assertEq(keyperModule.isChild(org1, groupA, groupC), true);
-        assertEq(keyperModule.isSuperSafe(org1, groupB, groupC), false);
-        assertEq(keyperModule.isSuperSafe(org1, groupA, groupC), true);
-        assertEq(keyperModule.isSuperSafe(org1, groupC, groupB), false);
-        assertEq(keyperModule.isSuperSafe(org1, groupC, groupA), false);
-        KeyperRoles authority = KeyperRoles(keyperRolesDeployed);
+        assertEq(keyperModule.isSuperSafe(groupIdB, subGroupIdA1), true);
+        assertEq(keyperModule.isSuperSafe(groupIdA1, subGroupIdA1), false);
+        assertEq(keyperModule.isSuperSafe(groupIdA1, subGroupIdA1), false);
+        assertEq(keyperModule.isSuperSafe(groupIdA1, subsubGroupIdA1), false);
+        assertEq(keyperModule.isTreeMember(groupIdA1, subsubGroupIdA1), false);
+        assertEq(keyperModule.isTreeMember(groupIdB, subsubGroupIdA1), true);
         assertEq(
-            authority.doesUserHaveRole(groupA, uint8(Role.SUPER_SAFE)), true
+            keyperRolesContract.doesUserHaveRole(
+                groupA1, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            false
         );
         assertEq(
-            authority.doesUserHaveRole(groupB, uint8(Role.SUPER_SAFE)), false
-        );
-        assertEq(
-            authority.doesUserHaveRole(groupC, uint8(Role.SUPER_SAFE)), false
-        );
-        vm.startPrank(org1);
-        keyperModule.updateSuper(groupC, groupB);
-        vm.stopPrank();
-        (,,,, address superSafeB) = keyperModule.getGroupInfo(org1, groupC);
-        assertEq(superSafeB, groupB);
-        assertEq(keyperModule.isChild(org1, groupB, groupC), true);
-        assertEq(keyperModule.isChild(org1, groupA, groupC), false);
-        assertEq(keyperModule.isSuperSafe(org1, groupB, groupC), true);
-        assertEq(keyperModule.isSuperSafe(org1, groupA, groupC), false);
-        assertEq(keyperModule.isSuperSafe(org1, groupC, groupB), false);
-        assertEq(keyperModule.isSuperSafe(org1, groupC, groupA), false);
-        assertEq(
-            authority.doesUserHaveRole(groupA, uint8(Role.SUPER_SAFE)), false
-        );
-        assertEq(
-            authority.doesUserHaveRole(groupB, uint8(Role.SUPER_SAFE)), true
-        );
-        assertEq(
-            authority.doesUserHaveRole(groupC, uint8(Role.SUPER_SAFE)), false
+            keyperRolesContract.doesUserHaveRole(
+                groupBB, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            true
         );
     }
 
-    function testRevertUpdateSuperIfActualGroupNotRegistered() public {
-        setUpBaseOrgTree();
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                KeyperModule.GroupNotRegistered.selector, groupD
-            )
-        );
-        keyperModule.updateSuper(groupD, groupB);
+    function testRevertUpdateSuperInvalidGroupId() public {
+        (uint256 rootId, uint256 groupIdA1,) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        // Get root info
+        (,,, address rootSafe,,) = keyperModule.getGroupInfo(rootId);
+        uint256 groupNotRegisteredId = 6;
+        vm.expectRevert(Errors.InvalidGroupId.selector);
+        vm.startPrank(rootSafe);
+        keyperModule.updateSuper(groupIdA1, groupNotRegisteredId);
     }
 
-    function testRevertUpdateSuperIfNewGroupNotRegistered() public {
-        setUpBaseOrgTree();
-        vm.startPrank(org1);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                KeyperModule.GroupNotRegistered.selector, groupD
-            )
-        );
-        keyperModule.updateSuper(groupB, groupD);
-    }
-
-    // TODO: Should we add a custom error for a nonsafe caller?
     function testRevertUpdateSuperIfCallerIsNotSafe() public {
-        setUpBaseOrgTree();
+        (uint256 rootId, uint256 groupIdA1,) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
         vm.startPrank(address(0xDDD));
         vm.expectRevert(
             abi.encodeWithSelector(
-                KeyperModule.GroupNotRegistered.selector, groupA
+                Errors.InvalidGnosisSafe.selector, address(0xDDD)
             )
         );
-        keyperModule.updateSuper(groupA, groupB);
+        keyperModule.updateSuper(groupIdA1, rootId);
         vm.stopPrank();
     }
 
     function testRevertUpdateSuperIfCallerNotPartofTheOrg() public {
-        setUpBaseOrgTree();
-        registerOrgWithRoles(org2, rootOrgName);
-        vm.startPrank(org2);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                KeyperModule.GroupNotRegistered.selector, groupC
-            )
-        );
-        keyperModule.updateSuper(groupC, groupB);
-        vm.stopPrank();
-    }
-
-    // Register org call with mocked call to KeyperRoles
-    function registerOrgWithRoles(address org, string memory name) public {
-        vm.startPrank(org);
-        keyperModule.registerOrg(name);
-        vm.stopPrank();
-    }
-
-    // Register org call and tree group with several levels with mocked call to KeyperRoles
-    function setUpBaseOrgTree() public {
-        registerOrgWithRoles(org1, rootOrgName);
-        vm.startPrank(groupA);
-        keyperModule.addGroup(org1, org1, "GroupA");
-        vm.stopPrank();
-        vm.startPrank(groupB);
-        keyperModule.addGroup(org1, org1, "GroupB");
-        vm.stopPrank();
-        vm.startPrank(groupC);
-        keyperModule.addGroup(org1, groupA, "SubGroupA");
+        (uint256 rootId, uint256 groupIdA1,) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (uint256 rootId2,,) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(org2Name, groupBName);
+        // Get root2 info
+        (,,, address rootSafe2,,) = keyperModule.getGroupInfo(rootId2);
+        vm.startPrank(rootSafe2);
+        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenGroup.selector);
+        keyperModule.updateSuper(groupIdA1, rootId);
         vm.stopPrank();
     }
 }

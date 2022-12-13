@@ -5,15 +5,14 @@ import {console} from "forge-std/console.sol";
 import {Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
-import {Constants} from "../src/Constants.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import "./helpers/GnosisSafeHelper.t.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
+import {Constants} from "../libraries/Constants.sol";
+import {DataTypes} from "../libraries/DataTypes.sol";
 
-/// @title KeyperRolesTest
-/// @custom:security-contact general@palmeradao.xyz
-contract KeyperRolesTest is Test, Constants {
+contract KeyperRolesTest is Test {
     using Address for address;
 
     GnosisSafeHelper gnosisHelper;
@@ -55,13 +54,17 @@ contract KeyperRolesTest is Test, Constants {
         // Check KeyperModule has role capabilites
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                uint8(Role.SAFE_LEAD), keyperModuleDeployed, ADD_OWNER
+                uint8(DataTypes.Role.SAFE_LEAD),
+                keyperModuleDeployed,
+                Constants.ADD_OWNER
             ),
             true
         );
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                uint8(Role.SAFE_LEAD), keyperModuleDeployed, REMOVE_OWNER
+                uint8(DataTypes.Role.SAFE_LEAD),
+                keyperModuleDeployed,
+                Constants.REMOVE_OWNER
             ),
             true
         );
@@ -78,7 +81,9 @@ contract KeyperRolesTest is Test, Constants {
         // Check Role
         assertEq(
             keyperRoles.doesRoleHaveCapability(
-                uint8(Role.ROOT_SAFE), address(keyperModule), ROLE_ASSIGMENT
+                uint8(DataTypes.Role.ROOT_SAFE),
+                address(keyperModule),
+                Constants.ROLE_ASSIGMENT
             ),
             true
         );

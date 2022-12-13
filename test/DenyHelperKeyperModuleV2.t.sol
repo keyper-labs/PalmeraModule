@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {DenyHelperV2} from "../src/DenyHelperV2.sol";
+import {DenyHelper} from "../src/DenyHelper.sol";
 import {Test} from "forge-std/Test.sol";
-import {KeyperModuleV2} from "../src/KeyperModuleV2.sol";
+import {KeyperModule} from "../src/KeyperModule.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
-import {KeyperRolesV2} from "../src/KeyperRolesV2.sol";
+import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {console} from "forge-std/console.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
-import "./helpers/GnosisSafeHelperV2.t.sol";
+import "./helpers/GnosisSafeHelper.t.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {Errors} from "../libraries/Errors.sol";
 
 contract DenyHelperKeyperModuleTest is Test {
-    GnosisSafeHelperV2 public gnosisHelper;
-    KeyperModuleV2 public keyperModule;
+    GnosisSafeHelper public gnosisHelper;
+    KeyperModule public keyperModule;
     MockedContract public masterCopyMocked;
     MockedContract public proxyFactoryMocked;
 
@@ -33,7 +33,7 @@ contract DenyHelperKeyperModuleTest is Test {
         proxyFactoryMocked = new MockedContract();
 
         // Setup Gnosis Helper
-        gnosisHelper = new GnosisSafeHelperV2();
+        gnosisHelper = new GnosisSafeHelper();
         // Setup of all Safe for Testing
         org1 = gnosisHelper.setupSeveralSafeEnv();
         groupA = gnosisHelper.setupSeveralSafeEnv();
@@ -46,7 +46,7 @@ contract DenyHelperKeyperModuleTest is Test {
         keyperRolesDeployed = factory.getDeployed(address(this), salt);
 
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
-        keyperModule = new KeyperModuleV2(
+        keyperModule = new KeyperModule(
             address(masterCopyMocked),
             address(proxyFactoryMocked),
             address(keyperRolesDeployed)
@@ -60,9 +60,8 @@ contract DenyHelperKeyperModuleTest is Test {
 
         bytes memory args = abi.encode(address(keyperModuleAddr));
 
-        bytes memory bytecode = abi.encodePacked(
-            vm.getCode("KeyperRolesV2.sol:KeyperRolesV2"), args
-        );
+        bytes memory bytecode =
+            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
 
         factory.deploy(salt, bytecode);
     }

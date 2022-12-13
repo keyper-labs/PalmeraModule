@@ -11,7 +11,7 @@ optimizer_runs = 999
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 # Gas Report
-gas_reports = ['KeyperModule', 'KeyperRoles', 'KeyperModuleV2', 'KeyperRolesV2']
+gas_reports = ['KeyperModule', 'KeyperRoles']
 
 
 [fmt]

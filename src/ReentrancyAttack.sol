@@ -5,9 +5,12 @@ pragma solidity >=0.7.0 <0.9.0;
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {console} from "forge-std/console.sol";
+import {Errors} from "../libraries/Errors.sol";
+import {DataTypes} from "../libraries/DataTypes.sol";
+import {Constants} from "../libraries/Constants.sol";
 
 contract Attacker {
-    address public orgFromAttacker;
+    bytes32 public orgFromAttacker;
     address public targetSafeFromAttacker;
     bytes public dataFromAttacker;
     bytes public signaturesFromAttacker;
@@ -36,7 +39,7 @@ contract Attacker {
     }
 
     function performAttack(
-        address org,
+        bytes32 org,
         address targetSafe,
         address to,
         uint256 value,
@@ -84,7 +87,7 @@ contract Attacker {
     }
 
     function setParamsForAttack(
-        address _org,
+        bytes32 _org,
         address _targetSafe,
         bytes calldata _data,
         bytes memory _signatures
