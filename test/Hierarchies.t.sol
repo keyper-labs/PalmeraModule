@@ -13,7 +13,7 @@ import "./helpers/GnosisSafeHelper.t.sol";
 import "./helpers/KeyperSafeBuilder.t.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
 
-contract KeyperModuleTest is Test {
+contract Hierarchies is Test {
     GnosisSafeHelper gnosisHelper;
     KeyperModule keyperModule;
     KeyperSafeBuilder keyperSafeBuilder;
@@ -72,47 +72,74 @@ contract KeyperModuleTest is Test {
         gnosisHelper.setKeyperModule(keyperModuleAddr);
     }
 
-    function testCreateRootOrg() public {
-        (uint256 rootId,,) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-        DataTypes.Tier tier;
-        string memory rootOrgName;
-        address lead;
-        address rootAddr;
-        uint256[] memory child;
-        uint256 superSafe;
-        (tier, rootOrgName, lead, rootAddr, child, superSafe) =
-            keyperModule.getGroupInfo(rootId);
-        assertEq(uint256(tier), uint256(DataTypes.Tier.ROOT));
-        assertEq(orgName, rootOrgName);
+    function testRegisterRootOrg() public {
+        bool result = gnosisHelper.registerOrgTx(orgName);
+        assertEq(result, true);
+        bytes32 orgId =
+            keyperModule.getOrgBySafe(address(gnosisHelper.gnosisSafe()));
+        assertEq(orgId, keccak256(abi.encodePacked(orgName)));
+        uint256 rootId = keyperModule.getGroupIdBySafe(
+            orgId, address(gnosisHelper.gnosisSafe())
+        );
+        (
+            DataTypes.Tier tier,
+            string memory name,
+            address lead,
+            address safe,
+            uint256[] memory child,
+            uint256 superSafe
+        ) = keyperModule.getGroupInfo(rootId);
+        assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
+        assertEq(name, orgName);
         assertEq(lead, address(0));
+        assertEq(safe, address(gnosisHelper.gnosisSafe()));
         assertEq(superSafe, 0);
+        assertEq(child.length, 0);
+        assertEq(keyperModule.isOrgRegistered(orgId), true);
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
+                safe, uint8(DataTypes.Role.ROOT_SAFE)
             ),
             true
         );
     }
 
     function testAddGroup() public {
-        (uint256 rootId, uint256 groupIdA1,) =
+        (uint256 rootId, uint256 groupIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (
+            DataTypes.Tier tier,
+            string memory groupName,
+            address lead,
+            address safe,
+            uint256[] memory child,
+            uint256 superSafe
+        ) = keyperModule.getGroupInfo(groupIdA1);
 
-        DataTypes.Tier tier;
-        string memory groupName;
-        address lead;
-        uint256[] memory child;
-        uint256 superSafe;
-        (tier, groupName, lead,, child, superSafe) =
-            keyperModule.getGroupInfo(groupIdA1);
         assertEq(uint256(tier), uint256(DataTypes.Tier.GROUP));
         assertEq(groupName, groupA1Name);
         assertEq(lead, address(0));
+        assertEq(safe, address(gnosisHelper.gnosisSafe()));
+        assertEq(child.length, 0);
         assertEq(superSafe, rootId);
-        (,,, address rootSafe,,) = keyperModule.getGroupInfo(rootId);
-        assertEq(keyperModule.isRootSafeOf(rootSafe, groupIdA1), true);
-        vm.stopPrank();
+
+        (,,, address groupAddr,,) = keyperModule.getGroupInfo(groupIdA1);
+        (,,, address rootAddr,,) = keyperModule.getGroupInfo(rootId);
+
+        assertEq(keyperModule.isRootSafeOf(rootAddr, groupIdA1), true);
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                groupAddr, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            false
+        );
+
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            true
+        );
     }
 
     function testExpectInvalidGroupId() public {
@@ -132,7 +159,7 @@ contract KeyperModuleTest is Test {
     }
 
     function testAddSubGroup() public {
-        (uint256 rootId, uint256 groupIdA1,) =
+        (uint256 rootId, uint256 groupIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
         address groupBaddr = gnosisHelper.newKeyperSafe(4, 2);
         vm.startPrank(groupBaddr);
@@ -150,7 +177,7 @@ contract KeyperModuleTest is Test {
         );
         assertEq(keyperModule.isTreeMember(rootId, groupIdA1), true);
         assertEq(keyperModule.isTreeMember(groupIdA1, subGroupIdA1), true);
-        (uint256 rootId2, uint256 groupIdB,) =
+        (uint256 rootId2, uint256 groupIdB) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(org2Name, groupBName);
         assertEq(keyperModule.isTreeMember(rootId2, groupIdB), true);
         assertEq(keyperModule.isTreeMember(rootId2, rootId), false);
@@ -235,7 +262,7 @@ contract KeyperModuleTest is Test {
     }
 
     function testRevertUpdateSuperInvalidGroupId() public {
-        (uint256 rootId, uint256 groupIdA1,) =
+        (uint256 rootId, uint256 groupIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
         // Get root info
         (,,, address rootSafe,,) = keyperModule.getGroupInfo(rootId);
@@ -246,7 +273,7 @@ contract KeyperModuleTest is Test {
     }
 
     function testRevertUpdateSuperIfCallerIsNotSafe() public {
-        (uint256 rootId, uint256 groupIdA1,) =
+        (uint256 rootId, uint256 groupIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
         vm.startPrank(address(0xDDD));
         vm.expectRevert(
@@ -259,9 +286,9 @@ contract KeyperModuleTest is Test {
     }
 
     function testRevertUpdateSuperIfCallerNotPartofTheOrg() public {
-        (uint256 rootId, uint256 groupIdA1,) =
+        (uint256 rootId, uint256 groupIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-        (uint256 rootId2,,) =
+        (uint256 rootId2,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(org2Name, groupBName);
         // Get root2 info
         (,,, address rootSafe2,,) = keyperModule.getGroupInfo(rootId2);
@@ -269,5 +296,76 @@ contract KeyperModuleTest is Test {
         vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenGroup.selector);
         keyperModule.updateSuper(groupIdA1, rootId);
         vm.stopPrank();
+    }
+
+    function testCreateGroupThreeTiersTree() public {
+        (uint256 orgRootId, uint256 safeGroupA1Id, uint256 safeSubGroupA1Id) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, groupA1Name, subGroupA1Name
+        );
+
+        (,,, address safeGroupA1Addr,,) =
+            keyperModule.getGroupInfo(safeGroupA1Id);
+        (,,, address safeSubGroupA1Addr,,) =
+            keyperModule.getGroupInfo(safeSubGroupA1Id);
+
+        (
+            DataTypes.Tier tier,
+            string memory name,
+            address lead,
+            address safe,
+            uint256[] memory child,
+            uint256 superSafe
+        ) = keyperModule.getGroupInfo(safeGroupA1Id);
+
+        assertEq(uint8(tier), uint8(DataTypes.Tier.GROUP));
+        assertEq(name, groupA1Name);
+        assertEq(lead, address(0));
+        assertEq(safe, safeGroupA1Addr);
+        assertEq(child.length, 1);
+        assertEq(child[0], safeSubGroupA1Id);
+        assertEq(superSafe, orgRootId);
+
+        /// Reuse the local-variable for avoid stack too deep error
+        (tier, name, lead, safe, child, superSafe) =
+            keyperModule.getGroupInfo(safeSubGroupA1Id);
+
+        assertEq(uint8(tier), uint8(DataTypes.Tier.GROUP));
+        assertEq(name, subGroupA1Name);
+        assertEq(lead, address(0));
+        assertEq(safe, safeSubGroupA1Addr);
+        assertEq(child.length, 0);
+        assertEq(superSafe, safeGroupA1Id);
+    }
+
+    // Revert ChildAlreadyExist() addGroup (Attempting to add a group when its child already exist)
+    // Caller: safeSubGroupA1
+    // Caller Type: safe
+    // Caller Role: N/A
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
+    function testRevertGroupAlreadyRegisteredAddGroup() public {
+        (, uint256 groupIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
+        gnosisHelper.updateSafeInterface(safeSubGroupA1);
+
+        bool result = gnosisHelper.createAddGroupTx(groupIdA1, subGroupA1Name);
+        assertEq(result, true);
+
+        vm.startPrank(safeSubGroupA1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.SafeAlreadyRegistered.selector, safeSubGroupA1
+            )
+        );
+        keyperModule.addGroup(groupIdA1, subGroupA1Name);
+
+        vm.deal(safeSubGroupA1, 1 ether);
+        gnosisHelper.updateSafeInterface(safeSubGroupA1);
+
+        vm.expectRevert();
+        result = gnosisHelper.createAddGroupTx(groupIdA1, subGroupA1Name);
     }
 }

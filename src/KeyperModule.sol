@@ -693,6 +693,20 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         );
     }
 
+    /// @notice Get the safe address of a group
+    /// @dev Method for getting the safe address of a group
+    /// @param group uint256 of the group
+    /// @return safe address
+    function getGroupSafeAddress(uint256 group)
+        public
+        view
+        GroupRegistered(group)
+        returns (address)
+    {
+        bytes32 org = getOrgByGroup(group);
+        return groups[org][group].safe;
+    }
+
     /// @notice check if the organisation is registered
     /// @param org address
     /// @return bool
