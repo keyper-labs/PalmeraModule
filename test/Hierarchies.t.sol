@@ -75,11 +75,11 @@ contract Hierarchies is Test {
     function testRegisterRootOrg() public {
         bool result = gnosisHelper.registerOrgTx(orgName);
         assertEq(result, true);
-        bytes32 orgId =
-            keyperModule.getOrgBySafe(address(gnosisHelper.gnosisSafe()));
-        assertEq(orgId, keccak256(abi.encodePacked(orgName)));
+        bytes32 orgHash =
+            keyperModule.getOrgHashBySafe(address(gnosisHelper.gnosisSafe()));
+        assertEq(orgHash, keccak256(abi.encodePacked(orgName)));
         uint256 rootId = keyperModule.getGroupIdBySafe(
-            orgId, address(gnosisHelper.gnosisSafe())
+            orgHash, address(gnosisHelper.gnosisSafe())
         );
         (
             DataTypes.Tier tier,
@@ -95,7 +95,7 @@ contract Hierarchies is Test {
         assertEq(safe, address(gnosisHelper.gnosisSafe()));
         assertEq(superSafe, 0);
         assertEq(child.length, 0);
-        assertEq(keyperModule.isOrgRegistered(orgId), true);
+        assertEq(keyperModule.isOrgRegistered(orgHash), true);
         assertEq(
             keyperRolesContract.doesUserHaveRole(
                 safe, uint8(DataTypes.Role.ROOT_SAFE)

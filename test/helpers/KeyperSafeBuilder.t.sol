@@ -34,11 +34,11 @@ contract KeyperSafeBuilder is Test {
         // address rootAddr = address(gnosisHelper.gnosisSafe());
         address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         // Get org Id
-        bytes32 orgId = keyperModule.getOrgBySafe(rootAddr);
-        rootId = keyperModule.getGroupIdBySafe(orgId, rootAddr);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+        rootId = keyperModule.getGroupIdBySafe(orgHash, rootAddr);
         // Create group through safe tx
         result = gnosisHelper.createAddGroupTx(rootId, groupA1NameArg);
-        groupIdA1 = keyperModule.getGroupIdBySafe(orgId, groupSafe);
+        groupIdA1 = keyperModule.getGroupIdBySafe(orgHash, groupSafe);
 
         vm.deal(rootAddr, 100 gwei);
         vm.deal(groupSafe, 100 gwei);
@@ -74,15 +74,15 @@ contract KeyperSafeBuilder is Test {
         gnosisHelper.updateSafeInterface(rootAddr);
         // Create Root Safe Group
         bool result = gnosisHelper.createRootSafeTx(rootBAddr, rootBNameArg);
-        bytes32 orgId = keyperModule.getOrgBySafe(rootAddr);
-        rootIdB = keyperModule.getGroupIdBySafe(orgId, rootBAddr);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+        rootIdB = keyperModule.getGroupIdBySafe(orgHash, rootBAddr);
         vm.deal(rootBAddr, 100 gwei);
 
         // Create groupB for rootB
         address groupSafeB = gnosisHelper.newKeyperSafe(4, 2);
         // Create group through safe tx
         result = gnosisHelper.createAddGroupTx(rootIdB, groupB1NameArg);
-        groupIdB1 = keyperModule.getGroupIdBySafe(orgId, groupSafeB);
+        groupIdB1 = keyperModule.getGroupIdBySafe(orgHash, groupSafeB);
         vm.deal(groupSafeB, 100 gwei);
 
         return (rootIdA, groupIdA1, rootIdB, groupIdB1);
@@ -108,9 +108,9 @@ contract KeyperSafeBuilder is Test {
         address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
         // Create subgroupA1
         gnosisHelper.createAddGroupTx(groupIdA1, subGroupA1NameArg);
-        bytes32 orgId = keyperModule.getOrgByGroup(groupIdA1);
+        bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
         // Get subgroupA1 Id
-        subGroupIdA1 = keyperModule.getGroupIdBySafe(orgId, safeSubGroupA1);
+        subGroupIdA1 = keyperModule.getGroupIdBySafe(orgHash, safeSubGroupA1);
         return (rootId, groupIdA1, subGroupIdA1);
     }
 
@@ -142,10 +142,10 @@ contract KeyperSafeBuilder is Test {
 
         address safeSubSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
         gnosisHelper.createAddGroupTx(subGroupIdA1, subSubGroupA1NameArg);
-        bytes32 orgId = keyperModule.getOrgByGroup(groupIdA1);
+        bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
         // Get subgroupA1 Id
         subSubGroupIdA1 =
-            keyperModule.getGroupIdBySafe(orgId, safeSubSubGroupA1);
+            keyperModule.getGroupIdBySafe(orgHash, safeSubSubGroupA1);
 
         return (rootId, groupIdA1, subGroupIdA1, subSubGroupIdA1);
     }
@@ -181,9 +181,9 @@ contract KeyperSafeBuilder is Test {
 
         address safeGroupB = gnosisHelper.newKeyperSafe(2, 1);
         gnosisHelper.createAddGroupTx(rootId, groupBNameArg);
-        bytes32 orgId = keyperModule.getOrgByGroup(groupIdA1);
+        bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
         // Get groupIdB Id
-        groupIdB = keyperModule.getGroupIdBySafe(orgId, safeGroupB);
+        groupIdB = keyperModule.getGroupIdBySafe(orgHash, safeGroupB);
 
         return (rootId, groupIdA1, groupIdB, subGroupIdA1, subSubGroupIdA1);
     }

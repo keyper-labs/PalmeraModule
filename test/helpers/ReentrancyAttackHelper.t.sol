@@ -70,8 +70,8 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         keyperSafes[nameAttacker] = address(attacker);
 
         address attackerSafe = keyperSafes[nameAttacker];
-        bytes32 orgId = keccak256(abi.encodePacked(_orgName));
-        uint256 rootOrgId = keyper.getGroupIdBySafe(orgId, orgAddr);
+        bytes32 orgHash = keccak256(abi.encodePacked(_orgName));
+        uint256 rootOrgId = keyper.getGroupIdBySafe(orgHash, orgAddr);
 
         vm.startPrank(attackerSafe);
         keyper.addGroup(rootOrgId, nameAttacker);
@@ -80,12 +80,12 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         address victim = gnosisHelper.newKeyperSafe(2, 1);
         string memory nameVictim = "Victim";
         keyperSafes[nameVictim] = address(victim);
-        uint256 attackerGroupId = keyper.getGroupIdBySafe(orgId, attackerSafe);
+        uint256 attackerGroupId = keyper.getGroupIdBySafe(orgHash, attackerSafe);
 
         vm.startPrank(victim);
         keyper.addGroup(attackerGroupId, nameVictim);
         vm.stopPrank();
-        uint256 victimGroupId = keyper.getGroupIdBySafe(orgId, victim);
+        uint256 victimGroupId = keyper.getGroupIdBySafe(orgHash, victim);
 
         vm.deal(victim, 100 gwei);
 
