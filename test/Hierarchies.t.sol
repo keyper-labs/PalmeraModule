@@ -123,8 +123,8 @@ contract Hierarchies is Test {
         assertEq(child.length, 0);
         assertEq(superSafe, rootId);
 
-        (,,, address groupAddr,,) = keyperModule.getGroupInfo(groupIdA1);
-        (,,, address rootAddr,,) = keyperModule.getGroupInfo(rootId);
+        address groupAddr = keyperModule.getGroupSafeAddress(groupIdA1);
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
 
         assertEq(keyperModule.isRootSafeOf(rootAddr, groupIdA1), true);
         assertEq(
@@ -214,10 +214,10 @@ contract Hierarchies is Test {
         ) = keyperSafeBuilder.setUpBaseOrgTree(
             orgName, groupA1Name, groupBName, subGroupA1Name, subSubgroupA1Name
         );
-        (,,, address rootSafe,,) = keyperModule.getGroupInfo(rootId);
-        (,,, address groupA1,,) = keyperModule.getGroupInfo(groupIdA1);
-        (,,, address groupBB,,) = keyperModule.getGroupInfo(groupIdB);
-        (,,, address subGroupA1,,) = keyperModule.getGroupInfo(subGroupIdA1);
+        address rootSafe = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1 = keyperModule.getGroupSafeAddress(groupIdA1);
+        address groupBB = keyperModule.getGroupSafeAddress(groupIdB);
+        address subGroupA1 = keyperModule.getGroupSafeAddress(subGroupIdA1);
 
         assertEq(
             keyperRolesContract.doesUserHaveRole(
@@ -265,7 +265,8 @@ contract Hierarchies is Test {
         (uint256 rootId, uint256 groupIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
         // Get root info
-        (,,, address rootSafe,,) = keyperModule.getGroupInfo(rootId);
+        address rootSafe = keyperModule.getGroupSafeAddress(rootId);
+
         uint256 groupNotRegisteredId = 6;
         vm.expectRevert(Errors.InvalidGroupId.selector);
         vm.startPrank(rootSafe);
@@ -291,7 +292,7 @@ contract Hierarchies is Test {
         (uint256 rootId2,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(org2Name, groupBName);
         // Get root2 info
-        (,,, address rootSafe2,,) = keyperModule.getGroupInfo(rootId2);
+        address rootSafe2 = keyperModule.getGroupSafeAddress(rootId2);
         vm.startPrank(rootSafe2);
         vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenGroup.selector);
         keyperModule.updateSuper(groupIdA1, rootId);
@@ -304,10 +305,10 @@ contract Hierarchies is Test {
             orgName, groupA1Name, subGroupA1Name
         );
 
-        (,,, address safeGroupA1Addr,,) =
-            keyperModule.getGroupInfo(safeGroupA1Id);
-        (,,, address safeSubGroupA1Addr,,) =
-            keyperModule.getGroupInfo(safeSubGroupA1Id);
+        address safeGroupA1Addr =
+            keyperModule.getGroupSafeAddress(safeGroupA1Id);
+        address safeSubGroupA1Addr =
+            keyperModule.getGroupSafeAddress(safeSubGroupA1Id);
 
         (
             DataTypes.Tier tier,
