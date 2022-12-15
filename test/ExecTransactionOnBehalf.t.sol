@@ -84,11 +84,11 @@ contract ExecTransactionOnBehalf is Test {
         );
     }
 
-    // ! ********************** execTransactionOnBehalf Test ********************
+    // ! ********************** ROOT_SAFE ROLE ********************
 
     // Caller Info: ROOT_SAFE(role), SAFE(type), rootSafe(hierachie)
     // TargetSafe Type: Child from same hierachical tree
-    function testCan_ExecTransactionOnBehalf_ROOT_SAFE_and_Target_Root_SameTree(
+    function testCan_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree(
     ) public {
         (uint256 rootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
@@ -121,89 +121,6 @@ contract ExecTransactionOnBehalf is Test {
         );
         assertEq(result, true);
         assertEq(receiver.balance, 2 gwei);
-    }
-
-    // execTransactionOnBehalf when msg.sender is a lead (not a RootSafe)
-    // Caller: safeGroupB
-    // Caller Type: safe
-    // Caller Role: SAFE_LEAD of safeSubSubGroupA1
-    // TargerSafe: safeSubSubGroupA1
-    // TargetSafe Type: group (not a child)
-    //            rootSafe
-    //           |        |
-    //  safeGroupA1       safeGroupB
-    //      |
-    // safeSubGroupA1
-    //      |
-    // safeSubSubGroupA1
-    function testLeadExecOnBehalfFromGroup() public {
-        (uint256 rootId,, uint256 safeGroupBId,, uint256 safeSubSubGroupA1Id) =
-        keyperSafeBuilder.setUpBaseOrgTree(
-            orgName, groupA1Name, groupBName, subGroupA1Name, subSubgroupA1Name
-        );
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address safeGroupBAddr = keyperModule.getGroupSafeAddress(safeGroupBId);
-        address safeSubSubGroupA1Addr =
-            keyperModule.getGroupSafeAddress(safeSubSubGroupA1Id);
-
-        vm.deal(safeSubSubGroupA1Addr, 100 gwei);
-        vm.deal(safeGroupBAddr, 100 gwei);
-
-        vm.startPrank(rootAddr);
-        bytes32 orgHash = keyperModule.getOrgByGroup(rootId);
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
-            ),
-            true
-        );
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                safeGroupBAddr, uint8(DataTypes.Role.SAFE_LEAD)
-            ),
-            false
-        );
-        keyperModule.setRole(
-            DataTypes.Role.SAFE_LEAD, safeGroupBAddr, safeSubSubGroupA1Id, true
-        );
-        vm.stopPrank();
-
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                safeGroupBAddr, uint8(DataTypes.Role.SAFE_LEAD)
-            ),
-            true
-        );
-        assertEq(
-            keyperModule.isSafeLead(safeSubSubGroupA1Id, safeGroupBAddr), true
-        );
-        assertEq(
-            keyperModule.isSuperSafe(safeGroupBId, safeSubSubGroupA1Id), false
-        );
-        // Set keyperhelper gnosis safe to org
-        vm.startPrank(safeGroupBAddr);
-        keyperHelper.setGnosisSafe(safeGroupBAddr);
-        bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            safeGroupBAddr,
-            safeSubSubGroupA1Addr,
-            receiver,
-            12 gwei,
-            emptyData,
-            Enum.Operation(0)
-        );
-
-        bool result = keyperModule.execTransactionOnBehalf(
-            orgHash,
-            safeSubSubGroupA1Addr,
-            receiver,
-            12 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-        assertEq(result, true);
-        assertEq(receiver.balance, 12 gwei);
     }
 
     // Caller Info: ROOT_SAFE(role), SAFE(type), rootSafe(hierachie)
@@ -249,6 +166,316 @@ contract ExecTransactionOnBehalf is Test {
         );
         assertEq(result, true);
         assertEq(receiver.balance, 25 gwei);
+    }
+
+    // ! ********************** SAFE_LEAD ROLE ********************
+
+    // Caller Info: SAFE_LEAD(role), SAFE(type), groupB(hierachie)
+    // TargerSafe: safeSubSubGroupA1
+    // TargetSafe Type: group (not a child)
+    //            rootSafe
+    //           |        |
+    //  safeGroupA1       safeGroupB
+    //      |
+    // safeSubGroupA1
+    //      |
+    // safeSubSubGroupA1
+    function testCan_ExecTransactionOnBehalf_SAFE_LEAD_as_SAFE_is_TARGETS_LEAD()
+        public
+    {
+        (uint256 rootId,, uint256 safeGroupBId,, uint256 safeSubSubGroupA1Id) =
+        keyperSafeBuilder.setUpBaseOrgTree(
+            orgName, groupA1Name, groupBName, subGroupA1Name, subSubgroupA1Name
+        );
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address safeGroupBAddr = keyperModule.getGroupSafeAddress(safeGroupBId);
+        address safeSubSubGroupA1Addr =
+            keyperModule.getGroupSafeAddress(safeSubSubGroupA1Id);
+
+        vm.deal(safeSubSubGroupA1Addr, 100 gwei);
+        vm.deal(safeGroupBAddr, 100 gwei);
+
+        vm.startPrank(rootAddr);
+        bytes32 orgHash = keyperModule.getOrgByGroup(rootId);
+        keyperModule.setRole(
+            DataTypes.Role.SAFE_LEAD, safeGroupBAddr, safeSubSubGroupA1Id, true
+        );
+        vm.stopPrank();
+
+        assertEq(
+            keyperModule.isSuperSafe(safeGroupBId, safeSubSubGroupA1Id), false
+        );
+        keyperHelper.setGnosisSafe(safeGroupBAddr);
+
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            safeGroupBAddr,
+            safeSubSubGroupA1Addr,
+            receiver,
+            12 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+
+        // Execute on behalf function
+        bool result = gnosisHelper.execTransactionOnBehalfTx(
+            orgHash,
+            safeSubSubGroupA1Addr,
+            receiver,
+            12 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        assertEq(result, true);
+        assertEq(receiver.balance, 12 gwei);
+    }
+
+    // execTransactionOnBehalf when SafeLead of an Org as EOA
+    // Caller: callerEOA
+    // Caller Type: EOA
+    // Caller Role: SAFE_LEAD of org
+    // TargerSafe: rootAddr
+    // TargetSafe Type: rootSafe
+    function testCan_ExecTransactionOnBehalf_SAFE_LEAD_as_EOA_is_TARGETS_LEAD()
+        public
+    {
+        (uint256 rootId,) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        keyperHelper.setGnosisSafe(rootAddr);
+
+        // Random wallet instead of a safe (EOA)
+        address callerEOA = address(0xFED);
+
+        // Set safe_lead role to fake caller
+        vm.startPrank(rootAddr);
+        keyperModule.setRole(DataTypes.Role.SAFE_LEAD, callerEOA, rootId, true);
+        vm.stopPrank();
+        bytes memory emptyData;
+        bytes memory signatures;
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+        vm.startPrank(callerEOA);
+        bool result = keyperModule.execTransactionOnBehalf(
+            orgHash,
+            rootAddr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        assertEq(result, true);
+        assertEq(receiver.balance, 2 gwei);
+    }
+
+    // ! ********************** SUPER_SAFE ROLE ********************
+
+    // execTransactionOnBehalf
+    // Caller: safeGroupA1
+    // Caller Type: safe
+    // Caller Role: SUPER_SAFE of safeSubGroupA1
+    // TargerSafe: safeSubGroupA1
+    // TargetSafe Type: safe
+    //            rootSafe
+    //               |
+    //           safeGroupA1 as superSafe ---
+    //              |                        |
+    //           safeSubGroupA1 <------------
+    function testCan_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_is_TARGETS_LEAD_SameTree(
+    ) public {
+        (uint256 rootId, uint256 safeGroupA1Id, uint256 safeSubGroupA1Id) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, groupA1Name, subGroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address safeGroupA1Addr =
+            keyperModule.getGroupSafeAddress(safeGroupA1Id);
+        address safeSubGroupA1Addr =
+            keyperModule.getGroupSafeAddress(safeSubGroupA1Id);
+
+        // Send ETH to group&subgroup
+        vm.deal(safeGroupA1Addr, 100 gwei);
+        vm.deal(safeSubGroupA1Addr, 100 gwei);
+
+        // Set keyperhelper gnosis safe to safeGroupA1
+        keyperHelper.setGnosisSafe(safeGroupA1Addr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            safeGroupA1Addr,
+            safeSubGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+        /// Verify if the safeGroupA1Addr have the role to execute, executionTransactionOnBehalf
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                safeGroupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            true
+        );
+
+        // Execute on safe tx
+        gnosisHelper.updateSafeInterface(safeGroupA1Addr);
+        bool result = gnosisHelper.execTransactionOnBehalfTx(
+            orgHash,
+            safeSubGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        assertEq(result, true);
+        assertEq(receiver.balance, 2 gwei);
+    }
+
+    // ! ********************** REVERT ********************
+
+    // Revert NotAuthorizedExecOnBehalf() execTransactionOnBehalf (safeSubGroupA1 is attempting to execute on its superSafe)
+    // Caller: safeSubGroupA1
+    // Caller Type: safe
+    // Caller Role: SUPER_SAFE
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe as lead
+    //            rootSafe
+    //           |
+    //  safeGroupA1 <----
+    //      |            |
+    // safeSubGroupA1 ---
+    //      |
+    // safeSubSubGroupA1
+    function testRevertSuperSafeExecOnBehalf() public {
+        (uint256 rootId, uint256 groupIdA1, uint256 subGroupIdA1,) =
+        keyperSafeBuilder.setupOrgFourTiersTree(
+            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address safeGroupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
+        address safeSubGroupA1Addr =
+            keyperModule.getGroupSafeAddress(subGroupIdA1);
+
+        // Send ETH to org&subgroup
+        vm.deal(rootAddr, 100 gwei);
+        vm.deal(safeGroupA1Addr, 100 gwei);
+
+        // Set keyperhelper gnosis safe to safeSubGroupA1
+        keyperHelper.setGnosisSafe(safeSubGroupA1Addr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            safeSubGroupA1Addr,
+            safeGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
+        vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector);
+
+        vm.startPrank(safeSubGroupA1Addr);
+        bool result = keyperModule.execTransactionOnBehalf(
+            orgHash,
+            safeGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        assertEq(result, false);
+    }
+
+    // Revert "UNAUTHORIZED" execTransactionOnBehalf (Caller is an EOA but he's not the lead (no role provided to EOA))
+    // Caller: fakeCaller
+    // Caller Type: EOA
+    // Caller Role: N/A (NO ROLE PROVIDED)
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
+    function testRevertNotAuthorizedExecTransactionOnBehalfScenarioThree()
+        public
+    {
+        (uint256 rootId, uint256 safeGroupA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address safeGroupA1Addr = keyperModule.getGroupSafeAddress(safeGroupA1);
+        keyperHelper.setGnosisSafe(rootAddr);
+
+        // Random wallet instead of a safe (EOA)
+        address fakeCaller = address(0xFED);
+
+        keyperHelper.setGnosisSafe(rootAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            rootAddr,
+            safeGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+        vm.startPrank(fakeCaller);
+        vm.expectRevert("UNAUTHORIZED");
+        keyperModule.execTransactionOnBehalf(
+            orgHash,
+            safeGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
+    // Revert "GS026" execTransactionOnBehalf (invalid signatures provided)
+    // Caller: rootAddr
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeGroupA1
+    // TargetSafe Type: safe
+    function testRevertInvalidSignatureExecOnBehalf() public {
+        (uint256 rootId, uint256 safeGroupA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address safeGroupA1Addr = keyperModule.getGroupSafeAddress(safeGroupA1);
+        keyperHelper.setGnosisSafe(rootAddr);
+
+        // Try onbehalf with incorrect signers
+        keyperHelper.setGnosisSafe(rootAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeInvalidSignaturesKeyperTx(
+            rootAddr,
+            safeGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
+        vm.expectRevert("GS026");
+        // Execute invalid OnBehalf function
+        vm.startPrank(rootAddr);
+        bool result = keyperModule.execTransactionOnBehalf(
+            orgHash,
+            safeGroupA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        assertEq(result, false);
     }
 
     // Revert ZeroAddressProvided() execTransactionOnBehalf when arg "to" is address(0)
@@ -481,289 +708,6 @@ contract ExecTransactionOnBehalf is Test {
             emptyData,
             Enum.Operation(0),
             signatures
-        );
-    }
-
-    // execTransactionOnBehalf when SafeLead of an Org as EOA
-    // Caller: callerEOA
-    // Caller Type: EOA
-    // Caller Role: SAFE_LEAD of org
-    // TargerSafe: rootAddr
-    // TargetSafe Type: rootSafe
-    function testEoaCallExecTransactionOnBehalfScenarioTwo() public {
-        (uint256 rootId,) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        keyperHelper.setGnosisSafe(rootAddr);
-
-        // Random wallet instead of a safe (EOA)
-        address callerEOA = address(0xFED);
-
-        // Set safe_lead role to fake caller
-        vm.startPrank(rootAddr);
-        keyperModule.setRole(DataTypes.Role.SAFE_LEAD, callerEOA, rootId, true);
-        vm.stopPrank();
-        bytes memory emptyData;
-        bytes memory signatures;
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        vm.startPrank(callerEOA);
-        bool result = keyperModule.execTransactionOnBehalf(
-            orgHash,
-            rootAddr,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-        assertEq(result, true);
-        assertEq(receiver.balance, 2 gwei);
-    }
-
-    // Revert "UNAUTHORIZED" execTransactionOnBehalf (Caller is an EOA but he's not the lead (no role provided to EOA))
-    // Caller: fakeCaller
-    // Caller Type: EOA
-    // Caller Role: N/A (NO ROLE PROVIDED)
-    // TargerSafe: safeGroupA1
-    // TargetSafe Type: safe
-    function testRevertNotAuthorizedExecTransactionOnBehalfScenarioThree()
-        public
-    {
-        (uint256 rootId, uint256 safeGroupA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address safeGroupA1Addr = keyperModule.getGroupSafeAddress(safeGroupA1);
-        keyperHelper.setGnosisSafe(rootAddr);
-
-        // Random wallet instead of a safe (EOA)
-        address fakeCaller = address(0xFED);
-
-        keyperHelper.setGnosisSafe(rootAddr);
-        bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            rootAddr,
-            safeGroupA1Addr,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0)
-        );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        vm.startPrank(fakeCaller);
-        vm.expectRevert("UNAUTHORIZED");
-        keyperModule.execTransactionOnBehalf(
-            orgHash,
-            safeGroupA1Addr,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-    }
-
-    // Revert "GS026" execTransactionOnBehalf (invalid signatures provided)
-    // Caller: rootAddr
-    // Caller Type: rootSafe
-    // Caller Role: ROOT_SAFE
-    // TargerSafe: safeGroupA1
-    // TargetSafe Type: safe
-    function testRevertInvalidSignatureExecOnBehalf() public {
-        (uint256 rootId, uint256 safeGroupA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address safeGroupA1Addr = keyperModule.getGroupSafeAddress(safeGroupA1);
-        keyperHelper.setGnosisSafe(rootAddr);
-
-        // Try onbehalf with incorrect signers
-        keyperHelper.setGnosisSafe(rootAddr);
-        bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeInvalidSignaturesKeyperTx(
-            rootAddr,
-            safeGroupA1Addr,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0)
-        );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-
-        vm.expectRevert("GS026");
-        // Execute invalid OnBehalf function
-        vm.startPrank(rootAddr);
-        bool result = keyperModule.execTransactionOnBehalf(
-            orgHash,
-            safeGroupA1Addr,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-        assertEq(result, false);
-    }
-
-    // execTransactionOnBehalf
-    // Caller: safeGroupA1
-    // Caller Type: safe
-    // Caller Role: SUPER_SAFE of safeSubGroupA1
-    // TargerSafe: safeSubGroupA1
-    // TargetSafe Type: safe
-    //            rootSafe
-    //               |
-    //           safeGroupA1 as superSafe ---
-    //              |                        |
-    //           safeSubGroupA1 <------------
-    function testSuperSafeExecOnBehalf() public {
-        (uint256 rootId, uint256 safeGroupA1Id, uint256 safeSubGroupA1Id) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
-        );
-
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address safeGroupA1Addr =
-            keyperModule.getGroupSafeAddress(safeGroupA1Id);
-        address safeSubGroupA1Addr =
-            keyperModule.getGroupSafeAddress(safeSubGroupA1Id);
-
-        // Send ETH to group&subgroup
-        vm.deal(safeGroupA1Addr, 100 gwei);
-        vm.deal(safeSubGroupA1Addr, 100 gwei);
-
-        // Set keyperhelper gnosis safe to safeGroupA1
-        keyperHelper.setGnosisSafe(safeGroupA1Addr);
-        bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            safeGroupA1Addr,
-            safeSubGroupA1Addr,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0)
-        );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        /// Verify if the safeGroupA1Addr have the role to execute, executionTransactionOnBehalf
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                safeGroupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
-            ),
-            true
-        );
-
-        // Execute on behalf function
-        vm.startPrank(safeGroupA1Addr);
-        bool result = keyperModule.execTransactionOnBehalf(
-            orgHash,
-            safeSubGroupA1Addr,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-        assertEq(result, true);
-        assertEq(receiver.balance, 2 gwei);
-    }
-
-    // Revert NotAuthorizedExecOnBehalf() execTransactionOnBehalf (safeSubGroupA1 is attempting to execute on its superSafe)
-    // Caller: safeSubGroupA1
-    // Caller Type: safe
-    // Caller Role: SUPER_SAFE
-    // TargerSafe: safeGroupA1
-    // TargetSafe Type: safe as lead
-    //            rootSafe
-    //           |
-    //  safeGroupA1 <----
-    //      |            |
-    // safeSubGroupA1 ---
-    //      |
-    // safeSubSubGroupA1
-    function testRevertSuperSafeExecOnBehalf() public {
-        (uint256 rootId, uint256 groupIdA1, uint256 subGroupIdA1,) =
-        keyperSafeBuilder.setupOrgFourTiersTree(
-            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
-        );
-
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address safeGroupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
-        address safeSubGroupA1Addr =
-            keyperModule.getGroupSafeAddress(subGroupIdA1);
-
-        // Send ETH to org&subgroup
-        vm.deal(rootAddr, 100 gwei);
-        vm.deal(safeGroupA1Addr, 100 gwei);
-
-        // Set keyperhelper gnosis safe to safeSubGroupA1
-        keyperHelper.setGnosisSafe(safeSubGroupA1Addr);
-        bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            safeSubGroupA1Addr,
-            safeGroupA1Addr,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0)
-        );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-
-        vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector);
-
-        vm.startPrank(safeSubGroupA1Addr);
-        bool result = keyperModule.execTransactionOnBehalf(
-            orgHash,
-            safeGroupA1Addr,
-            receiver,
-            2 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-        assertEq(result, false);
-    }
-
-    function testOrgFourTiersTreeSuperSafeRoles() public {
-        (
-            uint256 rootId,
-            uint256 groupIdA1,
-            uint256 subGroupIdA1,
-            uint256 subSubGroupIdA1
-        ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
-        );
-
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address safeGroupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
-        address safeSubGroupA1Addr =
-            keyperModule.getGroupSafeAddress(subGroupIdA1);
-        address safeSubSubGroupA1Addr =
-            keyperModule.getGroupSafeAddress(subSubGroupIdA1);
-
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                rootAddr, uint8(DataTypes.Role.SUPER_SAFE)
-            ),
-            true
-        );
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                safeGroupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
-            ),
-            true
-        );
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                safeSubGroupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
-            ),
-            true
-        );
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                safeSubSubGroupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
-            ),
-            false
         );
     }
 

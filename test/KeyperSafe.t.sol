@@ -728,24 +728,40 @@ contract TestKeyperSafe is Test, SigningUtils {
     // Caller Role: ROOT_SAFE, SUPER_SAFE
     // TargerSafe: userLead
     // TargetSafe Type: EOA
-    function testsetSafeLead() public {
+    function testSetSafeLead() public {
         (uint256 rootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address userLead = address(0x123);
+        address userEOALead = address(0x123);
 
         vm.startPrank(rootAddr);
         keyperModule.setRole(
-            DataTypes.Role.SAFE_LEAD, userLead, safeGroupA1, true
+            DataTypes.Role.SAFE_LEAD, userEOALead, safeGroupA1, true
         );
 
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                userLead, uint8(DataTypes.Role.SAFE_LEAD)
+                userEOALead, uint8(DataTypes.Role.SAFE_LEAD)
             ),
             true
         );
+
+        assertEq(keyperModule.isSafeLead(safeGroupA1, userEOALead), true);
+
+        address safeLead = gnosisHelper.newKeyperSafe(4, 2);
+        keyperModule.setRole(
+            DataTypes.Role.SAFE_LEAD, safeLead, safeGroupA1, true
+        );
+
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                safeLead, uint8(DataTypes.Role.SAFE_LEAD)
+            ),
+            true
+        );
+
+        assertEq(keyperModule.isSafeLead(safeGroupA1, safeLead), true);
     }
 
     // Attempt to set a forbidden role to an EOA

@@ -339,6 +339,49 @@ contract Hierarchies is Test {
         assertEq(superSafe, safeGroupA1Id);
     }
 
+    function testOrgFourTiersTreeSuperSafeRoles() public {
+        (
+            uint256 rootId,
+            uint256 groupIdA1,
+            uint256 subGroupIdA1,
+            uint256 subSubGroupIdA1
+        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address safeGroupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
+        address safeSubGroupA1Addr =
+            keyperModule.getGroupSafeAddress(subGroupIdA1);
+        address safeSubSubGroupA1Addr =
+            keyperModule.getGroupSafeAddress(subSubGroupIdA1);
+
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            true
+        );
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                safeGroupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            true
+        );
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                safeSubGroupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            true
+        );
+        assertEq(
+            keyperRolesContract.doesUserHaveRole(
+                safeSubSubGroupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            false
+        );
+    }
+
     // Revert ChildAlreadyExist() addGroup (Attempting to add a group when its child already exist)
     // Caller: safeSubGroupA1
     // Caller Type: safe
