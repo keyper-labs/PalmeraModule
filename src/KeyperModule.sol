@@ -256,15 +256,15 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             revert Errors.NotAuthorizedAddOwnerWithThreshold();
         }
 
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
         /// If the owner is already an owner
-        if (isSafeOwner(IGnosisSafe(targetSafe), ownerAdded)) {
+        if (gnosisTargetSafe.isOwner(ownerAdded)) {
             revert Errors.OwnerAlreadyExists();
         }
 
         bytes memory data = abi.encodeWithSelector(
             IGnosisSafe.addOwnerWithThreshold.selector, ownerAdded, threshold
         );
-        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
         /// Execute transaction from target safe
         bool result = gnosisTargetSafe.execTransactionFromModule(
             targetSafe, uint256(0), data, Enum.Operation.Call
@@ -298,12 +298,11 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (hasNotPermissionOverTarget(caller, org, targetSafe)) {
             revert Errors.NotAuthorizedRemoveOwner();
         }
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
         /// if Owner Not found
-        if (!isSafeOwner(IGnosisSafe(targetSafe), ownerRemoved)) {
+        if (!gnosisTargetSafe.isOwner(ownerRemoved)) {
             revert Errors.OwnerNotFound();
         }
-
-        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
 
         bytes memory data = abi.encodeWithSelector(
             IGnosisSafe.removeOwner.selector, prevOwner, ownerRemoved, threshold
@@ -876,25 +875,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         } else {
             return false;
         }
-    }
-
-    /// @notice Check if the signer is an owner of the safe
-    /// @dev Call has to be done from a safe transaction
-    /// @param gnosisSafe GnosisSafe interface
-    /// @param signer Address of the signer to verify
-    /// @return bool
-    function isSafeOwner(IGnosisSafe gnosisSafe, address signer)
-        public
-        view
-        returns (bool)
-    {
-        address[] memory safeOwners = gnosisSafe.getOwners();
-        for (uint256 i = 0; i < safeOwners.length; i++) {
-            if (safeOwners[i] == signer) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /// @dev Method to get the domain separator for Keyper Module

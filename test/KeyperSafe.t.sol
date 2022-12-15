@@ -253,7 +253,6 @@ contract TestKeyperSafe is Test, SigningUtils {
         gnosisHelper.updateSafeInterface(groupA1Addr);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
-        address[] memory prevOwnersList = gnosisHelper.gnosisSafe().getOwners();
         bytes32 orgHash = keyperModule.getOrgHashBySafe(groupA1Addr);
 
         vm.startPrank(userLeadModifyOwnersOnly);
@@ -263,17 +262,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         );
 
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold + 1);
-
-        address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
-        assertEq(ownersList.length, prevOwnersList.length + 1);
-
-        address ownerTest;
-        for (uint256 i = 0; i < ownersList.length; i++) {
-            if (ownersList[i] == newOwner) {
-                ownerTest = ownersList[i];
-            }
-        }
-        assertEq(ownerTest, newOwner);
+        assertEq(gnosisHelper.gnosisSafe().isOwner(newOwner), true);
     }
 
     function testCan_AddOwnerWithThreshold_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_SAFE_is_TARGETS_LEAD(
@@ -304,10 +293,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         address newOwner = address(0xDEF);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
-        assertEq(
-            keyperModule.isSafeOwner(IGnosisSafe(groupAAddr), groupA1Owners[1]),
-            true
-        );
+        assertEq(gnosisHelper.gnosisSafe().isOwner(groupA1Owners[1]), true);
 
         // GroupB AddOwnerWithThreshold from groupA
         gnosisHelper.updateSafeInterface(groupBAddr);
@@ -315,22 +301,14 @@ contract TestKeyperSafe is Test, SigningUtils {
             newOwner, threshold, groupAAddr, orgHash
         );
         assertEq(result, true);
-        assertEq(
-            keyperModule.isSafeOwner(IGnosisSafe(groupAAddr), newOwner), true
-        );
 
         gnosisHelper.updateSafeInterface(groupAAddr);
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
-        address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
-        assertEq(ownersList.length, groupA1Owners.length + 1);
-
-        address ownerTest;
-        for (uint256 i = 0; i < ownersList.length; i++) {
-            if (ownersList[i] == newOwner) {
-                ownerTest = ownersList[i];
-            }
-        }
-        assertEq(ownerTest, newOwner);
+        assertEq(
+            gnosisHelper.gnosisSafe().getOwners().length,
+            groupA1Owners.length + 1
+        );
+        assertEq(gnosisHelper.gnosisSafe().isOwner(newOwner), true);
     }
 
     // Revert OwnerAlreadyExists() addOwnerWithThreshold (Attempting to add an existing owner)
@@ -339,7 +317,7 @@ contract TestKeyperSafe is Test, SigningUtils {
     // Caller Role: SAFE_LEAD of org
     // TargerSafe: rootAddr
     // TargetSafe Type: rootSafe
-    function testRevertOwnerAlreadyExists() public {
+    function testRevertOwnerAlreadyExistsAddOwnerWithThreshold() public {
         (uint256 rootId,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
@@ -370,16 +348,12 @@ contract TestKeyperSafe is Test, SigningUtils {
         );
     }
 
-    // Revert InvalidThreshold() addOwnerWithThreshold (When threshold < 1)
-    // Scenario 1
+    // Revert InvalidThreshold() addOwnerWithThreshold
     // Caller: safeLead
     // Caller Type: EOA
     // Caller Role: SAFE_LEAD of org
     // TargerSafe: rootAddr
-    // TargetSafe Type: rootSafe
-    function testRevertInvalidThresholdAddOwnerWithThresholdScenarioOne()
-        public
-    {
+    function testRevertInvalidThresholdAddOwnerWithThreshold() public {
         (uint256 rootId,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
@@ -390,44 +364,21 @@ contract TestKeyperSafe is Test, SigningUtils {
         keyperModule.setRole(DataTypes.Role.SAFE_LEAD, safeLead, rootId, true);
         vm.stopPrank();
 
+        // (When threshold < 1)
         address newOwner = address(0xf1f1f1);
-        uint256 wrongThreshold = 0;
+        uint256 zeroThreshold = 0;
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         vm.startPrank(safeLead);
         vm.expectRevert(Errors.TxExecutionModuleFaild.selector); // safe Contract Internal Error GS202 "Threshold needs to be greater than 0"
         keyperModule.addOwnerWithThreshold(
-            newOwner, wrongThreshold, rootAddr, orgHash
+            newOwner, zeroThreshold, rootAddr, orgHash
         );
-    }
 
-    // Revert InvalidThreshold() addOwnerWithThreshold (When threshold > (IGnosisSafe(targetSafe).getOwners().length.add(1)))
-    // Scenario 2
-    // Caller: safeLead
-    // Caller Type: EOA
-    // Caller Role: SAFE_LEAD of org
-    // TargerSafe: rootAddr
-    // TargetSafe Type: rootSafe
-    function testRevertInvalidThresholdAddOwnerWithThresholdScenarioTwo()
-        public
-    {
-        (uint256 rootId,) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address safeLead = address(0x123);
-
-        vm.startPrank(rootAddr);
-        keyperModule.setRole(DataTypes.Role.SAFE_LEAD, safeLead, rootId, true);
-        vm.stopPrank();
-
-        gnosisHelper.updateSafeInterface(rootAddr);
-        address newOwner = address(0xf1f1f1);
+        // When threshold > max current threshold
         uint256 wrongThreshold =
             gnosisHelper.gnosisSafe().getOwners().length + 2;
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
-        vm.startPrank(safeLead);
         vm.expectRevert(Errors.TxExecutionModuleFaild.selector); // safe Contract Internal Error GS201 "Threshold cannot exceed owner count"
         keyperModule.addOwnerWithThreshold(
             newOwner, wrongThreshold, rootAddr, orgHash
@@ -539,10 +490,7 @@ contract TestKeyperSafe is Test, SigningUtils {
         address newOwner = address(0xDEF);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
-        assertEq(
-            keyperModule.isSafeOwner(IGnosisSafe(groupAAddr), groupA1Owners[1]),
-            true
-        );
+        assertEq(gnosisHelper.gnosisSafe().isOwner(groupA1Owners[1]), true);
 
         // GroupB AddOwnerWithThreshold from groupA
         gnosisHelper.updateSafeInterface(groupBAddr);
@@ -550,19 +498,16 @@ contract TestKeyperSafe is Test, SigningUtils {
             newOwner, threshold, groupAAddr, orgHash
         );
         assertEq(result, true);
-        assertEq(
-            keyperModule.isSafeOwner(IGnosisSafe(groupAAddr), newOwner), true
-        );
+        gnosisHelper.updateSafeInterface(groupAAddr);
+        assertEq(gnosisHelper.gnosisSafe().isOwner(newOwner), true);
 
         // GroupB RemoveOwner from groupA
+        gnosisHelper.updateSafeInterface(groupBAddr);
         result = gnosisHelper.createRemoveOwnerTx(
             groupA1Owners[0], groupA1Owners[1], threshold, groupAAddr, orgHash
         );
         assertEq(result, true);
-        assertEq(
-            keyperModule.isSafeOwner(IGnosisSafe(groupAAddr), groupA1Owners[1]),
-            false
-        );
+        assertEq(gnosisHelper.gnosisSafe().isOwner(groupA1Owners[1]), false);
     }
 
     // Revert NotAuthorizedAsNotSafeLead() removeOwner (Attempting to remove an owner from an external org)
