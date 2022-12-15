@@ -313,6 +313,50 @@ contract GnosisSafeHelper is
         return result;
     }
 
+    function createRemoveOwnerTx(
+        address prevOwner,
+        address ownerRemoved,
+        uint256 threshold,
+        address targetSafe,
+        bytes32 org
+    ) public returns (bool) {
+        bytes memory data = abi.encodeWithSignature(
+            "removeOwner(address,address,uint256,address,bytes32)",
+            prevOwner,
+            ownerRemoved,
+            threshold,
+            targetSafe,
+            org
+        );
+        // Create module safe tx
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
+    function addOwnerWithThresholdTx(
+        address ownerAdded,
+        uint256 threshold,
+        address targetSafe,
+        bytes32 org
+    ) public returns (bool) {
+        bytes memory data = abi.encodeWithSignature(
+            "addOwnerWithThreshold(address,uint256,address,bytes32)",
+            ownerAdded,
+            threshold,
+            targetSafe,
+            org
+        );
+        // Create module safe tx
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
     function encodeSignaturesModuleSafeTx(Transaction memory mockTx)
         public
         returns (bytes memory)
