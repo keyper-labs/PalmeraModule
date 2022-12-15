@@ -664,13 +664,12 @@ contract ExecTransactionOnBehalf is Test {
 
     // Revert NotAuthorizedAsNotSafeLead() execTransactionOnBehalf : safe lead of another org/group
     // Caller: fakeCaller
-    // Caller Type: EOA
+    // Caller Type: Safe
     // Caller Role: SAFE_LEAD of the org
     // TargerSafe: safeGroupA1
     // TargetSafe Type: safe
-    function testRevertNotAuthorizedExecTransactionOnBehalfScenarioTwo()
-        public
-    {
+    function testCannot_ExecTransactionOnBehalf_SAFE_LEAD_as_SAFE_Different_Target(
+    ) public {
         (uint256 rootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
@@ -717,4 +716,22 @@ contract ExecTransactionOnBehalf is Test {
     //    Group A starts a executeOnBehalf tx for his children B
     //    -> The calldata for the function is another executeOnBehalfTx for children C
     //       -> Verify that this wrapped executeOnBehalf tx does not work
+
+    // 2: testCannot_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_DifferentTree
+    //    -> SUPER_SAFE ROLE, caller try call function from another tree
+
+    // 3: testCannot_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_DifferentTree
+    //    --> ROOTSAFE from another tree try call function
+
+    // 4: testCannot_ExecTransactionOnBehalf_SAFE_LEAD_as_SAFE_Different_Target
+    //    --> SAFE_LEAD from another group try call function
+
+    // 5: testCannot_ExecTransactionOnBehalf_SAFE_LEAD_as_EOA_Different_Target
+    //    --> SAFE_LEAD from another group try call function
+
+    // 6: testCan_ExecTransactionOnBehalf_SAFE_LEAD_EXEC_ON_BEHALF_ONLY_as_SAFE_is_TARGETS_LEAD
+    //    -> SAFE_LEAD_EXEC_ON_BEHALF_ONLY to target group which caller is lead
+
+    // 7: testCan_ExecTransactionOnBehalf_SAFE_LEAD_EXEC_ON_BEHALF_ONLY_as_EOA_is_TARGETS_LEAD
+    //    -> SAFE_LEAD_EXEC_ON_BEHALF_ONLY (EOA) to target group which caller is lead
 }
