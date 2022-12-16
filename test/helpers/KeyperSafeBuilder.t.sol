@@ -46,6 +46,30 @@ contract KeyperSafeBuilder is Test {
         return (rootId, groupIdA1);
     }
 
+    // Deploy 1 org with 2 group at same level
+    //           RootA
+    //         |         |
+    //     groupA1    groupA2
+    function setupRootWithTwoGroups(
+        string memory orgNameArg,
+        string memory groupA1NameArg,
+        string memory groupA2NameArg
+    ) public returns (uint256 rootIdA, uint256 groupIdA1, uint256 groupIdA2) {
+        (rootIdA, groupIdA1) =
+            setupRootOrgAndOneGroup(orgNameArg, groupA1NameArg);
+        (,,, address rootAddr,,) = keyperModule.getGroupInfo(rootIdA);
+
+        // Create groupA2
+        address groupA2 = gnosisHelper.newKeyperSafe(4, 2);
+        // Create group through safe tx
+        gnosisHelper.createAddGroupTx(rootIdA, groupA2NameArg);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+        groupIdA2 = keyperModule.getGroupIdBySafe(orgHash, groupA2);
+        vm.deal(groupA2, 100 gwei);
+
+        return (rootIdA, groupIdA1, groupIdA2);
+    }
+
     // Deploy 1 org with 2 root safe with 1 group each
     //           RootA      RootB
     //              |         |

@@ -313,7 +313,7 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createRemoveOwnerTx(
+    function removeOwnerTx(
         address prevOwner,
         address ownerRemoved,
         uint256 threshold,

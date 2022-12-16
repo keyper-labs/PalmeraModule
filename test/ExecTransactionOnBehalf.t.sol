@@ -7,6 +7,7 @@ import "./helpers/GnosisSafeHelper.t.sol";
 import "./helpers/KeyperModuleHelper.t.sol";
 import "./helpers/ReentrancyAttackHelper.t.sol";
 import "./helpers/KeyperSafeBuilder.t.sol";
+import "./helpers/DeployHelper.t.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 import {Errors} from "../libraries/Errors.sol";
@@ -17,71 +18,9 @@ import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {Attacker} from "../src/ReentrancyAttack.sol";
 import {console} from "forge-std/console.sol";
 
-contract ExecTransactionOnBehalf is Test {
-    KeyperModule keyperModule;
-    GnosisSafeHelper gnosisHelper;
-    KeyperModuleHelper keyperHelper;
-    KeyperRoles keyperRolesContract;
-    KeyperSafeBuilder keyperSafeBuilder;
-
-    address gnosisSafeAddr;
-    address keyperModuleAddr;
-    address keyperRolesDeployed;
-    address receiver = address(0xABC);
-    string public orgName = "Main Org";
-    string public org2Name = "Second Org";
-    string public groupA1Name = "GroupA1";
-    string public groupA2Name = "GroupA2";
-    string public groupBName = "GroupB";
-    string public subGroupA1Name = "subGroupA1";
-    string public subSubgroupA1Name = "SubSubGroupA";
-
-    // Helper mapping to keep track safes associated with a role
-    mapping(string => address) keyperSafes;
-
+contract ExecTransactionOnBehalf is DeployHelper {
     function setUp() public {
-        CREATE3Factory factory = new CREATE3Factory();
-        bytes32 salt = keccak256(abi.encode(0xafff));
-        // Predict the future address of keyper roles
-        keyperRolesDeployed = factory.getDeployed(address(this), salt);
-
-        // Init a new safe as main organization (3 owners, 1 threshold)
-        gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
-
-        // setting keyperRoles Address
-        gnosisHelper.setKeyperRoles(keyperRolesDeployed);
-
-        // Init KeyperModule
-        address masterCopy = gnosisHelper.gnosisMasterCopy();
-        address safeFactory = address(gnosisHelper.safeFactory());
-
-        keyperModule = new KeyperModule(
-            masterCopy,
-            safeFactory,
-            address(keyperRolesDeployed)
-        );
-        keyperModuleAddr = address(keyperModule);
-        // Init keyperModuleHelper
-        keyperHelper = new KeyperModuleHelper();
-        keyperHelper.initHelper(keyperModule, 30);
-        // Update gnosisHelper
-        gnosisHelper.setKeyperModule(keyperModuleAddr);
-        // Enable keyper module
-        gnosisHelper.enableModuleTx(gnosisSafeAddr);
-
-        bytes memory args = abi.encode(address(keyperModuleAddr));
-
-        bytes memory bytecode =
-            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
-
-        keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
-
-        keyperSafeBuilder = new KeyperSafeBuilder();
-        // keyperSafeBuilder.setGnosisHelper(GnosisSafeHelper(gnosisHelper));
-        keyperSafeBuilder.setUpParams(
-            KeyperModule(keyperModule), GnosisSafeHelper(gnosisHelper)
-        );
+        DeployHelper.deployAllContracts();
     }
 
     // ! ********************** ROOT_SAFE ROLE ********************
