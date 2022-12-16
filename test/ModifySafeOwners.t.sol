@@ -62,6 +62,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(gnosisHelper.gnosisSafe().isOwner(newOwner), true);
     }
 
+    // Caller Info: SAFE_LEAD_MODIFY_OWNERS_ONLY(role), SAFE(type), groupSafe(hierachie)
+    // TargetSafe Type: Child from same hierachical tree
     function testCan_AddOwnerWithThreshold_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_SAFE_is_TARGETS_LEAD(
     ) public {
         (uint256 rootIdA, uint256 groupIdA1,, uint256 groupIdB1) =
@@ -107,6 +109,12 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         );
         assertEq(gnosisHelper.gnosisSafe().isOwner(newOwner), true);
     }
+
+    // TODO : Missing scenarios
+    // Scenario 1: testCan_AddOwnerWithThreshold_SUPER_SAFE_as_SAFE_is_TARGETS_SUPER_SAFE()
+    // Scenario 2: testCan_AddOwnerWithThreshold_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SAFE()
+    // Scenario 3: testCan_AddOwnerWithThreshold_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_SAFE_is_TARGETS_LEAD()
+    // Scenario 4: testCan_AddOwnerWithThreshold_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_EOA_is_TARGETS_LEAD()
 
     // Revert OwnerAlreadyExists() addOwnerWithThreshold (Attempting to add an existing owner)
     // Caller: safeLead
@@ -210,12 +218,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
     //     // ! ********************* removeOwner Test ***********************************
 
-    // removeOwner
-    // Caller: userLead
-    // Caller Type: EOA
-    // Caller Role: SAFE_LEAD of safeGroupA1
-    // TargerSafe: safeGroupA1
-    // TargetSafe Type: safe
+    // Caller Info: SAFE_LEAD(role), EOA(type)
+    // TargetSafe Type: SAFE
     function testCan_RemoveOwner_SAFE_LEAD_as_EOA_is_TARGETS_LEAD() public {
         (uint256 rootId, uint256 groupIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
@@ -252,6 +256,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
     }
 
+    // Caller Info: SAFE_LEAD(role), SAFE(type), groupSafe(hierachie)
+    // TargetSafe Type: SAFE
     function testCan_RemoveOwner_SAFE_LEAD_as_SAFE_is_TARGETS_LEAD() public {
         (uint256 rootId, uint256 groupIdA1, uint256 groupIdA2) =
         keyperSafeBuilder.setupRootWithTwoGroups(
@@ -289,17 +295,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
     }
 
-    // Empower a safe to modify another safe from another org
-    // Caller: safeGroupA2
-    // Caller Type: safe
-    // Caller Role: SAFE_LEAD
-    // TargerSafe: safeGroupA1
-    // TargetSafe Type: safe
-    // Deploy 4 keyperSafes : following structure
-    //           Root1                    Root2
-    //              |                       |
-    //          groupA1                groupB1
-    // safeGroupA2 will be a safeLead of safeGroupA1
+    // Caller Info: SAFE_LEAD(role), SAFE(type), groupSafe(hierachie)
+    // TargetSafe Type: SAFE from different tree
     function testCan_RemoveOwner_SAFE_LEAD_as_SAFE_is_TARGETS_LEAD_DifferentTree(
     ) public {
         (uint256 rootIdA, uint256 groupIdA1,, uint256 groupIdB1) =
@@ -331,6 +328,12 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(result, true);
         assertEq(gnosisHelper.gnosisSafe().isOwner(groupA1Owners[1]), false);
     }
+
+    // TODO : Missing scenarios
+    // Scenario 1: testCan_RemoveOwner_SUPER_SAFE_as_SAFE_is_TARGETS_SUPER_SAFE()
+    // Scenario 2: testCan_RemoveOwner_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SAFE()
+    // Scenario 3: testCan_RemoveOwner_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_SAFE_is_TARGETS_LEAD()
+    // Scenario 4: testCan_RemoveOwner_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_EOA_is_TARGETS_LEAD()
 
     // Revert NotAuthorizedAsNotSafeLead() removeOwner (Attempting to remove an owner from an external org)
     // Caller: org2Addr
