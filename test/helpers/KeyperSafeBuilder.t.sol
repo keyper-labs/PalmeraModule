@@ -30,12 +30,16 @@ contract KeyperSafeBuilder is Test {
     ) public returns (uint256 rootId, uint256 groupIdA1) {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        // update safe of gonsis helper
+        gnosisHelper.updateSafeInterface(rootAddr);
         bool result = gnosisHelper.registerOrgTx(orgNameArg);
         // address rootAddr = address(gnosisHelper.gnosisSafe());
         address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         // Get org Id
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
         rootId = keyperModule.getGroupIdBySafe(orgHash, rootAddr);
+        // update safe of gonsis helper
+        gnosisHelper.updateSafeInterface(groupSafe);
         // Create group through safe tx
         result = gnosisHelper.createAddGroupTx(rootId, groupA1NameArg);
         groupIdA1 = keyperModule.getGroupIdBySafe(orgHash, groupSafe);
@@ -61,6 +65,8 @@ contract KeyperSafeBuilder is Test {
 
         // Create groupA2
         address groupA2 = gnosisHelper.newKeyperSafe(4, 2);
+        // update safe of gonsis helper
+        gnosisHelper.updateSafeInterface(groupA2);
         // Create group through safe tx
         gnosisHelper.createAddGroupTx(rootIdA, groupA2NameArg);
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
@@ -104,12 +110,71 @@ contract KeyperSafeBuilder is Test {
 
         // Create groupB for rootB
         address groupSafeB = gnosisHelper.newKeyperSafe(4, 2);
+        // update safe of gonsis helper
+        gnosisHelper.updateSafeInterface(groupSafeB);
         // Create group through safe tx
         result = gnosisHelper.createAddGroupTx(rootIdB, groupB1NameArg);
         groupIdB1 = keyperModule.getGroupIdBySafe(orgHash, groupSafeB);
         vm.deal(groupSafeB, 100 gwei);
 
         return (rootIdA, groupIdA1, rootIdB, groupIdB1);
+    }
+
+    // Deploy 2 org with 2 root safe with 1 group each
+    //           RootA         RootB
+    //              |            |
+    //           groupA1      groupB1
+    //              |            |
+    //        childGroupA1  childGroupA1
+    function setupTwoRootOrgWithOneGroupAndOneChildEach(
+        string memory orgNameArg,
+        string memory groupA1NameArg,
+        string memory rootBNameArg,
+        string memory groupB1NameArg,
+        string memory childGroupA1NameArg,
+        string memory childGroupB1NameArg
+    )
+        public
+        returns (
+            uint256 rootIdA,
+            uint256 groupIdA1,
+            uint256 rootIdB,
+            uint256 groupIdB1,
+            uint256 childGroupIdA1,
+            uint256 childGroupIdB1
+        )
+    {
+        (rootIdA, groupIdA1, rootIdB, groupIdB1) =
+        setupTwoRootOrgWithOneGroupEach(
+            orgNameArg, groupA1NameArg, rootBNameArg, groupB1NameArg
+        );
+        bytes32 orgHash = keyperModule.getOrgByGroup(rootIdA);
+
+        // Create childGroupA1
+        address childGroupA1 = gnosisHelper.newKeyperSafe(4, 2);
+        // Create childGroupB1
+        address childGroupB1 = gnosisHelper.newKeyperSafe(4, 2);
+
+        // Create group through safe tx
+        gnosisHelper.updateSafeInterface(childGroupA1);
+        gnosisHelper.createAddGroupTx(groupIdA1, childGroupA1NameArg);
+        childGroupIdA1 = keyperModule.getGroupIdBySafe(orgHash, childGroupA1);
+        vm.deal(childGroupA1, 100 gwei);
+
+        // Create group through safe tx
+        gnosisHelper.updateSafeInterface(childGroupB1);
+        gnosisHelper.createAddGroupTx(groupIdB1, childGroupB1NameArg);
+        childGroupIdB1 = keyperModule.getGroupIdBySafe(orgHash, childGroupB1);
+        vm.deal(childGroupB1, 100 gwei);
+
+        return (
+            rootIdA,
+            groupIdA1,
+            rootIdB,
+            groupIdB1,
+            childGroupIdA1,
+            childGroupIdB1
+        );
     }
 
     // Deploy 3 keyperSafes : following structure
@@ -130,6 +195,8 @@ contract KeyperSafeBuilder is Test {
         (rootId, groupIdA1) =
             setupRootOrgAndOneGroup(orgNameArg, groupA1NameArg);
         address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
+        // update safe of gonsis helper
+        gnosisHelper.updateSafeInterface(safeSubGroupA1);
         // Create subgroupA1
         gnosisHelper.createAddGroupTx(groupIdA1, subGroupA1NameArg);
         bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
@@ -165,6 +232,8 @@ contract KeyperSafeBuilder is Test {
         );
 
         address safeSubSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
+        // update safe of gonsis helper
+        gnosisHelper.updateSafeInterface(safeSubSubGroupA1);
         gnosisHelper.createAddGroupTx(subGroupIdA1, subSubGroupA1NameArg);
         bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
         // Get subgroupA1 Id
@@ -204,6 +273,8 @@ contract KeyperSafeBuilder is Test {
         );
 
         address safeGroupB = gnosisHelper.newKeyperSafe(2, 1);
+        // update safe of gonsis helper
+        gnosisHelper.updateSafeInterface(safeGroupB);
         gnosisHelper.createAddGroupTx(rootId, groupBNameArg);
         bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
         // Get groupIdB Id

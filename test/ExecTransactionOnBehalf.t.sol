@@ -663,26 +663,19 @@ contract ExecTransactionOnBehalf is DeployHelper {
     // TargetSafe Type: safe
     function testCannot_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_DifferentTree(
     ) public {
-        (, uint256 safeGroupA1,, uint256 safeGroupB1) = keyperSafeBuilder
-            .setupTwoRootOrgWithOneGroupEach(
-            orgName, groupA1Name, root2Name, groupBName
+        (, uint256 safeGroupA1,,,, uint256 ChildIdB) = keyperSafeBuilder
+            .setupTwoRootOrgWithOneGroupAndOneChildEach(
+            orgName,
+            groupA1Name,
+            root2Name,
+            groupBName,
+            subGroupA1Name,
+            "subGroupB1"
         );
 
         // Inthis case the Fake Caller is a Super Safe of the org in another tree
         address fakeCaller = keyperModule.getGroupSafeAddress(safeGroupA1);
-        address ChildA = gnosisHelper.newKeyperSafe(4, 2);
-        address ChildB = gnosisHelper.newKeyperSafe(4, 2);
-        assertTrue(ChildA != ChildB);
-
-        // Create a child safe for group A
-        gnosisHelper.updateSafeInterface(ChildA);
-        bool result = gnosisHelper.createAddGroupTx(safeGroupA1, "ChildGroupA");
-        assertEq(result, true);
-
-        // Create a child safe for group B
-        gnosisHelper.updateSafeInterface(ChildB);
-        result = gnosisHelper.createAddGroupTx(safeGroupB1, "ChildGroupB");
-        assertEq(result, true);
+        address ChildB = keyperModule.getGroupSafeAddress(ChildIdB);
 
         // Set keyperhelper gnosis safe to org
         bytes memory emptyData;
@@ -720,20 +713,20 @@ contract ExecTransactionOnBehalf is DeployHelper {
     // TargetSafe Type: safe
     function testCannot_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_DifferentTree(
     ) public {
-        (uint256 rootIdA,,, uint256 safeGroupB1) = keyperSafeBuilder
-            .setupTwoRootOrgWithOneGroupEach(
-            orgName, groupA1Name, root2Name, groupBName
+        (uint256 rootIdA,,, uint256 safeGroupB1,, uint256 ChildIdB) =
+        keyperSafeBuilder.setupTwoRootOrgWithOneGroupAndOneChildEach(
+            orgName,
+            groupA1Name,
+            root2Name,
+            groupBName,
+            subGroupA1Name,
+            "subGroupB1"
         );
 
         // Inthis case the Fake Caller is a Root Safe of the org in another tree
         address fakeCaller = keyperModule.getGroupSafeAddress(rootIdA);
         address safeGroupAddrB1 = keyperModule.getGroupSafeAddress(safeGroupB1);
-        address ChildB = gnosisHelper.newKeyperSafe(4, 2);
-
-        // Create a child safe for group B
-        gnosisHelper.updateSafeInterface(ChildB);
-        bool result = gnosisHelper.createAddGroupTx(safeGroupB1, "ChildGroupB");
-        assertEq(result, true);
+        address ChildB = keyperModule.getGroupSafeAddress(ChildIdB);
 
         // Set keyperhelper gnosis safe to org
         bytes memory emptyData;
@@ -784,29 +777,28 @@ contract ExecTransactionOnBehalf is DeployHelper {
     // TargetSafe Type: safe
     function testCannot_ExecTransactionOnBehalf_SAFE_LEAD_as_SAFE_Different_Tree(
     ) public {
-        (uint256 rootIdA, uint256 safeGroupA1,, uint256 safeGroupB1) =
-        keyperSafeBuilder.setupTwoRootOrgWithOneGroupEach(
-            orgName, groupA1Name, root2Name, groupBName
+        (
+            uint256 rootIdA,
+            uint256 safeGroupA1,
+            ,
+            uint256 safeGroupB1,
+            uint256 ChildIdA,
+            uint256 ChildIdB
+        ) = keyperSafeBuilder.setupTwoRootOrgWithOneGroupAndOneChildEach(
+            orgName,
+            groupA1Name,
+            root2Name,
+            groupBName,
+            subGroupA1Name,
+            "subGroupB1"
         );
 
         // Inthis case the Fake Caller is a Super Safe of the org in another tree
         address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
         address fakeCaller = keyperModule.getGroupSafeAddress(safeGroupA1);
         address safeGroupAddrB1 = keyperModule.getGroupSafeAddress(safeGroupB1);
-        address ChildA1 = gnosisHelper.newKeyperSafe(4, 2);
-        address ChildB = gnosisHelper.newKeyperSafe(4, 2);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
-
-        // Create a child safe for group A1
-        gnosisHelper.updateSafeInterface(ChildA1);
-        bool result = gnosisHelper.createAddGroupTx(safeGroupA1, "ChildGroupA1");
-        assertEq(result, true);
-        uint256 childGroupA1 = keyperModule.getGroupIdBySafe(orgHash, ChildA1);
-
-        // Create a child safe for group B
-        gnosisHelper.updateSafeInterface(ChildB);
-        result = gnosisHelper.createAddGroupTx(safeGroupB1, "ChildGroupB");
-        assertEq(result, true);
+        address ChildA1 = keyperModule.getGroupSafeAddress(ChildIdA);
+        address ChildB = keyperModule.getGroupSafeAddress(ChildIdB);
 
         // Set keyperhelper gnosis safe to org
         bytes memory emptyData;
@@ -814,6 +806,8 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         // Set Safe Role in Safe Group A1 over Child Group A1
         vm.startPrank(rootAddrA);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
+        uint256 childGroupA1 = keyperModule.getGroupIdBySafe(orgHash, ChildA1);
         keyperModule.setRole(
             DataTypes.Role.SAFE_LEAD, fakeCaller, childGroupA1, true
         );
@@ -862,29 +856,28 @@ contract ExecTransactionOnBehalf is DeployHelper {
     // TargetSafe Type: safe
     function testCannot_ExecTransactionOnBehalf_SAFE_LEAD_as_EOA_Different_Target(
     ) public {
-        (uint256 rootIdA, uint256 safeGroupA1,, uint256 safeGroupB1) =
-        keyperSafeBuilder.setupTwoRootOrgWithOneGroupEach(
-            orgName, groupA1Name, root2Name, groupBName
+        (
+            uint256 rootIdA,
+            uint256 safeGroupA1,
+            ,
+            uint256 safeGroupB1,
+            uint256 ChildIdA,
+            uint256 ChildIdB
+        ) = keyperSafeBuilder.setupTwoRootOrgWithOneGroupAndOneChildEach(
+            orgName,
+            groupA1Name,
+            root2Name,
+            groupBName,
+            subGroupA1Name,
+            "subGroupB1"
         );
 
         // Inthis case the Fake Caller is a Super Safe of the org in another tree
         address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
         address safeGroupAddrA1 = keyperModule.getGroupSafeAddress(safeGroupA1);
         address safeGroupAddrB1 = keyperModule.getGroupSafeAddress(safeGroupB1);
-        address ChildA1 = gnosisHelper.newKeyperSafe(4, 2);
-        address ChildB = gnosisHelper.newKeyperSafe(4, 2);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
-
-        // Create a child safe for group A1
-        gnosisHelper.updateSafeInterface(ChildA1);
-        bool result = gnosisHelper.createAddGroupTx(safeGroupA1, "ChildGroupA1");
-        assertEq(result, true);
-        uint256 childGroupA1 = keyperModule.getGroupIdBySafe(orgHash, ChildA1);
-
-        // Create a child safe for group B
-        gnosisHelper.updateSafeInterface(ChildB);
-        result = gnosisHelper.createAddGroupTx(safeGroupB1, "ChildGroupB");
-        assertEq(result, true);
+        address ChildA1 = keyperModule.getGroupSafeAddress(ChildIdA);
+        address ChildB = keyperModule.getGroupSafeAddress(ChildIdB);
 
         // Set keyperhelper gnosis safe to org
         bytes memory emptyData;
@@ -895,13 +888,15 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         // Set Safe Role in Safe Group A1 over Child Group A1
         vm.startPrank(rootAddrA);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
+        uint256 childGroupA1 = keyperModule.getGroupIdBySafe(orgHash, ChildA1);
         keyperModule.setRole(
             DataTypes.Role.SAFE_LEAD, fakeCaller, childGroupA1, true
         );
         assertTrue(keyperModule.isSafeLead(childGroupA1, fakeCaller));
         vm.stopPrank();
 
-        // Execute on behalf function from a not authorized caller (Root Safe of Another Tree) over Super Safe and Group Safe in another Three
+        // Execute on behalf function from a not authorized caller (EOA) over another Group
         vm.startPrank(fakeCaller);
         vm.expectRevert(Errors.NotAuthorizedAsNotSafeLead.selector);
         keyperModule.execTransactionOnBehalf(
@@ -1005,6 +1000,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
             Enum.Operation(0),
             signatures
         );
+        assertEq(receiver.balance, 2 gwei);
     }
 
     // testCan_ExecTransactionOnBehalf_SAFE_LEAD_EXEC_ON_BEHALF_ONLY_as_EOA_is_TARGETS_LEAD
@@ -1063,10 +1059,9 @@ contract ExecTransactionOnBehalf is DeployHelper {
             Enum.Operation(0),
             signatures
         );
+        assertEq(receiver.balance, 2 gwei);
         vm.stopPrank();
     }
-
-    // Missing scenarios:
 
     // Org with a root safe with 3 child levels: A, B, C
     //    Group A starts a executeOnBehalf tx for his children B
