@@ -404,53 +404,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
-    // Revert ZeroAddressProvided removeOwner
-    // Caller: fakeCaller
-    // Caller Type: SAFE
-    // Caller Role: ROOT_SAFE of org
-    // TargerSafe: groupAAddr
-    // TargetSafe Type: Super Safe
-    function testRevertZeroAddressProvidedRemoveOwner() public {
-        (uint256 rootIdA, uint256 groupIdA1,,) = keyperSafeBuilder
-            .setupTwoRootOrgWithOneGroupEach(
-            orgName, groupA1Name, root2Name, groupBName
-        );
-
-        address fakeCaller = keyperModule.getGroupSafeAddress(rootIdA);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(fakeCaller);
-
-        address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
-
-        // Get groupA signers info
-        gnosisHelper.updateSafeInterface(groupAAddr);
-        address[] memory groupA1Owners = gnosisHelper.gnosisSafe().getOwners();
-        address prevOwner = groupA1Owners[0];
-        address ownerToRemove = groupA1Owners[1];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-
-        vm.startPrank(fakeCaller);
-        vm.expectRevert(Errors.ZeroAddressProvided.selector);
-        keyperModule.removeOwner(
-            zeroAddress, ownerToRemove, threshold, groupAAddr, orgHash
-        );
-
-        vm.expectRevert(Errors.ZeroAddressProvided.selector);
-        keyperModule.removeOwner(
-            prevOwner, zeroAddress, threshold, groupAAddr, orgHash
-        );
-
-        vm.expectRevert(Errors.ZeroAddressProvided.selector);
-        keyperModule.removeOwner(
-            sentinel, ownerToRemove, threshold, groupAAddr, orgHash
-        );
-
-        vm.expectRevert(Errors.ZeroAddressProvided.selector);
-        keyperModule.removeOwner(
-            prevOwner, sentinel, threshold, groupAAddr, orgHash
-        );
-        vm.stopPrank();
-    }
-
     // Revert InvalidThreshold() addOwnerWithThreshold
     // Caller: safeLead
     // Caller Type: EOA
@@ -551,6 +504,122 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
+    // Revert NotAuthorizedAsNotSafeLead() addOwnerWithThreshold (Attempting to add an owner from an external org)
+    // Caller: org2Addr
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE for org2
+    // TargerSafe: rootAddr
+    // TargetSafe Type: rootSafe
+    function testRevertRootSafesAttemptToAddToExternalSafeOrg() public {
+        (uint256 rootIdA,, uint256 rootIdB,) = keyperSafeBuilder
+            .setupTwoRootOrgWithOneGroupEach(
+            orgName, groupA1Name, root2Name, groupBName
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootIdA);
+        address rootBAddr = keyperModule.getGroupSafeAddress(rootIdB);
+
+        address newOwnerOnOrgA = address(0xF1F1);
+        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+        vm.expectRevert(Errors.NotAuthorizedAddOwnerWithThreshold.selector);
+
+        vm.startPrank(rootBAddr);
+        keyperModule.addOwnerWithThreshold(
+            newOwnerOnOrgA, threshold, rootAddr, orgHash
+        );
+    }
+
+    //     // ! ********************* removeOwner Test ***********************************
+
+    // Revert ZeroAddressProvided removeOwner
+    // Caller: fakeCaller
+    // Caller Type: SAFE
+    // Caller Role: ROOT_SAFE of org
+    // TargerSafe: groupAAddr
+    // TargetSafe Type: Super Safe
+    function testRevertZeroAddressProvidedRemoveOwner() public {
+        (uint256 rootIdA, uint256 groupIdA1,,) = keyperSafeBuilder
+            .setupTwoRootOrgWithOneGroupEach(
+            orgName, groupA1Name, root2Name, groupBName
+        );
+
+        address fakeCaller = keyperModule.getGroupSafeAddress(rootIdA);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(fakeCaller);
+
+        address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
+
+        // Get groupA signers info
+        gnosisHelper.updateSafeInterface(groupAAddr);
+        address[] memory groupA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address prevOwner = groupA1Owners[0];
+        address ownerToRemove = groupA1Owners[1];
+        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+
+        vm.startPrank(fakeCaller);
+        vm.expectRevert(Errors.ZeroAddressProvided.selector);
+        keyperModule.removeOwner(
+            zeroAddress, ownerToRemove, threshold, groupAAddr, orgHash
+        );
+
+        vm.expectRevert(Errors.ZeroAddressProvided.selector);
+        keyperModule.removeOwner(
+            prevOwner, zeroAddress, threshold, groupAAddr, orgHash
+        );
+
+        vm.expectRevert(Errors.ZeroAddressProvided.selector);
+        keyperModule.removeOwner(
+            sentinel, ownerToRemove, threshold, groupAAddr, orgHash
+        );
+
+        vm.expectRevert(Errors.ZeroAddressProvided.selector);
+        keyperModule.removeOwner(
+            prevOwner, sentinel, threshold, groupAAddr, orgHash
+        );
+        vm.stopPrank();
+    }
+
+    // Revert InvalidThreshold() removeOwner
+    // Caller: safeLead
+    // Caller Type: EOA
+    // Caller Role: SAFE_LEAD of org
+    // TargerSafe: rootAddr
+    function testRevertInvalidThresholdRemoveOwner() public {
+        (uint256 rootId, uint256 groupA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1);
+        address safeLead = address(0x123);
+
+        vm.startPrank(rootAddr);
+        keyperModule.setRole(DataTypes.Role.SAFE_LEAD, safeLead, rootId, true);
+        vm.stopPrank();
+
+        // (When threshold < 1)
+        gnosisHelper.updateSafeInterface(groupA1Addr);
+        address[] memory groupA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address prevOwner = groupA1Owners[0];
+        address removeOwner = groupA1Owners[1];
+        uint256 zeroThreshold = 0;
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
+        vm.startPrank(safeLead);
+        vm.expectRevert(Errors.TxExecutionModuleFaild.selector); // safe Contract Internal Error GS202 "Threshold needs to be greater than 0"
+        keyperModule.removeOwner(
+            prevOwner, removeOwner, zeroThreshold, rootAddr, orgHash
+        );
+
+        // When threshold > max current threshold
+        uint256 wrongThreshold =
+            gnosisHelper.gnosisSafe().getOwners().length + 2;
+
+        vm.expectRevert(Errors.TxExecutionModuleFaild.selector); // safe Contract Internal Error GS201 "Threshold cannot exceed owner count"
+        keyperModule.removeOwner(
+            prevOwner, removeOwner, wrongThreshold, rootAddr, orgHash
+        );
+    }
+
     // Revert SafeNotRegistered() removeOwner (Attempting to target safe not Registered like group)
     // Caller: fakeCaller
     // Caller Type: SAFE
@@ -613,34 +682,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         );
         vm.stopPrank();
     }
-
-    // Revert NotAuthorizedAsNotSafeLead() addOwnerWithThreshold (Attempting to add an owner from an external org)
-    // Caller: org2Addr
-    // Caller Type: rootSafe
-    // Caller Role: ROOT_SAFE for org2
-    // TargerSafe: rootAddr
-    // TargetSafe Type: rootSafe
-    function testRevertRootSafesAttemptToAddToExternalSafeOrg() public {
-        (uint256 rootIdA,, uint256 rootIdB,) = keyperSafeBuilder
-            .setupTwoRootOrgWithOneGroupEach(
-            orgName, groupA1Name, root2Name, groupBName
-        );
-
-        address rootAddr = keyperModule.getGroupSafeAddress(rootIdA);
-        address rootBAddr = keyperModule.getGroupSafeAddress(rootIdB);
-
-        address newOwnerOnOrgA = address(0xF1F1);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        vm.expectRevert(Errors.NotAuthorizedAddOwnerWithThreshold.selector);
-
-        vm.startPrank(rootBAddr);
-        keyperModule.addOwnerWithThreshold(
-            newOwnerOnOrgA, threshold, rootAddr, orgHash
-        );
-    }
-
-    //     // ! ********************* removeOwner Test ***********************************
 
     // Caller: userLeadEOA
     // Caller Type: EOA
