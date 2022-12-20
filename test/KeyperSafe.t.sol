@@ -425,6 +425,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
+        vm.expectRevert(Errors.TxOnBehalfExecutedFailed.selector);
         bool result = attackerContract.performAttack(
             orgHash,
             victim,
@@ -435,7 +436,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
             signatures
         );
 
-        assertEq(result, true);
+        assertEq(result, false);
 
         // This is the expected behavior since the nonReentrant modifier is blocking the attacker from draining the victim's funds nor transfer any amount
         assertEq(attackerContract.getBalanceFromSafe(victim), 100 gwei);

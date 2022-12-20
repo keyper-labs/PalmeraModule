@@ -215,6 +215,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             to, value, data, operation
         );
 
+        if (!result) revert Errors.TxOnBehalfExecutedFailed();
         emit Events.TxOnBehalfExecuted(org, caller, targetSafe, result);
     }
 

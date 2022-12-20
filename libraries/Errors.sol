@@ -40,6 +40,8 @@ library Errors {
     error InvalidThreshold();
 	/// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
     error TxExecutionModuleFaild();
+	/// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
+	error TxOnBehalfExecutedFailed();
 	/// @dev Error messages when the caller is an Invalid Gnosis Safe
     error InvalidGnosisSafe(address safe);
 	/// @dev Error messages when the caller is an Invalid Gnosis Root Safe
