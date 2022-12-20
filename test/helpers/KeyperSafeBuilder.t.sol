@@ -30,16 +30,12 @@ contract KeyperSafeBuilder is Test {
     ) public returns (uint256 rootId, uint256 groupIdA1) {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
-        // update safe of gonsis helper
-        gnosisHelper.updateSafeInterface(rootAddr);
         bool result = gnosisHelper.registerOrgTx(orgNameArg);
-        // address rootAddr = address(gnosisHelper.gnosisSafe());
-        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         // Get org Id
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
         rootId = keyperModule.getGroupIdBySafe(orgHash, rootAddr);
-        // update safe of gonsis helper
-        gnosisHelper.updateSafeInterface(groupSafe);
+
+        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
         // Create group through safe tx
         result = gnosisHelper.createAddGroupTx(rootId, groupA1NameArg);
         groupIdA1 = keyperModule.getGroupIdBySafe(orgHash, groupSafe);
@@ -65,8 +61,7 @@ contract KeyperSafeBuilder is Test {
 
         // Create groupA2
         address groupA2 = gnosisHelper.newKeyperSafe(4, 2);
-        // update safe of gonsis helper
-        gnosisHelper.updateSafeInterface(groupA2);
+
         // Create group through safe tx
         gnosisHelper.createAddGroupTx(rootIdA, groupA2NameArg);
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
@@ -110,8 +105,7 @@ contract KeyperSafeBuilder is Test {
 
         // Create groupB for rootB
         address groupSafeB = gnosisHelper.newKeyperSafe(4, 2);
-        // update safe of gonsis helper
-        gnosisHelper.updateSafeInterface(groupSafeB);
+
         // Create group through safe tx
         result = gnosisHelper.createAddGroupTx(rootIdB, groupB1NameArg);
         groupIdB1 = keyperModule.getGroupIdBySafe(orgHash, groupSafeB);
@@ -152,17 +146,12 @@ contract KeyperSafeBuilder is Test {
 
         // Create childGroupA1
         address childGroupA1 = gnosisHelper.newKeyperSafe(4, 2);
-        // Create childGroupB1
-        address childGroupB1 = gnosisHelper.newKeyperSafe(4, 2);
-
-        // Create group through safe tx
-        gnosisHelper.updateSafeInterface(childGroupA1);
         gnosisHelper.createAddGroupTx(groupIdA1, childGroupA1NameArg);
         childGroupIdA1 = keyperModule.getGroupIdBySafe(orgHash, childGroupA1);
         vm.deal(childGroupA1, 100 gwei);
 
-        // Create group through safe tx
-        gnosisHelper.updateSafeInterface(childGroupB1);
+        // Create childGroupB1
+        address childGroupB1 = gnosisHelper.newKeyperSafe(4, 2);
         gnosisHelper.createAddGroupTx(groupIdB1, childGroupB1NameArg);
         childGroupIdB1 = keyperModule.getGroupIdBySafe(orgHash, childGroupB1);
         vm.deal(childGroupB1, 100 gwei);
@@ -195,8 +184,7 @@ contract KeyperSafeBuilder is Test {
         (rootId, groupIdA1) =
             setupRootOrgAndOneGroup(orgNameArg, groupA1NameArg);
         address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
-        // update safe of gonsis helper
-        gnosisHelper.updateSafeInterface(safeSubGroupA1);
+
         // Create subgroupA1
         gnosisHelper.createAddGroupTx(groupIdA1, subGroupA1NameArg);
         bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
@@ -232,8 +220,7 @@ contract KeyperSafeBuilder is Test {
         );
 
         address safeSubSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
-        // update safe of gonsis helper
-        gnosisHelper.updateSafeInterface(safeSubSubGroupA1);
+
         gnosisHelper.createAddGroupTx(subGroupIdA1, subSubGroupA1NameArg);
         bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
         // Get subgroupA1 Id
@@ -273,8 +260,6 @@ contract KeyperSafeBuilder is Test {
         );
 
         address safeGroupB = gnosisHelper.newKeyperSafe(2, 1);
-        // update safe of gonsis helper
-        gnosisHelper.updateSafeInterface(safeGroupB);
         gnosisHelper.createAddGroupTx(rootId, groupBNameArg);
         bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
         // Get groupIdB Id

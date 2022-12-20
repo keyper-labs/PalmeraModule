@@ -961,7 +961,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         // Create a child safe for group A2
         address rightCaller = gnosisHelper.newKeyperSafe(4, 2);
-        gnosisHelper.updateSafeInterface(rightCaller);
         bool result = gnosisHelper.createAddGroupTx(safeGroupA1, "ChildGroupA2");
         assertEq(result, true);
 
@@ -1088,7 +1087,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         // Create a child safe for group A2
         address fakeCaller = gnosisHelper.newKeyperSafe(4, 2);
-        gnosisHelper.updateSafeInterface(fakeCaller);
         bool result = gnosisHelper.createAddGroupTx(safeGroupA1, "ChildGroupA2");
         assertEq(result, true);
 
