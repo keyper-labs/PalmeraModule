@@ -184,7 +184,9 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Caller Role: ROOT_SAFE
     // TargerSafe: safeGroupA1
     // TargetSafe Type: safe
-    function testRemoveGroupFromOrg() public {
+    function testCan_RemoveGroup_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree()
+        public
+    {
         (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, groupA1Name, subGroupA1Name
@@ -201,42 +203,14 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), true);
         // Check org is parent of safeSubGroupA1
         assertEq(keyperModule.isSuperSafe(rootId, subGroupA1Id), true);
-    }
 
-    /// removeGroup when org == superSafe
-    // Caller: rootAddr
-    // Caller Type: rootSafe
-    // Caller Role: ROOT_SAFE
-    // TargerSafe: safeGroupA1
-    // TargetSafe Type: safe
-    function testRemoveGroupFromSafeOrgEqSuperSafe() public {
-        (uint256 rootId, uint256 groupIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-
-        // Create a sub safe
-        address safeSubGroupA1 = gnosisHelper.newKeyperSafe(3, 2);
-        keyperSafes[subGroupA1Name] = address(safeSubGroupA1);
-        bool result = gnosisHelper.createAddGroupTx(groupIdA1, subGroupA1Name);
-        assertEq(result, true);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        uint256 subGroupA1Id =
-            keyperModule.getGroupIdBySafe(orgHash, safeSubGroupA1);
-
-        gnosisHelper.updateSafeInterface(rootAddr);
-        result = gnosisHelper.createRemoveGroupTx(groupIdA1);
-        assertEq(result, true);
-
-        assertEq(keyperModule.isSuperSafe(rootId, groupIdA1), false);
-
+        // Check removed group parent has subSafeGroup A as child an not safeGroupA1
         uint256[] memory child;
         (,,,, child,) = keyperModule.getGroupInfo(rootId);
-        // Check removed group parent has subSafeGroup A as child an not safeGroupA1
         assertEq(child.length, 1);
-        assertEq(child[0] == groupIdA1, false);
+        assertEq(child[0] == groupA1Id, false);
         assertEq(child[0] == subGroupA1Id, true);
-        assertEq(keyperModule.isTreeMember(rootId, groupIdA1), false);
+        assertEq(keyperModule.isTreeMember(rootId, groupA1Id), false);
     }
 
     // ? Org call removeGroup for a group of another org
@@ -250,7 +224,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     //             |                       |
     //         groupA                 groupB
     // Must Revert if RootOrg1 attempt to remove GroupA2
-    function testRevertRemoveGroupFromAnotherOrg() public {
+    function testCannot_RemoveGroup_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentTree(
+    ) public {
         (uint256 rootIdA, uint256 groupAId, uint256 rootIdB, uint256 groupBId) =
         keyperSafeBuilder.setupTwoRootOrgWithOneGroupEach(
             orgName, groupA1Name, root2Name, groupBName
@@ -307,98 +282,10 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
     }
 
-    // ! ******************* setRole Test *****************************************
-
-    // setLead as a role at setRole Test
-    // Caller: rootAddr
-    // Caller Type: rootSafe
-    // Caller Role: ROOT_SAFE, SUPER_SAFE
-    // TargerSafe: userLead
-    // TargetSafe Type: EOA
-    function testSetSafeLead() public {
-        (uint256 rootId, uint256 safeGroupA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address userEOALead = address(0x123);
-
-        vm.startPrank(rootAddr);
-        keyperModule.setRole(
-            DataTypes.Role.SAFE_LEAD, userEOALead, safeGroupA1, true
-        );
-
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                userEOALead, uint8(DataTypes.Role.SAFE_LEAD)
-            ),
-            true
-        );
-
-        assertEq(keyperModule.isSafeLead(safeGroupA1, userEOALead), true);
-
-        address safeLead = gnosisHelper.newKeyperSafe(4, 2);
-        keyperModule.setRole(
-            DataTypes.Role.SAFE_LEAD, safeLead, safeGroupA1, true
-        );
-
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                safeLead, uint8(DataTypes.Role.SAFE_LEAD)
-            ),
-            true
-        );
-
-        assertEq(keyperModule.isSafeLead(safeGroupA1, safeLead), true);
-    }
-
-    // Attempt to set a forbidden role to an EOA
-    // Caller: rootAddr
-    // Caller Type: rootSafe
-    // Caller Role: ROOT_SAFE, SUPER_SAFE
-    // TargerSafe: user
-    // TargetSafe Type: EOA
-    function testRevertSetRoleForbidden() public {
-        (uint256 rootId, uint256 safeGroupA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-
-        address user = address(0xABCDE);
-
-        vm.startPrank(rootAddr);
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.SetRoleForbidden.selector, 4)
-        );
-        keyperModule.setRole(DataTypes.Role.ROOT_SAFE, user, safeGroupA1, true);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.SetRoleForbidden.selector, 3)
-        );
-        keyperModule.setRole(DataTypes.Role.SUPER_SAFE, user, safeGroupA1, true);
-    }
-
-    // Attempt to set a forbidden role to an EOA
-    // Caller: safeGroupA1
-    // Caller Type: safe
-    // Caller Role: SUPER_SAFE
-    // TargerSafe: user
-    // TargetSafe Type: EOA
-    function testRevertSetRolesToOrgNotRegistered() public {
-        (, uint256 groupA1Id) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-
-        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
-
-        address user = address(0xABCDE);
-
-        vm.startPrank(groupA1Addr);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, groupA1Addr
-            )
-        );
-        keyperModule.setRole(DataTypes.Role.SAFE_LEAD, user, groupA1Id, true);
-    }
+    // Missing scenarios
+    // 1 : testCan_RemoveGroup_SUPER_SAFE_as_SAFE_is_SUPER_SAFE_SameTree
+    // 2 : testCannot_RemoveGroup_SUPER_SAFE_as_SAFE_is_not_TARGETS_ROOT_SameTree
+    // 3 : testCannot_RemoveGroup_SUPER_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentTree
 
     // ! ****************** Reentrancy Attack Test to execOnBehalf ***************
 
@@ -442,4 +329,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         assertEq(attackerContract.getBalanceFromSafe(victim), 100 gwei);
         assertEq(attackerContract.getBalanceFromAttacker(), 0);
     }
+
+    // Missing case
+    // Test hasNotPermissionOverTarget multiple scenarios
+    //
 }
