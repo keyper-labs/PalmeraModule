@@ -88,7 +88,7 @@ ModifySafeOwners:testRevertRootSafeToAttemptTo_AddOwnerWithThreshold_ROOT_SAFE_a
 ModifySafeOwners:testRevertRootSafeToAttemptTo_AddOwnerWithThreshold_SUPER_SAFE_as_SAFE_is_TARGETS_SUPER_SAFE() (gas: 3732836)
 ModifySafeOwners:testRevertRootSafeToAttemptTo_removeOwner_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SAFE() (gas: 2500801)
 ModifySafeOwners:testRevertRootSafeToAttemptTo_removeOwner_SUPER_SAFE_as_SAFE_is_TARGETS_SUPER_SAFE() (gas: 3733194)
-ModifySafeOwners:testRevertRootSafesAttemptToAddToExternalSafeOrg() (gas: 2490735)
+ModifySafeOwners:testRevertRootSafesAttemptToAddToExternalSafeOrg() (gas: 2491107)
 ModifySafeOwners:testRevertRootSafesToAttemptToRemoveFromExternalOrg() (gas: 2502425)
 ModifySafeOwners:testRevertSafeNotRegisteredAddOwnerWithThreshold_EOA_Caller() (gas: 2051396)
 ModifySafeOwners:testRevertSafeNotRegisteredAddOwnerWithThreshold_SAFE_Caller() (gas: 2056073)
