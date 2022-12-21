@@ -37,6 +37,7 @@ contract DeployHelper is Test {
     string groupA2Name = "GroupA2";
     string groupBName = "GroupB";
     string subGroupA1Name = "subGroupA1";
+    string subGroupB1Name = "subGroupB1";
     string subSubgroupA1Name = "SubSubGroupA";
 
     function deployAllContracts() public {
