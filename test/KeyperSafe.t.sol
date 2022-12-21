@@ -178,12 +178,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
     // ! ******************** removeGroup Test *************************************
 
-    // removeGroup
-    // Caller: rootAddr
-    // Caller Type: rootSafe
-    // Caller Role: ROOT_SAFE
-    // TargerSafe: safeGroupA1
-    // TargetSafe Type: safe
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
+    // Target Info: Type-> SAFE, Name -> safeGroupA1, Hierarchy related to caller -> SAME_TREE
     function testCan_RemoveGroup_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree()
         public
     {
@@ -213,17 +209,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         assertEq(keyperModule.isTreeMember(rootId, groupA1Id), false);
     }
 
-    // ? Org call removeGroup for a group of another org
-    // Caller: rootAddr, rootAddr2
-    // Caller Type: rootSafe
-    // Caller Role: N/A
-    // TargerSafe: safeGroupA1, safeGroupA2
-    // TargetSafe Type: safe as a child
-    // Deploy 4 keyperSafes : following structure
-    //           Root                    RootB
-    //             |                       |
-    //         groupA                 groupB
-    // Must Revert if RootOrg1 attempt to remove GroupA2
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
+    // Target Info: Type-> SAFE, Name -> groupB, Hierarchy related to caller -> DIFFERENT_TREE
     function testCannot_RemoveGroup_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentTree(
     ) public {
         (uint256 rootIdA, uint256 groupAId, uint256 rootIdB, uint256 groupBId) =
@@ -243,8 +230,74 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         keyperModule.removeGroup(groupAId);
     }
 
-    // ? Check disableSafeLeadRoles method success
-    // groupA1 removed and it should not have any role
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> groupA
+    // Target Info: Type-> SAFE, Name -> subGroupA, Hierarchy related to caller -> SAME_TREE, CHILDREN
+    function testCan_RemoveGroup_SUPER_SAFE_as_SAFE_is_SUPER_SAFE_SameTree()
+        public
+    {
+        (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, groupA1Name, subGroupA1Name
+        );
+
+        address groupAAddr = keyperModule.getGroupSafeAddress(groupA1Id);
+
+        gnosisHelper.updateSafeInterface(groupAAddr);
+        bool result = gnosisHelper.createRemoveGroupTx(subGroupA1Id);
+        assertEq(result, true);
+        assertEq(keyperModule.isSuperSafe(groupA1Id, subGroupA1Id), false);
+        assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), false);
+
+        // Check supersafe has not any children
+        uint256[] memory child;
+        (,,,, child,) = keyperModule.getGroupInfo(groupA1Id);
+        assertEq(child.length, 0);
+    }
+
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> groupA
+    // Target Info: Type-> SAFE, Name -> groupB, Hierarchy related to caller -> DIFFERENT_TREE,NOT_DIRECT_CHILDREN
+    function testCannot_RemoveGroup_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_DifferentTree(
+    ) public {
+        (, uint256 groupAId,, uint256 groupBId,,) = keyperSafeBuilder
+            .setupTwoRootOrgWithOneGroupAndOneChildEach(
+            orgName,
+            groupA1Name,
+            root2Name,
+            groupBName,
+            subGroupA1Name,
+            subGroupB1Name
+        );
+
+        address groupAAddr = keyperModule.getGroupSafeAddress(groupAId);
+        vm.startPrank(groupAAddr);
+        vm.expectRevert(Errors.NotAuthorizedAsNotSuperSafe.selector);
+        keyperModule.removeGroup(groupBId);
+        vm.stopPrank();
+
+        address groupBAddr = keyperModule.getGroupSafeAddress(groupBId);
+        vm.startPrank(groupBAddr);
+        vm.expectRevert(Errors.NotAuthorizedAsNotSuperSafe.selector);
+        keyperModule.removeGroup(groupAId);
+    }
+
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> groupA
+    // Target Info: Type-> SAFE, Name -> subsubGroupA, Hierarchy related to caller -> SAME_TREE,NOT_DIRECT_CHILDREN
+    function testCannot_RemoveGroup_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_SameTree(
+    ) public {
+        (, uint256 groupAId,, uint256 subSubGroupA1) = keyperSafeBuilder
+            .setupOrgFourTiersTree(
+            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
+        );
+
+        address groupAAddr = keyperModule.getGroupSafeAddress(groupAId);
+        vm.startPrank(groupAAddr);
+        vm.expectRevert(Errors.NotAuthorizedAsNotSuperSafe.selector);
+        keyperModule.removeGroup(subSubGroupA1);
+        vm.stopPrank();
+    }
+
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
+    // Target Info: Type-> SAFE, Name -> groupA, Hierarchy related to caller -> SAME_TREE, CHILDREN
     function testRemoveGroupAndCheckDisables() public {
         (uint256 rootId, uint256 groupA1Id) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
@@ -281,11 +334,6 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
             false
         );
     }
-
-    // Missing scenarios
-    // 1 : testCan_RemoveGroup_SUPER_SAFE_as_SAFE_is_SUPER_SAFE_SameTree
-    // 2 : testCannot_RemoveGroup_SUPER_SAFE_as_SAFE_is_not_TARGETS_ROOT_SameTree
-    // 3 : testCannot_RemoveGroup_SUPER_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentTree
 
     // ! ****************** Reentrancy Attack Test to execOnBehalf ***************
 
