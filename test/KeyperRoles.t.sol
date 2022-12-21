@@ -18,7 +18,7 @@ contract KeyperRolesTest is Test, DeployHelper {
         DeployHelper.deployAllContracts();
     }
 
-    function testRolesModulesSetup() public {
+    function testCan_KeyperModule_Setup_RoleContract() public {
         // Check KeyperModule has role capabilites
         assertEq(
             keyperRolesContract.doesRoleHaveCapability(
@@ -40,12 +40,13 @@ contract KeyperRolesTest is Test, DeployHelper {
         assertEq(keyperRolesContract.owner(), keyperModuleAddr);
     }
 
-    function testSetSafeRoleOnOrgRegister() public {
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
+    function testCan_ROOT_SAFE_SetRole_ROOT_SAFE_When_RegisterOrg() public {
         address org1 = gnosisSafeAddr;
         vm.startPrank(org1);
 
         KeyperModule keyperModule = KeyperModule(keyperModuleAddr);
-        keyperModule.registerOrg("Org1");
+        keyperModule.registerOrg(orgName);
         // Check Role
         assertEq(
             keyperRolesContract.doesRoleHaveCapability(
@@ -59,7 +60,7 @@ contract KeyperRolesTest is Test, DeployHelper {
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     // Target Info: Type-> EOA, Name -> EAO, Hierarchy related to caller -> N/A
-    function testCan_SetRole_SAFE_LEAD_to_EAO() public {
+    function testCan_ROOT_SAFE_SetRole_SAFE_LEAD_to_EAO() public {
         (uint256 rootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
@@ -79,25 +80,11 @@ contract KeyperRolesTest is Test, DeployHelper {
         );
 
         assertEq(keyperModule.isSafeLead(safeGroupA1, userEOALead), true);
-
-        address safeLead = gnosisHelper.newKeyperSafe(4, 2);
-        keyperModule.setRole(
-            DataTypes.Role.SAFE_LEAD, safeLead, safeGroupA1, true
-        );
-
-        assertEq(
-            keyperRolesContract.doesUserHaveRole(
-                safeLead, uint8(DataTypes.Role.SAFE_LEAD)
-            ),
-            true
-        );
-
-        assertEq(keyperModule.isSafeLead(safeGroupA1, safeLead), true);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     // Target Info: Type-> SAFE, Name -> GroupA, Hierarchy related to caller -> N/A
-    function testCan_SetRole_SAFE_LEAD_to_SAFE() public {
+    function testCan_ROOT_SAFE_SetRole_SAFE_LEAD_to_SAFE() public {
         (uint256 rootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
@@ -122,7 +109,7 @@ contract KeyperRolesTest is Test, DeployHelper {
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     // Target Info: Type-> EOA, Name -> GroupA, Hierarchy related to caller -> N/A
-    function testCannot_SetRole_ROOT_SAFE_to_EAO() public {
+    function testCannot_ROOT_SAFE_SetRole_ROOT_SAFE_to_EAO() public {
         (uint256 rootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
@@ -139,7 +126,7 @@ contract KeyperRolesTest is Test, DeployHelper {
 
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> groupA
     // Target Info: Type-> EOA, Name -> user, Hierarchy related to caller -> N/A
-    function testCannot_SetRole_SAFE_LEAD_to_EAO() public {
+    function testCannot_SUPER_SAFE_SetRole_SAFE_LEAD_to_EAO() public {
         (, uint256 groupA1Id) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
@@ -158,7 +145,7 @@ contract KeyperRolesTest is Test, DeployHelper {
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> root
     // Target Info: Type-> SAFE, Name -> groupA, Hierarchy related to caller -> N/A
-    function testCannot_SetRole_SUPER_SAFE_to_SAFE() public {
+    function testCannot_ROOT_SAFE_SetRole_SUPER_SAFE_to_SAFE() public {
         (uint256 rootId, uint256 groupA1Id, uint256 subGroupAId) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, groupA1Name, subGroupA1Name
@@ -178,7 +165,7 @@ contract KeyperRolesTest is Test, DeployHelper {
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     // Target Info: Type-> EOA, Name -> GroupA, Hierarchy related to caller -> N/A
-    function testCannot_SetRole_SUPER_SAFE_to_EAO() public {
+    function testCannot_ROOT_SAFE_SetRole_SUPER_SAFE_to_EAO() public {
         (uint256 rootId, uint256 safeGroupA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
