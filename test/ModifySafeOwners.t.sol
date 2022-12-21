@@ -861,12 +861,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
-    // Revert Root Safe to attempt to remove owner SUPER_SAFE as SAFE is TARGETS SUPER SAFE
-    // Caller: groupAAddr
-    // Caller Type: SAFE
-    // Caller Role: SUPER_SAFE for org1
-    // Caller Info: SUPER_SAFE(role), SAFE(type), groupSafe(hierachie)
-    // TargetSafe Type: SAFE from the same tree (Right TARGETS SUPER SAFE)
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> rootAddrB
+    // Target Info: Name -> rootAddrA, Hierarchy related to caller -> DIFFERENT TREE,
     function testRevertRootSafeToAttemptTo_removeOwner_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SAFE(
     ) public {
         (uint256 rootIdA,, uint256 rootIdB,) = keyperSafeBuilder
@@ -897,11 +893,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
-    // Caller: groupBAddr
-    // Caller Type: SAFE
-    // Caller Role: SAFE_LEAD_MODIFY_OWNERS_ONLY for org1
-    // Caller Info: SAFE_LEAD_MODIFY_OWNERS_ONLY(role), SAFE(type), groupSafe(hierachie)
-    // TargetSafe Type: SAFE from the same tree (Right TARGETS LEAD)
+    // Caller Info: Role-> SAFE_LEAD_MODIFY_OWNERS_ONLY, Type -> SAFE, Hierarchy -> GROUP, Name -> groupBAddr
+    // Target Info: Name -> groupAAddr, Hierarchy related to caller -> SAME TREE,
     function testCan_RemoveOwner_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_SAFE_is_TARGETS_LEAD(
     ) public {
         (uint256 rootIdA, uint256 groupIdA1,, uint256 groupIdB1) =
@@ -949,11 +942,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(gnosisHelper.gnosisSafe().isOwner(removeOwner), false);
     }
 
-    // Caller: userLeadModifyOwnersOnly
-    // Caller Type: EOA
-    // Caller Role: SAFE_LEAD_MODIFY_OWNERS_ONLY for org1
-    // Caller Info: SAFE_LEAD_MODIFY_OWNERS_ONLY(role), SAFE(type), groupSafe(hierachie)
-    // TargetSafe Type: EOA from the same tree (Right TARGETS LEAD)
+    // Caller Info: Role-> SAFE_LEAD_MODIFY_OWNERS_ONLY, Type -> EOA, Hierarchy -> NOT_REGISTERED, Name -> userLeadModifyOwnersOnly
+    // Target Info: Name -> groupA1Addr, Hierarchy related to caller -> SAFE Leading by caller,
     function testCan_RemoveOwner_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_EOA_is_TARGETS_LEAD(
     ) public {
         (uint256 rootId, uint256 groupIdA1) =
@@ -990,12 +980,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(gnosisHelper.gnosisSafe().isOwner(removeOwner), false);
     }
 
-    // Revert NotAuthorizedAsNotSafeLead() removeOwner (Attempting to remove an owner from an external org)
-    // Caller: org2Addr
-    // Caller Type: rootSafe
-    // Caller Role: ROOT_SAFE of org2
-    // TargerSafe: rootAddr
-    // TargetSafe Type: rootSafe
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> rootBAddr
+    // Target Info: Name -> rootAddr, Hierarchy related to caller -> DIFFERENT TREE,
     function testRevertRootSafesToAttemptToRemoveFromExternalOrg() public {
         (uint256 rootIdA,, uint256 rootIdB,) = keyperSafeBuilder
             .setupTwoRootOrgWithOneGroupEach(
@@ -1019,12 +1005,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         );
     }
 
-    // Revert OwnerNotFound() removeOwner (attempting to remove an owner that is not exist as an owner of the safe)
-    // Caller: safeLead
-    // Caller Type: EOA
-    // Caller Role: SAFE_LEAD of org
-    // TargerSafe: rootAddr
-    // TargetSafe Type: rootSafe
+    // Caller Info: Role-> SAFE_LEAD, Type -> EOA, Hierarchy -> NOT_REGISTERED, Name -> safeLead
+    // Target Info: Name -> rootAddr, Hierarchy related to caller -> SAFE Leading by caller,
     function testRevertOwnerNotFoundRemoveOwner() public {
         bool result = gnosisHelper.registerOrgTx(orgName);
         keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
