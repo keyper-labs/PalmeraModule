@@ -28,6 +28,8 @@ contract DeployHelper is Test {
     address keyperModuleAddr;
     address keyperRolesDeployed;
     address receiver = address(0xABC);
+    address zeroAddress = address(0x0);
+    address sentinel = address(0x1);
 
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) keyperSafes;
