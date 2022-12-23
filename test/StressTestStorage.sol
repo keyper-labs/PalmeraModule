@@ -306,22 +306,37 @@ contract StressTestStorage is Test, SigningUtils {
             }
             // Show in consola the level of the new Safe
             if (
-                (i > pod(3, structLevel - 1))
+                (i > subOldlevels(3, structLevel))
                     && (
-                        i.sub(pod(3, structLevel - 1)).mod(pod(3, structLevel)) == 0
+                        i.sub(subOldlevels(3, structLevel)).mod(pod(3, structLevel))
+                            == 0
                     )
             ) {
                 console.log("Level: ", structLevel);
+                console.log("i: ", i);
                 structLevel++;
             }
         }
     }
 
-    function pod(uint256 base, uint256 exp) internal pure returns (uint256) {
-        uint256 result = 1;
+    function pod(uint256 base, uint256 exp)
+        internal
+        pure
+        returns (uint256 result)
+    {
+        result = 1;
         for (uint256 i = 0; i < exp; i++) {
             result *= base;
         }
-        return result;
+    }
+
+    function subOldlevels(uint256 base, uint256 level)
+        internal
+        pure
+        returns (uint256 result)
+    {
+        for (uint256 i = 1; i < level; i++) {
+            result += pod(base, i);
+        }
     }
 }
