@@ -40,6 +40,10 @@ contract SignersHelper is Test {
         }
     }
 
+    function getOwnersUsed() public view returns (uint256) {
+        return countUsed;
+    }
+
     function updateCount(uint256 used) public {
         countUsed = used;
     }

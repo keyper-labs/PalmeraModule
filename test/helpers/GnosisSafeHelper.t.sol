@@ -112,7 +112,7 @@ contract GnosisSafeHelper is
         bytes memory emptyData = abi.encodePacked(salt);
         address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
         gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
-        initOnwers(100000);
+        initOnwers(200000);
 
         // Setup gnosis safe with 3 owners, 1 threshold
         address[] memory owners = new address[](3);

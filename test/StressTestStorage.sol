@@ -168,9 +168,9 @@ contract StressTestStorage is Test, SigningUtils {
         );
 
         // Array of Address for the subGroups
-        address[] memory subGroupAaddr = new address[](90000);
-        uint256[] memory subGroupAid = new uint256[](90000);
-        uint256[] memory level = new uint256[](30000);
+        address[] memory subGroupAaddr = new address[](70000);
+        uint256[] memory subGroupAid = new uint256[](70000);
+        uint256[] memory level = new uint256[](20000);
         uint256 indexLevel;
         uint256 indexGroup;
 
@@ -194,8 +194,8 @@ contract StressTestStorage is Test, SigningUtils {
         level[indexLevel] = 1;
         indexGroup = 4;
         uint256 structLevel = 1;
-        for (uint256 i = 1; i < 10000; i++) {
-            for (uint256 j = 0; j < 2; j++) {
+        for (uint256 i = 0; i < 3350; i++) {
+            for (uint256 j = 0; j < 3; j++) {
                 // SuperSafe of Iteration
                 uint256 superSafe = subGroupAid[level[i] + j];
                 // Create a new Safe
@@ -303,18 +303,25 @@ contract StressTestStorage is Test, SigningUtils {
 
                 // Increment indexGroup
                 indexGroup++;
-            }
-            // Show in consola the level of the new Safe
-            if (
-                (i > subOldlevels(3, structLevel))
-                    && (
-                        i.sub(subOldlevels(3, structLevel)).mod(pod(3, structLevel))
-                            == 0
-                    )
-            ) {
-                console.log("Level: ", structLevel);
-                console.log("i: ", i);
-                structLevel++;
+
+                // Show in consola the level of the new Safe
+                if (
+                    (indexLevel > subOldlevels(3, structLevel))
+                        && (
+                            indexLevel.sub(subOldlevels(3, structLevel)).mod(
+                                pod(3, structLevel)
+                            ) == 0
+                        )
+                ) {
+                    console.log("Level: ", structLevel + 2);
+                    console.log("indexGroup: ", indexGroup);
+                    console.log("indexLevel: ", indexLevel);
+                    console.log("SubOldLevels: ", subOldlevels(3, structLevel));
+                    console.log(
+                        "Gnosis Helpers Owners: ", gnosisHelper.getOwnersUsed()
+                    );
+                    structLevel++;
+                }
             }
         }
     }
@@ -325,6 +332,9 @@ contract StressTestStorage is Test, SigningUtils {
         returns (uint256 result)
     {
         result = 1;
+        if (exp == 0) {
+            return result;
+        }
         for (uint256 i = 0; i < exp; i++) {
             result *= base;
         }
