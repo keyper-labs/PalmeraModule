@@ -378,7 +378,33 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         assertEq(attackerContract.getBalanceFromAttacker(), 0);
     }
 
-    // Missing case
-    // Test hasNotPermissionOverTarget multiple scenarios
-    //
+    function testCan_hasNotPermissionOverTarget_is_root_of_target() public {
+        (uint256 rootId, uint256 groupA1Id) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
+        bool result = keyperModule.hasNotPermissionOverTarget(
+            rootAddr, orgHash, groupAddr
+        );
+        assertFalse(result);
+    }
+
+    function testCan_hasNotPermissionOverTarget_is_not_root_of_target()
+        public
+    {
+        (uint256 rootId, uint256 groupA1Id) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
+        bool result = keyperModule.hasNotPermissionOverTarget(
+            groupAddr, orgHash, rootAddr
+        );
+        assertTrue(result);
+    }
 }

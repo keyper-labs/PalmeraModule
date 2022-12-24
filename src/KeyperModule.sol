@@ -324,7 +324,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         address caller,
         bytes32 org,
         address targetSafe
-    ) internal view returns (bool hasPermission) {
+    ) public view returns (bool hasPermission) {
         hasPermission = !isRootSafeOf(caller, getGroupIdBySafe(org, targetSafe))
             && !isSuperSafe(
                 getGroupIdBySafe(org, caller), getGroupIdBySafe(org, targetSafe)
