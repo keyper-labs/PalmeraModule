@@ -39,4 +39,4 @@ jobs:
         run: forge test --no-match-contract StressTestStorage
 
       - name: Run Coverage
-        run: forge coverage
+        run: forge coverage --no-match-contract StressTestStorage
