@@ -101,7 +101,8 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     // 	      /|\     /|\    /|\
     // 	     B1B2B3  B1B2B3 B1B2B3 ........
     function testAddThreeSubGroupLinealSecuenceMaxLevel() public {
-        createTreeStressTest("RootOrg", "RootOrg", 3, 30000);
+        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
+        createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 3, 30000);
     }
 
     // Stress Test for Verification of maximal level when add Four sub Group, in a lineal secuencial way
@@ -112,7 +113,8 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     // 	       /|\\      /|\\     /|\\       /|\\
     // 	     B1B2B3B4  B1B2B3B3  B1B2B3B4  B1B2B3B4
     function testAddFourthSubGroupLinealSecuenceMaxLevel() public {
-        createTreeStressTest("RootOrg", "RootOrg", 4, 22000);
+        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
+        createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 4, 22000);
     }
 
     // Stress Test for Verification of maximal level when add Five sub Group, in a lineal secuencial way
@@ -123,73 +125,99 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     // 	       /|\\\       /|\\\       /|\\\      /|\\\        /|\\\
     // 	     B1B2B3B4B5  B1B2B3B3B5  B1B2B3B4B5 B1B2B3B4B5   B1B2B3B4B5
     function testAddFifthSubGroupLinealSecuenceMaxLevel() public {
-        createTreeStressTest("RootOrg", "RootOrg", 5, 20000);
+        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
+        createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 5, 20000);
     }
 
     function testSeveralsSmallOrgsGroupSecuenceMaxLevel() public {
         setUp();
+        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
+        address orgSafe1 = gnosisHelper.newKeyperSafe(3, 1);
+        address orgSafe2 = gnosisHelper.newKeyperSafe(3, 1);
         console.log("Test Severals Small Orgs Group Secuence Max Level");
         console.log("Group of 3 Members");
         console.log("---------------------");
-        createTreeStressTest("RootOrg31", "RootOrg31", 3, 1100);
+        createTreeStressTest(
+            "RootOrg31", "RootOrg31", orgSafe, orgSafe, 3, 1100
+        );
         console.log("Group of 4 Members");
         console.log("---------------------");
-        createTreeStressTest("RootOrg41", "RootOrg41", 4, 1400);
+        createTreeStressTest(
+            "RootOrg41", "RootOrg41", orgSafe1, orgSafe1, 4, 1400
+        );
         console.log("Group of 5 Members");
         console.log("---------------------");
-        createTreeStressTest("RootOrg51", "RootOrg51", 5, 4000);
+        createTreeStressTest(
+            "RootOrg51", "RootOrg51", orgSafe2, orgSafe2, 5, 4000
+        );
     }
 
     function testSeveralsBigOrgsGroupSecuenceMaxLevel() public {
         setUp();
+        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
+        address orgSafe1 = gnosisHelper.newKeyperSafe(3, 1);
+        address orgSafe2 = gnosisHelper.newKeyperSafe(3, 1);
         console.log("Full Org 1");
         console.log("---------------------");
-        createTreeStressTest("RootOrg3", "RootOrg3", 3, 30000);
+        createTreeStressTest("RootOrg3", "RootOrg3", orgSafe, orgSafe, 3, 30000);
         console.log("Full Org 2");
         console.log("---------------------");
-        createTreeStressTest("RootOrg4", "RootOrg4", 4, 22000);
+        createTreeStressTest(
+            "RootOrg4", "RootOrg4", orgSafe1, orgSafe1, 4, 22000
+        );
         console.log("Full Org 3");
         console.log("---------------------");
-        createTreeStressTest("RootOrg5", "RootOrg5", 5, 20000);
+        createTreeStressTest(
+            "RootOrg5", "RootOrg5", orgSafe2, orgSafe2, 5, 20000
+        );
     }
 
     function testFullOrgGroupSecuenceMaxLevel() public {
         setUp();
+        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
+        address rootSafe1 = gnosisHelper.newKeyperSafe(3, 1);
+        address rootSafe2 = gnosisHelper.newKeyperSafe(3, 1);
         console.log("Full Org 2");
         console.log("---------------------");
-        createTreeStressTest("RootOrg2", "RootOrg2", 3, 30000);
+        createTreeStressTest("RootOrg2", "RootOrg2", orgSafe, orgSafe, 3, 30000);
         console.log("Root Safe 1");
         console.log("---------------------");
-        createTreeStressTest("RootOrg2", "RootSafe1", 4, 22000);
+        createTreeStressTest(
+            "RootOrg2", "RootSafe1", orgSafe, rootSafe1, 4, 22000
+        );
         console.log("Root Safe 2");
         console.log("---------------------");
-        createTreeStressTest("RootOrg2", "RootSafe2", 5, 20000);
+        createTreeStressTest(
+            "RootOrg2", "RootSafe2", orgSafe, rootSafe2, 5, 20000
+        );
     }
 
     function createTreeStressTest(
-        string memory name,
-        string memory rootName,
+        string memory OrgName,
+        string memory RootSafeName,
+        address orgSafe,
+        address rootSafe,
         uint256 members,
         uint256 safeWallets
     ) public {
         uint256 rootId;
-        bytes32 org = bytes32(keccak256(abi.encodePacked(name)));
+        bytes32 org = bytes32(keccak256(abi.encodePacked(OrgName)));
         if (
-            (keyperModule.isOrgRegistered(org))
+            (keyperModule.isOrgRegistered(org)) && (orgSafe != rootSafe)
                 && (
-                    keccak256(abi.encodePacked(name))
-                        != keccak256(abi.encodePacked(rootName))
+                    keccak256(abi.encodePacked(RootSafeName))
+                        != keccak256(abi.encodePacked(OrgName))
                 )
         ) {
-            address rootSafe = gnosisHelper.newKeyperSafe(3, 1);
-            bool result = gnosisHelper.createRootSafeTx(rootSafe, rootName);
+            gnosisHelper.updateSafeInterface(orgSafe);
+            bool result = gnosisHelper.createRootSafeTx(rootSafe, RootSafeName);
             assertEq(result, true);
             rootId = keyperModule.getGroupIdBySafe(org, rootSafe);
         } else {
-            address rootSafe = gnosisHelper.newKeyperSafe(3, 1);
-            bool result = gnosisHelper.registerOrgTx(rootName);
+            gnosisHelper.updateSafeInterface(orgSafe);
+            bool result = gnosisHelper.registerOrgTx(OrgName);
             assertEq(result, true);
-            rootId = keyperModule.getGroupIdBySafe(org, rootSafe);
+            rootId = keyperModule.getGroupIdBySafe(org, orgSafe);
         }
 
         // Array of Address for the subGroups
