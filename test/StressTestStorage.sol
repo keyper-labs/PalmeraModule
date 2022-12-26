@@ -20,72 +20,11 @@ import {Attacker} from "../src/ReentrancyAttack.sol";
 import {console} from "forge-std/console.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
-contract StressTestStorage is Test, SigningUtils {
+contract StressTestStorage is DeployHelper, SigningUtils {
     using SafeMath for uint256;
 
-    KeyperModule keyperModule;
-    GnosisSafeHelper gnosisHelper;
-    KeyperModuleHelper keyperHelper;
-    KeyperRoles keyperRolesContract;
-    KeyperSafeBuilder keyperSafeBuilder;
-
-    address gnosisSafeAddr;
-    address keyperModuleAddr;
-    address keyperRolesDeployed;
-    address receiver = address(0xABC);
-    address zeroAddress = address(0x0);
-    address sentinel = address(0x1);
-
-    // Helper mapping to keep track safes associated with a role
-    mapping(string => address) keyperSafes;
-    string orgName = "Main Org";
-    string root2Name = "Second Root";
-    string groupA1Name = "GroupA1";
-    string groupBName = "GroupB";
-
     function setUp() public {
-        CREATE3Factory factory = new CREATE3Factory();
-        bytes32 salt = keccak256(abi.encode(0xafff));
-        // Predict the future address of keyper roles
-        keyperRolesDeployed = factory.getDeployed(address(this), salt);
-
-        // Init a new safe as main organization (3 owners, 1 threshold)
-        gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSpecialSafeEnv();
-
-        // setting keyperRoles Address
-        gnosisHelper.setKeyperRoles(keyperRolesDeployed);
-
-        // Init KeyperModule
-        address masterCopy = gnosisHelper.gnosisMasterCopy();
-        address safeFactory = address(gnosisHelper.safeFactory());
-
-        keyperModule = new KeyperModule(
-            masterCopy,
-            safeFactory,
-            address(keyperRolesDeployed)
-        );
-        keyperModuleAddr = address(keyperModule);
-        // Init keyperModuleHelper
-        keyperHelper = new KeyperModuleHelper();
-        keyperHelper.initHelper(keyperModule, 30);
-        // Update gnosisHelper
-        gnosisHelper.setKeyperModule(keyperModuleAddr);
-        // Enable keyper module
-        gnosisHelper.enableModuleTx(gnosisSafeAddr);
-
-        bytes memory args = abi.encode(address(keyperModuleAddr));
-
-        bytes memory bytecode =
-            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
-
-        keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
-
-        keyperSafeBuilder = new KeyperSafeBuilder();
-        // keyperSafeBuilder.setGnosisHelper(GnosisSafeHelper(gnosisHelper));
-        keyperSafeBuilder.setUpParams(
-            KeyperModule(keyperModule), GnosisSafeHelper(gnosisHelper)
-        );
+        deployAllContracts(200000);
     }
 
     // ! ********************* Stress Test Storage ***********************
@@ -105,105 +44,143 @@ contract StressTestStorage is Test, SigningUtils {
     }
 
     // Stress Test for Verification of maximal level when add sub Group, in a lineal secuencial way
-    function testAddSubGroupLinealSecuenceMaxLevel() public {
-        (uint256 rootId, uint256 groupIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+    // function testAddSubGroupLinealSecuenceMaxLevel() public {
+    //     (uint256 rootId, uint256 groupIdA1) =
+    //         keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
-        // Array of Address for the subGroups
-        address[] memory subGroupAaddr = new address[](8100);
-        uint256[] memory subGroupAid = new uint256[](8100);
+    //     // Array of Address for the subGroups
+    //     address[] memory subGroupAaddr = new address[](8100);
+    //     uint256[] memory subGroupAid = new uint256[](8100);
 
-        // Assig the Address to first two subGroups
-        subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootId);
-        subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
+    //     // Assig the Address to first two subGroups
+    //     subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootId);
+    //     subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
 
-        // Assig the Id to first two subGroups
-        subGroupAid[0] = rootId;
-        subGroupAid[1] = groupIdA1;
+    //     // Assig the Id to first two subGroups
+    //     subGroupAid[0] = rootId;
+    //     subGroupAid[1] = groupIdA1;
 
-        for (uint256 i = 2; i < 8100; i++) {
-            // Create a new Safe
-            subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
-            // Start Prank
-            vm.startPrank(subGroupAaddr[i]);
-            // Add the new Safe as a subGroup
-            try keyperModule.addGroup(subGroupAid[i - 1], groupBName) returns (
-                uint256 groupId
-            ) {
-                subGroupAid[i] = groupId;
-                // Stop Prank
-                vm.stopPrank();
-            } catch Error(string memory reason) {
-                console.log("Error: ", reason);
-            }
+    //     for (uint256 i = 2; i < 8100; i++) {
+    //         // Create a new Safe
+    //         subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+    //         // Start Prank
+    //         vm.startPrank(subGroupAaddr[i]);
+    //         // Add the new Safe as a subGroup
+    //         try keyperModule.addGroup(subGroupAid[i - 1], groupBName) returns (
+    //             uint256 groupId
+    //         ) {
+    //             subGroupAid[i] = groupId;
+    //             // Stop Prank
+    //             vm.stopPrank();
+    //         } catch Error(string memory reason) {
+    //             console.log("Error: ", reason);
+    //         }
 
-            // Verify that the new Safe is a member of the previous Safe
-            assertEq(
-                keyperModule.isTreeMember(subGroupAid[i - 1], subGroupAid[i]),
-                true
-            );
-            // Verify that the new Safe is a superSafe of the previous Safe
-            assertEq(
-                keyperModule.isSuperSafe(subGroupAid[i - 1], subGroupAid[i]),
-                true
-            );
-            // Verify that the new Safe is a member of the root Safe
-            assertEq(keyperModule.isTreeMember(rootId, subGroupAid[i]), true);
-            // Show in consola the level of the new Safe
-            console.log("Level: ", i);
-        }
-    }
+    //         // Verify that the new Safe is a member of tree of the previous Safe
+    //         assertEq(
+    //             keyperModule.isTreeMember(subGroupAid[i - 1], subGroupAid[i]),
+    //             true
+    //         );
+    //         // Verify that the new Safe is a superSafe of the previous Safe
+    //         assertEq(
+    //             keyperModule.isSuperSafe(subGroupAid[i - 1], subGroupAid[i]),
+    //             true
+    //         );
+    //         // Verify that the new Safe is a member of the root Tree
+    //         assertEq(keyperModule.isTreeMember(rootId, subGroupAid[i]), true);
+    //         // Show in consola the level of the new Safe
+    //         console.log("Level: ", i);
+    //     }
+    // }
 
     // Stress Test for Verification of maximal level when add three sub Group, in a lineal secuencial way
     // Struct of Org
-    //               Root
-    //          /     |     \
-    // 	   	   A1     A2    A3
-    // 	      /|\     /|\   /|\
-    // 	     B1B2B3  B1B2B3 B1B2B3 .....
+    //                Root
+    //          /      |      \
+    // 	   	   A1     A2      A3
+    // 	      /|\     /|\    /|\
+    // 	     B1B2B3  B1B2B3 B1B2B3 ........
     function testAddThreeSubGroupLinealSecuenceMaxLevel() public {
-        (uint256 rootId, uint256 groupIdA1, uint256 groupIdA2) =
-        keyperSafeBuilder.setupRootWithTwoGroups(
-            orgName, groupA1Name, groupBName
-        );
+        createTreeStressTest("RootOrg", "RootOrg", 3, 30000);
+    }
+
+    // Stress Test for Verification of maximal level when add Four sub Group, in a lineal secuencial way
+    // Struct of Org
+    //                       Root
+    //          ┌---------┬---------┬----------┐
+    // 	   	    A1        A2       A3         A4
+    // 	       /|\\      /|\\     /|\\       /|\\
+    // 	     B1B2B3B4  B1B2B3B3  B1B2B3B4  B1B2B3B4
+    function testAddFourthSubGroupLinealSecuenceMaxLevel() public {
+        createTreeStressTest("RootOrg", "RootOrg", 4, 22000);
+    }
+
+    // Stress Test for Verification of maximal level when add Five sub Group, in a lineal secuencial way
+    // Struct of Org
+    //                                Root
+    //           ┌----------┬-----------┬-----------┬-----------┐
+    // 	   	     A1         A2          A3          A4          A5
+    // 	       /|\\\       /|\\\       /|\\\      /|\\\        /|\\\
+    // 	     B1B2B3B4B5  B1B2B3B3B5  B1B2B3B4B5 B1B2B3B4B5   B1B2B3B4B5
+    function testAddFifthSubGroupLinealSecuenceMaxLevel() public {
+        createTreeStressTest("RootOrg", "RootOrg", 5, 20000);
+    }
+
+    function testFullOrgGroupSecuenceMaxLevel() public {
+        setUp();
+        createTreeStressTest("RootOrg2", "RootOrg2", 3, 30000);
+        createTreeStressTest("RootOrg2", "RootSafe1", 4, 22000);
+        createTreeStressTest("RootOrg2", "RootSafe2", 5, 20000);
+    }
+
+    function createTreeStressTest(
+        string memory name,
+        string memory rootName,
+        uint256 members,
+        uint256 safeWallets
+    ) public {
+        uint256 rootId;
+        bytes32 org = bytes32(keccak256(abi.encodePacked(name)));
+        if (
+            (keyperModule.isOrgRegistered(org))
+                && (
+                    keccak256(abi.encodePacked(name))
+                        != keccak256(abi.encodePacked(rootName))
+                )
+        ) {
+            address rootSafe = gnosisHelper.newKeyperSafe(3, 1);
+            bool result = gnosisHelper.createRootSafeTx(rootSafe, rootName);
+            assertEq(result, true);
+            rootId = keyperModule.getGroupIdBySafe(org, rootSafe);
+        } else {
+            (rootId,) =
+                keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        }
 
         // Array of Address for the subGroups
-        address[] memory subGroupAaddr = new address[](70000);
-        uint256[] memory subGroupAid = new uint256[](70000);
-        uint256[] memory level = new uint256[](20000);
+        address[] memory subGroupAaddr = new address[](safeWallets.mul(members));
+        uint256[] memory subGroupAid = new uint256[](safeWallets.mul(members));
+        uint256[] memory level = new uint256[](safeWallets);
         uint256 indexLevel;
         uint256 indexGroup;
 
-        // Assig the Address to first two subGroups
-        subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootId);
-        subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
-        subGroupAaddr[2] = keyperModule.getGroupSafeAddress(groupIdA2);
-        subGroupAaddr[3] = gnosisHelper.newKeyperSafe(3, 1);
-
         // Assig the Id to first two subGroups
         subGroupAid[0] = rootId;
-        subGroupAid[1] = groupIdA1;
-        subGroupAid[2] = groupIdA2;
-        // Create group through safe tx
-        gnosisHelper.createAddGroupTx(rootId, "GroupA2");
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(subGroupAaddr[0]);
-        subGroupAid[3] =
-            keyperModule.getGroupIdBySafe(orgHash, subGroupAaddr[3]);
 
         // Assign first level
-        level[indexLevel] = 1;
-        indexGroup = 4;
+        level[indexLevel] = 0;
+        indexGroup = members.sub(1);
         uint256 structLevel = 1;
-        for (uint256 i = 0; i < 3350; i++) {
-            for (uint256 j = 0; j < 3; j++) {
-                // SuperSafe of Iteration
-                uint256 superSafe = subGroupAid[level[i] + j];
+        for (uint256 i = 0; i < safeWallets.div(members); i++) {
+            // SuperSafe of Iteration
+            uint256 superSafe = subGroupAid[level[i]];
+            for (uint256 j = 0; j < members; j++) {
                 // Create a new Safe
                 subGroupAaddr[indexGroup] = gnosisHelper.newKeyperSafe(3, 1);
                 // Start Prank
                 vm.startPrank(subGroupAaddr[indexGroup]);
                 // Add the new Safe as a subGroup
-                try keyperModule.addGroup(superSafe, groupBName) returns (
+                try keyperModule.addGroup(superSafe, groupA1Name) returns (
                     uint256 groupId
                 ) {
                     subGroupAid[indexGroup] = groupId;
@@ -230,93 +207,30 @@ contract StressTestStorage is Test, SigningUtils {
                     keyperModule.isTreeMember(rootId, subGroupAid[indexGroup]),
                     true
                 );
-                // Assign next level
-                indexLevel++;
-                level[indexLevel] = indexGroup;
-                // Increment indexGroup
-                indexGroup++;
-                // Create a new Safe
-                subGroupAaddr[indexGroup] = gnosisHelper.newKeyperSafe(3, 1);
-                // Start Prank
-                vm.startPrank(subGroupAaddr[indexGroup]);
-                // Add the new Safe as a subGroup
-                try keyperModule.addGroup(superSafe, groupBName) returns (
-                    uint256 groupId
-                ) {
-                    subGroupAid[indexGroup] = groupId;
-                    // Stop Prank
-                    vm.stopPrank();
-                } catch Error(string memory reason) {
-                    console.log("Error: ", reason);
+                // Only increment indexLevel if is the first Safe of the level
+                if (j == 0) {
+                    // Assign next level
+                    indexLevel++;
+                    level[indexLevel] = indexGroup;
                 }
-                // Verify that the new Safe is a member of the previous Safe
-                assertEq(
-                    keyperModule.isTreeMember(
-                        superSafe, subGroupAid[indexGroup]
-                    ),
-                    true
-                );
-                // Verify that the new Safe is a superSafe of the previous Safe
-                assertEq(
-                    keyperModule.isSuperSafe(superSafe, subGroupAid[indexGroup]),
-                    true
-                );
-                // Verify that the new Safe is a member of the root Safe
-                assertEq(
-                    keyperModule.isTreeMember(rootId, subGroupAid[indexGroup]),
-                    true
-                );
-
-                // Increment indexGroup
-                indexGroup++;
-                // Create a new Safe
-                subGroupAaddr[indexGroup] = gnosisHelper.newKeyperSafe(3, 1);
-                // Start Prank
-                vm.startPrank(subGroupAaddr[indexGroup]);
-                // Add the new Safe as a subGroup
-                try keyperModule.addGroup(superSafe, groupBName) returns (
-                    uint256 groupId
-                ) {
-                    subGroupAid[indexGroup] = groupId;
-                    // Stop Prank
-                    vm.stopPrank();
-                } catch Error(string memory reason) {
-                    console.log("Error: ", reason);
-                }
-                // Verify that the new Safe is a member of the previous Safe
-                assertEq(
-                    keyperModule.isTreeMember(
-                        superSafe, subGroupAid[indexGroup]
-                    ),
-                    true
-                );
-                // Verify that the new Safe is a superSafe of the previous Safe
-                assertEq(
-                    keyperModule.isSuperSafe(superSafe, subGroupAid[indexGroup]),
-                    true
-                );
-                // Verify that the new Safe is a member of the root Safe
-                assertEq(
-                    keyperModule.isTreeMember(rootId, subGroupAid[indexGroup]),
-                    true
-                );
 
                 // Increment indexGroup
                 indexGroup++;
 
+                uint256 subOldlevel = subOldlevels(members, structLevel);
                 // Show in consola the level of the new Safe
                 if (
-                    (indexLevel > subOldlevels(3, structLevel))
+                    (indexLevel.sub(1) > subOldlevel)
                         && (
-                            indexLevel.sub(subOldlevels(3, structLevel)).mod(
-                                pod(3, structLevel)
+                            indexLevel.sub(1).sub(subOldlevel).mod(
+                                pod(members, structLevel)
                             ) == 0
                         )
                 ) {
                     console.log("Level: ", structLevel + 2);
-                    console.log("indexGroup: ", indexGroup);
+                    console.log("indexGroup / Amount of Safe: ", indexGroup + 1);
                     console.log("indexLevel: ", indexLevel);
-                    console.log("SubOldLevels: ", subOldlevels(3, structLevel));
+                    console.log("SubOldLevels: ", subOldlevel);
                     console.log(
                         "Gnosis Helpers Owners: ", gnosisHelper.getOwnersUsed()
                     );

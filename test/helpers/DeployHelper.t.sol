@@ -86,4 +86,49 @@ contract DeployHelper is Test {
             KeyperModule(keyperModule), GnosisSafeHelper(gnosisHelper)
         );
     }
+
+    function deployAllContracts(uint256 initOwners) public {
+        CREATE3Factory factory = new CREATE3Factory();
+        bytes32 salt = keccak256(abi.encode(0xafff));
+        // Predict the future address of keyper roles
+        keyperRolesDeployed = factory.getDeployed(address(this), salt);
+
+        // Init a new safe as main organization (3 owners, 1 threshold)
+        gnosisHelper = new GnosisSafeHelper();
+        gnosisSafeAddr = gnosisHelper.setupSeveralSafeEnv(initOwners);
+
+        // setting keyperRoles Address
+        gnosisHelper.setKeyperRoles(keyperRolesDeployed);
+
+        // Init KeyperModule
+        address masterCopy = gnosisHelper.gnosisMasterCopy();
+        address safeFactory = address(gnosisHelper.safeFactory());
+
+        keyperModule = new KeyperModule(
+            masterCopy,
+            safeFactory,
+            address(keyperRolesDeployed)
+        );
+        keyperModuleAddr = address(keyperModule);
+        // Init keyperModuleHelper
+        keyperHelper = new KeyperModuleHelper();
+        keyperHelper.initHelper(keyperModule, 30);
+        // Update gnosisHelper
+        gnosisHelper.setKeyperModule(keyperModuleAddr);
+        // Enable keyper module
+        gnosisHelper.enableModuleTx(gnosisSafeAddr);
+
+        bytes memory args = abi.encode(address(keyperModuleAddr));
+
+        bytes memory bytecode =
+            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
+
+        keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
+
+        keyperSafeBuilder = new KeyperSafeBuilder();
+        // keyperSafeBuilder.setGnosisHelper(GnosisSafeHelper(gnosisHelper));
+        keyperSafeBuilder.setUpParams(
+            KeyperModule(keyperModule), GnosisSafeHelper(gnosisHelper)
+        );
+    }
 }

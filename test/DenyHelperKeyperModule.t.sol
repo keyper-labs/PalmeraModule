@@ -35,8 +35,8 @@ contract DenyHelperKeyperModuleTest is Test {
         // Setup Gnosis Helper
         gnosisHelper = new GnosisSafeHelper();
         // Setup of all Safe for Testing
-        org1 = gnosisHelper.setupSeveralSafeEnv();
-        groupA = gnosisHelper.setupSeveralSafeEnv();
+        org1 = gnosisHelper.setupSeveralSafeEnv(30);
+        groupA = gnosisHelper.setupSeveralSafeEnv(30);
         vm.label(org1, "Org 1");
         vm.label(groupA, "GroupA");
 
@@ -238,7 +238,7 @@ contract DenyHelperKeyperModuleTest is Test {
     function testRevertIfCallAnotherSafeNotRegister() public {
         listOfOwners();
         registerOrgWithRoles(org1, rootOrgName);
-        address anotherWallet = gnosisHelper.setupSeveralSafeEnv();
+        address anotherWallet = gnosisHelper.setupSeveralSafeEnv(30);
         vm.startPrank(anotherWallet);
         vm.expectRevert(
             abi.encodeWithSelector(
