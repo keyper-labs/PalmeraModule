@@ -44,54 +44,54 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     }
 
     // Stress Test for Verification of maximal level when add sub Group, in a lineal secuencial way
-    // function testAddSubGroupLinealSecuenceMaxLevel() public {
-    //     (uint256 rootId, uint256 groupIdA1) =
-    //         keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+    function testAddSubGroupLinealSecuenceMaxLevel() public {
+        (uint256 rootId, uint256 groupIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
-    //     // Array of Address for the subGroups
-    //     address[] memory subGroupAaddr = new address[](8100);
-    //     uint256[] memory subGroupAid = new uint256[](8100);
+        // Array of Address for the subGroups
+        address[] memory subGroupAaddr = new address[](8100);
+        uint256[] memory subGroupAid = new uint256[](8100);
 
-    //     // Assig the Address to first two subGroups
-    //     subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootId);
-    //     subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
+        // Assig the Address to first two subGroups
+        subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootId);
+        subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
 
-    //     // Assig the Id to first two subGroups
-    //     subGroupAid[0] = rootId;
-    //     subGroupAid[1] = groupIdA1;
+        // Assig the Id to first two subGroups
+        subGroupAid[0] = rootId;
+        subGroupAid[1] = groupIdA1;
 
-    //     for (uint256 i = 2; i < 8100; i++) {
-    //         // Create a new Safe
-    //         subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
-    //         // Start Prank
-    //         vm.startPrank(subGroupAaddr[i]);
-    //         // Add the new Safe as a subGroup
-    //         try keyperModule.addGroup(subGroupAid[i - 1], groupBName) returns (
-    //             uint256 groupId
-    //         ) {
-    //             subGroupAid[i] = groupId;
-    //             // Stop Prank
-    //             vm.stopPrank();
-    //         } catch Error(string memory reason) {
-    //             console.log("Error: ", reason);
-    //         }
+        for (uint256 i = 2; i < 8100; i++) {
+            // Create a new Safe
+            subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            // Start Prank
+            vm.startPrank(subGroupAaddr[i]);
+            // Add the new Safe as a subGroup
+            try keyperModule.addGroup(subGroupAid[i - 1], groupBName) returns (
+                uint256 groupId
+            ) {
+                subGroupAid[i] = groupId;
+                // Stop Prank
+                vm.stopPrank();
+            } catch Error(string memory reason) {
+                console.log("Error: ", reason);
+            }
 
-    //         // Verify that the new Safe is a member of tree of the previous Safe
-    //         assertEq(
-    //             keyperModule.isTreeMember(subGroupAid[i - 1], subGroupAid[i]),
-    //             true
-    //         );
-    //         // Verify that the new Safe is a superSafe of the previous Safe
-    //         assertEq(
-    //             keyperModule.isSuperSafe(subGroupAid[i - 1], subGroupAid[i]),
-    //             true
-    //         );
-    //         // Verify that the new Safe is a member of the root Tree
-    //         assertEq(keyperModule.isTreeMember(rootId, subGroupAid[i]), true);
-    //         // Show in consola the level of the new Safe
-    //         console.log("Level: ", i);
-    //     }
-    // }
+            // Verify that the new Safe is a member of tree of the previous Safe
+            assertEq(
+                keyperModule.isTreeMember(subGroupAid[i - 1], subGroupAid[i]),
+                true
+            );
+            // Verify that the new Safe is a superSafe of the previous Safe
+            assertEq(
+                keyperModule.isSuperSafe(subGroupAid[i - 1], subGroupAid[i]),
+                true
+            );
+            // Verify that the new Safe is a member of the root Tree
+            assertEq(keyperModule.isTreeMember(rootId, subGroupAid[i]), true);
+            // Show in consola the level of the new Safe
+            console.log("Level: ", i);
+        }
+    }
 
     // Stress Test for Verification of maximal level when add three sub Group, in a lineal secuencial way
     // Struct of Org
@@ -126,10 +126,43 @@ contract StressTestStorage is DeployHelper, SigningUtils {
         createTreeStressTest("RootOrg", "RootOrg", 5, 20000);
     }
 
+    function testSeveralsSmallOrgsGroupSecuenceMaxLevel() public {
+        setUp();
+        console.log("Test Severals Small Orgs Group Secuence Max Level");
+        console.log("Group of 3 Members");
+        console.log("---------------------");
+        createTreeStressTest("RootOrg31", "RootOrg31", 3, 1100);
+        console.log("Group of 4 Members");
+        console.log("---------------------");
+        createTreeStressTest("RootOrg41", "RootOrg41", 4, 1400);
+        console.log("Group of 5 Members");
+        console.log("---------------------");
+        createTreeStressTest("RootOrg51", "RootOrg51", 5, 4000);
+    }
+
+    function testSeveralsBigOrgsGroupSecuenceMaxLevel() public {
+        setUp();
+        console.log("Full Org 1");
+        console.log("---------------------");
+        createTreeStressTest("RootOrg3", "RootOrg3", 3, 30000);
+        console.log("Full Org 2");
+        console.log("---------------------");
+        createTreeStressTest("RootOrg4", "RootOrg4", 4, 22000);
+        console.log("Full Org 3");
+        console.log("---------------------");
+        createTreeStressTest("RootOrg5", "RootOrg5", 5, 20000);
+    }
+
     function testFullOrgGroupSecuenceMaxLevel() public {
         setUp();
+        console.log("Full Org 2");
+        console.log("---------------------");
         createTreeStressTest("RootOrg2", "RootOrg2", 3, 30000);
+        console.log("Root Safe 1");
+        console.log("---------------------");
         createTreeStressTest("RootOrg2", "RootSafe1", 4, 22000);
+        console.log("Root Safe 2");
+        console.log("---------------------");
         createTreeStressTest("RootOrg2", "RootSafe2", 5, 20000);
     }
 
@@ -153,8 +186,10 @@ contract StressTestStorage is DeployHelper, SigningUtils {
             assertEq(result, true);
             rootId = keyperModule.getGroupIdBySafe(org, rootSafe);
         } else {
-            (rootId,) =
-                keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+            address rootSafe = gnosisHelper.newKeyperSafe(3, 1);
+            bool result = gnosisHelper.registerOrgTx(rootName);
+            assertEq(result, true);
+            rootId = keyperModule.getGroupIdBySafe(org, rootSafe);
         }
 
         // Array of Address for the subGroups
