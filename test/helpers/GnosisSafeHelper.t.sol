@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
@@ -66,7 +67,7 @@ contract GnosisSafeHelper is
     // Create new gnosis safe test environment
     // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
     // Init signers
-    // Permit create a specific nember of owners
+    // Permit create a specific numbers of owners
     // Deploy a new safe proxy
     function setupSeveralSafeEnv(uint256 initOwners) public returns (address) {
         safeFactory = new DeploySafeFactory();
