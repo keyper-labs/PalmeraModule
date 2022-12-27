@@ -24,7 +24,7 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     using SafeMath for uint256;
 
     function setUp() public {
-        deployAllContracts(200000);
+        deployAllContracts(500000);
     }
 
     // ! ********************* Stress Test Storage ***********************
@@ -111,7 +111,7 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     //          ┌---------┬---------┬----------┐
     // 	   	    A1        A2       A3         A4
     // 	       /|\\      /|\\     /|\\       /|\\
-    // 	     B1B2B3B4  B1B2B3B3  B1B2B3B4  B1B2B3B4
+    // 	     B1B2B3B4  B1B2B3B4  B1B2B3B4  B1B2B3B4
     function testAddFourthSubGroupLinealSecuenceMaxLevel() public {
         address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
         createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 4, 22000);
@@ -123,7 +123,7 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     //           ┌----------┬-----------┬-----------┬-----------┐
     // 	   	     A1         A2          A3          A4          A5
     // 	       /|\\\       /|\\\       /|\\\      /|\\\        /|\\\
-    // 	     B1B2B3B4B5  B1B2B3B3B5  B1B2B3B4B5 B1B2B3B4B5   B1B2B3B4B5
+    // 	     B1B2B3B4B5  B1B2B3B4B5  B1B2B3B4B5 B1B2B3B4B5   B1B2B3B4B5
     function testAddFifthSubGroupLinealSecuenceMaxLevel() public {
         address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
         createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 5, 20000);

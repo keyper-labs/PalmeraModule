@@ -112,7 +112,7 @@ contract DeployHelper is Test {
         keyperModuleAddr = address(keyperModule);
         // Init keyperModuleHelper
         keyperHelper = new KeyperModuleHelper();
-        keyperHelper.initHelper(keyperModule, 30);
+        keyperHelper.initHelper(keyperModule, 10);
         // Update gnosisHelper
         gnosisHelper.setKeyperModule(keyperModuleAddr);
         // Enable keyper module

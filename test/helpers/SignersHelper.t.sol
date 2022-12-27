@@ -18,6 +18,11 @@ contract SignersHelper is Test {
     uint256 public countUsed;
 
     function initOnwers(uint256 numberOwners) public {
+        initValidOnwers(numberOwners);
+        initInvalidOnwers(30);
+    }
+
+    function initValidOnwers(uint256 numberOwners) internal {
         privateKeyOwners = new uint256[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
             uint256 pk = i;
@@ -29,7 +34,9 @@ contract SignersHelper is Test {
             ownersPK[publicKey] = pk;
             privateKeyOwners[i] = pk;
         }
+    }
 
+    function initInvalidOnwers(uint256 numberOwners) internal {
         invalidPrivateKeyOwners = new uint256[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
             // Start derivation after correct ones
