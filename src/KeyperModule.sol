@@ -39,8 +39,8 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// bytes32: Hash(DAO's name) -> uint256: ID's Groups
     mapping(bytes32 => uint256[]) public indexGroup;
     /// @dev Limit of Level per Tree
-    /// bytes32: Hash(DAO's name) -> uint256:GroupId -> uint256: Level Limit
-    mapping(bytes32 => mapping(uint256 => uint256)) public limitLevel;
+    /// bytes32: Hash(DAO's name) -> uint256: Level Limit
+    mapping(bytes32 => uint256) public depthTreeLimit;
     /// @dev Hash(DAO's name) -> Groups
     /// bytes32: Hash(DAO's name).   uint256:GroupId.   Group: Group Info
     mapping(bytes32 => mapping(uint256 => DataTypes.Group)) public groups;
@@ -388,7 +388,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         groupId = _createOrgOrRoot(daoName, caller, caller);
         orgId.push(name);
         // Setting level by Default
-        limitLevel[name][groupId] = 8;
+        depthTreeLimit[name] = 8;
 
         emit Events.OrganizationCreated(caller, name, daoName);
         return groupId;
@@ -410,7 +410,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         uint256 newIndex = indexId;
         groupId = _createOrgOrRoot(name, caller, newRootSafe);
         // Setting level by default
-        limitLevel[org][groupId] = 8;
+        depthTreeLimit[org] = 8;
 
         emit Events.RootSafeGroupCreated(
             org, newIndex, caller, newRootSafe, name
@@ -607,16 +607,13 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         address caller = _msgSender();
         bytes32 org = getOrgBySafe(caller);
         uint256 rootSafe = getGroupIdBySafe(org, caller);
-        if (
-            (newLimit > maxLimitLevel)
-                || (newLimit <= limitLevel[org][rootSafe])
-        ) {
+        if ((newLimit > maxLimitLevel) || (newLimit <= depthTreeLimit[org])) {
             revert Errors.InvalidLimit();
         }
         emit Events.NewLimitLevel(
-            org, rootSafe, caller, limitLevel[org][rootSafe], newLimit
+            org, rootSafe, caller, depthTreeLimit[org], newLimit
             );
-        limitLevel[org][rootSafe] = newLimit;
+        depthTreeLimit[org] = newLimit;
     }
 
     /// List of the Methods of DenyHelpers
@@ -790,37 +787,14 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// @return bool
     function isLimitLevel(uint256 superSafe) public view returns (bool) {
         bytes32 org = getOrgByGroup(superSafe);
-        uint256 rootSafe = getRootSafe(superSafe);
         DataTypes.Group memory childGroup = groups[org][superSafe];
         uint256 currentSuperSafe = childGroup.superSafe;
-        for (uint256 i = 1; i < limitLevel[org][rootSafe]; i++) {
+        for (uint256 i = 1; i < depthTreeLimit[org]; i++) {
             if (currentSuperSafe == 0) return false;
             childGroup = groups[org][currentSuperSafe];
             currentSuperSafe = childGroup.superSafe;
         }
         return true;
-    }
-
-    /// @dev Method to get Root Safe of a Group
-    /// @param groupId ID's of the group
-    /// @return rootSafeId uint256 Root Safe Id's
-    /// TODO: this model will be moved to V1
-    function getRootSafe(uint256 groupId)
-        public
-        view
-        returns (uint256 rootSafeId)
-    {
-        bytes32 org = getOrgByGroup(groupId);
-        DataTypes.Group memory childGroup = groups[org][groupId];
-        if (childGroup.superSafe == 0) return groupId;
-        rootSafeId = childGroup.superSafe;
-        uint256 currentSuperSafe = rootSafeId;
-        while (currentSuperSafe != 0) {
-            childGroup = groups[org][currentSuperSafe];
-            if (childGroup.superSafe == 0) return rootSafeId;
-            else rootSafeId = childGroup.superSafe;
-            currentSuperSafe = childGroup.superSafe;
-        }
     }
 
     /// @dev Method to Validate is ID Group a SuperSafe of a Group
