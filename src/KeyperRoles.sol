@@ -145,6 +145,14 @@ contract KeyperRoles is RolesAuthority, DenyHelper {
             Constants.CREATE_ROOT_SAFE,
             true
         );
+        /// Target contract: KeyperModule
+        /// Auth function updateLimitLevel
+        setRoleCapability(
+            uint8(DataTypes.Role.ROOT_SAFE),
+            keyperModule,
+            Constants.UPDATE_LIMIT_LEVEL,
+            true
+        );
 
         /// Define Role 4 - SUPER_SAFE
         /// Target contract: KeyperModule
