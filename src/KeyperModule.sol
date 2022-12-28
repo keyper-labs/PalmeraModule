@@ -804,6 +804,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// @dev Method to get Root Safe of a Group
     /// @param groupId ID's of the group
     /// @return rootSafeId uint256 Root Safe Id's
+    /// TODO: this model will be moved to V1
     function getRootSafe(uint256 groupId)
         public
         view
