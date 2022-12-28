@@ -80,7 +80,41 @@ contract KeyperRoles is RolesAuthority, DenyHelper {
             true
         );
 
-        /// Define Role 3 - ROOT_SAFE
+        /// Define Role 3 - SUPER_SAFE
+        /// Target contract: KeyperModule
+        /// Auth function addOwnerWithThreshold
+        setRoleCapability(
+            uint8(DataTypes.Role.SUPER_SAFE),
+            keyperModule,
+            Constants.ADD_OWNER,
+            true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function removeOwner
+        setRoleCapability(
+            uint8(DataTypes.Role.SUPER_SAFE),
+            keyperModule,
+            Constants.REMOVE_OWNER,
+            true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function execTransactionOnBehalf
+        setRoleCapability(
+            uint8(DataTypes.Role.SUPER_SAFE),
+            keyperModule,
+            Constants.EXEC_ON_BEHALF,
+            true
+        );
+        /// Target contract: KeyperModule
+        /// Auth function removeGroup
+        setRoleCapability(
+            uint8(DataTypes.Role.SUPER_SAFE),
+            keyperModule,
+            Constants.REMOVE_GROUP,
+            true
+        );
+
+        /// Define Role 4 - ROOT_SAFE
         /// Target contract: KeyperModule
         /// Auth function setRole
         setRoleCapability(
@@ -151,40 +185,6 @@ contract KeyperRoles is RolesAuthority, DenyHelper {
             uint8(DataTypes.Role.ROOT_SAFE),
             keyperModule,
             Constants.UPDATE_LIMIT_LEVEL,
-            true
-        );
-
-        /// Define Role 4 - SUPER_SAFE
-        /// Target contract: KeyperModule
-        /// Auth function addOwnerWithThreshold
-        setRoleCapability(
-            uint8(DataTypes.Role.SUPER_SAFE),
-            keyperModule,
-            Constants.ADD_OWNER,
-            true
-        );
-        /// Target contract: KeyperModule
-        /// Auth function removeOwner
-        setRoleCapability(
-            uint8(DataTypes.Role.SUPER_SAFE),
-            keyperModule,
-            Constants.REMOVE_OWNER,
-            true
-        );
-        /// Target contract: KeyperModule
-        /// Auth function execTransactionOnBehalf
-        setRoleCapability(
-            uint8(DataTypes.Role.SUPER_SAFE),
-            keyperModule,
-            Constants.EXEC_ON_BEHALF,
-            true
-        );
-        /// Target contract: KeyperModule
-        /// Auth function removeGroup
-        setRoleCapability(
-            uint8(DataTypes.Role.SUPER_SAFE),
-            keyperModule,
-            Constants.REMOVE_GROUP,
             true
         );
 
