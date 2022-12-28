@@ -20,7 +20,7 @@ import {console} from "forge-std/console.sol";
 
 contract ExecTransactionOnBehalf is DeployHelper {
     function setUp() public {
-        DeployHelper.deployAllContracts();
+        DeployHelper.deployAllContracts(60);
     }
 
     // ! ********************** ROOT_SAFE ROLE ********************

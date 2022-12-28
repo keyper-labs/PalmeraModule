@@ -20,7 +20,7 @@ import {console} from "forge-std/console.sol";
 
 contract TestKeyperSafe is SigningUtils, DeployHelper {
     function setUp() public {
-        DeployHelper.deployAllContracts();
+        DeployHelper.deployAllContracts(90);
     }
 
     // ! ********************** authority Test **********************************
