@@ -58,8 +58,8 @@ library Constants {
     bytes4 internal constant UPDATE_SUPER_SAFE =
         bytes4(keccak256(bytes("updateSuper(uint256,uint256)")));
 
-	bytes4 internal constant UPDATE_LIMIT_LEVEL =
-		bytes4(keccak256(bytes("updateLimitLevel(uint256)")));
+	bytes4 internal constant UPDATE_DEPTH_TREE_LIMIT =
+		bytes4(keccak256(bytes("updateDepthTreeLimit(uint256)")));
 
     bytes4 internal constant EXEC_ON_BEHALF =
         bytes4(

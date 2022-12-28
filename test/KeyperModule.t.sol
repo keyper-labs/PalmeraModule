@@ -46,13 +46,13 @@ contract KeyperModuleTest is Test {
         bytes32 salt = keccak256(abi.encode(0xafff));
         // Predict the future address of keyper roles
         keyperRolesDeployed = factory.getDeployed(address(this), salt);
-        uint256 maxLevel = 50;
+        uint256 maxTreeDepth = 50;
         // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
         keyperModule = new KeyperModule(
             address(masterCopyMocked),
             address(proxyFactoryMocked),
             address(keyperRolesDeployed),
-    maxLevel
+            maxTreeDepth
         );
 
         keyperModuleAddr = address(keyperModule);

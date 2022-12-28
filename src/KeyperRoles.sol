@@ -180,11 +180,11 @@ contract KeyperRoles is RolesAuthority, DenyHelper {
             true
         );
         /// Target contract: KeyperModule
-        /// Auth function updateLimitLevel
+        /// Auth function updateDepthTreeLimit
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
             keyperModule,
-            Constants.UPDATE_LIMIT_LEVEL,
+            Constants.UPDATE_DEPTH_TREE_LIMIT,
             true
         );
 

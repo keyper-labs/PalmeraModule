@@ -27,7 +27,7 @@ contract KeyperRolesTest is Test {
     function setUp() public {
         masterCopyMocked = new MockedContract();
         proxyFactoryMocked = new MockedContract();
-        uint256 maxLevel = 50;
+        uint256 maxTreeDepth = 50;
 
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
@@ -40,7 +40,7 @@ contract KeyperRolesTest is Test {
             address(masterCopyMocked), //Master copy address does not matter
             address(proxyFactoryMocked), // Same proxy factory
             address(keyperRoles),
-            maxLevel
+            maxTreeDepth
         );
 
         bytes memory bytecode =

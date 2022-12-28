@@ -11,7 +11,7 @@ contract DeployModule is Script {
         address masterCopy = vm.envAddress("MASTER_COPY_ADDRESS");
         address proxyFactory = vm.envAddress("PROXY_FACTORY_ADDRESS");
         address rolesAuthority = address(0xBEEF);
-        uint256 maxLevel = 50;
+        uint256 maxTreeDepth = 50;
         vm.startBroadcast();
         MockedContract masterCopyMocked = new MockedContract();
         MockedContract proxyFactoryMocked = new MockedContract();
@@ -19,7 +19,7 @@ contract DeployModule is Script {
             address(masterCopyMocked),
             address(proxyFactoryMocked),
             rolesAuthority,
-    maxLevel
+            maxTreeDepth
         );
         vm.stopBroadcast();
     }

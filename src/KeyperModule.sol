@@ -104,7 +104,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         address masterCopyAddress,
         address proxyFactoryAddress,
         address authorityAddress,
-        uint256 _maxLimitLevel
+        uint256 maxLimitLevelInitial
     ) Auth(address(0), Authority(authorityAddress)) {
         if (
             masterCopyAddress == address(0) || proxyFactoryAddress == address(0)
@@ -120,7 +120,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         rolesAuthority = authorityAddress;
         /// Index of Groups starts in 1 Always
         indexId = 1;
-        maxLimitLevel = _maxLimitLevel;
+        maxLimitLevel = maxLimitLevelInitial;
     }
 
     /// @dev Function to create Gnosis Safe Multisig Wallet with our module enabled
@@ -439,7 +439,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             revert Errors.GroupAlreadyRegistered();
         }
         // check if the superSafe raised the limit of Levels
-        if (isLimitLevel(superSafe)) revert Errors.LimitLevelRaised();
+        if (isLimitLevel(superSafe)) revert Errors.TreeDepthLimitReached();
         /// Create a new group
         DataTypes.Group storage newGroup = groups[org][indexId];
         /// Add to org root/group
@@ -550,7 +550,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             revert Errors.NotAuthorizedUpdateNonChildrenGroup();
         }
         /// Check if the new Super Safe is not Limit Level
-        if (isLimitLevel(newSuper)) revert Errors.LimitLevelRaised();
+        if (isLimitLevel(newSuper)) revert Errors.TreeDepthLimitReached();
         DataTypes.Group storage _group = groups[org][group];
         /// SuperSafe is either an Org or a Group
         DataTypes.Group storage oldSuper = groups[org][_group.superSafe];
@@ -599,7 +599,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
 
     /// @dev Method to update Limit Level for Tree
     /// @param newLimit new Limit Level in this Tree
-    function updateLimitLevel(uint256 newLimit)
+    function updateDepthTreeLimit(uint256 newLimit)
         external
         IsRootSafe(_msgSender())
         requiresAuth

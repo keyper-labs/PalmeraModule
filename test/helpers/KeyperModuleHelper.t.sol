@@ -121,9 +121,13 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         address masterCopy = address(deploySafeFactory.gnosisSafeContract());
         address safeFactory = address(deploySafeFactory.proxyFactory());
         address rolesAuthority = address(deploySafeFactory.proxyFactory());
-        uint256 maxLevel = 50;
-        keyper =
-            new KeyperModule(masterCopy, safeFactory, rolesAuthority, maxLevel);
+        uint256 maxTreeDepth = 50;
+        keyper = new KeyperModule(
+            masterCopy,
+            safeFactory,
+            rolesAuthority,
+            maxTreeDepth
+        );
 
         require(address(keyper) != address(0), "Keyper module not deployed");
         address[] memory owners = new address[](numberOwners);
