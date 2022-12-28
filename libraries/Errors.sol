@@ -56,6 +56,10 @@ library Errors {
     error SafeAlreadyRegistered(address safe);
 	/// @dev Error messages when the String Name is Empty
     error EmptyName();
+	/// @dev Errors messages when Raised the Level Limit
+	error LimitLevelRaised();
+	/// @dev Errors messages when New Limit is more than Max Limit or less than or Equal to actual value
+	error InvalidLimit();
     /// @dev Errors Module DenyHelpers
 	/// @dev Error messages when the Address is a Zero Address
     error ZeroAddressProvided();

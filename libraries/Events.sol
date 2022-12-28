@@ -88,6 +88,20 @@ library Events {
         string name
     );
 
+	/// @dev Event Fire when any Root Safe change Limit Level of Tree
+	/// @param org Hash(DAO's name)
+	/// @param rootSafeGroupId New ID of the Root Safe Group
+	/// @param updater Address of the Root Safe
+	/// @param oldLimit uint256 Old Limit of Tree
+	/// @param newLimit uint256 New Limit of Tree
+	event NewLimitLevel(
+		bytes32 indexed org,
+		uint256 indexed rootSafeGroupId,
+        address indexed updater,
+		uint256 oldLimit,
+		uint256 newLimit
+	);
+
     /// @notice Events Deny Helpers
 
 	/// @dev Event Fire when add several wallet into the deny/allow list

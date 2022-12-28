@@ -54,11 +54,13 @@ contract TestKeyperSafe is Test, SigningUtils {
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
+        uint256 maxLevel = 50;
 
         keyperModule = new KeyperModule(
             masterCopy,
             safeFactory,
-            address(keyperRolesDeployed)
+            address(keyperRolesDeployed),
+    maxLevel
         );
         keyperModuleAddr = address(keyperModule);
         // Init keyperModuleHelper

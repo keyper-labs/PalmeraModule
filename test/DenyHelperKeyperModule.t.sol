@@ -42,6 +42,7 @@ contract DenyHelperKeyperModuleTest is Test {
 
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
+        uint256 maxLevel = 50;
         // Predict the future address of keyper roles
         keyperRolesDeployed = factory.getDeployed(address(this), salt);
 
@@ -49,7 +50,8 @@ contract DenyHelperKeyperModuleTest is Test {
         keyperModule = new KeyperModule(
             address(masterCopyMocked),
             address(proxyFactoryMocked),
-            address(keyperRolesDeployed)
+            address(keyperRolesDeployed),
+    maxLevel
         );
 
         rootOrgName = "Root Org";
