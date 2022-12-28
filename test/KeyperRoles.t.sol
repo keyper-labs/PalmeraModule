@@ -15,7 +15,7 @@ import {DataTypes} from "../libraries/DataTypes.sol";
 
 contract KeyperRolesTest is Test, DeployHelper {
     function setUp() public {
-        DeployHelper.deployAllContracts();
+        DeployHelper.deployAllContracts(90);
     }
 
     function testCan_KeyperModule_Setup_RoleContract() public {

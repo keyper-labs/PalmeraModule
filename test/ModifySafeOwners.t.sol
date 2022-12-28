@@ -20,7 +20,7 @@ import {console} from "forge-std/console.sol";
 
 contract ModifySafeOwners is DeployHelper, SigningUtils {
     function setUp() public {
-        DeployHelper.deployAllContracts();
+        DeployHelper.deployAllContracts(90);
     }
 
     // ! ********************* addOwnerWithThreshold Test ***********************

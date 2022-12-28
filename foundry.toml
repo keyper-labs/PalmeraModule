@@ -13,6 +13,9 @@ optimizer_runs = 999
 # Gas Report
 gas_reports = ['KeyperModule', 'KeyperRoles']
 
+# No match contracts
+no_match_contract = "StressTestStorage"
+
 
 [fmt]
 # Maximum line length where formatter will try to wrap the line
