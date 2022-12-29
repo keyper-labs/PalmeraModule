@@ -178,4 +178,25 @@ contract KeyperRolesTest is Test, DeployHelper {
         );
         keyperModule.setRole(DataTypes.Role.SUPER_SAFE, user, safeGroupA1, true);
     }
+
+    //  Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
+    // Target Info: Type-> EOA, Name -> GroupA, Hierarchy related to caller -> N/A
+    function testCannot_ROOT_SAFE_SetRole_ROOT_SAFE_to_EOA_DifferentTree_Safe()
+        public
+    {
+        (uint256 rootIdA,,, uint256 groupBId) = keyperSafeBuilder
+            .setupTwoRootOrgWithOneGroupEach(
+            orgName, groupA1Name, root2Name, groupBName
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootIdA);
+        address user = address(0xABCDE);
+        vm.startPrank(rootAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.NotAuthorizedSetRoleAnotherTree.selector
+            )
+        );
+        keyperModule.setRole(DataTypes.Role.SAFE_LEAD, user, groupBId, true);
+    }
 }
