@@ -80,7 +80,6 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
             emptyData,
             Enum.Operation(0)
         );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         // Execute on behalf function
         vm.startPrank(groupA1Addr);
@@ -132,7 +131,6 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
             emptyData,
             Enum.Operation(0)
         );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         // Execute on behalf function
         vm.startPrank(groupA1Addr);
@@ -186,7 +184,6 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
             emptyData,
             Enum.Operation(0)
         );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         // Execute on behalf function
         vm.startPrank(groupA1Addr);
@@ -342,7 +339,6 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
 
         (,,,,, uint256 superSafe) = keyperModule.getGroupInfo(groupA1Id);
-        bytes32 orgHash = keyperModule.getOrgByGroup(superSafe);
         (,, address superSafeAddr,,) = keyperModule.groups(orgHash, superSafe);
 
         gnosisHelper.updateSafeInterface(rootAddr);
@@ -377,7 +373,6 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address rootAddr = keyperModule.getGroupSafeAddress(rootId);
         address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         bool result = keyperModule.hasNotPermissionOverTarget(
             rootAddr, orgHash, groupAddr
@@ -393,7 +388,6 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address rootAddr = keyperModule.getGroupSafeAddress(rootId);
         address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         bool result = keyperModule.hasNotPermissionOverTarget(
             groupAddr, orgHash, rootAddr
@@ -404,15 +398,11 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_hasNotPermissionOverTarget_is_super_safe_of_target()
         public
     {
-        (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
-        );
+        (, uint256 groupA1Id, uint256 subGroupA1Id) = keyperSafeBuilder
+            .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
         address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
         address subGroupAddr = keyperModule.getGroupSafeAddress(subGroupA1Id);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         bool result = keyperModule.hasNotPermissionOverTarget(
             groupAddr, orgHash, subGroupAddr
@@ -423,15 +413,11 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_hasNotPermissionOverTarget_is_not_super_safe_of_target()
         public
     {
-        (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
-        );
+        (, uint256 groupA1Id, uint256 subGroupA1Id) = keyperSafeBuilder
+            .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
         address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
         address subGroupAddr = keyperModule.getGroupSafeAddress(subGroupA1Id);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         bool result = keyperModule.hasNotPermissionOverTarget(
             subGroupAddr, orgHash, groupAddr
