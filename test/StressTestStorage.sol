@@ -281,14 +281,11 @@ contract StressTestStorage is DeployHelper, SigningUtils {
                 indexGroup++;
 
                 uint256 subOldlevel = subOldlevels(members, structLevel);
+                uint256 safeLevel = pod(members, structLevel);
                 // Show in consola the level of the new Safe
                 if (
                     (indexLevel.sub(1) > subOldlevel)
-                        && (
-                            indexLevel.sub(1).sub(subOldlevel).mod(
-                                pod(members, structLevel)
-                            ) == 0
-                        )
+                        && (indexLevel.sub(1).sub(subOldlevel).mod(safeLevel) == 0)
                 ) {
                     console.log("Level: ", structLevel + 2);
                     console.log("indexGroup / Amount of Safe: ", indexGroup + 1);

@@ -124,14 +124,13 @@ contract Hierarchies is DeployHelper {
         assertEq(keyperModule.isTreeMember(rootId, groupIdA1), true);
         assertEq(keyperModule.isTreeMember(groupIdA1, subGroupIdA1), true);
         (uint256 rootId2, uint256 groupIdB) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(org2Name, groupBName);
+            keyperSafeBuilder.setupRootOrgAndOneGroup(root2Name, groupBName);
         assertEq(keyperModule.isTreeMember(rootId2, groupIdB), true);
         assertEq(keyperModule.isTreeMember(rootId2, rootId), false);
         assertEq(keyperModule.isTreeMember(rootId2, groupIdA1), false);
         assertEq(keyperModule.isTreeMember(rootId, groupIdB), false);
     }
 
-    // Test is SuperSafe function
     function testIsSuperSafe() public {
         (
             uint256 rootId,
@@ -236,7 +235,7 @@ contract Hierarchies is DeployHelper {
         (uint256 rootId, uint256 groupIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
         (uint256 rootId2,) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(org2Name, groupBName);
+            keyperSafeBuilder.setupRootOrgAndOneGroup(root2Name, groupBName);
         // Get root2 info
         address rootSafe2 = keyperModule.getGroupSafeAddress(rootId2);
         vm.startPrank(rootSafe2);
@@ -328,13 +327,7 @@ contract Hierarchies is DeployHelper {
         );
     }
 
-    // Revert ChildAlreadyExist() addGroup (Attempting to add a group when its child already exist)
-    // Caller: safeSubGroupA1
-    // Caller Type: safe
-    // Caller Role: N/A
-    // TargerSafe: safeGroupA1
-    // TargetSafe Type: safe
-    function testRevertGroupAlreadyRegisteredAddGroup() public {
+    function testRevertSafeAlreadyRegisteredAddGroup() public {
         (, uint256 groupIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 

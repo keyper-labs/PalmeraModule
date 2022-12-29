@@ -48,16 +48,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // ! ********************** Allow/Deny list Test ********************
 
     // Revert AddresNotAllowed() execTransactionOnBehalf (safeGroupA1 is not on AllowList)
-    // Caller: safeGroupA1
-    // Caller Type: safe
-    // Caller Role: N/A
-    // TargerSafe: safeSubGroupA1
-    // TargetSafe Type: safe
-    //            rootSafe
-    //               |
-    //           safeGroupA1 as superSafe ---
-    //              |                        |
-    //           safeSubGroupA1 <------------
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> safeGroupA1
+    // Target Info: Type-> SAFE, Name -> safeSubGroupA1, Hierarchy related to caller -> NOT_ALLOW_LIST
     function testRevertSuperSafeExecOnBehalfIsNotAllowList() public {
         (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
@@ -105,17 +97,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     }
 
     // Revert AddressDenied() execTransactionOnBehalf (safeGroupA1 is on DeniedList)
-    // Caller: safeGroupA1
-    // Caller Type: safe
-    // Caller Role: N/A
-    // TargerSafe: safeSubGroupA1
-    // TargetSafe Type: safe
-    //            rootSafe
-    //               |
-    //           safeGroupA1 as superSafe ---
-    //              |                        |
-    //           safeSubGroupA1 <------------
-    // Result: Revert
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> safeGroupA1
+    // Target Info: Type-> SAFE, Name -> safeSubGroupA1, Hierarchy related to caller -> DENY_LIST
     function testRevertSuperSafeExecOnBehalfIsDenyList() public {
         (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
@@ -154,6 +137,59 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         // Execute on behalf function
         vm.startPrank(groupA1Addr);
         vm.expectRevert(Errors.AddressDenied.selector);
+        keyperModule.execTransactionOnBehalf(
+            orgHash,
+            subGroupA1Addr,
+            receiverList[0],
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+    }
+
+    // Revert AddressDenied() execTransactionOnBehalf (safeGroupA1 is on DeniedList)
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> safeGroupA1
+    // Target Info: Type-> SAFE, Name -> safeSubGroupA1, Hierarchy related to caller -> DENY_LIST
+    function testDisableDenyHelperList() public {
+        (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, groupA1Name, subGroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address subGroupA1Addr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+
+        // Send ETH to group&subgroup
+        vm.deal(groupA1Addr, 100 gwei);
+        vm.deal(subGroupA1Addr, 100 gwei);
+        address[] memory receiverList = new address[](1);
+        receiverList[0] = address(0xDDD);
+
+        /// Enable allowlist
+        vm.startPrank(rootAddr);
+        keyperModule.enableDenylist();
+        keyperModule.addToList(receiverList);
+        /// Disable allowlist
+        keyperModule.disableDenyHelper();
+        vm.stopPrank();
+
+        // Set keyperhelper gnosis safe to safeGroupA1
+        keyperHelper.setGnosisSafe(groupA1Addr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            groupA1Addr,
+            subGroupA1Addr,
+            receiverList[0],
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
+        // Execute on behalf function
+        vm.startPrank(groupA1Addr);
         keyperModule.execTransactionOnBehalf(
             orgHash,
             subGroupA1Addr,
@@ -335,50 +371,71 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
     }
 
-    // ! ****************** Reentrancy Attack Test to execOnBehalf ***************
+    function testCan_hasNotPermissionOverTarget_is_root_of_target() public {
+        (uint256 rootId, uint256 groupA1Id) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
-    function testReentrancyAttack() public {
-        Attacker attackerContract = new Attacker(address(keyperModule));
-        AttackerHelper attackerHelper = new AttackerHelper();
-        attackerHelper.initHelper(
-            keyperModule, attackerContract, gnosisHelper, 30
-        );
-
-        (address rootAddr, address attacker, address victim) =
-            attackerHelper.setAttackerTree(orgName);
-
-        gnosisHelper.updateSafeInterface(victim);
-        attackerContract.setOwners(gnosisHelper.gnosisSafe().getOwners());
-
-        gnosisHelper.updateSafeInterface(attacker);
-        vm.startPrank(attacker);
-
-        bytes memory emptyData;
-        bytes memory signatures = attackerHelper
-            .encodeSignaturesForAttackKeyperTx(
-            attacker, victim, attacker, 5 gwei, emptyData, Enum.Operation(0)
-        );
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
-        vm.expectRevert(Errors.TxOnBehalfExecutedFailed.selector);
-        bool result = attackerContract.performAttack(
-            orgHash,
-            victim,
-            attacker,
-            5 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
+        bool result = keyperModule.hasNotPermissionOverTarget(
+            rootAddr, orgHash, groupAddr
         );
-
-        assertEq(result, false);
-
-        // This is the expected behavior since the nonReentrant modifier is blocking the attacker from draining the victim's funds nor transfer any amount
-        assertEq(attackerContract.getBalanceFromSafe(victim), 100 gwei);
-        assertEq(attackerContract.getBalanceFromAttacker(), 0);
+        assertFalse(result);
     }
 
-    // Missing case
-    // Test hasNotPermissionOverTarget multiple scenarios
-    //
+    function testCan_hasNotPermissionOverTarget_is_not_root_of_target()
+        public
+    {
+        (uint256 rootId, uint256 groupA1Id) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
+        bool result = keyperModule.hasNotPermissionOverTarget(
+            groupAddr, orgHash, rootAddr
+        );
+        assertTrue(result);
+    }
+
+    function testCan_hasNotPermissionOverTarget_is_super_safe_of_target()
+        public
+    {
+        (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, groupA1Name, subGroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address subGroupAddr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
+        bool result = keyperModule.hasNotPermissionOverTarget(
+            groupAddr, orgHash, subGroupAddr
+        );
+        assertFalse(result);
+    }
+
+    function testCan_hasNotPermissionOverTarget_is_not_super_safe_of_target()
+        public
+    {
+        (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, groupA1Name, subGroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address subGroupAddr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
+        bool result = keyperModule.hasNotPermissionOverTarget(
+            subGroupAddr, orgHash, groupAddr
+        );
+        assertTrue(result);
+    }
 }
