@@ -32,6 +32,8 @@ interface IGnosisSafe {
 
     function getOwners() external view returns (address[] memory);
 
+    function isOwner(address owner) external view returns (bool);
+
     function getThreshold() external view returns (uint256);
 
     function checkSignatures(
