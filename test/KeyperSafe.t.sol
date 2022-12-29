@@ -371,49 +371,6 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
     }
 
-    // ! ****************** Reentrancy Attack Test to execOnBehalf ***************
-
-    function testReentrancyAttack() public {
-        Attacker attackerContract = new Attacker(address(keyperModule));
-        AttackerHelper attackerHelper = new AttackerHelper();
-        attackerHelper.initHelper(
-            keyperModule, attackerContract, gnosisHelper, 30
-        );
-
-        (address rootAddr, address attacker, address victim) =
-            attackerHelper.setAttackerTree(orgName);
-
-        gnosisHelper.updateSafeInterface(victim);
-        attackerContract.setOwners(gnosisHelper.gnosisSafe().getOwners());
-
-        gnosisHelper.updateSafeInterface(attacker);
-        vm.startPrank(attacker);
-
-        bytes memory emptyData;
-        bytes memory signatures = attackerHelper
-            .encodeSignaturesForAttackKeyperTx(
-            attacker, victim, attacker, 5 gwei, emptyData, Enum.Operation(0)
-        );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-
-        vm.expectRevert(Errors.TxOnBehalfExecutedFailed.selector);
-        bool result = attackerContract.performAttack(
-            orgHash,
-            victim,
-            attacker,
-            5 gwei,
-            emptyData,
-            Enum.Operation(0),
-            signatures
-        );
-
-        assertEq(result, false);
-
-        // This is the expected behavior since the nonReentrant modifier is blocking the attacker from draining the victim's funds nor transfer any amount
-        assertEq(attackerContract.getBalanceFromSafe(victim), 100 gwei);
-        assertEq(attackerContract.getBalanceFromAttacker(), 0);
-    }
-
     function testCan_hasNotPermissionOverTarget_is_root_of_target() public {
         (uint256 rootId, uint256 groupA1Id) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
