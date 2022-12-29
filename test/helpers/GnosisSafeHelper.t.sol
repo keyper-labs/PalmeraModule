@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
@@ -66,8 +67,9 @@ contract GnosisSafeHelper is
     // Create new gnosis safe test environment
     // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
     // Init signers
+    // Permit create a specific numbers of owners
     // Deploy a new safe proxy
-    function setupSeveralSafeEnv() public returns (address) {
+    function setupSeveralSafeEnv(uint256 initOwners) public returns (address) {
         safeFactory = new DeploySafeFactory();
         safeFactory.run();
         gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
@@ -75,7 +77,7 @@ contract GnosisSafeHelper is
         bytes memory emptyData = abi.encodePacked(salt);
         address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
         gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
-        initOnwers(30);
+        initOnwers(initOwners);
 
         // Setup gnosis safe with 3 owners, 1 threshold
         address[] memory owners = new address[](3);
@@ -277,6 +279,78 @@ contract GnosisSafeHelper is
     function createRemoveGroupTx(uint256 group) public returns (bool) {
         bytes memory data =
             abi.encodeWithSignature("removeGroup(uint256)", group);
+        // Create module safe tx
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
+    function execTransactionOnBehalfTx(
+        bytes32 org,
+        address targetSafe,
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation,
+        bytes memory signaturesExec
+    ) public returns (bool) {
+        bytes memory internalData = abi.encodeWithSignature(
+            "execTransactionOnBehalf(bytes32,address,address,uint256,bytes,uint8,bytes)",
+            org,
+            targetSafe,
+            to,
+            value,
+            data,
+            operation,
+            signaturesExec
+        );
+        // Create module safe tx
+        Transaction memory mockTx =
+            createDefaultTx(keyperModuleAddr, internalData);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
+    function removeOwnerTx(
+        address prevOwner,
+        address ownerRemoved,
+        uint256 threshold,
+        address targetSafe,
+        bytes32 org
+    ) public returns (bool) {
+        bytes memory data = abi.encodeWithSignature(
+            "removeOwner(address,address,uint256,address,bytes32)",
+            prevOwner,
+            ownerRemoved,
+            threshold,
+            targetSafe,
+            org
+        );
+        // Create module safe tx
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
+    function addOwnerWithThresholdTx(
+        address ownerAdded,
+        uint256 threshold,
+        address targetSafe,
+        bytes32 org
+    ) public returns (bool) {
+        bytes memory data = abi.encodeWithSignature(
+            "addOwnerWithThreshold(address,uint256,address,bytes32)",
+            ownerAdded,
+            threshold,
+            targetSafe,
+            org
+        );
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx

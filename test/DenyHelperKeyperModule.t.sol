@@ -24,7 +24,7 @@ contract DenyHelperKeyperModuleTest is Test {
     address public keyperRolesDeployed;
     address[] public owners = new address[](5);
     string public rootOrgName;
-    bytes32 orgId;
+    bytes32 orgHash;
     uint256 RootOrgId;
 
     // Function called before each test is run
@@ -35,8 +35,8 @@ contract DenyHelperKeyperModuleTest is Test {
         // Setup Gnosis Helper
         gnosisHelper = new GnosisSafeHelper();
         // Setup of all Safe for Testing
-        org1 = gnosisHelper.setupSeveralSafeEnv();
-        groupA = gnosisHelper.setupSeveralSafeEnv();
+        org1 = gnosisHelper.setupSeveralSafeEnv(30);
+        groupA = gnosisHelper.setupSeveralSafeEnv(30);
         vm.label(org1, "Org 1");
         vm.label(groupA, "GroupA");
 
@@ -56,7 +56,7 @@ contract DenyHelperKeyperModuleTest is Test {
 
         rootOrgName = "Root Org";
 
-        orgId = keccak256(abi.encodePacked(rootOrgName));
+        orgHash = keccak256(abi.encodePacked(rootOrgName));
 
         keyperModuleAddr = address(keyperModule);
 
@@ -74,10 +74,10 @@ contract DenyHelperKeyperModuleTest is Test {
         vm.startPrank(org1);
         keyperModule.enableAllowlist();
         keyperModule.addToList(owners);
-        assertEq(keyperModule.listCount(orgId), owners.length);
-        assertEq(keyperModule.getAll(orgId).length, owners.length);
+        assertEq(keyperModule.listCount(orgHash), owners.length);
+        assertEq(keyperModule.getAll(orgHash).length, owners.length);
         for (uint256 i = 0; i < owners.length; i++) {
-            assertEq(keyperModule.isListed(orgId, owners[i]), true);
+            assertEq(keyperModule.isListed(orgHash, owners[i]), true);
         }
     }
 
@@ -240,7 +240,7 @@ contract DenyHelperKeyperModuleTest is Test {
     function testRevertIfCallAnotherSafeNotRegister() public {
         listOfOwners();
         registerOrgWithRoles(org1, rootOrgName);
-        address anotherWallet = gnosisHelper.setupSeveralSafeEnv();
+        address anotherWallet = gnosisHelper.setupSeveralSafeEnv(30);
         vm.startPrank(anotherWallet);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -333,10 +333,10 @@ contract DenyHelperKeyperModuleTest is Test {
         vm.startPrank(org1);
         keyperModule.enableAllowlist();
         keyperModule.addToList(owners);
-        assertEq(keyperModule.listCount(orgId), owners.length);
-        assertEq(keyperModule.getAll(orgId).length, owners.length);
+        assertEq(keyperModule.listCount(orgHash), owners.length);
+        assertEq(keyperModule.getAll(orgHash).length, owners.length);
         for (uint256 i = 0; i < owners.length; i++) {
-            assertEq(keyperModule.isListed(orgId, owners[i]), true);
+            assertEq(keyperModule.isListed(orgHash, owners[i]), true);
         }
     }
 
@@ -391,15 +391,15 @@ contract DenyHelperKeyperModuleTest is Test {
         address ownerToRemove = owners[2];
 
         keyperModule.dropFromList(ownerToRemove);
-        assertEq(keyperModule.isListed(orgId, ownerToRemove), false);
-        assertEq(keyperModule.getAll(orgId).length, 4);
+        assertEq(keyperModule.isListed(orgHash, ownerToRemove), false);
+        assertEq(keyperModule.getAll(orgHash).length, 4);
 
         // Must be the address(0xEEE)
         address secOwnerToRemove = owners[4];
 
         keyperModule.dropFromList(secOwnerToRemove);
-        assertEq(keyperModule.isListed(orgId, secOwnerToRemove), false);
-        assertEq(keyperModule.getAll(orgId).length, 3);
+        assertEq(keyperModule.isListed(orgHash, secOwnerToRemove), false);
+        assertEq(keyperModule.getAll(orgHash).length, 3);
         vm.stopPrank();
     }
 
@@ -409,13 +409,13 @@ contract DenyHelperKeyperModuleTest is Test {
         vm.startPrank(org1);
         keyperModule.enableAllowlist();
         keyperModule.addToList(owners);
-        assertEq(keyperModule.getPrevUser(orgId, owners[1]), owners[0]);
-        assertEq(keyperModule.getPrevUser(orgId, owners[2]), owners[1]);
-        assertEq(keyperModule.getPrevUser(orgId, owners[3]), owners[2]);
-        assertEq(keyperModule.getPrevUser(orgId, owners[4]), owners[3]);
-        assertEq(keyperModule.getPrevUser(orgId, address(0)), owners[4]);
+        assertEq(keyperModule.getPrevUser(orgHash, owners[1]), owners[0]);
+        assertEq(keyperModule.getPrevUser(orgHash, owners[2]), owners[1]);
+        assertEq(keyperModule.getPrevUser(orgHash, owners[3]), owners[2]);
+        assertEq(keyperModule.getPrevUser(orgHash, owners[4]), owners[3]);
+        assertEq(keyperModule.getPrevUser(orgHash, address(0)), owners[4]);
         // SENTINEL_WALLETS
-        assertEq(keyperModule.getPrevUser(orgId, owners[0]), address(0x1));
+        assertEq(keyperModule.getPrevUser(orgHash, owners[0]), address(0x1));
         vm.stopPrank();
     }
 
@@ -423,8 +423,8 @@ contract DenyHelperKeyperModuleTest is Test {
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableAllowlist();
-        assertEq(keyperModule.allowFeature(orgId), true);
-        assertEq(keyperModule.denyFeature(orgId), false);
+        assertEq(keyperModule.allowFeature(orgHash), true);
+        assertEq(keyperModule.denyFeature(orgHash), false);
         vm.stopPrank();
     }
 
@@ -432,8 +432,8 @@ contract DenyHelperKeyperModuleTest is Test {
         registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableDenylist();
-        assertEq(keyperModule.allowFeature(orgId), false);
-        assertEq(keyperModule.denyFeature(orgId), true);
+        assertEq(keyperModule.allowFeature(orgHash), false);
+        assertEq(keyperModule.denyFeature(orgHash), true);
         vm.stopPrank();
     }
 
