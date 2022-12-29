@@ -1,7 +1,5 @@
-// SPDX-License-Identifier: MIT
-// Modified version of OpenZeppelin Contracts v4.4.1 (utils/cryptography/draft-EIP712.sol)
-
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.15;
 
 import {ECDSA} from "@openzeppelin/utils/cryptography/ECDSA.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
