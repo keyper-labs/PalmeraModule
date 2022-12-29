@@ -352,7 +352,7 @@ contract Hierarchies is DeployHelper {
         result = gnosisHelper.createAddGroupTx(groupIdA1, subGroupA1Name);
     }
 
-    // List of Test for Depth Tree Limits
+    // ! **************** List of Test for Depth Tree Limits *******************************
     function testRevertIfTryInvalidLimit() public {
         (uint256 rootId,) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
@@ -392,5 +392,127 @@ contract Hierarchies is DeployHelper {
         );
         keyperModule.updateDepthTreeLimit(10);
         vm.stopPrank();
+    }
+
+    function testRevertifExceedMaxDepthTreeLimit() public {
+        (
+            uint256 rootId,
+            uint256 groupIdA1,
+            uint256 subGroupA,
+            uint256 subSubGroupA
+        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+            org2Name, groupA2Name, subGroupA1Name, subSubgroupA1Name
+        );
+        // Array of Address for the subGroups
+        address[] memory subGroupAaddr = new address[](9);
+        uint256[] memory subGroupAid = new uint256[](9);
+
+        // Assig the Address to first two subGroups
+        subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootId);
+        subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
+        subGroupAaddr[2] = keyperModule.getGroupSafeAddress(subGroupA);
+        subGroupAaddr[3] = keyperModule.getGroupSafeAddress(subSubGroupA);
+
+        // Assig the Id to first two subGroups
+        subGroupAid[0] = rootId;
+        subGroupAid[1] = groupIdA1;
+        subGroupAid[2] = subGroupA;
+        subGroupAid[3] = subSubGroupA;
+
+        /// depth Tree Lmit by org
+        bytes32 org = keyperModule.getOrgHashBySafe(subGroupAaddr[0]);
+        uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+
+        for (uint256 i = 4; i < depthTreeLimit; i++) {
+            // Create a new Safe
+            subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            // Start Prank
+            vm.startPrank(subGroupAaddr[i]);
+            // Add the new Safe as a subGroup
+            if (i != 8) {
+                subGroupAid[i] =
+                    keyperModule.addGroup(subGroupAid[i - 1], groupBName);
+            } else {
+                vm.expectRevert(Errors.TreeDepthLimitReached.selector);
+                keyperModule.addGroup(subGroupAid[i - 1], groupBName);
+                assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
+                console.log("i: ", i);
+                console.log("Max Depth Limit Reached");
+            }
+            vm.stopPrank();
+        }
+    }
+
+    function testRevertifUpdateLimitAndExceedMaxDepthTreeLimit() public {
+        (
+            uint256 rootId,
+            uint256 groupIdA1,
+            uint256 subGroupA,
+            uint256 subSubGroupA
+        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+            org2Name, groupA2Name, subGroupA1Name, subSubgroupA1Name
+        );
+        // Array of Address for the subGroups
+        address[] memory subGroupAaddr = new address[](16);
+        uint256[] memory subGroupAid = new uint256[](16);
+
+        // Assig the Address to first two subGroups
+        subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootId);
+        subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
+        subGroupAaddr[2] = keyperModule.getGroupSafeAddress(subGroupA);
+        subGroupAaddr[3] = keyperModule.getGroupSafeAddress(subSubGroupA);
+
+        // Assig the Id to first two subGroups
+        subGroupAid[0] = rootId;
+        subGroupAid[1] = groupIdA1;
+        subGroupAid[2] = subGroupA;
+        subGroupAid[3] = subSubGroupA;
+
+        // depth Tree Lmit by org
+        bytes32 org = keyperModule.getOrgHashBySafe(subGroupAaddr[0]);
+        uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+
+        for (uint256 i = 4; i < depthTreeLimit; i++) {
+            // Create a new Safe
+            subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            // Start Prank
+            vm.startPrank(subGroupAaddr[i]);
+            // Add the new Safe as a subGroup
+            if (i != 8) {
+                subGroupAid[i] =
+                    keyperModule.addGroup(subGroupAid[i - 1], groupBName);
+            } else {
+                vm.expectRevert(Errors.TreeDepthLimitReached.selector);
+                keyperModule.addGroup(subGroupAid[i - 1], groupBName);
+                assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
+                console.log("i: ", i);
+                console.log("Max Depth Limit Reached");
+            }
+            vm.stopPrank();
+        }
+        vm.startPrank(subGroupAaddr[0]);
+        keyperModule.updateDepthTreeLimit(15);
+        vm.stopPrank();
+
+        // Update depth Tree Lmit by org
+        depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        for (uint256 j = 8; j < depthTreeLimit; j++) {
+            // Create a new Safe
+            subGroupAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
+            // Start Prank
+            vm.startPrank(subGroupAaddr[j]);
+            // Add the new Safe as a subGroup
+            if (j != 15) {
+                subGroupAid[j] =
+                    keyperModule.addGroup(subGroupAid[j - 1], groupBName);
+            } else {
+                vm.expectRevert(Errors.TreeDepthLimitReached.selector);
+                keyperModule.addGroup(subGroupAid[j - 1], groupBName);
+                assertEq(keyperModule.isLimitLevel(subGroupAid[j - 1]), true);
+                console.log("j: ", j);
+                console.log("New Max Depth Limit Reached");
+            }
+            vm.stopPrank();
+        }
     }
 }
