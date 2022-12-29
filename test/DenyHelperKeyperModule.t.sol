@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import "./helpers/GnosisSafeHelper.t.sol";
+import "./helpers/DeployHelper.t.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
 import {Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
@@ -8,67 +10,33 @@ import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {console} from "forge-std/console.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
-import "./helpers/GnosisSafeHelper.t.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {Errors} from "../libraries/Errors.sol";
 
-contract DenyHelperKeyperModuleTest is Test {
-    GnosisSafeHelper public gnosisHelper;
-    KeyperModule public keyperModule;
-    MockedContract public masterCopyMocked;
-    MockedContract public proxyFactoryMocked;
-
-    address public org1;
-    address public groupA;
-    address public keyperModuleAddr;
-    address public keyperRolesDeployed;
+contract DenyHelperKeyperModuleTest is DeployHelper {
+    address org1;
+    address groupA;
     address[] public owners = new address[](5);
-    string public rootOrgName;
-    bytes32 orgHash;
     uint256 RootOrgId;
+    uint256 groupIdA1;
 
     // Function called before each test is run
     function setUp() public {
-        masterCopyMocked = new MockedContract();
-        proxyFactoryMocked = new MockedContract();
-
-        // Setup Gnosis Helper
-        gnosisHelper = new GnosisSafeHelper();
+        // Initial Deploy Contracts
+        deployAllContracts(60);
         // Setup of all Safe for Testing
-        org1 = gnosisHelper.setupSeveralSafeEnv(30);
-        groupA = gnosisHelper.setupSeveralSafeEnv(30);
+        // org1 = gnosisHelper.setupSeveralSafeEnv(30);
+        // groupA = gnosisHelper.setupSeveralSafeEnv(30);
+        (RootOrgId, groupIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        org1 = keyperModule.getGroupSafeAddress(RootOrgId);
+        groupA = keyperModule.getGroupSafeAddress(groupIdA1);
         vm.label(org1, "Org 1");
         vm.label(groupA, "GroupA");
-
-        CREATE3Factory factory = new CREATE3Factory();
-        bytes32 salt = keccak256(abi.encode(0xafff));
-        // Predict the future address of keyper roles
-        keyperRolesDeployed = factory.getDeployed(address(this), salt);
-
-        // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
-        keyperModule = new KeyperModule(
-            address(masterCopyMocked),
-            address(proxyFactoryMocked),
-            address(keyperRolesDeployed)
-        );
-
-        rootOrgName = "Root Org";
-
-        orgHash = keccak256(abi.encodePacked(rootOrgName));
-
-        keyperModuleAddr = address(keyperModule);
-
-        bytes memory args = abi.encode(address(keyperModuleAddr));
-
-        bytes memory bytecode =
-            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
-
-        factory.deploy(salt, bytecode);
     }
 
     function testAddToList() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableAllowlist();
         keyperModule.addToList(owners);
@@ -81,7 +49,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testRevertInvalidGnosisSafe() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         // EAO Address (Not Safe)
         vm.startPrank(owners[0]);
         vm.expectRevert(
@@ -193,9 +160,7 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testRevertInvalidGnosisRootSafe() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(groupA);
-        keyperModule.addGroup(RootOrgId, "GroupA");
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.InvalidGnosisRootSafe.selector, groupA
@@ -237,7 +202,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testRevertIfCallAnotherSafeNotRegister() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         address anotherWallet = gnosisHelper.setupSeveralSafeEnv(30);
         vm.startPrank(anotherWallet);
         vm.expectRevert(
@@ -281,7 +245,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testRevertIfDenyHelpersDisabled() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         vm.expectRevert(Errors.DenyHelpersDisabled.selector);
         keyperModule.addToList(owners);
@@ -293,7 +256,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testRevertIfListEmptyForAllowList() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         address dropOwner = owners[1];
         keyperModule.enableAllowlist();
@@ -304,7 +266,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testRevertIfListEmptyForDenyList() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         address dropOwner = owners[1];
         keyperModule.enableDenylist();
@@ -315,7 +276,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testRevertIfInvalidAddressProvidedForAllowList() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableAllowlist();
         keyperModule.addToList(owners);
@@ -327,7 +287,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testRevertIfInvalidAddressProvidedForDenyList() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableAllowlist();
         keyperModule.addToList(owners);
@@ -340,7 +299,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testRevertAddToListZeroAddress() public {
         address[] memory voidOwnersArray = new address[](0);
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableDenylist();
         vm.expectRevert(Errors.ZeroAddressProvided.selector);
@@ -350,7 +308,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testRevertAddToListInvalidAddress() public {
         listOfInvalidOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableDenylist();
         vm.expectRevert(Errors.InvalidAddressProvided.selector);
@@ -360,7 +317,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testRevertAddToDuplicateAddress() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableDenylist();
         keyperModule.addToList(owners);
@@ -375,7 +331,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testDropFromList() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableDenylist();
         keyperModule.addToList(owners);
@@ -403,7 +358,6 @@ contract DenyHelperKeyperModuleTest is Test {
 
     function testGetPrevUserList() public {
         listOfOwners();
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableAllowlist();
         keyperModule.addToList(owners);
@@ -418,7 +372,6 @@ contract DenyHelperKeyperModuleTest is Test {
     }
 
     function testEnableAllowlist() public {
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableAllowlist();
         assertEq(keyperModule.allowFeature(orgHash), true);
@@ -427,18 +380,10 @@ contract DenyHelperKeyperModuleTest is Test {
     }
 
     function testEnableDenylist() public {
-        registerOrgWithRoles(org1, rootOrgName);
         vm.startPrank(org1);
         keyperModule.enableDenylist();
         assertEq(keyperModule.allowFeature(orgHash), false);
         assertEq(keyperModule.denyFeature(orgHash), true);
-        vm.stopPrank();
-    }
-
-    // Register org call with mocked call to KeyperRoles
-    function registerOrgWithRoles(address org, string memory name) public {
-        vm.startPrank(org);
-        RootOrgId = keyperModule.registerOrg(name);
         vm.stopPrank();
     }
 

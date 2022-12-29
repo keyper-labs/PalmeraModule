@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import "./helpers/GnosisSafeHelper.t.sol";
+import "./helpers/KeyperSafeBuilder.t.sol";
+import "./helpers/DeployHelper.t.sol";
 import {console} from "forge-std/console.sol";
 import {stdStorage, StdStorage, Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
@@ -9,59 +12,17 @@ import {DataTypes} from "../libraries/DataTypes.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
-import "./helpers/GnosisSafeHelper.t.sol";
-import "./helpers/KeyperSafeBuilder.t.sol";
-import "./helpers/DeployHelper.t.sol";
 import {MockedContract} from "./mocks/MockedContract.t.sol";
 
-contract Hierarchies is Test, DeployHelper {
-    MockedContract public masterCopyMocked;
-    MockedContract public proxyFactoryMocked;
-
+contract Hierarchies is DeployHelper {
     // Function called before each test is run
     function setUp() public {
-        // Setup Gnosis Helper
-        gnosisHelper = new GnosisSafeHelper();
-        // Setup Gnosis Helper
-        gnosisHelper.setupSafeEnv();
-
-        masterCopyMocked = new MockedContract();
-        proxyFactoryMocked = new MockedContract();
-
-        CREATE3Factory factory = new CREATE3Factory();
-        bytes32 salt = keccak256(abi.encode(0xafff));
-        // Predict the future address of keyper roles
-        keyperRolesDeployed = factory.getDeployed(address(this), salt);
-        keyperRolesContract = KeyperRoles(keyperRolesDeployed);
-
-        // Gnosis safe call are not used during the tests, no need deployed factory/mastercopy
-        keyperModule = new KeyperModule(
-            address(masterCopyMocked),
-            address(proxyFactoryMocked),
-            address(keyperRolesDeployed)
-        );
-
-        keyperModuleAddr = address(keyperModule);
-
-        bytes memory args = abi.encode(address(keyperModuleAddr));
-
-        bytes memory bytecode =
-            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
-
-        factory.deploy(salt, bytecode);
-
-        keyperSafeBuilder = new KeyperSafeBuilder();
-        keyperSafeBuilder.setUpParams(
-            KeyperModule(keyperModule), GnosisSafeHelper(gnosisHelper)
-        );
-        gnosisHelper.setKeyperModule(keyperModuleAddr);
+        DeployHelper.deployAllContracts(60);
     }
 
     function testRegisterRootOrg() public {
         bool result = gnosisHelper.registerOrgTx(orgName);
         assertEq(result, true);
-        bytes32 orgHash =
-            keyperModule.getOrgHashBySafe(address(gnosisHelper.gnosisSafe()));
         assertEq(orgHash, keccak256(abi.encodePacked(orgName)));
         uint256 rootId = keyperModule.getGroupIdBySafe(
             orgHash, address(gnosisHelper.gnosisSafe())

@@ -34,9 +34,9 @@ contract DeployHelper is Test {
     address zeroAddress = address(0x0);
     address sentinel = address(0x1);
 
-    // Helper mapping to keep track safes associated with a role
-    mapping(string => address) keyperSafes;
+    // Org, Group and subGroup String names
     string orgName = "Main Org";
+    string org2Name = "Second Org";
     string root2Name = "Second Root";
     string groupA1Name = "GroupA1";
     string groupA2Name = "GroupA2";
@@ -44,6 +44,11 @@ contract DeployHelper is Test {
     string subGroupA1Name = "subGroupA1";
     string subGroupB1Name = "subGroupB1";
     string subSubgroupA1Name = "SubSubGroupA";
+
+    bytes32 orgHash;
+
+    // Helper mapping to keep track safes associated with a role
+    mapping(string => address) keyperSafes;
 
     function deployAllContracts(uint256 initOwners) public {
         CREATE3Factory factory = new CREATE3Factory();
@@ -75,6 +80,8 @@ contract DeployHelper is Test {
         gnosisHelper.setKeyperModule(keyperModuleAddr);
         // Enable keyper module
         gnosisHelper.enableModuleTx(gnosisSafeAddr);
+
+        orgHash = keccak256(abi.encodePacked(orgName));
 
         bytes memory args = abi.encode(address(keyperModuleAddr));
 
