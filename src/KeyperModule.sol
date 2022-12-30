@@ -440,7 +440,9 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             revert Errors.GroupAlreadyRegistered();
         }
         // check if the superSafe Reached Depth Tree Limit
-        if (isLimitLevel(superSafe)) revert Errors.TreeDepthLimitReached();
+        if (isLimitLevel(superSafe)) {
+            revert Errors.TreeDepthLimitReached(depthTreeLimit[org]);
+        }
         /// Create a new group
         DataTypes.Group storage newGroup = groups[org][indexId];
         /// Add to org root/group
@@ -555,7 +557,9 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             revert Errors.NotAuthorizedUpdateGroupToOtherOrg();
         }
         /// Check if the new Super Safe is Reached Depth Tree Limit
-        if (isLimitLevel(newSuper)) revert Errors.TreeDepthLimitReached();
+        if (isLimitLevel(newSuper)) {
+            revert Errors.TreeDepthLimitReached(depthTreeLimit[org]);
+        }
         DataTypes.Group storage _group = groups[org][group];
         /// SuperSafe is either an Org or a Group
         DataTypes.Group storage oldSuper = groups[org][_group.superSafe];

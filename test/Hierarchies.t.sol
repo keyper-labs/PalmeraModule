@@ -433,7 +433,11 @@ contract Hierarchies is DeployHelper {
                 subGroupAid[i] =
                     keyperModule.addGroup(subGroupAid[i - 1], groupBName);
             } else {
-                vm.expectRevert(Errors.TreeDepthLimitReached.selector);
+                vm.expectRevert(
+                    abi.encodeWithSelector(
+                        Errors.TreeDepthLimitReached.selector, i
+                    )
+                );
                 keyperModule.addGroup(subGroupAid[i - 1], groupBName);
                 assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
                 console.log("i: ", i);
@@ -482,7 +486,11 @@ contract Hierarchies is DeployHelper {
                 subGroupAid[i] =
                     keyperModule.addGroup(subGroupAid[i - 1], groupBName);
             } else {
-                vm.expectRevert(Errors.TreeDepthLimitReached.selector);
+                vm.expectRevert(
+                    abi.encodeWithSelector(
+                        Errors.TreeDepthLimitReached.selector, i
+                    )
+                );
                 keyperModule.addGroup(subGroupAid[i - 1], groupBName);
                 assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
                 console.log("i: ", i);
@@ -506,7 +514,11 @@ contract Hierarchies is DeployHelper {
                 subGroupAid[j] =
                     keyperModule.addGroup(subGroupAid[j - 1], groupBName);
             } else {
-                vm.expectRevert(Errors.TreeDepthLimitReached.selector);
+                vm.expectRevert(
+                    abi.encodeWithSelector(
+                        Errors.TreeDepthLimitReached.selector, j
+                    )
+                );
                 keyperModule.addGroup(subGroupAid[j - 1], groupBName);
                 assertEq(keyperModule.isLimitLevel(subGroupAid[j - 1]), true);
                 console.log("j: ", j);
@@ -565,7 +577,11 @@ contract Hierarchies is DeployHelper {
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootAddrB);
-                vm.expectRevert(Errors.TreeDepthLimitReached.selector);
+                vm.expectRevert(
+                    abi.encodeWithSelector(
+                        Errors.TreeDepthLimitReached.selector, i
+                    )
+                );
                 keyperModule.updateSuper(subGroupB, subGroupAid[i - 1]);
                 assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
                 console.log("i: ", i);
@@ -626,7 +642,11 @@ contract Hierarchies is DeployHelper {
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootAddrB);
-                vm.expectRevert(Errors.TreeDepthLimitReached.selector);
+                vm.expectRevert(
+                    abi.encodeWithSelector(
+                        Errors.TreeDepthLimitReached.selector, i
+                    )
+                );
                 keyperModule.updateSuper(subGroupB, subGroupAid[i - 1]);
                 assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
                 console.log("i: ", i);
@@ -652,7 +672,11 @@ contract Hierarchies is DeployHelper {
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootAddrB);
-                vm.expectRevert(Errors.TreeDepthLimitReached.selector);
+                vm.expectRevert(
+                    abi.encodeWithSelector(
+                        Errors.TreeDepthLimitReached.selector, j
+                    )
+                );
                 keyperModule.updateSuper(subGroupB, subGroupAid[j - 1]);
                 assertEq(keyperModule.isLimitLevel(subGroupAid[j - 1]), true);
                 console.log("j: ", j);
