@@ -62,7 +62,7 @@ library Errors {
     /// @dev Error messages when the String Name is Empty
     error EmptyName();
     /// @dev Errors messages when Raised the Level Limit
-    error TreeDepthLimitReached();
+    error TreeDepthLimitReached(uint256 limit);
     /// @dev Errors messages when New Limit is more than Max Limit or less than or Equal to actual value
     error InvalidLimit();
     /// @dev Errors Module DenyHelpers
