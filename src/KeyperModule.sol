@@ -550,6 +550,10 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (!isRootSafeOf(caller, group)) {
             revert Errors.NotAuthorizedUpdateNonChildrenGroup();
         }
+        // Validate are the same org
+        if (org != getOrgByGroup(newSuper)) {
+            revert Errors.NotAuthorizedUpdateGroupToOtherOrg();
+        }
         /// Check if the new Super Safe is Reached Depth Tree Limit
         if (isLimitLevel(newSuper)) revert Errors.TreeDepthLimitReached();
         DataTypes.Group storage _group = groups[org][group];
