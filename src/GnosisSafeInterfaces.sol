@@ -36,6 +36,8 @@ interface IGnosisSafe {
 
     function getThreshold() external view returns (uint256);
 
+    function isModuleEnabled(address module) external view returns (bool);
+
     function checkSignatures(
         bytes32 dataHash,
         bytes memory data,
