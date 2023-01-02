@@ -4,12 +4,10 @@ pragma solidity ^0.8.15;
 import {Guard, BaseGuard} from "@safe-contracts/base/GuardManager.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
-import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {KeyperModule} from "./KeyperModule.sol";
 import {Context} from "@openzeppelin/utils/Context.sol";
 import {Errors} from "../libraries/Errors.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {Events} from "../libraries/Events.sol";
 
