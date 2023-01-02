@@ -73,6 +73,7 @@ library Constants {
     bytes4 internal constant REMOVE_GROUP =
         bytes4(keccak256(bytes("removeGroup(uint256)")));
 
-	// keccak256("guard_manager.guard.address")
-    bytes32 internal constant GUARD_STORAGE_SLOT = 0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8;
+    // keccak256("guard_manager.guard.address")
+    bytes32 internal constant GUARD_STORAGE_SLOT =
+        0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8;
 }
