@@ -3,19 +3,11 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
-import "./helpers/GnosisSafeHelper.t.sol";
-import "./helpers/KeyperModuleHelper.t.sol";
-import "./helpers/ReentrancyAttackHelper.t.sol";
-import "./helpers/KeyperSafeBuilder.t.sol";
 import "./helpers/DeployHelper.t.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
-import {KeyperRoles} from "../src/KeyperRoles.sol";
-import {DenyHelper} from "../src/DenyHelper.sol";
-import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
-import {Attacker} from "../src/ReentrancyAttack.sol";
 import {console} from "forge-std/console.sol";
 
 contract ModifySafeOwners is DeployHelper, SigningUtils {
@@ -48,8 +40,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         gnosisHelper.updateSafeInterface(groupA1Addr);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(groupA1Addr);
-
         vm.startPrank(userLeadModifyOwnersOnly);
         address newOwner = address(0xaaaf);
         keyperModule.addOwnerWithThreshold(
@@ -72,7 +62,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
         address groupBAddr = keyperModule.getGroupSafeAddress(groupIdB1);
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
 
         vm.startPrank(rootAddrA);
         keyperModule.setRole(
@@ -118,8 +107,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
         address childAAddr = keyperModule.getGroupSafeAddress(childIdA);
 
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(groupAAddr);
-
         // Get groupA signers info
         gnosisHelper.updateSafeInterface(childAAddr);
         address[] memory childA1Owners = gnosisHelper.gnosisSafe().getOwners();
@@ -153,8 +140,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
-
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
 
         // Get groupA signers info
         gnosisHelper.updateSafeInterface(groupAAddr);
@@ -197,8 +182,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
         address groupBAddr = keyperModule.getGroupSafeAddress(groupIdB1);
 
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(groupAAddr);
-
         // Get groupA signers info
         gnosisHelper.updateSafeInterface(groupAAddr);
         address[] memory groupA1Owners = gnosisHelper.gnosisSafe().getOwners();
@@ -227,8 +210,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
         address rootAddrB = keyperModule.getGroupSafeAddress(rootIdB);
-
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
 
         // Get groupA signers info
         gnosisHelper.updateSafeInterface(rootAddrA);
@@ -260,7 +241,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
         address groupBAddr = keyperModule.getGroupSafeAddress(groupIdB1);
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
 
         vm.startPrank(rootAddrA);
         keyperModule.setRole(
@@ -306,7 +286,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
         address rightCaller = address(0x123);
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
 
         vm.startPrank(rootAddrA);
         keyperModule.setRole(
@@ -362,7 +341,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         }
 
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         vm.startPrank(safeLead);
         vm.expectRevert(Errors.OwnerAlreadyExists.selector);
@@ -381,7 +359,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         gnosisHelper.updateSafeInterface(rootAddr);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         vm.startPrank(rootAddr);
         vm.expectRevert(Errors.InvalidAddressProvided.selector);
@@ -412,7 +389,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         // (When threshold < 1)
         address newOwner = address(0xf1f1f1);
         uint256 zeroThreshold = 0;
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         vm.startPrank(safeLead);
         vm.expectRevert(Errors.TxExecutionModuleFaild.selector); // safe Contract Internal Error GS202 "Threshold needs to be greater than 0"
@@ -442,7 +418,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         address safeNotRegistered = gnosisHelper.newKeyperSafe(4, 2);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         address newOwner = gnosisHelper.newKeyperSafe(4, 2);
 
         vm.startPrank(safeNotRegistered);
@@ -470,7 +446,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         gnosisHelper.newKeyperSafe(4, 2);
         address invalidGnosisSafeCaller = address(0x123);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         address newOwner = gnosisHelper.newKeyperSafe(4, 2);
 
         vm.startPrank(invalidGnosisSafeCaller);
@@ -498,7 +474,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         address newOwnerOnOrgA = address(0xF1F1);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         vm.expectRevert(Errors.NotAuthorizedAddOwnerWithThreshold.selector);
 
         vm.startPrank(rootBAddr);
@@ -519,7 +495,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         );
 
         address fakeCaller = keyperModule.getGroupSafeAddress(rootIdA);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(fakeCaller);
 
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
 
@@ -573,7 +548,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address prevOwner = groupA1Owners[0];
         address removeOwner = groupA1Owners[1];
         uint256 zeroThreshold = 0;
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         vm.startPrank(safeLead);
         vm.expectRevert(Errors.TxExecutionModuleFaild.selector); // safe Contract Internal Error GS202 "Threshold needs to be greater than 0"
@@ -604,7 +578,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address prevOwner = owners[0];
         address ownerToRemove = owners[1];
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         vm.startPrank(fakeCaller);
         vm.expectRevert(
@@ -632,7 +605,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address prevOwner = owners[0];
         address ownerToRemove = owners[1];
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         vm.startPrank(invalidSafeCaller);
         vm.expectRevert(
@@ -669,7 +641,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address prevOwner = ownersList[0];
         address owner = ownersList[1];
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(groupA1Addr);
 
         vm.startPrank(userLeadEOA);
         keyperModule.removeOwner(
@@ -708,7 +679,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address prevOwner = ownersList[0];
         address owner = ownersList[1];
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(groupA1Addr);
 
         gnosisHelper.updateSafeInterface(groupA2Addr);
         gnosisHelper.removeOwnerTx(
@@ -735,7 +705,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
         address groupBAddr = keyperModule.getGroupSafeAddress(groupIdB1);
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
 
         vm.startPrank(rootAddrA);
         keyperModule.setRole(
@@ -768,8 +737,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
         address childAAddr = keyperModule.getGroupSafeAddress(childIdA);
 
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(groupAAddr);
-
         gnosisHelper.updateSafeInterface(childAAddr);
         address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
 
@@ -800,8 +767,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
-
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
 
         gnosisHelper.updateSafeInterface(groupAAddr);
         address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
@@ -841,8 +806,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
         address groupBAddr = keyperModule.getGroupSafeAddress(groupIdB1);
 
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(groupAAddr);
-
         // Get groupA signers info
         gnosisHelper.updateSafeInterface(groupAAddr);
         address[] memory groupA1Owners = gnosisHelper.gnosisSafe().getOwners();
@@ -872,8 +835,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
         address rootAddrB = keyperModule.getGroupSafeAddress(rootIdB);
-
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
 
         // Get groupA signers info
         gnosisHelper.updateSafeInterface(rootAddrA);
@@ -905,7 +866,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
         address groupBAddr = keyperModule.getGroupSafeAddress(groupIdB1);
         address groupAAddr = keyperModule.getGroupSafeAddress(groupIdA1);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
 
         vm.startPrank(rootAddrA);
         keyperModule.setRole(
@@ -969,8 +929,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         gnosisHelper.updateSafeInterface(groupA1Addr);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(groupA1Addr);
-
         vm.startPrank(userLeadModifyOwnersOnly);
         keyperModule.removeOwner(
             prevOwner, removeOwner, threshold - 1, groupA1Addr, orgHash
@@ -995,7 +953,6 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
             gnosisHelper.gnosisSafe().getOwners()[0];
         address ownerToRemove = gnosisHelper.gnosisSafe().getOwners()[1];
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         vm.expectRevert(Errors.NotAuthorizedRemoveOwner.selector);
 
@@ -1015,7 +972,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(result, true);
 
         address rootAddr = keyperSafes[orgName];
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         uint256 rootId = keyperModule.getGroupIdBySafe(orgHash, rootAddr);
         address safeLead = address(0x123);
 

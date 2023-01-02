@@ -38,6 +38,8 @@ interface IGnosisSafe {
 
     function isModuleEnabled(address module) external view returns (bool);
 
+    function getGuard() external view returns (address);
+
     function checkSignatures(
         bytes32 dataHash,
         bytes memory data,

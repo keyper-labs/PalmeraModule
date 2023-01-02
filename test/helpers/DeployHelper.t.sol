@@ -5,16 +5,14 @@ import "forge-std/Test.sol";
 import "../../src/SigningUtils.sol";
 import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
-import "./ReentrancyAttackHelper.t.sol";
 import "./KeyperSafeBuilder.t.sol";
 import {Constants} from "../../libraries/Constants.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 import {Errors} from "../../libraries/Errors.sol";
 import {KeyperModule, IGnosisSafe} from "../../src/KeyperModule.sol";
 import {KeyperRoles} from "../../src/KeyperRoles.sol";
-import {DenyHelper} from "../../src/DenyHelper.sol";
+import {KeyperGuard} from "../../src/KeyperGuard.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
-import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {console} from "forge-std/console.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
@@ -22,6 +20,7 @@ contract DeployHelper is Test {
     using SafeMath for uint256;
 
     KeyperModule keyperModule;
+    KeyperGuard keyperGuard;
     GnosisSafeHelper gnosisHelper;
     KeyperModuleHelper keyperHelper;
     KeyperRoles keyperRolesContract;
@@ -29,6 +28,7 @@ contract DeployHelper is Test {
 
     address gnosisSafeAddr;
     address keyperModuleAddr;
+    address keyperGuardAddr;
     address keyperRolesDeployed;
     address receiver = address(0xABC);
     address zeroAddress = address(0x0);
@@ -75,13 +75,21 @@ contract DeployHelper is Test {
     		maxTreeDepth
         );
         keyperModuleAddr = address(keyperModule);
+        // Deploy Guard Contract
+        keyperGuard = new KeyperGuard(keyperModuleAddr);
+        keyperGuardAddr = address(keyperGuard);
+
         // Init keyperModuleHelper
         keyperHelper = new KeyperModuleHelper();
         keyperHelper.initHelper(keyperModule, initOwners.div(3));
         // Update gnosisHelper
         gnosisHelper.setKeyperModule(keyperModuleAddr);
+        // Update gnosisHelper
+        gnosisHelper.setKeyperGuard(keyperGuardAddr);
         // Enable keyper module
         gnosisHelper.enableModuleTx(gnosisSafeAddr);
+        // Enable keyper Guard
+        gnosisHelper.enableGuardTx(gnosisSafeAddr);
 
         orgHash = keccak256(abi.encodePacked(orgName));
 

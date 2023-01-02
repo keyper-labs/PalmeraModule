@@ -2,18 +2,11 @@
 pragma solidity ^0.8.13;
 
 import {console} from "forge-std/console.sol";
-import {Test} from "forge-std/Test.sol";
-import {KeyperModule} from "../src/KeyperModule.sol";
-import {KeyperRoles} from "../src/KeyperRoles.sol";
-import {Address} from "@openzeppelin/utils/Address.sol";
-import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
-import "./helpers/GnosisSafeHelper.t.sol";
 import "./helpers/DeployHelper.t.sol";
-import {MockedContract} from "./mocks/MockedContract.t.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 
-contract KeyperRolesTest is Test, DeployHelper {
+contract KeyperRolesTest is DeployHelper {
     function setUp() public {
         DeployHelper.deployAllContracts(90);
     }

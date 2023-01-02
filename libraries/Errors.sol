@@ -25,6 +25,7 @@ library Errors {
 	error NotAuthorizedUpdateGroupToOtherOrg();
 	error CannotKeyperModuleDisable(address module);
 	error CannotDisableKeyperGuard(address guard);
+	error CannotEnableKeyperGuard(address guard);
     /// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
     error NotAuthorizedAsNotSafeLead();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Super Safe

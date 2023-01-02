@@ -7,6 +7,7 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {KeyperModule} from "./KeyperModule.sol";
+import {Context} from "@openzeppelin/utils/Context.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 import {Constants} from "../libraries/Constants.sol";
@@ -14,14 +15,14 @@ import {Events} from "../libraries/Events.sol";
 
 /// @title Keyper Guard
 /// @custom:security-contact general@palmeradao.xyz
-contract KeyperGuard is BaseGuard {
+contract KeyperGuard is BaseGuard, Context {
     KeyperModule keyperModule;
 
     string public constant NAME = "Keyper Guard";
     string public constant VERSION = "0.2.0";
 
     constructor(address keyperModuleAddr) {
-        if (keyperModuleAddr != address(0)) revert Errors.ZeroAddressProvided();
+        if (keyperModuleAddr == address(0)) revert Errors.ZeroAddressProvided();
         keyperModule = KeyperModule(keyperModuleAddr);
     }
 
@@ -40,17 +41,17 @@ contract KeyperGuard is BaseGuard {
     ) external {}
 
     function checkAfterExecution(bytes32, bool) external view {
+        address caller = _msgSender();
         // TODO: check if the msg.sender, exist or not in the keyperModule,
         // if it does, check if try to disable guard and revert if it does.
         // if it does, check if try to disable the Keyper Module and revert if it does.
-        if (keyperModule.isSafeRegistered(msg.sender)) {
-            if (!IGnosisSafe(msg.sender).isModuleEnabled(address(keyperModule)))
-            {
+        if (keyperModule.isSafeRegistered(caller)) {
+            if (!IGnosisSafe(caller).isModuleEnabled(address(keyperModule))) {
                 revert Errors.CannotKeyperModuleDisable(address(keyperModule));
             }
             if (
                 abi.decode(
-                    StorageAccessible(msg.sender).getStorageAt(
+                    StorageAccessible(caller).getStorageAt(
                         uint256(Constants.GUARD_STORAGE_SLOT), 2
                     ),
                     (address)
