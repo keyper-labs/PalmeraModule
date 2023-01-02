@@ -1,4 +1,5 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
@@ -121,7 +122,13 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         address masterCopy = address(deploySafeFactory.gnosisSafeContract());
         address safeFactory = address(deploySafeFactory.proxyFactory());
         address rolesAuthority = address(deploySafeFactory.proxyFactory());
-        keyper = new KeyperModule(masterCopy, safeFactory, rolesAuthority);
+        uint256 maxTreeDepth = 50;
+        keyper = new KeyperModule(
+            masterCopy,
+            safeFactory,
+            rolesAuthority,
+            maxTreeDepth
+        );
 
         require(address(keyper) != address(0), "Keyper module not deployed");
         address[] memory owners = new address[](numberOwners);

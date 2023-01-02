@@ -20,10 +20,12 @@ contract TestEnableModule is Test {
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
         address rolesAuthority = address(0xBEEF);
+        uint256 maxTreeDepth = 50;
         keyperModule = new KeyperModule(
             masterCopy,
             safeFactory,
-            rolesAuthority
+            rolesAuthority,
+            maxTreeDepth
         );
         gnosisHelper.setKeyperModule(address(keyperModule));
     }

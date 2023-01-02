@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 import "../../src/SigningUtils.sol";
@@ -66,11 +66,13 @@ contract DeployHelper is Test {
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
+        uint256 maxTreeDepth = 50;
 
         keyperModule = new KeyperModule(
             masterCopy,
             safeFactory,
-            address(keyperRolesDeployed)
+            address(keyperRolesDeployed),
+    		maxTreeDepth
         );
         keyperModuleAddr = address(keyperModule);
         // Init keyperModuleHelper

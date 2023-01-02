@@ -22,6 +22,7 @@ library Errors {
     error NotAuthorizedRemoveGroupFromOtherTree();
     error NotAuthorizedRemoveOwner();
     error NotAuthorizedExecOnBehalf();
+	error NotAuthorizedUpdateGroupToOtherOrg();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
     error NotAuthorizedAsNotSafeLead();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Super Safe
@@ -58,6 +59,10 @@ library Errors {
     error SafeAlreadyRegistered(address safe);
     /// @dev Error messages when the String Name is Empty
     error EmptyName();
+    /// @dev Errors messages when Raised the Level Limit
+    error TreeDepthLimitReached(uint256 limit);
+    /// @dev Errors messages when New Limit is more than Max Limit or less than or Equal to actual value
+    error InvalidLimit();
     /// @dev Errors Module DenyHelpers
     /// @dev Error messages when the Address is a Zero Address
     error ZeroAddressProvided();
