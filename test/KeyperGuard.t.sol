@@ -19,7 +19,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
     function testDisableKeyperGuard() public {
         // Check guard is disabled
-        bool result = gnosisHelper.disableGuardTx(gnosisSafeAddr);
+        bool result = gnosisHelper.disableModuleTx(address(0x1), gnosisSafeAddr);
+        assertEq(result, true);
+        result = gnosisHelper.disableGuardTx(gnosisSafeAddr);
         assertEq(result, true);
         // Verify guard has been enabled
         if (
@@ -167,6 +169,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Try to disable Guard from Group Removed
         gnosisHelper.updateSafeInterface(groupA1Addr);
+        result = gnosisHelper.disableModuleTx(address(0x1), groupA1Addr);
+        assertEq(result, true);
         result = gnosisHelper.disableGuardTx(groupA1Addr);
         assertEq(result, true);
 

@@ -102,6 +102,13 @@ library Events {
         uint256 newLimit
     );
 
+	event SafeDisconnected(
+		bytes32 indexed org,
+		uint256 indexed group,
+		address indexed safe,
+		address disconnector
+	);
+
     /// @notice Events Deny Helpers
 
     /// @dev Event Fire when add several wallet into the deny/allow list

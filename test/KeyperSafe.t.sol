@@ -222,7 +222,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         gnosisHelper.updateSafeInterface(rootAddr);
         bool result = gnosisHelper.createRemoveGroupTx(groupA1Id);
         assertEq(result, true);
-        assertEq(keyperModule.isSuperSafe(rootId, groupA1Id), false);
+        assertEq(keyperModule.isSuperSafe(rootId, groupA1Id), true); // Still be part of the Org because only remove child
 
         // Check safeSubGroupA1 is now a child of org
         assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), true);
@@ -235,7 +235,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         assertEq(child.length, 1);
         assertEq(child[0] == groupA1Id, false);
         assertEq(child[0] == subGroupA1Id, true);
-        assertEq(keyperModule.isTreeMember(rootId, groupA1Id), false);
+        assertEq(keyperModule.isTreeMember(rootId, groupA1Id), true); // Still be part of the Org because only remove child
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
@@ -274,8 +274,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         gnosisHelper.updateSafeInterface(groupAAddr);
         bool result = gnosisHelper.createRemoveGroupTx(subGroupA1Id);
         assertEq(result, true);
-        assertEq(keyperModule.isSuperSafe(groupA1Id, subGroupA1Id), false);
-        assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), false);
+        assertEq(keyperModule.isSuperSafe(groupA1Id, subGroupA1Id), true); // Still be part of the Org because only remove child
+        assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), true); // Still be part of the Org because only remove child
 
         // Check supersafe has not any children
         uint256[] memory child;

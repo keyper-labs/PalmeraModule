@@ -533,7 +533,51 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             org, group, superSafe.safe, caller, _group.superSafe, _group.name
             );
         removeIndexGroup(org, group);
+        // delete groups[org][group];
+    }
+
+    /// @notice Disable Safe of a group
+    /// @dev Disable Safe of a group, Call must come from the root safe
+    /// @param group address of the group to be updated
+    function disconnectSafe(uint256 group)
+        external
+        IsRootSafe(_msgSender())
+        GroupRegistered(group)
+        requiresAuth
+    {
+        bytes32 org = getOrgByGroup(group);
+        address caller = _msgSender();
+        /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
+        if (!isRootSafeOf(caller, group)) {
+            revert Errors.NotAuthorizedUpdateNonChildrenGroup();
+        }
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(groups[org][group].safe);
         delete groups[org][group];
+
+        /// Disable Guard
+        bytes memory data =
+            abi.encodeWithSelector(IGnosisSafe.setGuard.selector, address(0));
+        /// Execute transaction from target safe
+        bool result = gnosisTargetSafe.execTransactionFromModule(
+            address(gnosisTargetSafe), uint256(0), data, Enum.Operation.Call
+        );
+        if (!result) revert Errors.TxExecutionModuleFaild();
+
+        /// Disable Module
+        address prevModule = getPreviewModule(caller);
+        data = abi.encodeWithSelector(
+            IGnosisSafe.disableModule.selector, prevModule, address(this)
+        );
+
+        /// Execute transaction from target safe
+        result = gnosisTargetSafe.execTransactionFromModule(
+            address(gnosisTargetSafe), uint256(0), data, Enum.Operation.Call
+        );
+        if (!result) revert Errors.TxExecutionModuleFaild();
+
+        emit Events.SafeDisconnected(
+            org, group, address(gnosisTargetSafe), caller
+            );
     }
 
     /// @notice update superSafe of a group
@@ -541,7 +585,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// @param group address of the group to be updated
     /// @param newSuper address of the new superSafe
     function updateSuper(uint256 group, uint256 newSuper)
-        public
+        external
         IsRootSafe(_msgSender())
         GroupRegistered(newSuper)
         requiresAuth
@@ -1013,6 +1057,28 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
                 caller, safe, to, value, data, operation, _nonce
             )
         );
+    }
+
+    /// @dev Method to get Preview Module of the Safe
+    /// @param safe address of the Safe
+    /// @return address of the Preview Module
+    function getPreviewModule(address safe) internal view returns (address) {
+        // create Instance of the Gnosis Safe
+        IGnosisSafe gnosisSafe = IGnosisSafe(safe);
+        // get the modules of the Safe
+        (address[] memory modules,) =
+            gnosisSafe.getModulesPaginated(address(this), 25);
+        if (modules[0] == address(0)) {
+            return address(0);
+        } else if (modules[0] == address(this)) {
+            return Constants.SENTINEL_ADDRESS;
+        } else {
+            for (uint256 i = 1; i < modules.length; i++) {
+                if (modules[i] == address(this)) {
+                    return modules[i - 1];
+                }
+            }
+        }
     }
 
     /// @notice disable safe lead roles

@@ -38,6 +38,15 @@ interface IGnosisSafe {
 
     function isModuleEnabled(address module) external view returns (bool);
 
+    function disableModule(address prevModule, address module) external;
+
+    function setGuard(address guard) external;
+
+    function getModulesPaginated(address start, uint256 pageSize)
+        external
+        view
+        returns (address[] memory array, address next);
+
     function checkSignatures(
         bytes32 dataHash,
         bytes memory data,

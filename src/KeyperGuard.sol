@@ -70,6 +70,18 @@ contract KeyperGuard is BaseGuard, Context {
                     revert Errors.NotAuthorizedAsCallerOfKeyperModule(caller);
                 }
             }
+            if (
+                (
+                    abi.decode(
+                        StorageAccessible(caller).getStorageAt(
+                            uint256(Constants.GUARD_STORAGE_SLOT), 2
+                        ),
+                        (address)
+                    ) != address(this)
+                ) && IGnosisSafe(caller).isModuleEnabled(address(keyperModule))
+            ) {
+                revert Errors.NotAuthorizedAsCallerOfKeyperModule(caller);
+            }
         }
     }
 }
