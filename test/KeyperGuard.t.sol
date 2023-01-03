@@ -47,46 +47,54 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(isKeyperModuleEnabled, false);
     }
 
-    function testCannotDisableKeyperModuleIfSafeIsRegistered() public {
+    function testCannotDisableKeyperModuleIfGuardEnabled() public {
         (uint256 rootId, uint256 groupIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
         address rootAddr = keyperModule.getGroupSafeAddress(rootId);
         address groupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
 
-        // Try to disable Guard from root
+        // Try to disable Module from root
         gnosisHelper.updateSafeInterface(rootAddr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.CannotKeyperModuleDisable.selector, address(keyperModule)
+                Errors.CannotDisableKeyperModule.selector, address(keyperModule)
             )
         );
         bool result = gnosisHelper.disableModuleTx(address(0x1), rootAddr);
         assertEq(result, false);
 
-        // Verify module has been disabled
+        // Verify module is still enabled
         bool isKeyperModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
 
-        // Try to disable Guard from group
+        // Try to disable Module from group
         gnosisHelper.updateSafeInterface(groupA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.CannotKeyperModuleDisable.selector, address(keyperModule)
+                Errors.CannotDisableKeyperModule.selector, address(keyperModule)
             )
         );
         result = gnosisHelper.disableModuleTx(address(0x1), groupA1Addr);
         assertEq(result, false);
 
-        // Verify module has been disabled
+        // Verify module is still enabled
         isKeyperModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
+    }
+
+    function testCannotDisableKeyperModuleAfterRemoveGroup() public {
+        (uint256 rootId, uint256 groupIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
 
         // Remove Group A1
         gnosisHelper.updateSafeInterface(rootAddr);
-        result = gnosisHelper.createRemoveGroupTx(groupIdA1);
+        bool result = gnosisHelper.createRemoveGroupTx(groupIdA1);
         assertEq(result, true);
 
         // Try to disable Guard from Group Removed
@@ -95,12 +103,12 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(result, true);
 
         // Verify module has been disabled
-        isKeyperModuleEnabled =
+        bool isKeyperModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
     }
 
-    function testCannotDisableKeyperGuardIfSafeIsRegistered() public {
+    function testCannotDisableKeyperGuardIfGuardEnabled() public {
         (uint256 rootId, uint256 groupIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
@@ -117,7 +125,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         bool result = gnosisHelper.disableGuardTx(rootAddr);
         assertEq(result, false);
 
-        // Verify module has been disabled
+        // Verify Guard is still enabled
         address keyperGuardAddrTest = abi.decode(
             StorageAccessible(address(gnosisHelper.gnosisSafe())).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
@@ -136,7 +144,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         result = gnosisHelper.disableGuardTx(groupA1Addr);
         assertEq(result, false);
 
-        // Verify module has been disabled
+        // Verify Guard is still enabled
         keyperGuardAddrTest = abi.decode(
             StorageAccessible(address(gnosisHelper.gnosisSafe())).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
@@ -144,10 +152,17 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
             (address)
         );
         assertEq(keyperGuardAddrTest, keyperGuardAddr);
+    }
 
+    function testCannotDisableKeyperGuardAfterRemoveGroup() public {
+        (uint256 rootId, uint256 groupIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
         // Remove Group A1
         gnosisHelper.updateSafeInterface(rootAddr);
-        result = gnosisHelper.createRemoveGroupTx(groupIdA1);
+        bool result = gnosisHelper.createRemoveGroupTx(groupIdA1);
         assertEq(result, true);
 
         // Try to disable Guard from Group Removed

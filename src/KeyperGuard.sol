@@ -40,12 +40,11 @@ contract KeyperGuard is BaseGuard, Context {
 
     function checkAfterExecution(bytes32, bool) external view {
         address caller = _msgSender();
-        // TODO: check if the msg.sender, exist or not in the keyperModule,
         // if it does, check if try to disable guard and revert if it does.
         // if it does, check if try to disable the Keyper Module and revert if it does.
         if (keyperModule.isSafeRegistered(caller)) {
             if (!IGnosisSafe(caller).isModuleEnabled(address(keyperModule))) {
-                revert Errors.CannotKeyperModuleDisable(address(keyperModule));
+                revert Errors.CannotDisableKeyperModule(address(keyperModule));
             }
             if (
                 abi.decode(
@@ -56,6 +55,20 @@ contract KeyperGuard is BaseGuard, Context {
                 ) != address(this)
             ) {
                 revert Errors.CannotDisableKeyperGuard(address(this));
+            }
+        } else {
+            if (!keyperModule.isSafe(caller)) {
+                bool isSafeLead;
+                // Caller is EAO (lead) : check if it has the rights over the target safe
+                for (uint256 i = 1; i < keyperModule.indexId(); i++) {
+                    if (keyperModule.isSafeLead(i, caller)) {
+                        isSafeLead = true;
+                        break;
+                    }
+                }
+                if (!isSafeLead) {
+                    revert Errors.NotAuthorizedAsCallerOfKeyperModule(caller);
+                }
             }
         }
     }
