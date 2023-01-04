@@ -19,23 +19,20 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
     function testDisableKeyperGuard() public {
         // Check guard is disabled
-        bool result = gnosisHelper.disableModuleTx(
+        bool result = gnosisHelper.disableGuardTx(gnosisSafeAddr);
+        assertEq(result, true);
+        result = gnosisHelper.disableModuleTx(
             Constants.SENTINEL_ADDRESS, gnosisSafeAddr
         );
         assertEq(result, true);
-        result = gnosisHelper.disableGuardTx(gnosisSafeAddr);
-        assertEq(result, true);
         // Verify guard has been enabled
-        if (
-            abi.decode(
-                StorageAccessible(gnosisSafeAddr).getStorageAt(
-                    uint256(Constants.GUARD_STORAGE_SLOT), 2
-                ),
-                (address)
-            ) == address(keyperGuard)
-        ) {
-            revert Errors.CannotDisableKeyperGuard(address(keyperGuard));
-        }
+        address ZeroAddress = abi.decode(
+            StorageAccessible(gnosisSafeAddr).getStorageAt(
+                uint256(Constants.GUARD_STORAGE_SLOT), 2
+            ),
+            (address)
+        );
+        assertEq(ZeroAddress, zeroAddress);
     }
 
     function testDisableKeyperModule() public {
@@ -51,6 +48,363 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         isKeyperModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
+    }
+
+    function testDisconnectSafe_As_ROOTSAFE_TARGET_SUPERSAFE_SAME_TREE()
+        public
+    {
+        (uint256 rootId, uint256 groupIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
+
+        // Remove Group A1
+        gnosisHelper.updateSafeInterface(rootAddr);
+        bool result = gnosisHelper.createRemoveGroupTx(groupIdA1);
+        assertEq(result, true);
+
+        // Disconnect Safe
+        result = gnosisHelper.createDisconnectSafeTx(groupIdA1);
+        assertEq(result, true);
+
+        // Verify Safe is disconnected
+        // Verify module has been disabled
+        gnosisHelper.updateSafeInterface(groupA1Addr);
+        bool isKeyperModuleEnabled =
+            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+        assertEq(isKeyperModuleEnabled, false);
+        // Verify guard has been enabled
+        address ZeroAddress = abi.decode(
+            StorageAccessible(groupA1Addr).getStorageAt(
+                uint256(Constants.GUARD_STORAGE_SLOT), 2
+            ),
+            (address)
+        );
+        assertEq(ZeroAddress, zeroAddress);
+    }
+
+    function testDisconnectSafe_As_ROOTSAFE_TARGET_ROOTSAFE_SAME_TREE()
+        public
+    {
+        (uint256 rootId, uint256 groupIdA1, uint256 subGroupA1Id) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, groupA1Name, subGroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
+        address subGroupA1Addr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+
+        // Remove Group A1
+        gnosisHelper.updateSafeInterface(groupA1Addr);
+        bool result = gnosisHelper.createRemoveGroupTx(subGroupA1Id);
+        assertEq(result, true);
+
+        // Disconnect Safe
+        gnosisHelper.updateSafeInterface(rootAddr);
+        result = gnosisHelper.createDisconnectSafeTx(subGroupA1Id);
+        assertEq(result, true);
+
+        // Verify Safe is disconnected
+        // Verify module has been disabled
+        gnosisHelper.updateSafeInterface(subGroupA1Addr);
+        bool isKeyperModuleEnabled =
+            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+        assertEq(isKeyperModuleEnabled, false);
+        // Verify guard has been enabled
+        address ZeroAddress = abi.decode(
+            StorageAccessible(subGroupA1Addr).getStorageAt(
+                uint256(Constants.GUARD_STORAGE_SLOT), 2
+            ),
+            (address)
+        );
+        assertEq(ZeroAddress, zeroAddress);
+    }
+
+    // function testDisconnectSafe_As_ROOTSAFE_TARGET_ITSELF() public {
+    //     (uint256 rootId,) =
+    //         keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+    //     address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+
+    //     Remove Group A1
+    //     gnosisHelper.updateSafeInterface(rootAddr);
+    //     bool result = gnosisHelper.createRemoveGroupTx(rootId);
+    //     assertEq(result, true);
+
+    //     Disconnect Safe
+    //     result = gnosisHelper.createDisconnectSafeTx(rootId);
+    //     assertEq(result, true);
+
+    //     Verify Safe is disconnected
+    //     Verify module has been disabled
+    //     bool isKeyperModuleEnabled =
+    //         gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+    //     assertEq(isKeyperModuleEnabled, false);
+    //     Verify guard has been enabled
+    //     address ZeroAddress = abi.decode(
+    //         StorageAccessible(rootAddr).getStorageAt(
+    //             uint256(Constants.GUARD_STORAGE_SLOT), 2
+    //         ),
+    //         (address)
+    //     );
+    //     assertEq(ZeroAddress, zeroAddress);
+    // }
+
+    function testCannotDisconnectSafe_As_SuperSafe_As_SameTree() public {
+        (, uint256 groupIdA1, uint256 subGroupA1Id) = keyperSafeBuilder
+            .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
+
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
+        address subGroupA1Addr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+
+        // Remove Group A1
+        gnosisHelper.updateSafeInterface(groupA1Addr);
+        bool result = gnosisHelper.createRemoveGroupTx(subGroupA1Id);
+        assertEq(result, true);
+
+        // Try to Disconnect Safe
+        vm.startPrank(groupA1Addr);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.InvalidGnosisRootSafe.selector, groupA1Addr
+            )
+        );
+        keyperModule.disconnectSafe(subGroupA1Id);
+        vm.stopPrank();
+
+        // Verify module still enabled
+        gnosisHelper.updateSafeInterface(subGroupA1Addr);
+        bool isKeyperModuleEnabled =
+            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+        assertEq(isKeyperModuleEnabled, true);
+        // Verify guard still enabled
+        address guardAddress = abi.decode(
+            StorageAccessible(subGroupA1Addr).getStorageAt(
+                uint256(Constants.GUARD_STORAGE_SLOT), 2
+            ),
+            (address)
+        );
+        assertEq(guardAddress, address(keyperGuard));
+    }
+
+    function testCannotDisconnectSafe_As_SuperSafe_As_DifferentTree() public {
+        (, uint256 groupIdA1,, uint256 groupIdB1, uint256 subGroupA1Id,) =
+        keyperSafeBuilder.setupTwoOrgWithOneRootOneGroupAndOneChildEach(
+            orgName,
+            groupA1Name,
+            root2Name,
+            groupBName,
+            subGroupA1Name,
+            subGroupB1Name
+        );
+
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
+        address subGroupA1Addr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+        address groupB1Addr = keyperModule.getGroupSafeAddress(groupIdB1);
+
+        // Remove Group A1
+        gnosisHelper.updateSafeInterface(groupA1Addr);
+        bool result = gnosisHelper.createRemoveGroupTx(subGroupA1Id);
+        assertEq(result, true);
+
+        // Try to Disconnect Safe
+        vm.startPrank(groupB1Addr);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.InvalidGnosisRootSafe.selector, groupB1Addr
+            )
+        );
+        keyperModule.disconnectSafe(subGroupA1Id);
+        vm.stopPrank();
+
+        // Verify module still enabled
+        gnosisHelper.updateSafeInterface(subGroupA1Addr);
+        bool isKeyperModuleEnabled =
+            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+        assertEq(isKeyperModuleEnabled, true);
+        // Verify guard still enabled
+        address guardAddress = abi.decode(
+            StorageAccessible(subGroupA1Addr).getStorageAt(
+                uint256(Constants.GUARD_STORAGE_SLOT), 2
+            ),
+            (address)
+        );
+        assertEq(guardAddress, address(keyperGuard));
+    }
+
+    function testCannotDisconnectSafe_As_RootSafe_As_DifferentTree() public {
+        (uint256 rootIdA,, uint256 rootIdB,, uint256 subGroupA1Id,) =
+        keyperSafeBuilder.setupTwoOrgWithOneRootOneGroupAndOneChildEach(
+            orgName,
+            groupA1Name,
+            root2Name,
+            groupBName,
+            subGroupA1Name,
+            subGroupB1Name
+        );
+
+        address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
+        address subGroupA1Addr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+        address rootAddrB = keyperModule.getGroupSafeAddress(rootIdB);
+
+        // Remove Group A1
+        gnosisHelper.updateSafeInterface(rootAddrA);
+        bool result = gnosisHelper.createRemoveGroupTx(subGroupA1Id);
+        assertEq(result, true);
+
+        // Try to Disconnect Safe
+        vm.startPrank(rootAddrB);
+        vm.expectRevert(Errors.NotAuthorizedDisconnectChildrenGroup.selector);
+        keyperModule.disconnectSafe(subGroupA1Id);
+        vm.stopPrank();
+
+        // Verify module still enabled
+        gnosisHelper.updateSafeInterface(subGroupA1Addr);
+        bool isKeyperModuleEnabled =
+            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+        assertEq(isKeyperModuleEnabled, true);
+        // Verify guard still enabled
+        address guardAddress = abi.decode(
+            StorageAccessible(subGroupA1Addr).getStorageAt(
+                uint256(Constants.GUARD_STORAGE_SLOT), 2
+            ),
+            (address)
+        );
+        assertEq(guardAddress, address(keyperGuard));
+    }
+
+    function testCannotDisconnectSafeBeforeToRemoveGroup_One_Level() public {
+        (uint256 rootId, uint256 groupIdA1,) = keyperSafeBuilder
+            .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
+
+        // Try to Disconnect Safe before to remove group
+        vm.startPrank(rootAddr);
+        vm.expectRevert(Errors.CannotDisconnectSafeBeforeRemoveGroup.selector);
+        keyperModule.disconnectSafe(groupIdA1);
+        vm.stopPrank();
+
+        // Verify module still enabled
+        gnosisHelper.updateSafeInterface(groupA1Addr);
+        bool isKeyperModuleEnabled =
+            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+        assertEq(isKeyperModuleEnabled, true);
+        // Verify guard still enabled
+        address guardAddress = abi.decode(
+            StorageAccessible(groupA1Addr).getStorageAt(
+                uint256(Constants.GUARD_STORAGE_SLOT), 2
+            ),
+            (address)
+        );
+        assertEq(guardAddress, address(keyperGuard));
+    }
+
+    function testCannotDisconnectSafeBeforeToRemoveGroup_Two_Level() public {
+        (uint256 rootId,, uint256 subGroupIdA1,) = keyperSafeBuilder
+            .setupOrgFourTiersTree(
+            orgName, groupA1Name, subGroupA1Name, subSubGroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address subGroupA1Addr = keyperModule.getGroupSafeAddress(subGroupIdA1);
+
+        // Try to Disconnect Safe before to remove group
+        vm.startPrank(rootAddr);
+        vm.expectRevert(Errors.CannotDisconnectSafeBeforeRemoveGroup.selector);
+        keyperModule.disconnectSafe(subGroupIdA1);
+        vm.stopPrank();
+
+        // Verify module still enabled
+        gnosisHelper.updateSafeInterface(subGroupA1Addr);
+        bool isKeyperModuleEnabled =
+            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+        assertEq(isKeyperModuleEnabled, true);
+        // Verify guard still enabled
+        address guardAddress = abi.decode(
+            StorageAccessible(subGroupA1Addr).getStorageAt(
+                uint256(Constants.GUARD_STORAGE_SLOT), 2
+            ),
+            (address)
+        );
+        assertEq(guardAddress, address(keyperGuard));
+    }
+
+    function testCannotDisconnectSafe_As_SafeLead_As_EOA() public {
+        (uint256 rootId,, uint256 childGroupA1) = keyperSafeBuilder
+            .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address childGroupA1Addr =
+            keyperModule.getGroupSafeAddress(childGroupA1);
+
+        // Send ETH to group&subgroup
+        vm.deal(rootAddr, 100 gwei);
+        vm.deal(childGroupA1Addr, 100 gwei);
+
+        // Create a a Ramdom Right EOA Caller
+        address fakerCaller = address(0xCBA);
+
+        // Set Safe Role in Safe Group A1 over Child Group A1
+        vm.startPrank(rootAddr);
+        keyperModule.setRole(
+            DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+            fakerCaller,
+            childGroupA1,
+            true
+        );
+        assertTrue(keyperModule.isSafeLead(childGroupA1, fakerCaller));
+        vm.stopPrank();
+
+        // Try to Disconnect Safe before to remove group
+        vm.startPrank(fakerCaller);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.InvalidGnosisSafe.selector, fakerCaller
+            )
+        );
+        keyperModule.disconnectSafe(childGroupA1);
+        vm.stopPrank();
+    }
+
+    function testCannotDisconnectSafe_As_SafeLead_As_SAFE() public {
+        (uint256 rootId,, uint256 childGroupA1) = keyperSafeBuilder
+            .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address childGroupA1Addr =
+            keyperModule.getGroupSafeAddress(childGroupA1);
+
+        // Send ETH to group&subgroup
+        vm.deal(rootAddr, 100 gwei);
+        vm.deal(childGroupA1Addr, 100 gwei);
+
+        // Create a a Ramdom Right EOA Caller
+        address fakerCaller = gnosisHelper.newKeyperSafe(3, 1);
+
+        // Set Safe Role in Safe Group A1 over Child Group A1
+        vm.startPrank(rootAddr);
+        keyperModule.setRole(
+            DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+            fakerCaller,
+            childGroupA1,
+            true
+        );
+        assertTrue(keyperModule.isSafeLead(childGroupA1, fakerCaller));
+        vm.stopPrank();
+
+        // Try to Disconnect Safe before to remove group
+        vm.startPrank(fakerCaller);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.SafeNotRegistered.selector, fakerCaller
+            )
+        );
+        keyperModule.disconnectSafe(childGroupA1);
+        vm.stopPrank();
     }
 
     function testCannotDisableKeyperModuleIfGuardEnabled() public {
@@ -108,15 +462,20 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Try to disable Guard from Group Removed
         gnosisHelper.updateSafeInterface(groupA1Addr);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.CannotDisableKeyperModule.selector, address(keyperModule)
+            )
+        );
         result = gnosisHelper.disableModuleTx(
             Constants.SENTINEL_ADDRESS, groupA1Addr
         );
-        assertEq(result, true);
+        assertEq(result, false);
 
-        // Verify module has been disabled
+        // Verify module still enabled
         bool isKeyperModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, false);
+        assertEq(isKeyperModuleEnabled, true);
     }
 
     function testCannotDisableKeyperGuardIfGuardEnabled() public {
@@ -178,20 +537,30 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Try to disable Guard from Group Removed
         gnosisHelper.updateSafeInterface(groupA1Addr);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.CannotDisableKeyperModule.selector, address(keyperModule)
+            )
+        );
         result = gnosisHelper.disableModuleTx(
             Constants.SENTINEL_ADDRESS, groupA1Addr
         );
-        assertEq(result, true);
+        assertEq(result, false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.CannotDisableKeyperGuard.selector, address(keyperGuard)
+            )
+        );
         result = gnosisHelper.disableGuardTx(groupA1Addr);
-        assertEq(result, true);
+        assertEq(result, false);
 
-        // Verify module has been disabled
-        address ZeroAddress = abi.decode(
+        // Verify Guard still enabled
+        address GuardAddress = abi.decode(
             StorageAccessible(address(gnosisHelper.gnosisSafe())).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
         );
-        assertEq(ZeroAddress, zeroAddress); // If disable Guard, the address storage will be ZeroAddress (0x0)
+        assertEq(GuardAddress, address(keyperGuard)); // If disable Guard, the address storage will be ZeroAddress (0x0)
     }
 }

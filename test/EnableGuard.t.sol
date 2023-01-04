@@ -50,15 +50,12 @@ contract TestEnableGuard is Test {
         bool result = gnosisHelper.enableGuardTx(gnosisSafeAddr);
         assertEq(result, true);
         // Verify guard has been enabled
-        if (
-            abi.decode(
-                StorageAccessible(gnosisSafeAddr).getStorageAt(
-                    uint256(Constants.GUARD_STORAGE_SLOT), 2
-                ),
-                (address)
-            ) != address(keyperGuard)
-        ) {
-            revert Errors.CannotEnableKeyperGuard(address(keyperGuard));
-        }
+        address guardAddress = abi.decode(
+            StorageAccessible(gnosisSafeAddr).getStorageAt(
+                uint256(Constants.GUARD_STORAGE_SLOT), 2
+            ),
+            (address)
+        );
+        assertEq(guardAddress, address(keyperGuard));
     }
 }

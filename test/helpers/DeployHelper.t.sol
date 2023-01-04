@@ -43,7 +43,7 @@ contract DeployHelper is Test {
     string groupBName = "GroupB";
     string subGroupA1Name = "subGroupA1";
     string subGroupB1Name = "subGroupB1";
-    string subSubgroupA1Name = "SubSubGroupA";
+    string subSubGroupA1Name = "SubSubGroupA";
 
     bytes32 orgHash;
 
@@ -72,7 +72,7 @@ contract DeployHelper is Test {
             masterCopy,
             safeFactory,
             address(keyperRolesDeployed),
-    		maxTreeDepth
+            maxTreeDepth
         );
         keyperModuleAddr = address(keyperModule);
         // Deploy Guard Contract

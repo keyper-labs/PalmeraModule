@@ -12,6 +12,7 @@ import {Errors} from "../libraries/Errors.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {Events} from "../libraries/Events.sol";
+import {console} from "forge-std/console.sol";
 
 /// @title Keyper Module
 /// @custom:security-contact general@palmeradao.xyz
@@ -487,7 +488,12 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 callerSafe = getGroupIdBySafe(org, caller);
-        /// RootSafe usecase : Check if the group is part of caller's org
+        uint256 rootSafe = getRootSafe(group);
+        /// Another Org usecase: Check if the group is part of caller's org
+        if (org != getOrgByGroup(group)) {
+            revert Errors.NotAuthorizedRemoveGroupFromOtherOrg();
+        }
+        /// RootSafe usecase : Check if the group is part of caller's Tree
         if (
             (groups[org][callerSafe].tier == DataTypes.Tier.ROOT)
                 && (!isTreeMember(callerSafe, group))
@@ -495,10 +501,11 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             revert Errors.NotAuthorizedRemoveGroupFromOtherTree();
         }
         // SuperSafe usecase : Check caller is superSafe of the group
-        if (!isSuperSafe(callerSafe, group)) {
+        if ((!isRootSafeOf(caller, group)) && (!isSuperSafe(callerSafe, group)))
+        {
             revert Errors.NotAuthorizedAsNotSuperSafe();
         }
-        DataTypes.Group memory _group = groups[org][group];
+        DataTypes.Group storage _group = groups[org][group];
 
         // superSafe is either an org or a group
         DataTypes.Group storage superSafe = groups[org][_group.superSafe];
@@ -519,6 +526,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             // Update children group superSafe reference
             childrenGroup.superSafe = _group.superSafe;
         }
+        _group.child = new uint256[](0);
 
         // Revoke roles to group
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
@@ -530,11 +538,11 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
 
         // Store the name before to delete the Group
         emit Events.GroupRemoved(
-            org, group, superSafe.safe, caller, _group.superSafe, _group.name
+            org, group, superSafe.lead, caller, _group.superSafe, _group.name
             );
-        removeIndexGroup(org, group);
-        // Associate the Super Safe with Root Safe (because is not part of the Tree)
-        _group.superSafe = callerSafe;
+        // Assign the with Root Safe (because is not part of the Tree)
+        _group.superSafe = rootSafe;
+        _group.tier = DataTypes.Tier.REMOVED;
     }
 
     /// @notice Disconnect Safe of a group
@@ -548,11 +556,15 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     {
         bytes32 org = getOrgByGroup(group);
         address caller = _msgSender();
+        if (groups[org][group].tier != DataTypes.Tier.REMOVED) {
+            revert Errors.CannotDisconnectSafeBeforeRemoveGroup();
+        }
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
         if (!isRootSafeOf(caller, group)) {
             revert Errors.NotAuthorizedDisconnectChildrenGroup();
         }
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(groups[org][group].safe);
+        removeIndexGroup(org, group);
         delete groups[org][group];
 
         /// Disable Guard
@@ -878,6 +890,27 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         return true;
     }
 
+    /// @dev Method to get Root Safe of a Group
+    /// @param groupId ID's of the group
+    /// @return rootSafeId uint256 Root Safe Id's
+    function getRootSafe(uint256 groupId)
+        public
+        view
+        returns (uint256 rootSafeId)
+    {
+        bytes32 org = getOrgByGroup(groupId);
+        DataTypes.Group memory childGroup = groups[org][groupId];
+        if (childGroup.superSafe == 0) return groupId;
+        rootSafeId = childGroup.superSafe;
+        uint256 currentSuperSafe = rootSafeId;
+        while (currentSuperSafe != 0) {
+            childGroup = groups[org][currentSuperSafe];
+            if (childGroup.superSafe == 0) return rootSafeId;
+            else rootSafeId = childGroup.superSafe;
+            currentSuperSafe = childGroup.superSafe;
+        }
+    }
+
     /// @notice Get the safe address of a group
     /// @dev Method for getting the safe address of a group
     /// @param group uint256 of the group
@@ -1067,11 +1100,10 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         // create Instance of the Gnosis Safe
         IGnosisSafe gnosisSafe = IGnosisSafe(safe);
         // get the modules of the Safe
-        (address[] memory modules,) =
+        (address[] memory modules, address nextModule) =
             gnosisSafe.getModulesPaginated(address(this), 25);
-        if (modules[0] == address(0)) {
-            return address(0);
-        } else if (modules[0] == address(this)) {
+        if ((modules.length == 0) && (nextModule == Constants.SENTINEL_ADDRESS))
+        {
             return Constants.SENTINEL_ADDRESS;
         } else {
             for (uint256 i = 1; i < modules.length; i++) {

@@ -67,7 +67,7 @@ contract KeyperGuard is BaseGuard, Context {
                     }
                 }
                 if (!isSafeLead) {
-                    revert Errors.NotAuthorizedAsCallerOfKeyperModule(caller);
+                    revert Errors.NotAuthorizedAsNotSafeLead();
                 }
             }
             if (
@@ -80,7 +80,7 @@ contract KeyperGuard is BaseGuard, Context {
                     ) == address(this)
                 ) && IGnosisSafe(caller).isModuleEnabled(address(keyperModule))
             ) {
-                revert Errors.NotAuthorizedAsCallerOfKeyperModule(caller);
+                revert Errors.SafeNotRegistered(caller);
             }
         }
     }

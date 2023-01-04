@@ -114,7 +114,7 @@ contract KeyperSafeBuilder is Test {
         return (rootIdA, groupIdA1, rootIdB, groupIdB1);
     }
 
-    // Deploy 2 org with 2 root safe with 1 group each
+    // Deploy 1 org with 2 root safe with 1 group each
     //           RootA         RootB
     //              |            |
     //           groupA1      groupB1
@@ -142,8 +142,8 @@ contract KeyperSafeBuilder is Test {
         setupTwoRootOrgWithOneGroupEach(
             orgNameArg, groupA1NameArg, rootBNameArg, groupB1NameArg
         );
-        bytes32 orgHash = keyperModule.getOrgByGroup(rootIdA);
-
+        (,,, address rootAddr,,) = keyperModule.getGroupInfo(rootIdA);
+        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
         // Create childGroupA1
         address childGroupA1 = gnosisHelper.newKeyperSafe(4, 2);
         gnosisHelper.createAddGroupTx(groupIdA1, childGroupA1NameArg);
@@ -154,6 +154,59 @@ contract KeyperSafeBuilder is Test {
         address childGroupB1 = gnosisHelper.newKeyperSafe(4, 2);
         gnosisHelper.createAddGroupTx(groupIdB1, childGroupB1NameArg);
         childGroupIdB1 = keyperModule.getGroupIdBySafe(orgHash, childGroupB1);
+        vm.deal(childGroupB1, 100 gwei);
+
+        return (
+            rootIdA,
+            groupIdA1,
+            rootIdB,
+            groupIdB1,
+            childGroupIdA1,
+            childGroupIdB1
+        );
+    }
+
+    // Deploy 2 org with 2 root safe with 1 group each
+    //           RootA         RootB
+    //              |            |
+    //           groupA1      groupB1
+    //              |            |
+    //        childGroupA1  childGroupA1
+    function setupTwoOrgWithOneRootOneGroupAndOneChildEach(
+        string memory orgNameArg,
+        string memory groupA1NameArg,
+        string memory rootBNameArg,
+        string memory groupB1NameArg,
+        string memory childGroupA1NameArg,
+        string memory childGroupB1NameArg
+    )
+        public
+        returns (
+            uint256 rootIdA,
+            uint256 groupIdA1,
+            uint256 rootIdB,
+            uint256 groupIdB1,
+            uint256 childGroupIdA1,
+            uint256 childGroupIdB1
+        )
+    {
+        (rootIdA, groupIdA1) =
+            setupRootOrgAndOneGroup(orgNameArg, groupA1NameArg);
+        (rootIdB, groupIdB1) =
+            setupRootOrgAndOneGroup(rootBNameArg, groupB1NameArg);
+        bytes32 orgHash1 = keyperModule.getOrgByGroup(rootIdA);
+        bytes32 orgHash2 = keyperModule.getOrgByGroup(rootIdB);
+
+        // Create childGroupA1
+        address childGroupA1 = gnosisHelper.newKeyperSafe(4, 2);
+        gnosisHelper.createAddGroupTx(groupIdA1, childGroupA1NameArg);
+        childGroupIdA1 = keyperModule.getGroupIdBySafe(orgHash1, childGroupA1);
+        vm.deal(childGroupA1, 100 gwei);
+
+        // Create childGroupB1
+        address childGroupB1 = gnosisHelper.newKeyperSafe(4, 2);
+        gnosisHelper.createAddGroupTx(groupIdB1, childGroupB1NameArg);
+        childGroupIdB1 = keyperModule.getGroupIdBySafe(orgHash2, childGroupB1);
         vm.deal(childGroupB1, 100 gwei);
 
         return (

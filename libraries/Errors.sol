@@ -20,13 +20,14 @@ library Errors {
     error NotAuthorizedAddOwnerWithThreshold();
     /// @dev Error messages when the Safe is not Autorized to Remove Owner like Lead/Safe/Root Safe
     error NotAuthorizedRemoveGroupFromOtherTree();
+	error NotAuthorizedRemoveGroupFromOtherOrg();
     error NotAuthorizedRemoveOwner();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedUpdateGroupToOtherOrg();
+	/// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's children Group Id's
+	error CannotDisconnectSafeBeforeRemoveGroup();
     error CannotDisableKeyperModule(address module);
     error CannotDisableKeyperGuard(address guard);
-    error CannotEnableKeyperGuard(address guard);
-	error NotAuthorizedAsCallerOfKeyperModule(address caller);
     /// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
     error NotAuthorizedAsNotSafeLead();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Super Safe
