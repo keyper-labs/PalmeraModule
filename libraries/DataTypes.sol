@@ -16,7 +16,7 @@ library DataTypes {
     enum Tier {
         GROUP, // 0
         ROOT, // 1
-		REMOVED // 2
+        REMOVED // 2
     }
     /// @devStruct for Group
     /// @param tier Kind of the group (at the momento only GROUP or ROOT)
