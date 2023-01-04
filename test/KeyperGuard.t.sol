@@ -19,7 +19,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
     function testDisableKeyperGuard() public {
         // Check guard is disabled
-        bool result = gnosisHelper.disableModuleTx(address(0x1), gnosisSafeAddr);
+        bool result = gnosisHelper.disableModuleTx(
+            Constants.SENTINEL_ADDRESS, gnosisSafeAddr
+        );
         assertEq(result, true);
         result = gnosisHelper.disableGuardTx(gnosisSafeAddr);
         assertEq(result, true);
@@ -41,7 +43,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         // Check guard is disabled
-        bool result = gnosisHelper.disableModuleTx(address(0x1), gnosisSafeAddr);
+        bool result = gnosisHelper.disableModuleTx(
+            Constants.SENTINEL_ADDRESS, gnosisSafeAddr
+        );
         assertEq(result, true);
         // Verify module has been disabled
         isKeyperModuleEnabled =
@@ -63,7 +67,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.CannotDisableKeyperModule.selector, address(keyperModule)
             )
         );
-        bool result = gnosisHelper.disableModuleTx(address(0x1), rootAddr);
+        bool result =
+            gnosisHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, rootAddr);
         assertEq(result, false);
 
         // Verify module is still enabled
@@ -78,7 +83,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.CannotDisableKeyperModule.selector, address(keyperModule)
             )
         );
-        result = gnosisHelper.disableModuleTx(address(0x1), groupA1Addr);
+        result = gnosisHelper.disableModuleTx(
+            Constants.SENTINEL_ADDRESS, groupA1Addr
+        );
         assertEq(result, false);
 
         // Verify module is still enabled
@@ -101,7 +108,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Try to disable Guard from Group Removed
         gnosisHelper.updateSafeInterface(groupA1Addr);
-        result = gnosisHelper.disableModuleTx(address(0x1), groupA1Addr);
+        result = gnosisHelper.disableModuleTx(
+            Constants.SENTINEL_ADDRESS, groupA1Addr
+        );
         assertEq(result, true);
 
         // Verify module has been disabled
@@ -169,7 +178,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Try to disable Guard from Group Removed
         gnosisHelper.updateSafeInterface(groupA1Addr);
-        result = gnosisHelper.disableModuleTx(address(0x1), groupA1Addr);
+        result = gnosisHelper.disableModuleTx(
+            Constants.SENTINEL_ADDRESS, groupA1Addr
+        );
         assertEq(result, true);
         result = gnosisHelper.disableGuardTx(groupA1Addr);
         assertEq(result, true);

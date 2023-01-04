@@ -486,16 +486,16 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
-        uint256 rootSafe = getGroupIdBySafe(org, caller);
+        uint256 callerSafe = getGroupIdBySafe(org, caller);
         /// RootSafe usecase : Check if the group is part of caller's org
         if (
-            (groups[org][rootSafe].tier == DataTypes.Tier.ROOT)
-                && (!isTreeMember(rootSafe, group))
+            (groups[org][callerSafe].tier == DataTypes.Tier.ROOT)
+                && (!isTreeMember(callerSafe, group))
         ) {
             revert Errors.NotAuthorizedRemoveGroupFromOtherTree();
         }
         // SuperSafe usecase : Check caller is superSafe of the group
-        if (!isSuperSafe(rootSafe, group)) {
+        if (!isSuperSafe(callerSafe, group)) {
             revert Errors.NotAuthorizedAsNotSuperSafe();
         }
         DataTypes.Group memory _group = groups[org][group];
@@ -533,11 +533,12 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             org, group, superSafe.safe, caller, _group.superSafe, _group.name
             );
         removeIndexGroup(org, group);
-        // delete groups[org][group];
+        // Associate the Super Safe with Root Safe (because is not part of the Tree)
+        _group.superSafe = callerSafe;
     }
 
-    /// @notice Disable Safe of a group
-    /// @dev Disable Safe of a group, Call must come from the root safe
+    /// @notice Disconnect Safe of a group
+    /// @dev Disconnect Safe of a group, Call must come from the root safe
     /// @param group address of the group to be updated
     function disconnectSafe(uint256 group)
         external
@@ -549,7 +550,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         address caller = _msgSender();
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
         if (!isRootSafeOf(caller, group)) {
-            revert Errors.NotAuthorizedUpdateNonChildrenGroup();
+            revert Errors.NotAuthorizedDisconnectChildrenGroup();
         }
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(groups[org][group].safe);
         delete groups[org][group];

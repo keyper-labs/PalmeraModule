@@ -33,6 +33,8 @@ library Errors {
     error NotAuthorizedAsNotSuperSafe();
     /// @dev Error messages when the Root Safe is not Autorized Update Super Safe for a Group in Another Tree
     error NotAuthorizedUpdateNonChildrenGroup();
+	/// @dev Error messages when the Root Safe is not Autorized to Disconnect an Safe in Another Tree
+	error NotAuthorizedDisconnectChildrenGroup();
     /// @dev Error messages when the Root Safe is not Autorized to Update a Role in a Group in Another Tree
     error NotAuthorizedSetRoleAnotherTree();
     /// @dev Error messages the Owner is not Found into the Safe Owners

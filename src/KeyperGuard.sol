@@ -77,7 +77,7 @@ contract KeyperGuard is BaseGuard, Context {
                             uint256(Constants.GUARD_STORAGE_SLOT), 2
                         ),
                         (address)
-                    ) != address(this)
+                    ) == address(this)
                 ) && IGnosisSafe(caller).isModuleEnabled(address(keyperModule))
             ) {
                 revert Errors.NotAuthorizedAsCallerOfKeyperModule(caller);
