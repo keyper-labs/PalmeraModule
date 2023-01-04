@@ -239,7 +239,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         assertEq(child.length, 1);
         assertEq(child[0] == subGroupA1Id, false);
         assertEq(child[0] == subSubgroupA1Id, true);
-        assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), true); // Still be part of the Org because only remove child
+        assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), false);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
@@ -280,7 +280,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         assertEq(result, true);
         assertEq(keyperModule.isSuperSafe(groupA1Id, subGroupA1Id), false);
         assertEq(keyperModule.isSuperSafe(rootId, subGroupA1Id), false);
-        assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), true); // Still be part of the Org because only remove child
+        assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), false);
 
         // Check supersafe has not any children
         (,,,, uint256[] memory child,) = keyperModule.getGroupInfo(groupA1Id);

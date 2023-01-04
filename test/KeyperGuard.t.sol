@@ -156,16 +156,19 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         bool result = gnosisHelper.createRemoveGroupTx(groupA1Id);
         assertEq(result, true);
 
+        gnosisHelper.createRemoveGroupTx(rootId);
+        assertEq(result, true);
+
         /// Disconnect Safe
         result = gnosisHelper.createDisconnectedSafeTx(rootId);
         assertEq(result, true);
 
-        /// Verify Safe still enabled
-        /// Verify module still enabled
+        /// Verify Safe has been removed
+        /// Verify module has been removed
         bool isKeyperModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
-        /// Verify guard still enabled
+        /// Verify guard has been removed
         address ZeroAddress = abi.decode(
             StorageAccessible(rootAddr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2

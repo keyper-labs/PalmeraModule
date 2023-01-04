@@ -535,6 +535,8 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             // Update children group superSafe reference
             childrenGroup.superSafe = _group.superSafe;
         }
+        /// we guarantee the child was moving to another SuperSafe in the Org
+        /// and validate after in the disconnectedSafe method
         _group.child = new uint256[](0);
 
         // Revoke roles to group
@@ -550,7 +552,8 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             org, group, superSafe.lead, caller, _group.superSafe, _group.name
             );
         // Assign the with Root Safe (because is not part of the Tree)
-        _group.superSafe = rootSafe;
+        // If the Group is not Root Safe, pass to depend on Root Safe directly
+        _group.superSafe = _group.superSafe == 0 ? 0 : rootSafe;
         _group.tier = _group.tier == DataTypes.Tier.ROOT
             ? DataTypes.Tier.ROOT
             : DataTypes.Tier.REMOVED;
@@ -846,8 +849,13 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (superSafe == 0 || group == 0) return false;
         bytes32 org = getOrgByGroup(superSafe);
         DataTypes.Group memory childGroup = groups[org][group];
-        if (childGroup.safe == address(0)) return false;
-        /// TODO: verify if is not redundant
+        // Check if the Child Group is was removed or not Exist and Return False
+        if (
+            (childGroup.safe == address(0))
+                || (childGroup.tier == DataTypes.Tier.REMOVED)
+        ) {
+            return false;
+        }
         if (groups[org][superSafe].safe == address(0)) return false;
         /// TODO: verify is open a back door
         if (childGroup.safe == groups[org][superSafe].safe) return true;
@@ -888,6 +896,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (superSafe == 0 || group == 0) return false;
         bytes32 org = getOrgByGroup(superSafe);
         DataTypes.Group memory childGroup = groups[org][group];
+        // Check if the Child Group is was removed or not Exist and Return False
         if (
             (childGroup.safe == address(0))
                 || (childGroup.tier == DataTypes.Tier.REMOVED)
