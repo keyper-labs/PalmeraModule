@@ -25,7 +25,9 @@ library Errors {
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedUpdateGroupToOtherOrg();
     /// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's children Group Id's
-    error CannotDisconnectSafeBeforeRemoveGroup();
+    error CannotDisconnectedSafeBeforeRemoveChild(uint256 children);
+	/// @dev Error messages when try to remove Group before remove it's children, and show the Group's children Group Id's
+	error CannotRemoveGroupBeforeRemoveChild(uint256 children);
     error CannotDisableKeyperModule(address module);
     error CannotDisableKeyperGuard(address guard);
     /// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
@@ -35,7 +37,7 @@ library Errors {
     /// @dev Error messages when the Root Safe is not Autorized Update Super Safe for a Group in Another Tree
     error NotAuthorizedUpdateNonChildrenGroup();
     /// @dev Error messages when the Root Safe is not Autorized to Disconnect an Safe in Another Tree
-    error NotAuthorizedDisconnectChildrenGroup();
+    error NotAuthorizedDisconnectedChildrenGroup();
     /// @dev Error messages when the Root Safe is not Autorized to Update a Role in a Group in Another Tree
     error NotAuthorizedSetRoleAnotherTree();
     /// @dev Error messages the Owner is not Found into the Safe Owners

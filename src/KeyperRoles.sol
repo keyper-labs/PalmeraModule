@@ -189,11 +189,11 @@ contract KeyperRoles is RolesAuthority, DenyHelper {
         );
 
         /// Target contract: KeyperModule
-        /// Auth function disconnectSafe
+        /// Auth function disconnectedSafe
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
             keyperModule,
-            Constants.DISCONNECT_SAFE,
+            Constants.DISCONNECTED_SAFE,
             true
         );
 

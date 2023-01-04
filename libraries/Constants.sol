@@ -73,8 +73,8 @@ library Constants {
     bytes4 internal constant REMOVE_GROUP =
         bytes4(keccak256(bytes("removeGroup(uint256)")));
 
-    bytes4 internal constant DISCONNECT_SAFE =
-        bytes4(keccak256(bytes("disconnectSafe(uint256)")));
+    bytes4 internal constant DISCONNECTED_SAFE =
+        bytes4(keccak256(bytes("disconnectedSafe(uint256)")));
 
     // keccak256("guard_manager.guard.address")
     bytes32 internal constant GUARD_STORAGE_SLOT =
