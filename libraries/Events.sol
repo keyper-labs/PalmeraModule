@@ -102,11 +102,11 @@ library Events {
         uint256 newLimit
     );
 
-	/// @dev Event Fire when remove a Group (Tier 0) from the organization
+    /// @dev Event Fire when remove a Group (Tier 0) from the organization
     /// @param org Hash(DAO's name)
     /// @param group ID of the group Disconnect
-	/// @param safe Address of Safe Address of the group Disconnect
-	/// @param disconnector Address of the disconnector
+    /// @param safe Address of Safe Address of the group Disconnect
+    /// @param disconnector Address of the disconnector
     event SafeDisconnected(
         bytes32 indexed org,
         uint256 indexed group,

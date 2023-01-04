@@ -12,7 +12,6 @@ import {Errors} from "../libraries/Errors.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {Events} from "../libraries/Events.sol";
-import {console} from "forge-std/console.sol";
 
 /// @title Keyper Module
 /// @custom:security-contact general@palmeradao.xyz
