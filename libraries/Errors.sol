@@ -30,6 +30,7 @@ library Errors {
 	error CannotRemoveGroupBeforeRemoveChild(uint256 children);
     error CannotDisableKeyperModule(address module);
     error CannotDisableKeyperGuard(address guard);
+	error GroupAlreadyRemoved();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
     error NotAuthorizedAsNotSafeLead();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Super Safe

@@ -50,6 +50,23 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(isKeyperModuleEnabled, false);
     }
 
+    function testCannotReplayAttackRemoveGroup() public {
+        (uint256 rootId, uint256 groupA1Id) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+
+        /// Remove Group A1
+        gnosisHelper.updateSafeInterface(rootAddr);
+        bool result = gnosisHelper.createRemoveGroupTx(groupA1Id);
+        assertEq(result, true);
+        // Replay attack
+        vm.startPrank(rootAddr);
+        vm.expectRevert(Errors.GroupAlreadyRemoved.selector);
+        keyperModule.removeGroup(groupA1Id);
+        vm.stopPrank();
+    }
+
     function testDisconnectSafe_As_ROOTSAFE_TARGET_SUPERSAFE_SAME_TREE()
         public
     {

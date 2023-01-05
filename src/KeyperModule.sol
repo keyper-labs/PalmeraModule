@@ -488,6 +488,10 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         bytes32 org = getOrgHashBySafe(caller);
         uint256 callerSafe = getGroupIdBySafe(org, caller);
         uint256 rootSafe = getRootSafe(group);
+        /// Avoid Replay attack
+        if (groups[org][group].tier == DataTypes.Tier.REMOVED) {
+            revert Errors.GroupAlreadyRemoved();
+        }
         /// Another Org usecase: Check if the group is part of caller's org
         if (org != getOrgByGroup(group)) {
             revert Errors.NotAuthorizedRemoveGroupFromOtherOrg();
