@@ -67,6 +67,27 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
+    function testCannotReplayAttackDisconnectedSafe() public {
+        (uint256 rootId, uint256 groupA1Id) =
+            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+
+        /// Remove Group A1
+        gnosisHelper.updateSafeInterface(rootAddr);
+        bool result = gnosisHelper.createDisconnectedSafeTx(groupA1Id);
+        assertEq(result, true);
+        // Replay attack
+        vm.startPrank(rootAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.GroupNotRegistered.selector, groupA1Id
+            )
+        );
+        keyperModule.disconnectedSafe(groupA1Id);
+        vm.stopPrank();
+    }
+
     function testDisconnectSafe_As_ROOTSAFE_TARGET_SUPERSAFE_SAME_TREE()
         public
     {
