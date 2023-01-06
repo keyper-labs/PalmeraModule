@@ -574,15 +574,26 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     {
         bytes32 org = getOrgByGroup(group);
         address caller = _msgSender();
+        uint256 callerSafe = getGroupIdBySafe(org, caller);
+        DataTypes.Group memory disconnectedGroup = groups[org][group];
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
-        if (!isRootSafeOf(caller, group)) {
+        if (
+            (
+                (!isRootSafeOf(caller, group))
+                    && (disconnectedGroup.tier != DataTypes.Tier.REMOVED)
+            )
+                || (
+                    (disconnectedGroup.tier == DataTypes.Tier.REMOVED)
+                        && (callerSafe != disconnectedGroup.superSafe)
+                )
+        ) {
             revert Errors.NotAuthorizedDisconnectedChildrenGroup();
         }
         /// In case Root Safe Disconnected Safe without removeGroup Before
-        if (groups[org][group].tier != DataTypes.Tier.REMOVED) {
+        if (disconnectedGroup.tier != DataTypes.Tier.REMOVED) {
             removeGroup(group);
         }
-        IGnosisSafe gnosisTargetSafe = IGnosisSafe(groups[org][group].safe);
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(disconnectedGroup.safe);
         removeIndexGroup(org, group);
         delete groups[org][group];
 
@@ -609,6 +620,50 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
 
         emit Events.SafeDisconnected(
             org, group, address(gnosisTargetSafe), caller
+            );
+    }
+
+    /// @notice Method to Promete a group to Root Safe of an Org to Root Safe
+    /// @dev Method to Promete a group to Root Safe of an Org to Root Safe
+    /// @param group address of the group to be updated
+    function promoteRoot(uint256 group)
+        external
+        IsRootSafe(_msgSender())
+        GroupRegistered(group)
+        requiresAuth
+    {
+        bytes32 org = getOrgByGroup(group);
+        address caller = _msgSender();
+        /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
+        if (!isRootSafeOf(caller, group)) {
+            revert Errors.NotAuthorizedUpdateNonChildrenGroup();
+        }
+        DataTypes.Group storage newRootSafe = groups[org][group];
+        /// Check if the group is a Super Safe, and an Direct Children of thr Root Safe
+        if (
+            (newRootSafe.child.length > 0)
+                && (isSuperSafe(getGroupIdBySafe(org, caller), group))
+        ) {
+            revert Errors.NotAuthorizedUpdateNonSuperSafe();
+        }
+        /// Give Role SuperSafe if not have it
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        if (
+            !_authority.doesUserHaveRole(
+                newRootSafe.safe, uint8(DataTypes.Role.ROOT_SAFE)
+            )
+        ) {
+            _authority.setUserRole(
+                newRootSafe.safe, uint8(DataTypes.Role.ROOT_SAFE), true
+            );
+        }
+        // Update Tier
+        newRootSafe.tier = DataTypes.Tier.ROOT;
+        // Update Root Safe
+        newRootSafe.lead = address(0);
+        newRootSafe.superSafe = 0;
+        emit Events.RootSafePromoted(
+            org, group, caller, getGroupSafeAddress(group), newRootSafe.name
             );
     }
 
@@ -904,6 +959,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (
             (childGroup.safe == address(0))
                 || (childGroup.tier == DataTypes.Tier.REMOVED)
+                || (childGroup.tier == DataTypes.Tier.ROOT)
         ) {
             return false;
         }

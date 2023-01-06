@@ -24,6 +24,7 @@ library Errors {
     error NotAuthorizedRemoveOwner();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedUpdateGroupToOtherOrg();
+	error NotAuthorizedUpdateNonSuperSafe();
     /// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's children Group Id's
     error CannotDisconnectedSafeBeforeRemoveChild(uint256 children);
 	/// @dev Error messages when try to remove Group before remove it's children, and show the Group's children Group Id's

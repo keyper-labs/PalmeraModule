@@ -626,4 +626,41 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         );
         assertEq(GuardAddress, address(keyperGuard)); // If disable Guard, the address storage will be ZeroAddress (0x0)
     }
+
+    function testDisconnectSafe_As_ROOTSAFE_TARGET_ROOT_SAFE() public {
+        (uint256 rootId, uint256 groupA1Id, uint256 childGroupA1) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, groupA1Name, subGroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address childGroupA1Addr =
+            keyperModule.getGroupSafeAddress(childGroupA1);
+
+        /// Remove Group A1
+        gnosisHelper.updateSafeInterface(groupA1Addr);
+        bool result = gnosisHelper.createRemoveGroupTx(childGroupA1);
+        assertEq(result, true);
+
+        /// Disconnect Safe
+        gnosisHelper.updateSafeInterface(rootAddr);
+        result = gnosisHelper.createDisconnectedSafeTx(childGroupA1);
+        assertEq(result, true);
+
+        /// Verify Safe has been removed
+        /// Verify module has been removed
+        gnosisHelper.updateSafeInterface(childGroupA1Addr);
+        bool isKeyperModuleEnabled =
+            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+        assertEq(isKeyperModuleEnabled, false);
+        /// Verify guard has been removed
+        address ZeroAddress = abi.decode(
+            StorageAccessible(childGroupA1Addr).getStorageAt(
+                uint256(Constants.GUARD_STORAGE_SLOT), 2
+            ),
+            (address)
+        );
+        assertEq(ZeroAddress, zeroAddress);
+    }
 }

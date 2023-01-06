@@ -197,6 +197,15 @@ contract KeyperRoles is RolesAuthority, DenyHelper {
             true
         );
 
+        /// Target contract: KeyperModule
+        /// Auth function promoteRoot
+        setRoleCapability(
+            uint8(DataTypes.Role.ROOT_SAFE),
+            keyperModule,
+            Constants.PROMOTE_ROOT,
+            true
+        );
+
         /// Transfer ownership of authority to keyper module
         setOwner(keyperModule);
         emit Events.KeyperModuleSetup(keyperModule, _msgSender());
