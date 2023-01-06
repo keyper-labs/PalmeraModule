@@ -487,10 +487,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 callerSafe = getGroupIdBySafe(org, caller);
-        /// Another Org usecase: Check if the group is part of caller's org
-        if (org != getOrgByGroup(group)) {
-            revert Errors.NotAuthorizedRemoveGroupFromOtherOrg();
-        }
         /// RootSafe usecase : Check if the group is part of caller's Tree
         if (
             (groups[org][callerSafe].tier == DataTypes.Tier.ROOT)
@@ -562,7 +558,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// @dev Disconnected Safe of a group, Call must come from the root safe
     /// @param group address of the group to be updated
     function disconnectedSafe(uint256 group)
-        external
+        public
         IsRootSafe(_msgSender())
         GroupRegistered(group)
         requiresAuth
@@ -617,6 +613,30 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         emit Events.SafeDisconnected(
             org, group, address(gnosisTargetSafe), caller
             );
+    }
+
+    /// @notice Remove whole tree of a RootSafe
+    /// @dev Remove whole tree of a RootSafe
+    function removeWholeTree() external IsRootSafe(_msgSender()) requiresAuth {
+        address caller = _msgSender();
+        bytes32 org = getOrgHashBySafe(caller);
+        uint256 rootSafe = getGroupIdBySafe(org, caller);
+        for (uint256 i = 0; i < depthTreeLimit[org]; i++) {
+            for (uint256 j = 0; j < indexGroup[org].length; j++) {
+                uint256 group = indexGroup[org][j];
+                if (
+                    (groups[org][group].child.length == 0)
+                        && (isRootSafeOf(caller, group))
+                ) {
+                    disconnectedSafe(group);
+                }
+            }
+        }
+        // After Disconnected Root Safe
+        emit Events.WholeTreeRemoved(
+            org, rootSafe, caller, groups[org][rootSafe].name
+            );
+        disconnectedSafe(rootSafe);
     }
 
     /// @notice Method to Promete a group to Root Safe of an Org to Root Safe

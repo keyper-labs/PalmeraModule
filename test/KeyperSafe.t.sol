@@ -263,6 +263,30 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         keyperModule.removeGroup(groupAId);
     }
 
+    function testCannot_RemoveGroup_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentOrg(
+    ) public {
+        (uint256 rootIdA, uint256 groupAId, uint256 rootIdB, uint256 groupBId,,)
+        = keyperSafeBuilder.setupTwoOrgWithOneRootOneGroupAndOneChildEach(
+            orgName,
+            groupA1Name,
+            root2Name,
+            groupBName,
+            subGroupA1Name,
+            subSubGroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootIdA);
+        vm.startPrank(rootAddr);
+        vm.expectRevert(Errors.NotAuthorizedRemoveGroupFromOtherTree.selector);
+        keyperModule.removeGroup(groupBId);
+        vm.stopPrank();
+
+        address rootBAddr = keyperModule.getGroupSafeAddress(rootIdB);
+        vm.startPrank(rootBAddr);
+        vm.expectRevert(Errors.NotAuthorizedRemoveGroupFromOtherTree.selector);
+        keyperModule.removeGroup(groupAId);
+    }
+
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> groupA
     // Target Info: Type-> SAFE, Name -> subGroupA, Hierarchy related to caller -> SAME_TREE, CHILDREN
     function testCan_RemoveGroup_SUPER_SAFE_as_SAFE_is_SUPER_SAFE_SameTree()
@@ -303,13 +327,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address groupAAddr = keyperModule.getGroupSafeAddress(groupAId);
         vm.startPrank(groupAAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveGroupFromOtherOrg.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotSuperSafe.selector);
         keyperModule.removeGroup(groupBId);
         vm.stopPrank();
 
         address groupBAddr = keyperModule.getGroupSafeAddress(groupBId);
         vm.startPrank(groupBAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveGroupFromOtherOrg.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotSuperSafe.selector);
         keyperModule.removeGroup(groupAId);
     }
 

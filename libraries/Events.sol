@@ -88,17 +88,29 @@ library Events {
         string name
     );
 
-	/// @dev Event Fire when update SuperSafe of a Group To Root Safe
+    /// @dev Event Fire when update SuperSafe of a Group To Root Safe
     /// @param org Hash(DAO's name)
     /// @param newIdRootSafeGroup ID of the group updated
     /// @param updater Address of the updater of the group
-	/// @param newRootSafeGroup Address of the new Root Safe
-	/// @param name String name of the new Root Safe
+    /// @param newRootSafeGroup Address of the new Root Safe
+    /// @param name String name of the new Root Safe
     event RootSafePromoted(
         bytes32 indexed org,
         uint256 indexed newIdRootSafeGroup,
         address indexed updater,
-		address newRootSafeGroup,
+        address newRootSafeGroup,
+        string name
+    );
+
+    /// @dev Event Fire when an Root Safe Remove Whole of Tree
+    /// @param org Hash(DAO's name)
+    /// @param rootSafeGroupId ID of the group updated
+    /// @param remover Address of the remover of the group
+    /// @param name String name of the new Root Safe
+    event WholeTreeRemoved(
+        bytes32 indexed org,
+        uint256 indexed rootSafeGroupId,
+        address indexed remover,
         string name
     );
 

@@ -758,6 +758,7 @@ contract Hierarchies is DeployHelper {
         (uint256 rootId2, uint256 groupB) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupBName);
         address rootId2Addr = keyperModule.getGroupSafeAddress(rootId2);
+        assertEq(rootId != rootId2, true);
         // Array of Address for the subGroups
         address[] memory subGroupAaddr = new address[](16);
         uint256[] memory subGroupAid = new uint256[](16);
