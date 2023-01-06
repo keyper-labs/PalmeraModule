@@ -487,11 +487,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 callerSafe = getGroupIdBySafe(org, caller);
-        uint256 rootSafe = getRootSafe(group);
-        /// Avoid Replay attack
-        if (groups[org][group].tier == DataTypes.Tier.REMOVED) {
-            revert Errors.GroupAlreadyRemoved();
-        }
         /// Another Org usecase: Check if the group is part of caller's org
         if (org != getOrgByGroup(group)) {
             revert Errors.NotAuthorizedRemoveGroupFromOtherOrg();
@@ -557,7 +552,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             );
         // Assign the with Root Safe (because is not part of the Tree)
         // If the Group is not Root Safe, pass to depend on Root Safe directly
-        _group.superSafe = _group.superSafe == 0 ? 0 : rootSafe;
+        _group.superSafe = _group.superSafe == 0 ? 0 : getRootSafe(group);
         _group.tier = _group.tier == DataTypes.Tier.ROOT
             ? DataTypes.Tier.ROOT
             : DataTypes.Tier.REMOVED;
@@ -574,7 +569,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     {
         bytes32 org = getOrgByGroup(group);
         address caller = _msgSender();
-        uint256 callerSafe = getGroupIdBySafe(org, caller);
         DataTypes.Group memory disconnectedGroup = groups[org][group];
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
         if (
@@ -584,7 +578,9 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             )
                 || (
                     (disconnectedGroup.tier == DataTypes.Tier.REMOVED)
-                        && (callerSafe != disconnectedGroup.superSafe)
+                        && (
+                            getGroupIdBySafe(org, caller) != disconnectedGroup.superSafe
+                        )
                 )
         ) {
             revert Errors.NotAuthorizedDisconnectedChildrenGroup();

@@ -62,7 +62,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(result, true);
         // Replay attack
         vm.startPrank(rootAddr);
-        vm.expectRevert(Errors.GroupAlreadyRemoved.selector);
+        vm.expectRevert(Errors.NotAuthorizedRemoveGroupFromOtherTree.selector);
         keyperModule.removeGroup(groupA1Id);
         vm.stopPrank();
     }
