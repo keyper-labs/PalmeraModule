@@ -76,7 +76,7 @@ library Constants {
     bytes4 internal constant REMOVE_GROUP =
         bytes4(keccak256(bytes("removeGroup(uint256)")));
 
-	bytes4 internal constant REMOVE_WHOLE_TREE =
+    bytes4 internal constant REMOVE_WHOLE_TREE =
         bytes4(keccak256(bytes("removeWholeTree()")));
 
     bytes4 internal constant DISCONNECTED_SAFE =
