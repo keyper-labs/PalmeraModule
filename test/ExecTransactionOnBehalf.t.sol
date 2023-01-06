@@ -47,7 +47,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
             Enum.Operation(0)
         );
         // Execute on behalf function
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         gnosisHelper.updateSafeInterface(rootAddr);
         bool result = gnosisHelper.execTransactionOnBehalfTx(
             orgHash,
@@ -82,7 +82,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         vm.deal(safeSubGroupA1Addr, 100 gwei);
 
         // Set keyperhelper gnosis safe to org
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         keyperHelper.setGnosisSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
@@ -124,7 +124,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
     {
         (uint256 rootId,, uint256 safeGroupBId,, uint256 safeSubSubGroupA1Id) =
         keyperSafeBuilder.setUpBaseOrgTree(
-            orgName, groupA1Name, groupBName, subGroupA1Name, subSubgroupA1Name
+            orgName, groupA1Name, groupBName, subGroupA1Name, subSubGroupA1Name
         );
         address rootAddr = keyperModule.getGroupSafeAddress(rootId);
         address safeGroupBAddr = keyperModule.getGroupSafeAddress(safeGroupBId);
@@ -194,7 +194,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         vm.stopPrank();
         bytes memory emptyData;
         bytes memory signatures;
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         vm.startPrank(callerEOA);
         bool result = keyperModule.execTransactionOnBehalf(
             orgHash,
@@ -224,12 +224,9 @@ contract ExecTransactionOnBehalf is DeployHelper {
     //           safeSubGroupA1 <------------
     function testCan_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_is_TARGETS_LEAD_SameTree(
     ) public {
-        (uint256 rootId, uint256 safeGroupA1Id, uint256 safeSubGroupA1Id) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
-        );
+        (, uint256 safeGroupA1Id, uint256 safeSubGroupA1Id) = keyperSafeBuilder
+            .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
         address safeGroupA1Addr =
             keyperModule.getGroupSafeAddress(safeGroupA1Id);
         address safeSubGroupA1Addr =
@@ -250,7 +247,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
             emptyData,
             Enum.Operation(0)
         );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         /// Verify if the safeGroupA1Addr have the role to execute, executionTransactionOnBehalf
         assertEq(
             keyperRolesContract.doesUserHaveRole(
@@ -292,7 +289,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
     function testRevertSuperSafeExecOnBehalf() public {
         (uint256 rootId, uint256 groupIdA1, uint256 subGroupIdA1,) =
         keyperSafeBuilder.setupOrgFourTiersTree(
-            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
+            orgName, groupA1Name, subGroupA1Name, subSubGroupA1Name
         );
 
         address rootAddr = keyperModule.getGroupSafeAddress(rootId);
@@ -315,7 +312,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
             emptyData,
             Enum.Operation(0)
         );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         vm.startPrank(safeSubGroupA1Addr);
         vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector);
@@ -360,7 +356,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
             emptyData,
             Enum.Operation(0)
         );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         vm.startPrank(fakeCaller);
         vm.expectRevert("UNAUTHORIZED");
         keyperModule.execTransactionOnBehalf(
@@ -399,7 +395,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
             emptyData,
             Enum.Operation(0)
         );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         gnosisHelper.updateSafeInterface(rootAddr);
         vm.expectRevert("GS013");
@@ -445,7 +440,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
             emptyData,
             Enum.Operation(0)
         );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         // Execute on behalf function from a not authorized caller
         vm.startPrank(rootAddr);
         vm.expectRevert(Errors.InvalidAddressProvided.selector);
@@ -490,7 +485,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
             emptyData,
             Enum.Operation(0)
         );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         // Execute on behalf function from a not authorized caller
         vm.startPrank(rootAddr);
         vm.expectRevert(
@@ -582,7 +577,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         );
         // Execute on behalf function from a not authorized caller
         vm.startPrank(rootAddr);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.InvalidGnosisSafe.selector, fakeTargetSafe
@@ -734,7 +729,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         // Execute on behalf function from a not authorized caller (Root Safe of Another Tree) over Super Safe and Group Safe in another Three
         vm.startPrank(fakeCaller);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(fakeCaller);
         vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector);
         keyperModule.execTransactionOnBehalf(
             orgHash,
@@ -989,7 +983,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         // Execute on behalf function from a not authorized caller (Root Safe of Another Tree) over Super Safe and Group Safe in another Three
         gnosisHelper.updateSafeInterface(rightCaller);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         gnosisHelper.execTransactionOnBehalfTx(
             orgHash,
             childGroupA1Addr,
@@ -1048,7 +1042,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         // Execute on behalf function from a not authorized caller (Root Safe of Another Tree) over Super Safe and Group Safe in another Three
         vm.startPrank(rightCaller);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+
         keyperModule.execTransactionOnBehalf(
             orgHash,
             childGroupA1Addr,
@@ -1078,7 +1072,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
         address safeGroupA1Addr = keyperModule.getGroupSafeAddress(safeGroupA1);
         address childGroupA1Addr =
             keyperModule.getGroupSafeAddress(childGroupA1);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         // Send ETH to group&subgroup
         vm.deal(rootAddr, 100 gwei);
@@ -1161,7 +1154,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
         address rootAddr = keyperModule.getGroupSafeAddress(rootId);
         address childGroupA1Addr =
             keyperModule.getGroupSafeAddress(childGroupA1);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         // Send ETH to group&subgroup
         vm.deal(rootAddr, 100 gwei);
@@ -1231,7 +1223,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
             keyperModule, attackerContract, gnosisHelper, 30
         );
 
-        (address rootAddr, address attacker, address victim) =
+        (, address attacker, address victim) =
             attackerHelper.setAttackerTree(orgName);
 
         gnosisHelper.updateSafeInterface(victim);
@@ -1245,7 +1237,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
             .encodeSignaturesForAttackKeyperTx(
             attacker, victim, attacker, 5 gwei, emptyData, Enum.Operation(0)
         );
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
 
         vm.expectRevert(Errors.TxOnBehalfExecutedFailed.selector);
         bool result = attackerContract.performAttack(

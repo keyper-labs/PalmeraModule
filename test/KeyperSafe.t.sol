@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./helpers/GnosisSafeHelper.t.sol";
 import "./helpers/KeyperModuleHelper.t.sol";
-import "./helpers/ReentrancyAttackHelper.t.sol";
 import "./helpers/KeyperSafeBuilder.t.sol";
 import "./helpers/DeployHelper.t.sol";
 import {Constants} from "../libraries/Constants.sol";
@@ -14,8 +12,6 @@ import {Errors} from "../libraries/Errors.sol";
 import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
 import {KeyperRoles} from "../src/KeyperRoles.sol";
 import {DenyHelper} from "../src/DenyHelper.sol";
-import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
-import {Attacker} from "../src/ReentrancyAttack.sol";
 import {console} from "forge-std/console.sol";
 
 contract TestKeyperSafe is SigningUtils, DeployHelper {
@@ -216,30 +212,34 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_RemoveGroup_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree()
         public
     {
-        (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
+        (
+            uint256 rootId,
+            uint256 groupA1Id,
+            uint256 subGroupA1Id,
+            uint256 subSubgroupA1Id
+        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+            orgName, groupA1Name, subGroupA1Name, subSubGroupA1Name
         );
 
         address rootAddr = keyperModule.getGroupSafeAddress(rootId);
 
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveGroupTx(groupA1Id);
+        bool result = gnosisHelper.createRemoveGroupTx(subGroupA1Id);
         assertEq(result, true);
-        assertEq(keyperModule.isSuperSafe(rootId, groupA1Id), false);
+        assertEq(keyperModule.isSuperSafe(rootId, subGroupA1Id), false);
 
         // Check safeSubGroupA1 is now a child of org
-        assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), true);
+        assertEq(keyperModule.isTreeMember(rootId, subSubgroupA1Id), true);
         // Check org is parent of safeSubGroupA1
-        assertEq(keyperModule.isSuperSafe(rootId, subGroupA1Id), true);
+        assertEq(keyperModule.isSuperSafe(groupA1Id, subSubgroupA1Id), true);
 
         // Check removed group parent has subSafeGroup A as child an not safeGroupA1
         uint256[] memory child;
-        (,,,, child,) = keyperModule.getGroupInfo(rootId);
+        (,,,, child,) = keyperModule.getGroupInfo(groupA1Id);
         assertEq(child.length, 1);
-        assertEq(child[0] == groupA1Id, false);
-        assertEq(child[0] == subGroupA1Id, true);
-        assertEq(keyperModule.isTreeMember(rootId, groupA1Id), false);
+        assertEq(child[0] == subGroupA1Id, false);
+        assertEq(child[0] == subSubgroupA1Id, true);
+        assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), false);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
@@ -279,11 +279,11 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         bool result = gnosisHelper.createRemoveGroupTx(subGroupA1Id);
         assertEq(result, true);
         assertEq(keyperModule.isSuperSafe(groupA1Id, subGroupA1Id), false);
+        assertEq(keyperModule.isSuperSafe(rootId, subGroupA1Id), false);
         assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), false);
 
         // Check supersafe has not any children
-        uint256[] memory child;
-        (,,,, child,) = keyperModule.getGroupInfo(groupA1Id);
+        (,,,, uint256[] memory child,) = keyperModule.getGroupInfo(groupA1Id);
         assertEq(child.length, 0);
     }
 
@@ -292,7 +292,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCannot_RemoveGroup_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_DifferentTree(
     ) public {
         (, uint256 groupAId,, uint256 groupBId,,) = keyperSafeBuilder
-            .setupTwoRootOrgWithOneGroupAndOneChildEach(
+            .setupTwoOrgWithOneRootOneGroupAndOneChildEach(
             orgName,
             groupA1Name,
             root2Name,
@@ -303,13 +303,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address groupAAddr = keyperModule.getGroupSafeAddress(groupAId);
         vm.startPrank(groupAAddr);
-        vm.expectRevert(Errors.NotAuthorizedAsNotSuperSafe.selector);
+        vm.expectRevert(Errors.NotAuthorizedRemoveGroupFromOtherOrg.selector);
         keyperModule.removeGroup(groupBId);
         vm.stopPrank();
 
         address groupBAddr = keyperModule.getGroupSafeAddress(groupBId);
         vm.startPrank(groupBAddr);
-        vm.expectRevert(Errors.NotAuthorizedAsNotSuperSafe.selector);
+        vm.expectRevert(Errors.NotAuthorizedRemoveGroupFromOtherOrg.selector);
         keyperModule.removeGroup(groupAId);
     }
 
@@ -319,7 +319,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     ) public {
         (, uint256 groupAId,, uint256 subSubGroupA1) = keyperSafeBuilder
             .setupOrgFourTiersTree(
-            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
+            orgName, groupA1Name, subGroupA1Name, subSubGroupA1Name
         );
 
         address groupAAddr = keyperModule.getGroupSafeAddress(groupAId);

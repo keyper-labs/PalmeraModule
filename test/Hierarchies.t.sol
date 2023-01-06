@@ -138,7 +138,7 @@ contract Hierarchies is DeployHelper {
             uint256 subGroupIdA1,
             uint256 subsubGroupIdA1
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
+            orgName, groupA1Name, subGroupA1Name, subSubGroupA1Name
         );
         assertEq(keyperModule.isSuperSafe(rootId, groupIdA1), true);
         assertEq(keyperModule.isSuperSafe(groupIdA1, subGroupIdA1), true);
@@ -157,7 +157,7 @@ contract Hierarchies is DeployHelper {
             uint256 subGroupIdA1,
             uint256 subsubGroupIdA1
         ) = keyperSafeBuilder.setUpBaseOrgTree(
-            orgName, groupA1Name, groupBName, subGroupA1Name, subSubgroupA1Name
+            orgName, groupA1Name, groupBName, subGroupA1Name, subSubGroupA1Name
         );
         address rootSafe = keyperModule.getGroupSafeAddress(rootId);
         address groupA1 = keyperModule.getGroupSafeAddress(groupIdA1);
@@ -291,7 +291,7 @@ contract Hierarchies is DeployHelper {
             uint256 subGroupIdA1,
             uint256 subSubGroupIdA1
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            orgName, groupA1Name, subGroupA1Name, subSubgroupA1Name
+            orgName, groupA1Name, subGroupA1Name, subSubGroupA1Name
         );
 
         address rootAddr = keyperModule.getGroupSafeAddress(rootId);
@@ -381,7 +381,7 @@ contract Hierarchies is DeployHelper {
         vm.stopPrank();
 
         (,,, uint256 lastSubGroup) = keyperSafeBuilder.setupOrgFourTiersTree(
-            org2Name, groupA2Name, subGroupA1Name, subSubgroupA1Name
+            org2Name, groupA2Name, subGroupA1Name, subSubGroupA1Name
         );
         address LastSubGroup = keyperModule.getGroupSafeAddress(lastSubGroup);
         vm.startPrank(LastSubGroup);
@@ -401,7 +401,7 @@ contract Hierarchies is DeployHelper {
             uint256 subGroupA,
             uint256 subSubGroupA
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            org2Name, groupA2Name, subGroupA1Name, subSubgroupA1Name
+            org2Name, groupA2Name, subGroupA1Name, subSubGroupA1Name
         );
         // Array of Address for the subGroups
         address[] memory subGroupAaddr = new address[](9);
@@ -454,7 +454,7 @@ contract Hierarchies is DeployHelper {
             uint256 subGroupA,
             uint256 subSubGroupA
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            org2Name, groupA2Name, subGroupA1Name, subSubgroupA1Name
+            org2Name, groupA2Name, subGroupA1Name, subSubGroupA1Name
         );
         // Array of Address for the subGroups
         address[] memory subGroupAaddr = new address[](16);
@@ -693,7 +693,7 @@ contract Hierarchies is DeployHelper {
             uint256 subGroupA,
             uint256 subSubGroupA
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            org2Name, groupA2Name, subGroupA1Name, subSubgroupA1Name
+            org2Name, groupA2Name, subGroupA1Name, subSubGroupA1Name
         );
 
         (uint256 rootId2, uint256 groupB) =
@@ -752,7 +752,7 @@ contract Hierarchies is DeployHelper {
             uint256 subGroupA,
             uint256 subSubGroupA
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            org2Name, groupA2Name, subGroupA1Name, subSubgroupA1Name
+            org2Name, groupA2Name, subGroupA1Name, subSubGroupA1Name
         );
 
         (uint256 rootId2, uint256 groupB) =

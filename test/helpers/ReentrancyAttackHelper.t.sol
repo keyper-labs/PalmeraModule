@@ -8,9 +8,7 @@ import "./GnosisSafeHelper.t.sol";
 import {KeyperModule} from "../../src/KeyperModule.sol";
 import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
-import {Constants} from "../../libraries/Constants.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
-import {console} from "forge-std/console.sol";
 
 contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
     KeyperModule public keyper;

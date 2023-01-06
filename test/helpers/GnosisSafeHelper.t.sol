@@ -7,7 +7,6 @@ import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import "../../script/DeploySafeFactory.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
-import {Constants} from "../../libraries/Constants.sol";
 
 // Helper contract handling deployment Gnosis Safe contracts
 contract GnosisSafeHelper is
@@ -19,15 +18,12 @@ contract GnosisSafeHelper is
     GnosisSafe public gnosisSafe;
     DeploySafeFactory public safeFactory;
 
-    address public keyperRoles;
+    address public keyperRolesAddr;
     address private keyperModuleAddr;
+    address public keyperGuardAddr;
     address public gnosisMasterCopy;
 
     uint256 public salt;
-
-    function setKeyperRoles(address _keyperRoles) public {
-        keyperRoles = _keyperRoles;
-    }
 
     // Create new gnosis safe test environment
     // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
@@ -101,8 +97,16 @@ contract GnosisSafeHelper is
         return address(gnosisSafe);
     }
 
+    function setKeyperRoles(address keyperRoles) public {
+        keyperRolesAddr = keyperRoles;
+    }
+
     function setKeyperModule(address keyperModule) public {
         keyperModuleAddr = keyperModule;
+    }
+
+    function setKeyperGuard(address keyperGuard) public {
+        keyperGuardAddr = keyperGuard;
     }
 
     // Create GnosisSafe with Keyper and send module enabled tx
@@ -143,6 +147,10 @@ contract GnosisSafeHelper is
         // Enable module
         bool result = enableModuleTx(address(gnosisSafe));
         require(result == true, "failed enable module");
+
+        // Enable Guard
+        result = enableGuardTx(address(gnosisSafe));
+        require(result == true, "failed enable guard");
         return address(gnosisSafe);
     }
 
@@ -205,6 +213,46 @@ contract GnosisSafeHelper is
         // Create enableModule calldata
         bytes memory data =
             abi.encodeWithSignature("enableModule(address)", keyperModuleAddr);
+
+        // Create enable module safe tx
+        Transaction memory mockTx = createDefaultTx(safe, data);
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
+    function enableGuardTx(address safe) public returns (bool) {
+        // Create enableModule calldata
+        bytes memory data =
+            abi.encodeWithSignature("setGuard(address)", keyperGuardAddr);
+
+        // Create enable module safe tx
+        Transaction memory mockTx = createDefaultTx(safe, data);
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
+    function disableModuleTx(address prevModule, address safe)
+        public
+        returns (bool)
+    {
+        // Create enableModule calldata
+        bytes memory data = abi.encodeWithSignature(
+            "disableModule(address,address)", prevModule, keyperModuleAddr
+        );
+
+        // Create enable module safe tx
+        Transaction memory mockTx = createDefaultTx(safe, data);
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
+    function disableGuardTx(address safe) public returns (bool) {
+        // Create enableModule calldata
+        bytes memory data =
+            abi.encodeWithSignature("setGuard(address)", address(0));
 
         // Create enable module safe tx
         Transaction memory mockTx = createDefaultTx(safe, data);
@@ -279,6 +327,17 @@ contract GnosisSafeHelper is
     function createRemoveGroupTx(uint256 group) public returns (bool) {
         bytes memory data =
             abi.encodeWithSignature("removeGroup(uint256)", group);
+        // Create module safe tx
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
+    function createDisconnectedSafeTx(uint256 group) public returns (bool) {
+        bytes memory data =
+            abi.encodeWithSignature("disconnectedSafe(uint256)", group);
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx

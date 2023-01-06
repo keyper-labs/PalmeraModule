@@ -480,25 +480,45 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// @dev All actions will be driven based on the caller of the method, and args
     /// @param group address of the group to be removed
     function removeGroup(uint256 group)
-        external
+        public
         SafeRegistered(_msgSender())
         requiresAuth
     {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
-        uint256 rootSafe = getGroupIdBySafe(org, caller);
-        /// RootSafe usecase : Check if the group is part of caller's org
+        uint256 callerSafe = getGroupIdBySafe(org, caller);
+        uint256 rootSafe = getRootSafe(group);
+        /// Avoid Replay attack
+        if (groups[org][group].tier == DataTypes.Tier.REMOVED) {
+            revert Errors.GroupAlreadyRemoved();
+        }
+        /// Another Org usecase: Check if the group is part of caller's org
+        if (org != getOrgByGroup(group)) {
+            revert Errors.NotAuthorizedRemoveGroupFromOtherOrg();
+        }
+        /// RootSafe usecase : Check if the group is part of caller's Tree
         if (
-            (groups[org][rootSafe].tier == DataTypes.Tier.ROOT)
-                && (!isTreeMember(rootSafe, group))
+            (groups[org][callerSafe].tier == DataTypes.Tier.ROOT)
+                && (!isTreeMember(callerSafe, group))
         ) {
             revert Errors.NotAuthorizedRemoveGroupFromOtherTree();
         }
         // SuperSafe usecase : Check caller is superSafe of the group
-        if (!isSuperSafe(rootSafe, group)) {
+        if ((!isRootSafeOf(caller, group)) && (!isSuperSafe(callerSafe, group)))
+        {
             revert Errors.NotAuthorizedAsNotSuperSafe();
         }
-        DataTypes.Group memory _group = groups[org][group];
+        DataTypes.Group storage _group = groups[org][group];
+
+        // Check if the group is Root Safe and has child
+        if (
+            ((_group.tier == DataTypes.Tier.ROOT) || (_group.superSafe == 0))
+                && (_group.child.length > 0)
+        ) {
+            revert Errors.CannotRemoveGroupBeforeRemoveChild(
+                _group.child.length
+            );
+        }
 
         // superSafe is either an org or a group
         DataTypes.Group storage superSafe = groups[org][_group.superSafe];
@@ -519,6 +539,9 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             // Update children group superSafe reference
             childrenGroup.superSafe = _group.superSafe;
         }
+        /// we guarantee the child was moving to another SuperSafe in the Org
+        /// and validate after in the disconnectedSafe method
+        _group.child = new uint256[](0);
 
         // Revoke roles to group
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
@@ -530,10 +553,63 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
 
         // Store the name before to delete the Group
         emit Events.GroupRemoved(
-            org, group, superSafe.safe, caller, _group.superSafe, _group.name
+            org, group, superSafe.lead, caller, _group.superSafe, _group.name
             );
+        // Assign the with Root Safe (because is not part of the Tree)
+        // If the Group is not Root Safe, pass to depend on Root Safe directly
+        _group.superSafe = _group.superSafe == 0 ? 0 : rootSafe;
+        _group.tier = _group.tier == DataTypes.Tier.ROOT
+            ? DataTypes.Tier.ROOT
+            : DataTypes.Tier.REMOVED;
+    }
+
+    /// @notice Disconnected Safe of a group
+    /// @dev Disconnected Safe of a group, Call must come from the root safe
+    /// @param group address of the group to be updated
+    function disconnectedSafe(uint256 group)
+        external
+        IsRootSafe(_msgSender())
+        GroupRegistered(group)
+        requiresAuth
+    {
+        bytes32 org = getOrgByGroup(group);
+        address caller = _msgSender();
+        /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
+        if (!isRootSafeOf(caller, group)) {
+            revert Errors.NotAuthorizedDisconnectedChildrenGroup();
+        }
+        /// In case Root Safe Disconnected Safe without removeGroup Before
+        if (groups[org][group].tier != DataTypes.Tier.REMOVED) {
+            removeGroup(group);
+        }
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(groups[org][group].safe);
         removeIndexGroup(org, group);
         delete groups[org][group];
+
+        /// Disable Guard
+        bytes memory data =
+            abi.encodeWithSelector(IGnosisSafe.setGuard.selector, address(0));
+        /// Execute transaction from target safe
+        bool result = gnosisTargetSafe.execTransactionFromModule(
+            address(gnosisTargetSafe), uint256(0), data, Enum.Operation.Call
+        );
+        if (!result) revert Errors.TxExecutionModuleFaild();
+
+        /// Disable Module
+        address prevModule = getPreviewModule(caller);
+        data = abi.encodeWithSelector(
+            IGnosisSafe.disableModule.selector, prevModule, address(this)
+        );
+
+        /// Execute transaction from target safe
+        result = gnosisTargetSafe.execTransactionFromModule(
+            address(gnosisTargetSafe), uint256(0), data, Enum.Operation.Call
+        );
+        if (!result) revert Errors.TxExecutionModuleFaild();
+
+        emit Events.SafeDisconnected(
+            org, group, address(gnosisTargetSafe), caller
+            );
     }
 
     /// @notice update superSafe of a group
@@ -541,7 +617,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// @param group address of the group to be updated
     /// @param newSuper address of the new superSafe
     function updateSuper(uint256 group, uint256 newSuper)
-        public
+        external
         IsRootSafe(_msgSender())
         GroupRegistered(newSuper)
         requiresAuth
@@ -777,8 +853,13 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (superSafe == 0 || group == 0) return false;
         bytes32 org = getOrgByGroup(superSafe);
         DataTypes.Group memory childGroup = groups[org][group];
-        if (childGroup.safe == address(0)) return false;
-        /// TODO: verify if is not redundant
+        // Check if the Child Group is was removed or not Exist and Return False
+        if (
+            (childGroup.safe == address(0))
+                || (childGroup.tier == DataTypes.Tier.REMOVED)
+        ) {
+            return false;
+        }
         if (groups[org][superSafe].safe == address(0)) return false;
         /// TODO: verify is open a back door
         if (childGroup.safe == groups[org][superSafe].safe) return true;
@@ -819,7 +900,13 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (superSafe == 0 || group == 0) return false;
         bytes32 org = getOrgByGroup(superSafe);
         DataTypes.Group memory childGroup = groups[org][group];
-        if (childGroup.safe == address(0)) return false;
+        // Check if the Child Group is was removed or not Exist and Return False
+        if (
+            (childGroup.safe == address(0))
+                || (childGroup.tier == DataTypes.Tier.REMOVED)
+        ) {
+            return false;
+        }
         uint256 currentSuperSafe = childGroup.superSafe;
         return (currentSuperSafe == superSafe);
     }
@@ -831,6 +918,27 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (getOrgHashBySafe(safe) == bytes32(0)) return false;
         if (getGroupIdBySafe(getOrgHashBySafe(safe), safe) == 0) return false;
         return true;
+    }
+
+    /// @dev Method to get Root Safe of a Group
+    /// @param groupId ID's of the group
+    /// @return rootSafeId uint256 Root Safe Id's
+    function getRootSafe(uint256 groupId)
+        public
+        view
+        returns (uint256 rootSafeId)
+    {
+        bytes32 org = getOrgByGroup(groupId);
+        DataTypes.Group memory childGroup = groups[org][groupId];
+        if (childGroup.superSafe == 0) return groupId;
+        rootSafeId = childGroup.superSafe;
+        uint256 currentSuperSafe = rootSafeId;
+        while (currentSuperSafe != 0) {
+            childGroup = groups[org][currentSuperSafe];
+            if (childGroup.superSafe == 0) return rootSafeId;
+            else rootSafeId = childGroup.superSafe;
+            currentSuperSafe = childGroup.superSafe;
+        }
     }
 
     /// @notice Get the safe address of a group
@@ -1013,6 +1121,27 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
                 caller, safe, to, value, data, operation, _nonce
             )
         );
+    }
+
+    /// @dev Method to get Preview Module of the Safe
+    /// @param safe address of the Safe
+    /// @return address of the Preview Module
+    function getPreviewModule(address safe) internal view returns (address) {
+        // create Instance of the Gnosis Safe
+        IGnosisSafe gnosisSafe = IGnosisSafe(safe);
+        // get the modules of the Safe
+        (address[] memory modules, address nextModule) =
+            gnosisSafe.getModulesPaginated(address(this), 25);
+        if ((modules.length == 0) && (nextModule == Constants.SENTINEL_ADDRESS))
+        {
+            return Constants.SENTINEL_ADDRESS;
+        } else {
+            for (uint256 i = 1; i < modules.length; i++) {
+                if (modules[i] == address(this)) {
+                    return modules[i - 1];
+                }
+            }
+        }
     }
 
     /// @notice disable safe lead roles
