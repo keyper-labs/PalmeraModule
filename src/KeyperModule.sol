@@ -620,23 +620,55 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     function removeWholeTree() external IsRootSafe(_msgSender()) requiresAuth {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
-        uint256 rootSafe = getGroupIdBySafe(org, caller);
-        for (uint256 i = 0; i < depthTreeLimit[org]; i++) {
-            for (uint256 j = 0; j < indexGroup[org].length; j++) {
-                uint256 group = indexGroup[org][j];
-                if (
-                    (groups[org][group].child.length == 0)
-                        && (isRootSafeOf(caller, group))
-                ) {
-                    disconnectedSafe(group);
-                }
-            }
+        uint256[] memory _indexGroup = getTreeMember();
+        for (uint256 j = 0; j < _indexGroup.length; j++) {
+            uint256 group = _indexGroup[j];
+            DataTypes.Group memory _group = groups[org][group];
+            // Revoke roles to group
+            RolesAuthority _authority = RolesAuthority(rolesAuthority);
+            _authority.setUserRole(
+                _group.safe, uint8(DataTypes.Role.SUPER_SAFE), false
+            );
+            // Disable safe lead role
+            disableSafeLeadRoles(groups[org][group].safe);
+            IGnosisSafe gnosisTargetSafe = IGnosisSafe(_group.safe);
+            removeIndexGroup(org, group);
+            delete groups[org][group];
+
+            /// Disable Guard
+            bytes memory data = abi.encodeWithSelector(
+                IGnosisSafe.setGuard.selector, address(0)
+            );
+            /// Execute transaction from target safe
+            bool result = gnosisTargetSafe.execTransactionFromModule(
+                address(gnosisTargetSafe), uint256(0), data, Enum.Operation.Call
+            );
+            if (!result) revert Errors.TxExecutionModuleFaild();
+
+            /// Disable Module
+            address prevModule = getPreviewModule(caller);
+            data = abi.encodeWithSelector(
+                IGnosisSafe.disableModule.selector, prevModule, address(this)
+            );
+
+            /// Execute transaction from target safe
+            result = gnosisTargetSafe.execTransactionFromModule(
+                address(gnosisTargetSafe), uint256(0), data, Enum.Operation.Call
+            );
+            if (!result) revert Errors.TxExecutionModuleFaild();
+
+            emit Events.SafeDisconnected(
+                org, group, address(gnosisTargetSafe), caller
+                );
         }
         // After Disconnected Root Safe
         emit Events.WholeTreeRemoved(
-            org, rootSafe, caller, groups[org][rootSafe].name
+            org,
+            getGroupIdBySafe(org, caller),
+            caller,
+            groups[org][getGroupIdBySafe(org, caller)].name
             );
-        disconnectedSafe(rootSafe);
+        disconnectedSafe(getGroupIdBySafe(org, caller));
     }
 
     /// @notice Method to Promete a group to Root Safe of an Org to Root Safe
@@ -1298,5 +1330,28 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         _authority.setUserRole(
             newRootSafe, uint8(DataTypes.Role.SUPER_SAFE), true
         );
+    }
+
+    function getTreeMember()
+        internal
+        view
+        returns (uint256[] memory indexTree)
+    {
+        address caller = _msgSender();
+        bytes32 org = getOrgHashBySafe(caller);
+        uint256 rootSafe = getGroupIdBySafe(org, caller);
+        uint256 index;
+        uint256[] memory _indexGroup = indexGroup[org];
+        for (uint256 i = 0; i < _indexGroup.length; i++) {
+            if (getRootSafe(_indexGroup[i]) == rootSafe) {
+                index++;
+            }
+        }
+        indexTree = new uint256[](index);
+        for (uint256 i = 0; i < index; i++) {
+            if (getRootSafe(_indexGroup[i]) == rootSafe) {
+                indexTree[i] = _indexGroup[i];
+            }
+        }
     }
 }
