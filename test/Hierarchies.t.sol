@@ -564,6 +564,7 @@ contract Hierarchies is DeployHelper {
         /// depth Tree Lmit by org
         bytes32 org = keyperModule.getOrgHashBySafe(subGroupAaddr[0]);
         uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        console.log("depthTreeLimit: ", depthTreeLimit);
 
         for (uint256 i = 3; i < depthTreeLimit; i++) {
             // Create a new Safe
