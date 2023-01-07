@@ -953,6 +953,9 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         (,, rootSafeId) = _seekMember(indexId + 1, groupId);
     }
 
+    /// @dev Method to Gwetting if is Member, Level and Root Safe
+    /// @param superSafe ID's of the Super Safe group
+    /// @param childSafe ID's of the Child Safe
     function _seekMember(uint256 superSafe, uint256 childSafe)
         internal
         view
@@ -971,7 +974,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (superSafe == childSafe) return (true, level, childSafe);
         rootSafeId = childGroup.superSafe;
         uint256 currentSuperSafe = rootSafeId;
-        level = 2; // Level start in 1 not in zero
+        level = 2; // Level start in 1
         while (currentSuperSafe != 0) {
             childGroup = groups[org][currentSuperSafe];
             isMember =
@@ -1323,7 +1326,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
 
     function _executeModuleTransaction(address safe, bytes memory data)
         private
-        returns (bytes memory returnData)
     {
         IGnosisSafe gnosisTargetSafe = IGnosisSafe(safe);
         bool result = gnosisTargetSafe.execTransactionFromModule(
