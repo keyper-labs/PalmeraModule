@@ -663,4 +663,159 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         );
         assertEq(ZeroAddress, zeroAddress);
     }
+
+    // ! **************** List of Promote to Root *******************************
+
+    function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_GROUP_SAFE() public {
+        (uint256 rootId, uint256 groupA1Id, uint256 childGroupA1) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, groupA1Name, subGroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address childGroupA1Addr =
+            keyperModule.getGroupSafeAddress(childGroupA1);
+
+        /// Promote to Root
+        vm.startPrank(rootAddr);
+        vm.expectRevert(Errors.NotAuthorizedUpdateNonSuperSafe.selector);
+        keyperModule.promoteRoot(childGroupA1);
+        vm.stopPrank();
+
+        /// Verify child Safe is not an Root
+        assertEq(keyperModule.getRootSafe(childGroupA1) == rootId, true);
+        assertEq(keyperModule.getRootSafe(childGroupA1) == childGroupA1, false);
+        assertEq(keyperModule.isRootSafeOf(childGroupA1Addr, rootId), false);
+        assertEq(keyperModule.isRootSafeOf(rootAddr, childGroupA1), true);
+        assertEq(keyperModule.isRootSafeOf(groupA1Addr, childGroupA1), false);
+        assertEq(keyperModule.isSuperSafe(rootId, groupA1Id), true);
+        assertEq(keyperModule.isSuperSafe(groupA1Id, childGroupA1), true);
+        assertEq(keyperModule.isTreeMember(rootId, groupA1Id), true);
+        assertEq(keyperModule.isTreeMember(groupA1Id, childGroupA1), true);
+    }
+
+    function testCanPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE() public {
+        (uint256 rootId, uint256 groupA1Id, uint256 childGroupA1) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, groupA1Name, subGroupA1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
+
+        /// Promote to Root
+        gnosisHelper.updateSafeInterface(rootAddr);
+        bool result = gnosisHelper.createPromoteToRootTx(groupA1Id);
+        assertEq(result, true);
+
+        /// Verify Safe has been promoted to Root
+        assertEq(keyperModule.getRootSafe(groupA1Id) == rootId, false);
+        assertEq(keyperModule.getRootSafe(groupA1Id) == groupA1Id, true);
+        assertEq(keyperModule.isRootSafeOf(groupA1Addr, rootId), false);
+        assertEq(keyperModule.isRootSafeOf(rootAddr, groupA1Id), false);
+        assertEq(keyperModule.isRootSafeOf(groupA1Addr, groupA1Id), true);
+        assertEq(keyperModule.isRootSafeOf(groupA1Addr, childGroupA1), true);
+        assertEq(keyperModule.isSuperSafe(rootId, groupA1Id), false);
+        assertEq(keyperModule.isSuperSafe(groupA1Id, childGroupA1), true);
+        assertEq(keyperModule.isTreeMember(rootId, groupA1Id), false);
+        assertEq(keyperModule.isTreeMember(groupA1Id, childGroupA1), true);
+
+        // Validate Info Safe Group
+        (
+            DataTypes.Tier tier,
+            string memory name,
+            address lead,
+            address safe,
+            uint256[] memory child,
+            uint256 superSafe
+        ) = keyperModule.getGroupInfo(groupA1Id);
+
+        assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
+        assertEq(name, groupA1Name);
+        assertEq(lead, address(0));
+        assertEq(safe, groupA1Addr);
+        assertEq(child.length, 1);
+        assertEq(child[0], childGroupA1);
+        assertEq(superSafe, 0);
+    }
+
+    function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE_ANOTHER_TREE(
+    ) public {
+        (
+            uint256 rootIdA,
+            uint256 groupA1Id,
+            uint256 rootIdB,
+            ,
+            uint256 childGroupA1,
+        ) = keyperSafeBuilder.setupTwoRootOrgWithOneGroupAndOneChildEach(
+            orgName,
+            groupA1Name,
+            org2Name,
+            groupBName,
+            subGroupA1Name,
+            subGroupB1Name
+        );
+
+        address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
+        address rootAddrB = keyperModule.getGroupSafeAddress(rootIdB);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
+
+        /// Try Promote to Root
+        vm.startPrank(rootAddrB);
+        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenGroup.selector);
+        keyperModule.promoteRoot(groupA1Id);
+        vm.stopPrank();
+
+        /// Verify SuperSafe is not an Root
+        assertEq(keyperModule.getRootSafe(groupA1Id) == rootIdA, true);
+        assertEq(keyperModule.getRootSafe(groupA1Id) == childGroupA1, false);
+        assertEq(keyperModule.isRootSafeOf(groupA1Addr, rootIdA), false);
+        assertEq(keyperModule.isRootSafeOf(rootAddrA, groupA1Id), true);
+        assertEq(keyperModule.isRootSafeOf(groupA1Addr, childGroupA1), false);
+        assertEq(keyperModule.isSuperSafe(rootIdA, groupA1Id), true);
+        assertEq(keyperModule.isSuperSafe(groupA1Id, childGroupA1), true);
+        assertEq(keyperModule.isTreeMember(rootIdA, groupA1Id), true);
+        assertEq(keyperModule.isTreeMember(groupA1Id, childGroupA1), true);
+    }
+
+    function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE_ANOTHER_ORG()
+        public
+    {
+        (
+            uint256 rootIdA,
+            uint256 groupA1Id,
+            uint256 rootIdB,
+            ,
+            uint256 childGroupA1,
+        ) = keyperSafeBuilder.setupTwoOrgWithOneRootOneGroupAndOneChildEach(
+            orgName,
+            groupA1Name,
+            org2Name,
+            groupBName,
+            subGroupA1Name,
+            subGroupB1Name
+        );
+
+        address rootAddrA = keyperModule.getGroupSafeAddress(rootIdA);
+        address rootAddrB = keyperModule.getGroupSafeAddress(rootIdB);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
+
+        /// Try Promote to Root
+        vm.startPrank(rootAddrB);
+        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenGroup.selector);
+        keyperModule.promoteRoot(groupA1Id);
+        vm.stopPrank();
+
+        /// Verify SuperSafe is not an Root
+        assertEq(keyperModule.getRootSafe(groupA1Id) == rootIdA, true);
+        assertEq(keyperModule.getRootSafe(groupA1Id) == childGroupA1, false);
+        assertEq(keyperModule.isRootSafeOf(groupA1Addr, rootIdA), false);
+        assertEq(keyperModule.isRootSafeOf(rootAddrA, groupA1Id), true);
+        assertEq(keyperModule.isRootSafeOf(groupA1Addr, childGroupA1), false);
+        assertEq(keyperModule.isSuperSafe(rootIdA, groupA1Id), true);
+        assertEq(keyperModule.isSuperSafe(groupA1Id, childGroupA1), true);
+        assertEq(keyperModule.isTreeMember(rootIdA, groupA1Id), true);
+        assertEq(keyperModule.isTreeMember(groupA1Id, childGroupA1), true);
+    }
 }

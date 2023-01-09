@@ -628,8 +628,8 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         DataTypes.Group storage newRootSafe = groups[org][group];
         /// Check if the group is a Super Safe, and an Direct Children of thr Root Safe
         if (
-            (newRootSafe.child.length > 0)
-                && (isSuperSafe(getGroupIdBySafe(org, caller), group))
+            (newRootSafe.child.length <= 0)
+                || (!isSuperSafe(getGroupIdBySafe(org, caller), group))
         ) {
             revert Errors.NotAuthorizedUpdateNonSuperSafe();
         }
@@ -896,6 +896,8 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         bytes32 org = getOrgByGroup(superSafe);
         DataTypes.Group memory childGroup = groups[org][group];
         if (childGroup.safe == address(0)) return false;
+        /// TODO: verify is open a back door
+        if (superSafe == group) return true;
         (isMember,,) = _seekMember(superSafe, group);
     }
 
@@ -950,6 +952,9 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         view
         returns (uint256 rootSafeId)
     {
+        bytes32 org = getOrgByGroup(groupId);
+        DataTypes.Group memory childGroup = groups[org][groupId];
+        if (childGroup.superSafe == 0) return groupId;
         (,, rootSafeId) = _seekMember(indexId + 1, groupId);
     }
 
@@ -968,10 +973,8 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             (childGroup.safe == address(0))
                 || (childGroup.tier == DataTypes.Tier.REMOVED)
         ) {
-            return (isMember, level, childSafe);
+            return (isMember, level, rootSafeId);
         }
-        /// TODO: verify is open a back door
-        if (superSafe == childSafe) return (true, level, childSafe);
         rootSafeId = childGroup.superSafe;
         uint256 currentSuperSafe = rootSafeId;
         level = 2; // Level start in 1
