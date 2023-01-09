@@ -24,15 +24,15 @@ library Errors {
     error NotAuthorizedRemoveOwner();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedUpdateGroupToOtherOrg();
-	error NotAuthorizedUpdateNonSuperSafe();
-	error PreviewModuleNotFound(address safe);
+    error NotAuthorizedUpdateNonSuperSafe();
+    error PreviewModuleNotFound(address safe);
     /// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's children Group Id's
     error CannotDisconnectedSafeBeforeRemoveChild(uint256 children);
-	/// @dev Error messages when try to remove Group before remove it's children, and show the Group's children Group Id's
-	error CannotRemoveGroupBeforeRemoveChild(uint256 children);
+    /// @dev Error messages when try to remove Group before remove it's children, and show the Group's children Group Id's
+    error CannotRemoveGroupBeforeRemoveChild(uint256 children);
     error CannotDisableKeyperModule(address module);
     error CannotDisableKeyperGuard(address guard);
-	error GroupAlreadyRemoved();
+    error GroupAlreadyRemoved();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
     error NotAuthorizedAsNotSafeLead();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Super Safe

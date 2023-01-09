@@ -870,4 +870,97 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(keyperModule.isSafeRegistered(groupB1Addr) == false, true);
         assertEq(keyperModule.isSafeRegistered(childGroupB1Addr) == false, true);
     }
+
+    function testCanRemoveWholeTreeFourthLevel() public {
+        (
+            uint256 rootId,
+            uint256 groupA1Id,
+            uint256 groupB1Id,
+            uint256 childGroupA1,
+            uint256 subChildGroupA1
+        ) = keyperSafeBuilder.setUpBaseOrgTree(
+            orgName, groupA1Name, groupBName, subGroupA1Name, subGroupB1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address groupB1Addr = keyperModule.getGroupSafeAddress(groupB1Id);
+        address childGroupA1Addr =
+            keyperModule.getGroupSafeAddress(childGroupA1);
+        address subChildGroupB1Addr =
+            keyperModule.getGroupSafeAddress(subChildGroupA1);
+
+        /// Remove Whole Tree A
+        gnosisHelper.updateSafeInterface(rootAddr);
+        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        assertTrue(result);
+
+        /// Verify Whole Tree A is removed
+        assertEq(keyperModule.isSafeRegistered(rootAddr) == false, true);
+        assertEq(keyperModule.isSafeRegistered(groupA1Addr) == false, true);
+        assertEq(keyperModule.isSafeRegistered(childGroupA1Addr) == false, true);
+        assertEq(
+            keyperModule.isSafeRegistered(subChildGroupB1Addr) == false, true
+        );
+        assertEq(keyperModule.isSafeRegistered(groupB1Addr) == false, true);
+
+        // Validate Info Root Safe Group
+        vm.startPrank(rootAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.GroupNotRegistered.selector, rootId)
+        );
+        keyperModule.getGroupInfo(rootId);
+        vm.stopPrank();
+        // Validate Info Root Safe Group
+        vm.startPrank(subChildGroupB1Addr);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.GroupNotRegistered.selector, subChildGroupA1
+            )
+        );
+        keyperModule.getGroupInfo(subChildGroupA1);
+        vm.stopPrank();
+    }
+
+    function testCannotReplayAttackRemoveWholeTree() public {
+        (
+            uint256 rootId,
+            uint256 groupA1Id,
+            uint256 groupB1Id,
+            uint256 childGroupA1,
+            uint256 subChildGroupA1
+        ) = keyperSafeBuilder.setUpBaseOrgTree(
+            orgName, groupA1Name, groupBName, subGroupA1Name, subGroupB1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address groupB1Addr = keyperModule.getGroupSafeAddress(groupB1Id);
+        address childGroupA1Addr =
+            keyperModule.getGroupSafeAddress(childGroupA1);
+        address subChildGroupB1Addr =
+            keyperModule.getGroupSafeAddress(subChildGroupA1);
+
+        /// Remove Whole Tree A
+        gnosisHelper.updateSafeInterface(rootAddr);
+        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        assertTrue(result);
+
+        // Try Replay Attack
+        vm.startPrank(rootAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.SafeNotRegistered.selector, rootAddr)
+        );
+        keyperModule.removeWholeTree();
+        vm.stopPrank();
+
+        /// Verify Whole Tree A is removed
+        assertEq(keyperModule.isSafeRegistered(rootAddr) == false, true);
+        assertEq(keyperModule.isSafeRegistered(groupA1Addr) == false, true);
+        assertEq(keyperModule.isSafeRegistered(childGroupA1Addr) == false, true);
+        assertEq(
+            keyperModule.isSafeRegistered(subChildGroupB1Addr) == false, true
+        );
+        assertEq(keyperModule.isSafeRegistered(groupB1Addr) == false, true);
+    }
 }
