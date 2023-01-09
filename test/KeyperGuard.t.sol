@@ -818,4 +818,56 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(keyperModule.isTreeMember(rootIdA, groupA1Id), true);
         assertEq(keyperModule.isTreeMember(groupA1Id, childGroupA1), true);
     }
+
+    // ! **************** List of Remove Whole Tree *******************************
+
+    function testCanRemoveWholeTree() public {
+        (
+            uint256 rootId,
+            uint256 groupA1Id,
+            uint256 rootId2,
+            uint256 groupB1Id,
+            uint256 childGroupA1,
+            uint256 childGroupB1
+        ) = keyperSafeBuilder.setupTwoRootOrgWithOneGroupAndOneChildEach(
+            orgName,
+            groupA1Name,
+            org2Name,
+            groupBName,
+            subGroupA1Name,
+            subGroupB1Name
+        );
+
+        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address rootAddr2 = keyperModule.getGroupSafeAddress(rootId2);
+        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address groupB1Addr = keyperModule.getGroupSafeAddress(groupB1Id);
+        address childGroupA1Addr =
+            keyperModule.getGroupSafeAddress(childGroupA1);
+        address childGroupB1Addr =
+            keyperModule.getGroupSafeAddress(childGroupB1);
+
+        /// Remove Whole Tree A
+        gnosisHelper.updateSafeInterface(rootAddr);
+        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        assertTrue(result);
+
+        /// Verify Whole Tree A is removed
+        assertEq(keyperModule.isSafeRegistered(rootAddr) == false, true);
+        assertEq(keyperModule.isSafeRegistered(groupA1Addr) == false, true);
+        assertEq(keyperModule.isSafeRegistered(childGroupA1Addr) == false, true);
+        assertTrue(keyperModule.isSafeRegistered(rootAddr2));
+        assertTrue(keyperModule.isSafeRegistered(groupB1Addr));
+        assertTrue(keyperModule.isSafeRegistered(childGroupB1Addr));
+
+        /// Remove Whole Tree B
+        gnosisHelper.updateSafeInterface(rootAddr2);
+        result = gnosisHelper.createRemoveWholeTreeTx();
+        assertTrue(result);
+
+        /// Verify Tree is removed
+        assertEq(keyperModule.isSafeRegistered(rootAddr2) == false, true);
+        assertEq(keyperModule.isSafeRegistered(groupB1Addr) == false, true);
+        assertEq(keyperModule.isSafeRegistered(childGroupB1Addr) == false, true);
+    }
 }

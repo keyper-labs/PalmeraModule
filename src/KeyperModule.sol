@@ -582,6 +582,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         }
         // Disconnect Safe
         _exitSafe(group);
+        if (indexGroup[org].length == 0) removeOrg(org);
     }
 
     /// @notice Remove whole tree of a RootSafe
@@ -590,7 +591,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 rootSafe = getGroupIdBySafe(org, caller);
-        uint256[] memory _indexGroup = getTreeMember();
+        uint256[] memory _indexGroup = getTreeMember(org, rootSafe);
         for (uint256 j = 0; j < _indexGroup.length; j++) {
             uint256 group = _indexGroup[j];
             DataTypes.Group memory _group = groups[org][group];
@@ -608,6 +609,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             org, rootSafe, caller, groups[org][rootSafe].name
             );
         _exitSafe(rootSafe);
+        if (indexGroup[org].length == 0) removeOrg(org);
     }
 
     /// @notice Method to Promete a group to Root Safe of an Org to Root Safe
@@ -954,7 +956,10 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     {
         bytes32 org = getOrgByGroup(groupId);
         DataTypes.Group memory childGroup = groups[org][groupId];
-        if (childGroup.superSafe == 0) return groupId;
+        if (childGroup.superSafe == 0) {
+            rootSafeId = groupId;
+            return rootSafeId;
+        }
         (,, rootSafeId) = _seekMember(indexId + 1, groupId);
     }
 
@@ -1192,25 +1197,30 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         }
     }
 
-    function getTreeMember()
+    function getTreeMember(bytes32 org, uint256 rootSafe)
         internal
         view
         returns (uint256[] memory indexTree)
     {
-        address caller = _msgSender();
-        bytes32 org = getOrgHashBySafe(caller);
-        uint256 rootSafe = getGroupIdBySafe(org, caller);
         uint256 index;
         uint256[] memory _indexGroup = indexGroup[org];
         for (uint256 i = 0; i < _indexGroup.length; i++) {
-            if (getRootSafe(_indexGroup[i]) == rootSafe) {
+            if (
+                (getRootSafe(_indexGroup[i]) == rootSafe)
+                    && (_indexGroup[i] != rootSafe)
+            ) {
                 index++;
             }
         }
         indexTree = new uint256[](index);
-        for (uint256 i = 0; i < index; i++) {
-            if (getRootSafe(_indexGroup[i]) == rootSafe) {
-                indexTree[i] = _indexGroup[i];
+        index = 0;
+        for (uint256 i = 0; i < _indexGroup.length; i++) {
+            if (
+                (getRootSafe(_indexGroup[i]) == rootSafe)
+                    && (_indexGroup[i] != rootSafe)
+            ) {
+                indexTree[index] = _indexGroup[i];
+                index++;
             }
         }
     }
@@ -1250,6 +1260,18 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             if (indexGroup[org][i] == group) {
                 indexGroup[org][i] = indexGroup[org][indexGroup[org].length - 1];
                 indexGroup[org].pop();
+                break;
+            }
+        }
+    }
+
+    /// @notice Private method to remove Org from Array of Hsshes of organizations
+    /// @param org ID's of the organization
+    function removeOrg(bytes32 org) private {
+        for (uint256 i = 0; i < orgHash.length; i++) {
+            if (orgHash[i] == org) {
+                orgHash[i] = orgHash[orgHash.length - 1];
+                orgHash.pop();
                 break;
             }
         }
@@ -1315,6 +1337,9 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
 
         /// Disable Module
         address prevModule = getPreviewModule(caller);
+        if (prevModule == address(0)) {
+            revert Errors.PreviewModuleNotFound(_group);
+        }
         data = abi.encodeWithSelector(
             IGnosisSafe.disableModule.selector, prevModule, address(this)
         );
