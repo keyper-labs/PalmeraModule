@@ -27,7 +27,7 @@ library Errors {
     error NotAuthorizedUpdateNonSuperSafe();
     error PreviewModuleNotFound(address safe);
     /// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's children Group Id's
-    error CannotDisconnectedSafeBeforeRemoveChild(uint256 children);
+    error CannotDisconnectSafeBeforeRemoveChild(uint256 children);
     /// @dev Error messages when try to remove Group before remove it's children, and show the Group's children Group Id's
     error CannotRemoveGroupBeforeRemoveChild(uint256 children);
     error CannotDisableKeyperModule(address module);
@@ -40,7 +40,7 @@ library Errors {
     /// @dev Error messages when the Root Safe is not Autorized Update Super Safe for a Group in Another Tree
     error NotAuthorizedUpdateNonChildrenGroup();
     /// @dev Error messages when the Root Safe is not Autorized to Disconnect an Safe in Another Tree
-    error NotAuthorizedDisconnectedChildrenGroup();
+    error NotAuthorizedDisconnectChildrenGroup();
     /// @dev Error messages when the Root Safe is not Autorized to Update a Role in a Group in Another Tree
     error NotAuthorizedSetRoleAnotherTree();
     /// @dev Error messages the Owner is not Found into the Safe Owners

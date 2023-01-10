@@ -193,7 +193,7 @@ contract KeyperRoles is RolesAuthority, DenyHelper {
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
             keyperModule,
-            Constants.DISCONNECTED_SAFE,
+            Constants.DISCONNECT_SAFE,
             true
         );
 

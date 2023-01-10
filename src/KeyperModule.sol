@@ -12,7 +12,6 @@ import {Errors} from "../libraries/Errors.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {Events} from "../libraries/Events.sol";
-import {console} from "forge-std/console.sol";
 
 /// @title Keyper Module
 /// @custom:security-contact general@palmeradao.xyz
@@ -526,7 +525,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             childrenGroup.superSafe = _group.superSafe;
         }
         /// we guarantee the child was moving to another SuperSafe in the Org
-        /// and validate after in the disconnectedSafe method
+        /// and validate after in the DisconnectSafe method
         _group.child = new uint256[](0);
 
         // Revoke roles to group
@@ -549,10 +548,10 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             : DataTypes.Tier.REMOVED;
     }
 
-    /// @notice Disconnected Safe of a group
-    /// @dev Disconnected Safe of a group, Call must come from the root safe
+    /// @notice Disconnect Safe of a group
+    /// @dev Disconnect Safe of a group, Call must come from the root safe
     /// @param group address of the group to be updated
-    function disconnectedSafe(uint256 group)
+    function disconnectSafe(uint256 group)
         public
         IsRootSafe(_msgSender())
         GroupRegistered(group)
@@ -560,24 +559,22 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     {
         bytes32 org = getOrgByGroup(group);
         address caller = _msgSender();
-        DataTypes.Group memory disconnectedGroup = groups[org][group];
+        DataTypes.Group memory disconnectGroup = groups[org][group];
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
         if (
             (
                 (!isRootSafeOf(caller, group))
-                    && (disconnectedGroup.tier != DataTypes.Tier.REMOVED)
+                    && (disconnectGroup.tier != DataTypes.Tier.REMOVED)
             )
                 || (
-                    (disconnectedGroup.tier == DataTypes.Tier.REMOVED)
-                        && (
-                            getGroupIdBySafe(org, caller) != disconnectedGroup.superSafe
-                        )
+                    (disconnectGroup.tier == DataTypes.Tier.REMOVED)
+                        && (getGroupIdBySafe(org, caller) != disconnectGroup.superSafe)
                 )
         ) {
-            revert Errors.NotAuthorizedDisconnectedChildrenGroup();
+            revert Errors.NotAuthorizedDisconnectChildrenGroup();
         }
-        /// In case Root Safe Disconnected Safe without removeGroup Before
-        if (disconnectedGroup.tier != DataTypes.Tier.REMOVED) {
+        /// In case Root Safe Disconnect Safe without removeGroup Before
+        if (disconnectGroup.tier != DataTypes.Tier.REMOVED) {
             removeGroup(group);
         }
         // Disconnect Safe
@@ -604,7 +601,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             disableSafeLeadRoles(groups[org][group].safe);
             _exitSafe(group);
         }
-        // After Disconnected Root Safe
+        // After Disconnect Root Safe
         emit Events.WholeTreeRemoved(
             org, rootSafe, caller, groups[org][rootSafe].name
             );
@@ -635,17 +632,11 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         ) {
             revert Errors.NotAuthorizedUpdateNonSuperSafe();
         }
-        /// Give Role SuperSafe if not have it
+        /// Give Role RootSafe if not have it
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        if (
-            !_authority.doesUserHaveRole(
-                newRootSafe.safe, uint8(DataTypes.Role.ROOT_SAFE)
-            )
-        ) {
-            _authority.setUserRole(
-                newRootSafe.safe, uint8(DataTypes.Role.ROOT_SAFE), true
-            );
-        }
+        _authority.setUserRole(
+            newRootSafe.safe, uint8(DataTypes.Role.ROOT_SAFE), true
+        );
         // Update Tier
         newRootSafe.tier = DataTypes.Tier.ROOT;
         // Update Root Safe
@@ -963,7 +954,8 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         (,, rootSafeId) = _seekMember(indexId + 1, groupId);
     }
 
-    /// @dev Method to Gwetting if is Member, Level and Root Safe
+    /// @notice Method for refactoring the methods getRootSafe, isTreeMember, and isLimitTree, in one method
+    /// @dev Method to Getting if is Member, the  Level and Root Safe
     /// @param superSafe ID's of the Super Safe group
     /// @param childSafe ID's of the Child Safe
     function _seekMember(uint256 superSafe, uint256 childSafe)
@@ -1197,6 +1189,10 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         }
     }
 
+    /// @dev Method to getting the All Gorup Member for the Tree of the Root Safe/Org indicate in the args
+    /// @param org HAsh of the DAO of the org
+    /// @param rootSafe Gorup ID's of the root safe
+    /// @return indexTree Array of the Group ID's of the Tree
     function getTreeMember(bytes32 org, uint256 rootSafe)
         internal
         view
@@ -1265,7 +1261,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         }
     }
 
-    /// @notice Private method to remove Org from Array of Hsshes of organizations
+    /// @notice Private method to remove Org from Array of Hashes of organizations
     /// @param org ID's of the organization
     function removeOrg(bytes32 org) private {
         for (uint256 i = 0; i < orgHash.length; i++) {
@@ -1321,6 +1317,8 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         );
     }
 
+    /// @dev Function for refactoring DisconnectSafe Method, and RemoveWholeTree in one Method
+    /// @param group ID's of the organization
     function _exitSafe(uint256 group) private {
         bytes32 org = getOrgByGroup(group);
         address _group = groups[org][group].safe;
@@ -1352,6 +1350,9 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             );
     }
 
+    /// @dev refactoring of execution of Tx with the privilege of the Module Keyper Labs, and avoid repeat code
+    /// @param safe Safe Address to execute Tx
+    /// @param data Data to execute Tx
     function _executeModuleTransaction(address safe, bytes memory data)
         private
     {

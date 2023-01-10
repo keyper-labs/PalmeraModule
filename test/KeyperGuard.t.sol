@@ -67,7 +67,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
-    function testCannotReplayAttackDisconnectedSafe() public {
+    function testCannotReplayAttackdisconnectSafe() public {
         (uint256 rootId, uint256 groupA1Id) =
             keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
 
@@ -75,7 +75,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         /// Remove Group A1
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectedSafeTx(groupA1Id);
+        bool result = gnosisHelper.createDisconnectSafeTx(groupA1Id);
         assertEq(result, true);
         // Replay attack
         vm.startPrank(rootAddr);
@@ -84,7 +84,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.GroupNotRegistered.selector, groupA1Id
             )
         );
-        keyperModule.disconnectedSafe(groupA1Id);
+        keyperModule.disconnectSafe(groupA1Id);
         vm.stopPrank();
     }
 
@@ -99,7 +99,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Remove Group A1
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectedSafeTx(groupIdA1);
+        bool result = gnosisHelper.createDisconnectSafeTx(groupIdA1);
         assertEq(result, true);
 
         // Verify Safe is disconnected
@@ -129,7 +129,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Disconnect Safe
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectedSafeTx(subGroupA1Id);
+        bool result = gnosisHelper.createDisconnectSafeTx(subGroupA1Id);
         assertEq(result, true);
 
         // Verify Safe is disconnected
@@ -163,7 +163,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.CannotRemoveGroupBeforeRemoveChild.selector, 1
             )
         );
-        keyperModule.disconnectedSafe(rootId);
+        keyperModule.disconnectSafe(rootId);
         vm.stopPrank();
 
         /// Verify Safe still enabled
@@ -198,7 +198,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(result, true);
 
         /// Disconnect Safe
-        result = gnosisHelper.createDisconnectedSafeTx(rootId);
+        result = gnosisHelper.createDisconnectSafeTx(rootId);
         assertEq(result, true);
 
         /// Verify Safe has been removed
@@ -235,7 +235,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.InvalidGnosisRootSafe.selector, groupA1Addr
             )
         );
-        keyperModule.disconnectedSafe(subGroupA1Id);
+        keyperModule.disconnectSafe(subGroupA1Id);
         vm.stopPrank();
 
         // Verify module still enabled
@@ -280,7 +280,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.InvalidGnosisRootSafe.selector, groupB1Addr
             )
         );
-        keyperModule.disconnectedSafe(subGroupA1Id);
+        keyperModule.disconnectSafe(subGroupA1Id);
         vm.stopPrank();
 
         // Verify module still enabled
@@ -320,8 +320,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Try to Disconnect Safe
         vm.startPrank(rootAddrB);
-        vm.expectRevert(Errors.NotAuthorizedDisconnectedChildrenGroup.selector);
-        keyperModule.disconnectedSafe(subGroupA1Id);
+        vm.expectRevert(Errors.NotAuthorizedDisconnectChildrenGroup.selector);
+        keyperModule.disconnectSafe(subGroupA1Id);
         vm.stopPrank();
 
         // Verify module still enabled
@@ -348,7 +348,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Disconnect Safe before to remove group
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectedSafeTx(groupIdA1);
+        bool result = gnosisHelper.createDisconnectSafeTx(groupIdA1);
         assertEq(result, true);
 
         // Verify module has been disabled
@@ -378,7 +378,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Try to Disconnect Safe before to remove group
         // Disconnect Safe before to remove group
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectedSafeTx(subGroupIdA1);
+        bool result = gnosisHelper.createDisconnectSafeTx(subGroupIdA1);
         assertEq(result, true);
 
         // Verify module has been disabled
@@ -429,7 +429,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.InvalidGnosisSafe.selector, fakerCaller
             )
         );
-        keyperModule.disconnectedSafe(childGroupA1);
+        keyperModule.disconnectSafe(childGroupA1);
         vm.stopPrank();
     }
 
@@ -466,7 +466,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.SafeNotRegistered.selector, fakerCaller
             )
         );
-        keyperModule.disconnectedSafe(childGroupA1);
+        keyperModule.disconnectSafe(childGroupA1);
         vm.stopPrank();
     }
 
@@ -645,7 +645,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         /// Disconnect Safe
         gnosisHelper.updateSafeInterface(rootAddr);
-        result = gnosisHelper.createDisconnectedSafeTx(childGroupA1);
+        result = gnosisHelper.createDisconnectSafeTx(childGroupA1);
         assertEq(result, true);
 
         /// Verify Safe has been removed
@@ -853,9 +853,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertTrue(result);
 
         /// Verify Whole Tree A is removed
-        assertEq(keyperModule.isSafeRegistered(rootAddr) == false, true);
-        assertEq(keyperModule.isSafeRegistered(groupA1Addr) == false, true);
-        assertEq(keyperModule.isSafeRegistered(childGroupA1Addr) == false, true);
+        assertEq(keyperModule.isSafeRegistered(rootAddr), false);
+        assertEq(keyperModule.isSafeRegistered(groupA1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(childGroupA1Addr), false);
         assertTrue(keyperModule.isSafeRegistered(rootAddr2));
         assertTrue(keyperModule.isSafeRegistered(groupB1Addr));
         assertTrue(keyperModule.isSafeRegistered(childGroupB1Addr));
@@ -866,9 +866,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertTrue(result);
 
         /// Verify Tree is removed
-        assertEq(keyperModule.isSafeRegistered(rootAddr2) == false, true);
-        assertEq(keyperModule.isSafeRegistered(groupB1Addr) == false, true);
-        assertEq(keyperModule.isSafeRegistered(childGroupB1Addr) == false, true);
+        assertEq(keyperModule.isSafeRegistered(rootAddr2), false);
+        assertEq(keyperModule.isSafeRegistered(groupB1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(childGroupB1Addr), false);
     }
 
     function testCanRemoveWholeTreeFourthLevel() public {
@@ -896,13 +896,11 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertTrue(result);
 
         /// Verify Whole Tree A is removed
-        assertEq(keyperModule.isSafeRegistered(rootAddr) == false, true);
-        assertEq(keyperModule.isSafeRegistered(groupA1Addr) == false, true);
-        assertEq(keyperModule.isSafeRegistered(childGroupA1Addr) == false, true);
-        assertEq(
-            keyperModule.isSafeRegistered(subChildGroupB1Addr) == false, true
-        );
-        assertEq(keyperModule.isSafeRegistered(groupB1Addr) == false, true);
+        assertEq(keyperModule.isSafeRegistered(rootAddr), false);
+        assertEq(keyperModule.isSafeRegistered(groupA1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(childGroupA1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(subChildGroupB1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(groupB1Addr), false);
 
         // Validate Info Root Safe Group
         vm.startPrank(rootAddr);
@@ -955,12 +953,10 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.stopPrank();
 
         /// Verify Whole Tree A is removed
-        assertEq(keyperModule.isSafeRegistered(rootAddr) == false, true);
-        assertEq(keyperModule.isSafeRegistered(groupA1Addr) == false, true);
-        assertEq(keyperModule.isSafeRegistered(childGroupA1Addr) == false, true);
-        assertEq(
-            keyperModule.isSafeRegistered(subChildGroupB1Addr) == false, true
-        );
-        assertEq(keyperModule.isSafeRegistered(groupB1Addr) == false, true);
+        assertEq(keyperModule.isSafeRegistered(rootAddr), false);
+        assertEq(keyperModule.isSafeRegistered(groupA1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(childGroupA1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(subChildGroupB1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(groupB1Addr), false);
     }
 }

@@ -356,9 +356,9 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createDisconnectedSafeTx(uint256 group) public returns (bool) {
+    function createDisconnectSafeTx(uint256 group) public returns (bool) {
         bytes memory data =
-            abi.encodeWithSignature("disconnectedSafe(uint256)", group);
+            abi.encodeWithSignature("disconnectSafe(uint256)", group);
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx

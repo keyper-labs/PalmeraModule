@@ -92,6 +92,12 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     function testAddThreeSubGroupLinealSecuenceMaxLevel() public {
         address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
         createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 3, 30000);
+
+        /// Remove Whole Tree A
+        gnosisHelper.updateSafeInterface(orgSafe);
+        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        assertTrue(result);
+        console.log("All Org Removed");
     }
 
     // Stress Test for Verification of maximal level when add Four sub Group, in a lineal secuencial way
@@ -202,11 +208,17 @@ contract StressTestStorage is DeployHelper, SigningUtils {
             bool result = gnosisHelper.createRootSafeTx(rootSafe, RootSafeName);
             assertEq(result, true);
             rootId = keyperModule.getGroupIdBySafe(org, rootSafe);
+            vm.startPrank(orgSafe);
+            keyperModule.updateDepthTreeLimit(50);
+            vm.stopPrank();
         } else {
             gnosisHelper.updateSafeInterface(orgSafe);
             bool result = gnosisHelper.registerOrgTx(OrgName);
             assertEq(result, true);
             rootId = keyperModule.getGroupIdBySafe(org, orgSafe);
+            vm.startPrank(orgSafe);
+            keyperModule.updateDepthTreeLimit(50);
+            vm.stopPrank();
         }
 
         // Array of Address for the subGroups
