@@ -12,20 +12,20 @@ library DataTypes {
         SUPER_SAFE,
         ROOT_SAFE
     }
-    /// @dev typos of groups into Keyper Modules
+    /// @dev typos of squads into Keyper Modules
     enum Tier {
-        GROUP, // 0
+        SQUAD, // 0
         ROOT, // 1
         REMOVED // 2
     }
-    /// @devStruct for Group
-    /// @param tier Kind of the group (at the momento only GROUP or ROOT)
-    /// @param name String name of the group (any tier of group)
-    /// @param lead Address of Safe Lead of the group (Safe Lead Role)
-    /// @param safe Address of Safe of the group (Safe Role)
-    /// @param child Array of ID's members of the group
-    /// @param superSafe ID of Superior Group (superSafe Role)
-    struct Group {
+    /// @devStruct for Squad
+    /// @param tier Kind of the squad (at the momento only squad or ROOT)
+    /// @param name String name of the squad (any tier of squad)
+    /// @param lead Address of Safe Lead of the squad (Safe Lead Role)
+    /// @param safe Address of Safe of the squad (Safe Role)
+    /// @param child Array of ID's members of the squad
+    /// @param superSafe ID of Superior Squad (superSafe Role)
+    struct Squad {
         Tier tier;
         string name;
         address lead;

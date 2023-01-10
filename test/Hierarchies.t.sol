@@ -24,7 +24,7 @@ contract Hierarchies is DeployHelper {
         bool result = gnosisHelper.registerOrgTx(orgName);
         assertEq(result, true);
         assertEq(orgHash, keccak256(abi.encodePacked(orgName)));
-        uint256 rootId = keyperModule.getGroupIdBySafe(
+        uint256 rootId = keyperModule.getSquadIdBySafe(
             orgHash, address(gnosisHelper.gnosisSafe())
         );
         (
@@ -34,7 +34,7 @@ contract Hierarchies is DeployHelper {
             address safe,
             uint256[] memory child,
             uint256 superSafe
-        ) = keyperModule.getGroupInfo(rootId);
+        ) = keyperModule.getSquadInfo(rootId);
         assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
         assertEq(name, orgName);
         assertEq(lead, address(0));
@@ -50,32 +50,32 @@ contract Hierarchies is DeployHelper {
         );
     }
 
-    function testAddGroup() public {
-        (uint256 rootId, uint256 groupIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+    function testAddSquad() public {
+        (uint256 rootId, uint256 squadIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         (
             DataTypes.Tier tier,
-            string memory groupName,
+            string memory squadName,
             address lead,
             address safe,
             uint256[] memory child,
             uint256 superSafe
-        ) = keyperModule.getGroupInfo(groupIdA1);
+        ) = keyperModule.getSquadInfo(squadIdA1);
 
-        assertEq(uint256(tier), uint256(DataTypes.Tier.GROUP));
-        assertEq(groupName, groupA1Name);
+        assertEq(uint256(tier), uint256(DataTypes.Tier.SQUAD));
+        assertEq(squadName, squadA1Name);
         assertEq(lead, address(0));
         assertEq(safe, address(gnosisHelper.gnosisSafe()));
         assertEq(child.length, 0);
         assertEq(superSafe, rootId);
 
-        address groupAddr = keyperModule.getGroupSafeAddress(groupIdA1);
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address squadAddr = keyperModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
 
-        assertEq(keyperModule.isRootSafeOf(rootAddr, groupIdA1), true);
+        assertEq(keyperModule.isRootSafeOf(rootAddr, squadIdA1), true);
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                groupAddr, uint8(DataTypes.Role.SUPER_SAFE)
+                squadAddr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
@@ -88,172 +88,172 @@ contract Hierarchies is DeployHelper {
         );
     }
 
-    function testExpectInvalidGroupId() public {
+    function testExpectInvalidSquadId() public {
         uint256 orgIdNotRegistered = 2;
-        vm.expectRevert(Errors.InvalidGroupId.selector);
-        keyperModule.addGroup(orgIdNotRegistered, groupA1Name);
+        vm.expectRevert(Errors.InvalidSquadId.selector);
+        keyperModule.addSquad(orgIdNotRegistered, squadA1Name);
     }
 
-    function testExpectGroupNotRegistered() public {
+    function testExpectSquadNotRegistered() public {
         uint256 orgIdNotRegistered = 1;
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.GroupNotRegistered.selector, orgIdNotRegistered
+                Errors.SquadNotRegistered.selector, orgIdNotRegistered
             )
         );
-        keyperModule.addGroup(orgIdNotRegistered, groupA1Name);
+        keyperModule.addSquad(orgIdNotRegistered, squadA1Name);
     }
 
-    function testAddSubGroup() public {
-        (uint256 rootId, uint256 groupIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-        address groupBaddr = gnosisHelper.newKeyperSafe(4, 2);
-        vm.startPrank(groupBaddr);
-        uint256 groupIdB = keyperModule.addGroup(groupIdA1, groupBName);
-        assertEq(keyperModule.isTreeMember(rootId, groupIdA1), true);
-        assertEq(keyperModule.isSuperSafe(rootId, groupIdA1), true);
-        assertEq(keyperModule.isTreeMember(groupIdA1, groupIdB), true);
-        assertEq(keyperModule.isSuperSafe(groupIdA1, groupIdB), true);
+    function testAddSubSquad() public {
+        (uint256 rootId, uint256 squadIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        address squadBaddr = gnosisHelper.newKeyperSafe(4, 2);
+        vm.startPrank(squadBaddr);
+        uint256 squadIdB = keyperModule.addSquad(squadIdA1, squadBName);
+        assertEq(keyperModule.isTreeMember(rootId, squadIdA1), true);
+        assertEq(keyperModule.isSuperSafe(rootId, squadIdA1), true);
+        assertEq(keyperModule.isTreeMember(squadIdA1, squadIdB), true);
+        assertEq(keyperModule.isSuperSafe(squadIdA1, squadIdB), true);
     }
 
     function testTreeOrgsTreeMember() public {
-        (uint256 rootId, uint256 groupIdA1, uint256 subGroupIdA1) =
+        (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
+            orgName, squadA1Name, subSquadA1Name
         );
-        assertEq(keyperModule.isTreeMember(rootId, groupIdA1), true);
-        assertEq(keyperModule.isTreeMember(groupIdA1, subGroupIdA1), true);
-        (uint256 rootId2, uint256 groupIdB) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(root2Name, groupBName);
-        assertEq(keyperModule.isTreeMember(rootId2, groupIdB), true);
+        assertEq(keyperModule.isTreeMember(rootId, squadIdA1), true);
+        assertEq(keyperModule.isTreeMember(squadIdA1, subSquadIdA1), true);
+        (uint256 rootId2, uint256 squadIdB) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(root2Name, squadBName);
+        assertEq(keyperModule.isTreeMember(rootId2, squadIdB), true);
         assertEq(keyperModule.isTreeMember(rootId2, rootId), false);
-        assertEq(keyperModule.isTreeMember(rootId2, groupIdA1), false);
-        assertEq(keyperModule.isTreeMember(rootId, groupIdB), false);
+        assertEq(keyperModule.isTreeMember(rootId2, squadIdA1), false);
+        assertEq(keyperModule.isTreeMember(rootId, squadIdB), false);
     }
 
     function testIsSuperSafe() public {
         (
             uint256 rootId,
-            uint256 groupIdA1,
-            uint256 subGroupIdA1,
-            uint256 subsubGroupIdA1
+            uint256 squadIdA1,
+            uint256 subSquadIdA1,
+            uint256 subsubSquadIdA1
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            orgName, groupA1Name, subGroupA1Name, subSubGroupA1Name
+            orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
         );
-        assertEq(keyperModule.isSuperSafe(rootId, groupIdA1), true);
-        assertEq(keyperModule.isSuperSafe(groupIdA1, subGroupIdA1), true);
-        assertEq(keyperModule.isSuperSafe(subGroupIdA1, subsubGroupIdA1), true);
-        assertEq(keyperModule.isSuperSafe(subsubGroupIdA1, subGroupIdA1), false);
-        assertEq(keyperModule.isSuperSafe(subsubGroupIdA1, groupIdA1), false);
-        assertEq(keyperModule.isSuperSafe(subsubGroupIdA1, rootId), false);
-        assertEq(keyperModule.isSuperSafe(subGroupIdA1, groupIdA1), false);
+        assertEq(keyperModule.isSuperSafe(rootId, squadIdA1), true);
+        assertEq(keyperModule.isSuperSafe(squadIdA1, subSquadIdA1), true);
+        assertEq(keyperModule.isSuperSafe(subSquadIdA1, subsubSquadIdA1), true);
+        assertEq(keyperModule.isSuperSafe(subsubSquadIdA1, subSquadIdA1), false);
+        assertEq(keyperModule.isSuperSafe(subsubSquadIdA1, squadIdA1), false);
+        assertEq(keyperModule.isSuperSafe(subsubSquadIdA1, rootId), false);
+        assertEq(keyperModule.isSuperSafe(subSquadIdA1, squadIdA1), false);
     }
 
     function testUpdateSuper() public {
         (
             uint256 rootId,
-            uint256 groupIdA1,
-            uint256 groupIdB,
-            uint256 subGroupIdA1,
-            uint256 subsubGroupIdA1
+            uint256 squadIdA1,
+            uint256 squadIdB,
+            uint256 subSquadIdA1,
+            uint256 subsubSquadIdA1
         ) = keyperSafeBuilder.setUpBaseOrgTree(
-            orgName, groupA1Name, groupBName, subGroupA1Name, subSubGroupA1Name
+            orgName, squadA1Name, squadBName, subSquadA1Name, subSubSquadA1Name
         );
-        address rootSafe = keyperModule.getGroupSafeAddress(rootId);
-        address groupA1 = keyperModule.getGroupSafeAddress(groupIdA1);
-        address groupBB = keyperModule.getGroupSafeAddress(groupIdB);
-        address subGroupA1 = keyperModule.getGroupSafeAddress(subGroupIdA1);
+        address rootSafe = keyperModule.getSquadSafeAddress(rootId);
+        address squadA1 = keyperModule.getSquadSafeAddress(squadIdA1);
+        address squadBB = keyperModule.getSquadSafeAddress(squadIdB);
+        address subSquadA1 = keyperModule.getSquadSafeAddress(subSquadIdA1);
 
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                groupA1, uint8(DataTypes.Role.SUPER_SAFE)
+                squadA1, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                groupBB, uint8(DataTypes.Role.SUPER_SAFE)
+                squadBB, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                subGroupA1, uint8(DataTypes.Role.SUPER_SAFE)
+                subSquadA1, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
-        assertEq(keyperModule.isTreeMember(rootId, subGroupIdA1), true);
+        assertEq(keyperModule.isTreeMember(rootId, subSquadIdA1), true);
         vm.startPrank(rootSafe);
-        keyperModule.updateSuper(subGroupIdA1, groupIdB);
+        keyperModule.updateSuper(subSquadIdA1, squadIdB);
         vm.stopPrank();
-        assertEq(keyperModule.isSuperSafe(groupIdB, subGroupIdA1), true);
-        assertEq(keyperModule.isSuperSafe(groupIdA1, subGroupIdA1), false);
-        assertEq(keyperModule.isSuperSafe(groupIdA1, subGroupIdA1), false);
-        assertEq(keyperModule.isSuperSafe(groupIdA1, subsubGroupIdA1), false);
-        assertEq(keyperModule.isTreeMember(groupIdA1, subsubGroupIdA1), false);
-        assertEq(keyperModule.isTreeMember(groupIdB, subsubGroupIdA1), true);
+        assertEq(keyperModule.isSuperSafe(squadIdB, subSquadIdA1), true);
+        assertEq(keyperModule.isSuperSafe(squadIdA1, subSquadIdA1), false);
+        assertEq(keyperModule.isSuperSafe(squadIdA1, subSquadIdA1), false);
+        assertEq(keyperModule.isSuperSafe(squadIdA1, subsubSquadIdA1), false);
+        assertEq(keyperModule.isTreeMember(squadIdA1, subsubSquadIdA1), false);
+        assertEq(keyperModule.isTreeMember(squadIdB, subsubSquadIdA1), true);
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                groupA1, uint8(DataTypes.Role.SUPER_SAFE)
+                squadA1, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                groupBB, uint8(DataTypes.Role.SUPER_SAFE)
+                squadBB, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
     }
 
-    function testRevertUpdateSuperInvalidGroupId() public {
-        (uint256 rootId, uint256 groupIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+    function testRevertUpdateSuperInvalidSquadId() public {
+        (uint256 rootId, uint256 squadIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         // Get root info
-        address rootSafe = keyperModule.getGroupSafeAddress(rootId);
+        address rootSafe = keyperModule.getSquadSafeAddress(rootId);
 
-        uint256 groupNotRegisteredId = 6;
-        vm.expectRevert(Errors.InvalidGroupId.selector);
+        uint256 squadNotRegisteredId = 6;
+        vm.expectRevert(Errors.InvalidSquadId.selector);
         vm.startPrank(rootSafe);
-        keyperModule.updateSuper(groupIdA1, groupNotRegisteredId);
+        keyperModule.updateSuper(squadIdA1, squadNotRegisteredId);
     }
 
     function testRevertUpdateSuperIfCallerIsNotSafe() public {
-        (uint256 rootId, uint256 groupIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (uint256 rootId, uint256 squadIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         vm.startPrank(address(0xDDD));
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.InvalidGnosisSafe.selector, address(0xDDD)
             )
         );
-        keyperModule.updateSuper(groupIdA1, rootId);
+        keyperModule.updateSuper(squadIdA1, rootId);
         vm.stopPrank();
     }
 
     function testRevertUpdateSuperIfCallerNotPartofTheOrg() public {
-        (uint256 rootId, uint256 groupIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (uint256 rootId, uint256 squadIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         (uint256 rootId2,) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(root2Name, groupBName);
+            keyperSafeBuilder.setupRootOrgAndOneSquad(root2Name, squadBName);
         // Get root2 info
-        address rootSafe2 = keyperModule.getGroupSafeAddress(rootId2);
+        address rootSafe2 = keyperModule.getSquadSafeAddress(rootId2);
         vm.startPrank(rootSafe2);
-        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenGroup.selector);
-        keyperModule.updateSuper(groupIdA1, rootId);
+        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenSquad.selector);
+        keyperModule.updateSuper(squadIdA1, rootId);
         vm.stopPrank();
     }
 
-    function testCreateGroupThreeTiersTree() public {
-        (uint256 orgRootId, uint256 safeGroupA1Id, uint256 safeSubGroupA1Id) =
+    function testCreateSquadThreeTiersTree() public {
+        (uint256 orgRootId, uint256 safeSquadA1Id, uint256 safeSubSquadA1Id) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
+            orgName, squadA1Name, subSquadA1Name
         );
 
-        address safeGroupA1Addr =
-            keyperModule.getGroupSafeAddress(safeGroupA1Id);
-        address safeSubGroupA1Addr =
-            keyperModule.getGroupSafeAddress(safeSubGroupA1Id);
+        address safeSquadA1Addr =
+            keyperModule.getSquadSafeAddress(safeSquadA1Id);
+        address safeSubSquadA1Addr =
+            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         (
             DataTypes.Tier tier,
@@ -262,44 +262,44 @@ contract Hierarchies is DeployHelper {
             address safe,
             uint256[] memory child,
             uint256 superSafe
-        ) = keyperModule.getGroupInfo(safeGroupA1Id);
+        ) = keyperModule.getSquadInfo(safeSquadA1Id);
 
-        assertEq(uint8(tier), uint8(DataTypes.Tier.GROUP));
-        assertEq(name, groupA1Name);
+        assertEq(uint8(tier), uint8(DataTypes.Tier.SQUAD));
+        assertEq(name, squadA1Name);
         assertEq(lead, address(0));
-        assertEq(safe, safeGroupA1Addr);
+        assertEq(safe, safeSquadA1Addr);
         assertEq(child.length, 1);
-        assertEq(child[0], safeSubGroupA1Id);
+        assertEq(child[0], safeSubSquadA1Id);
         assertEq(superSafe, orgRootId);
 
         /// Reuse the local-variable for avoid stack too deep error
         (tier, name, lead, safe, child, superSafe) =
-            keyperModule.getGroupInfo(safeSubGroupA1Id);
+            keyperModule.getSquadInfo(safeSubSquadA1Id);
 
-        assertEq(uint8(tier), uint8(DataTypes.Tier.GROUP));
-        assertEq(name, subGroupA1Name);
+        assertEq(uint8(tier), uint8(DataTypes.Tier.SQUAD));
+        assertEq(name, subSquadA1Name);
         assertEq(lead, address(0));
-        assertEq(safe, safeSubGroupA1Addr);
+        assertEq(safe, safeSubSquadA1Addr);
         assertEq(child.length, 0);
-        assertEq(superSafe, safeGroupA1Id);
+        assertEq(superSafe, safeSquadA1Id);
     }
 
     function testOrgFourTiersTreeSuperSafeRoles() public {
         (
             uint256 rootId,
-            uint256 groupIdA1,
-            uint256 subGroupIdA1,
-            uint256 subSubGroupIdA1
+            uint256 squadIdA1,
+            uint256 subSquadIdA1,
+            uint256 subSubSquadIdA1
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            orgName, groupA1Name, subGroupA1Name, subSubGroupA1Name
+            orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
         );
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address safeGroupA1Addr = keyperModule.getGroupSafeAddress(groupIdA1);
-        address safeSubGroupA1Addr =
-            keyperModule.getGroupSafeAddress(subGroupIdA1);
-        address safeSubSubGroupA1Addr =
-            keyperModule.getGroupSafeAddress(subSubGroupIdA1);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
+        address safeSubSquadA1Addr =
+            keyperModule.getSquadSafeAddress(subSquadIdA1);
+        address safeSubSubSquadA1Addr =
+            keyperModule.getSquadSafeAddress(subSubSquadIdA1);
 
         assertEq(
             keyperRolesContract.doesUserHaveRole(
@@ -309,54 +309,54 @@ contract Hierarchies is DeployHelper {
         );
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                safeGroupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
+                safeSquadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                safeSubGroupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
+                safeSubSquadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                safeSubSubGroupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
+                safeSubSubSquadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
     }
 
-    function testRevertSafeAlreadyRegisteredAddGroup() public {
-        (, uint256 groupIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+    function testRevertSafeAlreadyRegisteredAddSquad() public {
+        (, uint256 squadIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
-        gnosisHelper.updateSafeInterface(safeSubGroupA1);
+        address safeSubSquadA1 = gnosisHelper.newKeyperSafe(2, 1);
+        gnosisHelper.updateSafeInterface(safeSubSquadA1);
 
-        bool result = gnosisHelper.createAddGroupTx(groupIdA1, subGroupA1Name);
+        bool result = gnosisHelper.createAddSquadTx(squadIdA1, subSquadA1Name);
         assertEq(result, true);
 
-        vm.startPrank(safeSubGroupA1);
+        vm.startPrank(safeSubSquadA1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.SafeAlreadyRegistered.selector, safeSubGroupA1
+                Errors.SafeAlreadyRegistered.selector, safeSubSquadA1
             )
         );
-        keyperModule.addGroup(groupIdA1, subGroupA1Name);
+        keyperModule.addSquad(squadIdA1, subSquadA1Name);
 
-        vm.deal(safeSubGroupA1, 1 ether);
-        gnosisHelper.updateSafeInterface(safeSubGroupA1);
+        vm.deal(safeSubSquadA1, 1 ether);
+        gnosisHelper.updateSafeInterface(safeSubSquadA1);
 
         vm.expectRevert();
-        result = gnosisHelper.createAddGroupTx(groupIdA1, subGroupA1Name);
+        result = gnosisHelper.createAddSquadTx(squadIdA1, subSquadA1Name);
     }
 
     // ! **************** List of Test for Depth Tree Limits *******************************
     function testRevertIfTryInvalidLimit() public {
         (uint256 rootId,) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         vm.startPrank(rootAddr);
         vm.expectRevert(Errors.InvalidLimit.selector);
         keyperModule.updateDepthTreeLimit(0);
@@ -368,26 +368,26 @@ contract Hierarchies is DeployHelper {
     }
 
     function testRevertIfTryNotRootSafe() public {
-        (, uint256 groupA1Id) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-        address groupA = keyperModule.getGroupSafeAddress(groupA1Id);
-        vm.startPrank(groupA);
+        (, uint256 squadA1Id) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        address squadA = keyperModule.getSquadSafeAddress(squadA1Id);
+        vm.startPrank(squadA);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, groupA
+                Errors.InvalidGnosisRootSafe.selector, squadA
             )
         );
         keyperModule.updateDepthTreeLimit(10);
         vm.stopPrank();
 
-        (,,, uint256 lastSubGroup) = keyperSafeBuilder.setupOrgFourTiersTree(
-            org2Name, groupA2Name, subGroupA1Name, subSubGroupA1Name
+        (,,, uint256 lastSubSquad) = keyperSafeBuilder.setupOrgFourTiersTree(
+            org2Name, squadA2Name, subSquadA1Name, subSubSquadA1Name
         );
-        address LastSubGroup = keyperModule.getGroupSafeAddress(lastSubGroup);
-        vm.startPrank(LastSubGroup);
+        address LastSubSquad = keyperModule.getSquadSafeAddress(lastSubSquad);
+        vm.startPrank(LastSubSquad);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, LastSubGroup
+                Errors.InvalidGnosisRootSafe.selector, LastSubSquad
             )
         );
         keyperModule.updateDepthTreeLimit(10);
@@ -397,49 +397,49 @@ contract Hierarchies is DeployHelper {
     function testRevertifExceedMaxDepthTreeLimit() public {
         (
             uint256 rootId,
-            uint256 groupIdA1,
-            uint256 subGroupA,
-            uint256 subSubGroupA
+            uint256 squadIdA1,
+            uint256 subSquadA,
+            uint256 subSubSquadA
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            org2Name, groupA2Name, subGroupA1Name, subSubGroupA1Name
+            org2Name, squadA2Name, subSquadA1Name, subSubSquadA1Name
         );
-        // Array of Address for the subGroups
-        address[] memory subGroupAaddr = new address[](9);
-        uint256[] memory subGroupAid = new uint256[](9);
+        // Array of Address for the subSquads
+        address[] memory subSquadAaddr = new address[](9);
+        uint256[] memory subSquadAid = new uint256[](9);
 
-        // Assig the Address to first two subGroups
-        subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootId);
-        subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
-        subGroupAaddr[2] = keyperModule.getGroupSafeAddress(subGroupA);
-        subGroupAaddr[3] = keyperModule.getGroupSafeAddress(subSubGroupA);
+        // Assig the Address to first two subSquads
+        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootId);
+        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
+        subSquadAaddr[3] = keyperModule.getSquadSafeAddress(subSubSquadA);
 
-        // Assig the Id to first two subGroups
-        subGroupAid[0] = rootId;
-        subGroupAid[1] = groupIdA1;
-        subGroupAid[2] = subGroupA;
-        subGroupAid[3] = subSubGroupA;
+        // Assig the Id to first two subSquads
+        subSquadAid[0] = rootId;
+        subSquadAid[1] = squadIdA1;
+        subSquadAid[2] = subSquadA;
+        subSquadAid[3] = subSubSquadA;
 
         /// depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subGroupAaddr[0]);
+        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
         uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
             // Start Prank
-            vm.startPrank(subGroupAaddr[i]);
-            // Add the new Safe as a subGroup
+            vm.startPrank(subSquadAaddr[i]);
+            // Add the new Safe as a subSquad
             if (i != 8) {
-                subGroupAid[i] =
-                    keyperModule.addGroup(subGroupAid[i - 1], groupBName);
+                subSquadAid[i] =
+                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
             } else {
                 vm.expectRevert(
                     abi.encodeWithSelector(
                         Errors.TreeDepthLimitReached.selector, i
                     )
                 );
-                keyperModule.addGroup(subGroupAid[i - 1], groupBName);
-                assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
+                keyperModule.addSquad(subSquadAid[i - 1], squadBName);
+                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
             }
@@ -450,55 +450,55 @@ contract Hierarchies is DeployHelper {
     function testRevertifUpdateLimitAndExceedMaxDepthTreeLimit() public {
         (
             uint256 rootId,
-            uint256 groupIdA1,
-            uint256 subGroupA,
-            uint256 subSubGroupA
+            uint256 squadIdA1,
+            uint256 subSquadA,
+            uint256 subSubSquadA
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            org2Name, groupA2Name, subGroupA1Name, subSubGroupA1Name
+            org2Name, squadA2Name, subSquadA1Name, subSubSquadA1Name
         );
-        // Array of Address for the subGroups
-        address[] memory subGroupAaddr = new address[](16);
-        uint256[] memory subGroupAid = new uint256[](16);
+        // Array of Address for the subSquads
+        address[] memory subSquadAaddr = new address[](16);
+        uint256[] memory subSquadAid = new uint256[](16);
 
-        // Assig the Address to first two subGroups
-        subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootId);
-        subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
-        subGroupAaddr[2] = keyperModule.getGroupSafeAddress(subGroupA);
-        subGroupAaddr[3] = keyperModule.getGroupSafeAddress(subSubGroupA);
+        // Assig the Address to first two subSquads
+        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootId);
+        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
+        subSquadAaddr[3] = keyperModule.getSquadSafeAddress(subSubSquadA);
 
-        // Assig the Id to first two subGroups
-        subGroupAid[0] = rootId;
-        subGroupAid[1] = groupIdA1;
-        subGroupAid[2] = subGroupA;
-        subGroupAid[3] = subSubGroupA;
+        // Assig the Id to first two subSquads
+        subSquadAid[0] = rootId;
+        subSquadAid[1] = squadIdA1;
+        subSquadAid[2] = subSquadA;
+        subSquadAid[3] = subSubSquadA;
 
         // depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subGroupAaddr[0]);
+        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
         uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
             // Start Prank
-            vm.startPrank(subGroupAaddr[i]);
-            // Add the new Safe as a subGroup
+            vm.startPrank(subSquadAaddr[i]);
+            // Add the new Safe as a subSquad
             if (i != 8) {
-                subGroupAid[i] =
-                    keyperModule.addGroup(subGroupAid[i - 1], groupBName);
+                subSquadAid[i] =
+                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
             } else {
                 vm.expectRevert(
                     abi.encodeWithSelector(
                         Errors.TreeDepthLimitReached.selector, i
                     )
                 );
-                keyperModule.addGroup(subGroupAid[i - 1], groupBName);
-                assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
+                keyperModule.addSquad(subSquadAid[i - 1], squadBName);
+                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
             }
             vm.stopPrank();
         }
-        vm.startPrank(subGroupAaddr[0]);
+        vm.startPrank(subSquadAaddr[0]);
         keyperModule.updateDepthTreeLimit(15);
         vm.stopPrank();
 
@@ -506,21 +506,21 @@ contract Hierarchies is DeployHelper {
         depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subGroupAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
             // Start Prank
-            vm.startPrank(subGroupAaddr[j]);
-            // Add the new Safe as a subGroup
+            vm.startPrank(subSquadAaddr[j]);
+            // Add the new Safe as a subSquad
             if (j != 15) {
-                subGroupAid[j] =
-                    keyperModule.addGroup(subGroupAid[j - 1], groupBName);
+                subSquadAid[j] =
+                    keyperModule.addSquad(subSquadAid[j - 1], squadBName);
             } else {
                 vm.expectRevert(
                     abi.encodeWithSelector(
                         Errors.TreeDepthLimitReached.selector, j
                     )
                 );
-                keyperModule.addGroup(subGroupAid[j - 1], groupBName);
-                assertEq(keyperModule.isLimitLevel(subGroupAid[j - 1]), true);
+                keyperModule.addSquad(subSquadAid[j - 1], squadBName);
+                assertEq(keyperModule.isLimitLevel(subSquadAid[j - 1]), true);
                 console.log("j: ", j);
                 console.log("New Max Depth Limit Reached");
             }
@@ -531,49 +531,49 @@ contract Hierarchies is DeployHelper {
     function testRevertifExceedMaxDepthTreeLimitAndUpdateSuper() public {
         (
             uint256 rootIdA,
-            uint256 groupIdA1,
+            uint256 squadIdA1,
             uint256 rootIdB,
             ,
-            uint256 subGroupA,
-            uint256 subGroupB
-        ) = keyperSafeBuilder.setupTwoRootOrgWithOneGroupAndOneChildEach(
+            uint256 subSquadA,
+            uint256 subSquadB
+        ) = keyperSafeBuilder.setupTwoRootOrgWithOneSquadAndOneChildEach(
             orgName,
-            groupA1Name,
+            squadA1Name,
             org2Name,
-            groupBName,
-            subGroupA1Name,
-            subGroupB1Name
+            squadBName,
+            subSquadA1Name,
+            subSquadB1Name
         );
-        // Array of Address for the subGroups
-        address[] memory subGroupAaddr = new address[](9);
-        uint256[] memory subGroupAid = new uint256[](9);
+        // Array of Address for the subSquads
+        address[] memory subSquadAaddr = new address[](9);
+        uint256[] memory subSquadAid = new uint256[](9);
 
-        // Assig the Address to first two subGroups
-        subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootIdA);
-        subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
-        subGroupAaddr[2] = keyperModule.getGroupSafeAddress(subGroupA);
+        // Assig the Address to first two subSquads
+        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootIdA);
+        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
 
-        // Assig the Id to first two subGroups
-        subGroupAid[0] = rootIdA;
-        subGroupAid[1] = groupIdA1;
-        subGroupAid[2] = subGroupA;
+        // Assig the Id to first two subSquads
+        subSquadAid[0] = rootIdA;
+        subSquadAid[1] = squadIdA1;
+        subSquadAid[2] = subSquadA;
 
         // Address of Root B
-        address rootAddrB = keyperModule.getGroupSafeAddress(rootIdB);
+        address rootAddrB = keyperModule.getSquadSafeAddress(rootIdB);
 
         /// depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subGroupAaddr[0]);
+        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
         uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
 
         for (uint256 i = 3; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
-            // Add the new Safe as a subGroup
+            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
-                vm.startPrank(subGroupAaddr[i]);
-                subGroupAid[i] =
-                    keyperModule.addGroup(subGroupAid[i - 1], groupBName);
+                vm.startPrank(subSquadAaddr[i]);
+                subSquadAid[i] =
+                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootAddrB);
@@ -582,8 +582,8 @@ contract Hierarchies is DeployHelper {
                         Errors.TreeDepthLimitReached.selector, i
                     )
                 );
-                keyperModule.updateSuper(subGroupB, subGroupAid[i - 1]);
-                assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
+                keyperModule.updateSuper(subSquadB, subSquadAid[i - 1]);
+                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
                 vm.stopPrank();
@@ -596,49 +596,49 @@ contract Hierarchies is DeployHelper {
     {
         (
             uint256 rootIdA,
-            uint256 groupIdA1,
+            uint256 squadIdA1,
             uint256 rootIdB,
             ,
-            uint256 subGroupA,
-            uint256 subGroupB
-        ) = keyperSafeBuilder.setupTwoRootOrgWithOneGroupAndOneChildEach(
+            uint256 subSquadA,
+            uint256 subSquadB
+        ) = keyperSafeBuilder.setupTwoRootOrgWithOneSquadAndOneChildEach(
             orgName,
-            groupA1Name,
+            squadA1Name,
             org2Name,
-            groupBName,
-            subGroupA1Name,
-            subGroupB1Name
+            squadBName,
+            subSquadA1Name,
+            subSquadB1Name
         );
-        // Array of Address for the subGroups
-        address[] memory subGroupAaddr = new address[](16);
-        uint256[] memory subGroupAid = new uint256[](16);
+        // Array of Address for the subSquads
+        address[] memory subSquadAaddr = new address[](16);
+        uint256[] memory subSquadAid = new uint256[](16);
 
-        // Assig the Address to first two subGroups
-        subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootIdA);
-        subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
-        subGroupAaddr[2] = keyperModule.getGroupSafeAddress(subGroupA);
+        // Assig the Address to first two subSquads
+        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootIdA);
+        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
 
-        // Assig the Id to first two subGroups
-        subGroupAid[0] = rootIdA;
-        subGroupAid[1] = groupIdA1;
-        subGroupAid[2] = subGroupA;
+        // Assig the Id to first two subSquads
+        subSquadAid[0] = rootIdA;
+        subSquadAid[1] = squadIdA1;
+        subSquadAid[2] = subSquadA;
 
         // Address of Root B
-        address rootAddrB = keyperModule.getGroupSafeAddress(rootIdB);
+        address rootAddrB = keyperModule.getSquadSafeAddress(rootIdB);
 
         /// depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subGroupAaddr[0]);
+        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
         uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
 
         for (uint256 i = 3; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
-            // Add the new Safe as a subGroup
+            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
-                vm.startPrank(subGroupAaddr[i]);
-                subGroupAid[i] =
-                    keyperModule.addGroup(subGroupAid[i - 1], groupBName);
+                vm.startPrank(subSquadAaddr[i]);
+                subSquadAid[i] =
+                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootAddrB);
@@ -647,14 +647,14 @@ contract Hierarchies is DeployHelper {
                         Errors.TreeDepthLimitReached.selector, i
                     )
                 );
-                keyperModule.updateSuper(subGroupB, subGroupAid[i - 1]);
-                assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
+                keyperModule.updateSuper(subSquadB, subSquadAid[i - 1]);
+                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
                 vm.stopPrank();
             }
         }
-        vm.startPrank(subGroupAaddr[0]);
+        vm.startPrank(subSquadAaddr[0]);
         keyperModule.updateDepthTreeLimit(15);
         vm.stopPrank();
 
@@ -662,13 +662,13 @@ contract Hierarchies is DeployHelper {
         depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subGroupAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
-            // Add the new Safe as a subGroup
+            subSquadAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
+            // Add the new Safe as a subSquad
             if (j != 15) {
                 // Start Prank
-                vm.startPrank(subGroupAaddr[j]);
-                subGroupAid[j] =
-                    keyperModule.addGroup(subGroupAid[j - 1], groupBName);
+                vm.startPrank(subSquadAaddr[j]);
+                subSquadAid[j] =
+                    keyperModule.addSquad(subSquadAid[j - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootAddrB);
@@ -677,8 +677,8 @@ contract Hierarchies is DeployHelper {
                         Errors.TreeDepthLimitReached.selector, j
                     )
                 );
-                keyperModule.updateSuper(subGroupB, subGroupAid[j - 1]);
-                assertEq(keyperModule.isLimitLevel(subGroupAid[j - 1]), true);
+                keyperModule.updateSuper(subSquadB, subSquadAid[j - 1]);
+                assertEq(keyperModule.isLimitLevel(subSquadAid[j - 1]), true);
                 console.log("j: ", j);
                 console.log("New Max Depth Limit Reached");
                 vm.stopPrank();
@@ -689,53 +689,53 @@ contract Hierarchies is DeployHelper {
     function testRevertifUpdateSuperToAnotherOrg() public {
         (
             uint256 rootId,
-            uint256 groupIdA1,
-            uint256 subGroupA,
-            uint256 subSubGroupA
+            uint256 squadIdA1,
+            uint256 subSquadA,
+            uint256 subSubSquadA
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            org2Name, groupA2Name, subGroupA1Name, subSubGroupA1Name
+            org2Name, squadA2Name, subSquadA1Name, subSubSquadA1Name
         );
 
-        (uint256 rootId2, uint256 groupB) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupBName);
-        address rootId2Addr = keyperModule.getGroupSafeAddress(rootId2);
-        // Array of Address for the subGroups
-        address[] memory subGroupAaddr = new address[](9);
-        uint256[] memory subGroupAid = new uint256[](9);
+        (uint256 rootId2, uint256 squadB) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadBName);
+        address rootId2Addr = keyperModule.getSquadSafeAddress(rootId2);
+        // Array of Address for the subSquads
+        address[] memory subSquadAaddr = new address[](9);
+        uint256[] memory subSquadAid = new uint256[](9);
 
-        // Assig the Address to first two subGroups
-        subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootId);
-        subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
-        subGroupAaddr[2] = keyperModule.getGroupSafeAddress(subGroupA);
-        subGroupAaddr[3] = keyperModule.getGroupSafeAddress(subSubGroupA);
+        // Assig the Address to first two subSquads
+        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootId);
+        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
+        subSquadAaddr[3] = keyperModule.getSquadSafeAddress(subSubSquadA);
 
-        // Assig the Id to first two subGroups
-        subGroupAid[0] = rootId;
-        subGroupAid[1] = groupIdA1;
-        subGroupAid[2] = subGroupA;
-        subGroupAid[3] = subSubGroupA;
+        // Assig the Id to first two subSquads
+        subSquadAid[0] = rootId;
+        subSquadAid[1] = squadIdA1;
+        subSquadAid[2] = subSquadA;
+        subSquadAid[3] = subSubSquadA;
 
         /// depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subGroupAaddr[0]);
+        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
         uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
-            // Add the new Safe as a subGroup
+            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
-                vm.startPrank(subGroupAaddr[i]);
-                subGroupAid[i] =
-                    keyperModule.addGroup(subGroupAid[i - 1], groupBName);
+                vm.startPrank(subSquadAaddr[i]);
+                subSquadAid[i] =
+                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootId2Addr);
                 vm.expectRevert(
-                    Errors.NotAuthorizedUpdateGroupToOtherOrg.selector
+                    Errors.NotAuthorizedUpdateSquadToOtherOrg.selector
                 );
-                keyperModule.updateSuper(groupB, subGroupAid[i - 1]);
-                assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
+                keyperModule.updateSuper(squadB, subSquadAid[i - 1]);
+                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
                 vm.stopPrank();
@@ -748,60 +748,60 @@ contract Hierarchies is DeployHelper {
     {
         (
             uint256 rootId,
-            uint256 groupIdA1,
-            uint256 subGroupA,
-            uint256 subSubGroupA
+            uint256 squadIdA1,
+            uint256 subSquadA,
+            uint256 subSubSquadA
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            org2Name, groupA2Name, subGroupA1Name, subSubGroupA1Name
+            org2Name, squadA2Name, subSquadA1Name, subSubSquadA1Name
         );
 
-        (uint256 rootId2, uint256 groupB) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupBName);
-        address rootId2Addr = keyperModule.getGroupSafeAddress(rootId2);
-        // Array of Address for the subGroups
-        address[] memory subGroupAaddr = new address[](16);
-        uint256[] memory subGroupAid = new uint256[](16);
+        (uint256 rootId2, uint256 squadB) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadBName);
+        address rootId2Addr = keyperModule.getSquadSafeAddress(rootId2);
+        // Array of Address for the subSquads
+        address[] memory subSquadAaddr = new address[](16);
+        uint256[] memory subSquadAid = new uint256[](16);
 
-        // Assig the Address to first two subGroups
-        subGroupAaddr[0] = keyperModule.getGroupSafeAddress(rootId);
-        subGroupAaddr[1] = keyperModule.getGroupSafeAddress(groupIdA1);
-        subGroupAaddr[2] = keyperModule.getGroupSafeAddress(subGroupA);
-        subGroupAaddr[3] = keyperModule.getGroupSafeAddress(subSubGroupA);
+        // Assig the Address to first two subSquads
+        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootId);
+        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
+        subSquadAaddr[3] = keyperModule.getSquadSafeAddress(subSubSquadA);
 
-        // Assig the Id to first two subGroups
-        subGroupAid[0] = rootId;
-        subGroupAid[1] = groupIdA1;
-        subGroupAid[2] = subGroupA;
-        subGroupAid[3] = subSubGroupA;
+        // Assig the Id to first two subSquads
+        subSquadAid[0] = rootId;
+        subSquadAid[1] = squadIdA1;
+        subSquadAid[2] = subSquadA;
+        subSquadAid[3] = subSubSquadA;
 
         /// depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subGroupAaddr[0]);
+        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
         uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subGroupAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
-            // Add the new Safe as a subGroup
+            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
-                vm.startPrank(subGroupAaddr[i]);
-                subGroupAid[i] =
-                    keyperModule.addGroup(subGroupAid[i - 1], groupBName);
+                vm.startPrank(subSquadAaddr[i]);
+                subSquadAid[i] =
+                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootId2Addr);
                 vm.expectRevert(
-                    Errors.NotAuthorizedUpdateGroupToOtherOrg.selector
+                    Errors.NotAuthorizedUpdateSquadToOtherOrg.selector
                 );
-                keyperModule.updateSuper(groupB, subGroupAid[i - 1]);
-                assertEq(keyperModule.isLimitLevel(subGroupAid[i - 1]), true);
+                keyperModule.updateSuper(squadB, subSquadAid[i - 1]);
+                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
                 vm.stopPrank();
             }
         }
 
-        vm.startPrank(subGroupAaddr[0]);
+        vm.startPrank(subSquadAaddr[0]);
         keyperModule.updateDepthTreeLimit(15);
         vm.stopPrank();
 
@@ -809,21 +809,21 @@ contract Hierarchies is DeployHelper {
         depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subGroupAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
-            // Add the new Safe as a subGroup
+            subSquadAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
+            // Add the new Safe as a subSquad
             if (j != 15) {
                 // Start Prank
-                vm.startPrank(subGroupAaddr[j]);
-                subGroupAid[j] =
-                    keyperModule.addGroup(subGroupAid[j - 1], groupBName);
+                vm.startPrank(subSquadAaddr[j]);
+                subSquadAid[j] =
+                    keyperModule.addSquad(subSquadAid[j - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootId2Addr);
                 vm.expectRevert(
-                    Errors.NotAuthorizedUpdateGroupToOtherOrg.selector
+                    Errors.NotAuthorizedUpdateSquadToOtherOrg.selector
                 );
-                keyperModule.updateSuper(groupB, subGroupAid[j - 1]);
-                assertEq(keyperModule.isLimitLevel(subGroupAid[j - 1]), true);
+                keyperModule.updateSuper(squadB, subSquadAid[j - 1]);
+                assertEq(keyperModule.isLimitLevel(subSquadAid[j - 1]), true);
                 console.log("j: ", j);
                 console.log("New Max Depth Limit Reached");
                 vm.stopPrank();

@@ -70,27 +70,27 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
 
         address attackerSafe = keyperSafes[nameAttacker];
         bytes32 orgHash = keccak256(abi.encodePacked(_orgName));
-        uint256 rootOrgId = keyper.getGroupIdBySafe(orgHash, orgAddr);
+        uint256 rootOrgId = keyper.getSquadIdBySafe(orgHash, orgAddr);
 
         vm.startPrank(attackerSafe);
-        keyper.addGroup(rootOrgId, nameAttacker);
+        keyper.addSquad(rootOrgId, nameAttacker);
         vm.stopPrank();
 
         address victim = gnosisHelper.newKeyperSafe(2, 1);
         string memory nameVictim = "Victim";
         keyperSafes[nameVictim] = address(victim);
-        uint256 attackerGroupId = keyper.getGroupIdBySafe(orgHash, attackerSafe);
+        uint256 attackerSquadId = keyper.getSquadIdBySafe(orgHash, attackerSafe);
 
         vm.startPrank(victim);
-        keyper.addGroup(attackerGroupId, nameVictim);
+        keyper.addSquad(attackerSquadId, nameVictim);
         vm.stopPrank();
-        uint256 victimGroupId = keyper.getGroupIdBySafe(orgHash, victim);
+        uint256 victimSquadId = keyper.getSquadIdBySafe(orgHash, victim);
 
         vm.deal(victim, 100 gwei);
 
         vm.startPrank(orgAddr);
         keyper.setRole(
-            DataTypes.Role.SAFE_LEAD, address(attackerSafe), victimGroupId, true
+            DataTypes.Role.SAFE_LEAD, address(attackerSafe), victimSquadId, true
         );
         vm.stopPrank();
 
