@@ -1,18 +1,11 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.15;
 
-import "./helpers/GnosisSafeHelper.t.sol";
-import "./helpers/KeyperSafeBuilder.t.sol";
 import "./helpers/DeployHelper.t.sol";
-import {console} from "forge-std/console.sol";
 import {stdStorage, StdStorage, Test} from "forge-std/Test.sol";
-import {KeyperModule} from "../src/KeyperModule.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 import {Errors} from "../libraries/Errors.sol";
-import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
-import {KeyperRoles} from "../src/KeyperRoles.sol";
-import {MockedContract} from "./mocks/MockedContract.t.sol";
 
 contract Hierarchies is DeployHelper {
     // Function called before each test is run

@@ -3,7 +3,6 @@ pragma solidity ^0.8.15;
 
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
-import {console} from "forge-std/console.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 import {Constants} from "../libraries/Constants.sol";

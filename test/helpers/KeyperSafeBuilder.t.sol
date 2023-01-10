@@ -4,7 +4,6 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import "./GnosisSafeHelper.t.sol";
 import {KeyperModule} from "../../src/KeyperModule.sol";
-import {console} from "forge-std/console.sol";
 
 contract KeyperSafeBuilder is Test {
     GnosisSafeHelper public gnosisHelper;

@@ -13,7 +13,6 @@ import {KeyperModule, IGnosisSafe} from "../../src/KeyperModule.sol";
 import {KeyperRoles} from "../../src/KeyperRoles.sol";
 import {KeyperGuard} from "../../src/KeyperGuard.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
-import {console} from "forge-std/console.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
 contract DeployHelper is Test {

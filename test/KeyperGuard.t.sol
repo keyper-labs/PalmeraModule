@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
@@ -7,10 +7,7 @@ import "./helpers/DeployHelper.t.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 import {Errors} from "../libraries/Errors.sol";
-import {KeyperModule} from "../src/KeyperModule.sol";
-import {KeyperGuard} from "../src/KeyperGuard.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
-import {console} from "forge-std/console.sol";
 
 contract KeyperGuardTest is DeployHelper, SigningUtils {
     function setUp() public {
