@@ -550,7 +550,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// @dev Disconnect Safe of a group, Call must come from the root safe
     /// @param group address of the group to be updated
     function disconnectSafe(uint256 group)
-        public
+        external
         IsRootSafe(_msgSender())
         GroupRegistered(group)
         requiresAuth
@@ -978,7 +978,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// @param superSafe ID's of the Super Safe group
     /// @param childSafe ID's of the Child Safe
     function _seekMember(uint256 superSafe, uint256 childSafe)
-        internal
+        private
         view
         returns (bool isMember, uint256 level, uint256 rootSafeId)
     {
@@ -1190,7 +1190,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// @dev Method to get Preview Module of the Safe
     /// @param safe address of the Safe
     /// @return address of the Preview Module
-    function getPreviewModule(address safe) internal view returns (address) {
+    function getPreviewModule(address safe) private view returns (address) {
         // create Instance of the Gnosis Safe
         IGnosisSafe gnosisSafe = IGnosisSafe(safe);
         // get the modules of the Safe
@@ -1213,7 +1213,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// @param rootSafe Gorup ID's of the root safe
     /// @return indexTree Array of the Group ID's of the Tree
     function getTreeMember(bytes32 org, uint256 rootSafe)
-        internal
+        private
         view
         returns (uint256[] memory indexTree)
     {
@@ -1293,7 +1293,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     }
 
     /// @notice Refactoring method for Create Org or RootSafe
-    /// @dev Method Internal for Create Org or RootSafe
+    /// @dev Method Private for Create Org or RootSafe
     /// @param name String Name of the Organization
     /// @param caller Safe Caller to Create Org or RootSafe
     /// @param newRootSafe Safe Address to Create Org or RootSafe
@@ -1342,7 +1342,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         bytes32 org = getOrgByGroup(group);
         address _group = groups[org][group].safe;
         address caller = _msgSender();
-        address safe = address(IGnosisSafe(_group));
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(_group);
         removeIndexGroup(org, group);
         delete groups[org][group];
 
@@ -1363,7 +1363,9 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         /// Execute transaction from target safe
         _executeModuleTransaction(_group, data);
 
-        emit Events.SafeDisconnected(org, group, safe, caller);
+        emit Events.SafeDisconnected(
+            org, group, address(gnosisTargetSafe), caller
+            );
     }
 
     /// @dev refactoring of execution of Tx with the privilege of the Module Keyper Labs, and avoid repeat code
