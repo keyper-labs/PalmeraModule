@@ -3,10 +3,7 @@ pragma solidity ^0.8.15;
 
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Authority} from "@solmate/auth/Auth.sol";
-import {DenyHelper} from "./DenyHelper.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Events} from "../libraries/Events.sol";
+import {DenyHelper, Constants, DataTypes, Events} from "./DenyHelper.sol";
 
 /// @title Keyper Roles
 /// @custom:security-contact general@palmeradao.xyz

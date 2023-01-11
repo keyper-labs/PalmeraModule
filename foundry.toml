@@ -8,7 +8,7 @@ ffi = true
 # via-ir = true
 optimizer = true
 optimizer_runs = 200
-# libraries = ['libraries/Constants.sol:Constants', 'libraries/DataTypes.sol:DataTypes', 'libraries/Errors.sol:Errors', 'libraries/Events.sol:Events']
+# libraries = ['./libraries/Constants.sol:Constants', './libraries/DataTypes.sol:DataTypes', './libraries/Errors.sol:Errors', './libraries/Events.sol:Events']
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 # Gas Report

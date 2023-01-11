@@ -7,6 +7,7 @@ import {Context} from "@openzeppelin/utils/Context.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {Events} from "../libraries/Events.sol";
+import {DataTypes} from "../libraries/DataTypes.sol";
 
 /// @title DenyHelper
 /// @custom:security-contact general@palmeradao.xyz
