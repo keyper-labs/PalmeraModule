@@ -386,7 +386,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         depthTreeLimit[name] = 8;
 
         emit Events.OrganizationCreated(caller, name, daoName);
-        return groupId;
     }
 
     /// @notice Call has to be done from another root safe to the organization
@@ -467,7 +466,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         emit Events.GroupCreated(
             org, groupId, newGroup.lead, caller, superSafe, name
             );
-        return groupId;
     }
 
     /// @notice Remove group and reasign all child to the superSafe
