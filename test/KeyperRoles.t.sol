@@ -38,7 +38,6 @@ contract KeyperRolesTest is DeployHelper {
         address org1 = gnosisSafeAddr;
         vm.startPrank(org1);
 
-        KeyperModule keyperModule = KeyperModule(keyperModuleAddr);
         keyperModule.registerOrg(orgName);
         // Check Role
         assertEq(

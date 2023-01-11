@@ -222,7 +222,9 @@ contract StressTestStorage is DeployHelper, SigningUtils {
         }
 
         // Array of Address for the subGroups
-        address[] memory subGroupAaddr = new address[](safeWallets.mul(members));
+        address[] memory subGroupAaddr = new address[](
+            safeWallets.mul(members)
+        );
         uint256[] memory subGroupAid = new uint256[](safeWallets.mul(members));
         uint256[] memory level = new uint256[](safeWallets);
         uint256 indexLevel;

@@ -557,8 +557,9 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         GroupRegistered(group)
         requiresAuth
     {
-        bytes32 org = getOrgByGroup(group);
         address caller = _msgSender();
+        bytes32 org = getOrgHashBySafe(caller);
+        uint256 rootSafe = getGroupIdBySafe(org, caller);
         DataTypes.Group memory disconnectGroup = groups[org][group];
         /// RootSafe usecase : Check if the group is Member of the Tree of the caller (rootSafe)
         if (
@@ -567,8 +568,8 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
                     && (disconnectGroup.tier != DataTypes.Tier.REMOVED)
             )
                 || (
-                    (disconnectGroup.tier == DataTypes.Tier.REMOVED)
-                        && (getGroupIdBySafe(org, caller) != disconnectGroup.superSafe)
+                    (!isPendingRemove(rootSafe, group))
+                        && (disconnectGroup.tier == DataTypes.Tier.REMOVED)
                 )
         ) {
             revert Errors.NotAuthorizedDisconnectChildrenGroup();
@@ -924,8 +925,28 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         ) {
             return false;
         }
-        uint256 currentSuperSafe = childGroup.superSafe;
-        return (currentSuperSafe == superSafe);
+        return (childGroup.superSafe == superSafe);
+    }
+
+    /// @dev Method to Validate is ID Group is Pending to Disconnect (was Removed by SuperSafe)
+    /// @param group ID's of the group
+    /// @param rootSafe ID's of Root Safe
+    /// @return bool
+    function isPendingRemove(uint256 rootSafe, uint256 group)
+        public
+        view
+        returns (bool)
+    {
+        DataTypes.Group memory childGroup = groups[getOrgByGroup(group)][group];
+        // Check if the Child Group is was removed or not Exist and Return False
+        if (
+            (childGroup.safe == address(0))
+                || (childGroup.tier == DataTypes.Tier.GROUP)
+                || (childGroup.tier == DataTypes.Tier.ROOT)
+        ) {
+            return false;
+        }
+        return (childGroup.superSafe == rootSafe);
     }
 
     function isSafeRegistered(address safe) public view returns (bool) {
@@ -1323,7 +1344,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         bytes32 org = getOrgByGroup(group);
         address _group = groups[org][group].safe;
         address caller = _msgSender();
-        IGnosisSafe gnosisTargetSafe = IGnosisSafe(_group);
+        address safe = address(IGnosisSafe(_group));
         removeIndexGroup(org, group);
         delete groups[org][group];
 
@@ -1341,13 +1362,10 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         data = abi.encodeWithSelector(
             IGnosisSafe.disableModule.selector, prevModule, address(this)
         );
-
         /// Execute transaction from target safe
         _executeModuleTransaction(_group, data);
 
-        emit Events.SafeDisconnected(
-            org, group, address(gnosisTargetSafe), caller
-            );
+        emit Events.SafeDisconnected(org, group, safe, caller);
     }
 
     /// @dev refactoring of execution of Tx with the privilege of the Module Keyper Labs, and avoid repeat code

@@ -195,7 +195,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
-    function testRevertIfCallAnotherSafeNotRegister() public {
+    function testRevertIfCallAnotherSafeNotRegistered() public {
         listOfOwners();
         address anotherWallet = gnosisHelper.setupSeveralSafeEnv(30);
         vm.startPrank(anotherWallet);
