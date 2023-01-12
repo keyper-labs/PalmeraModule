@@ -588,11 +588,11 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         bytes32 org = getOrgHashBySafe(caller);
         uint256 rootSafe = getGroupIdBySafe(org, caller);
         uint256[] memory _indexGroup = getTreeMember(org, rootSafe);
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
         for (uint256 j = 0; j < _indexGroup.length; j++) {
             uint256 group = _indexGroup[j];
             DataTypes.Group memory _group = groups[org][group];
             // Revoke roles to group
-            RolesAuthority _authority = RolesAuthority(rolesAuthority);
             _authority.setUserRole(
                 _group.safe, uint8(DataTypes.Role.SUPER_SAFE), false
             );
@@ -875,7 +875,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         );
     }
 
-    /// @notice Check if the group is a superSafe of another group
+    /// @notice Check if the group is a Is Tree Member of another group
     /// @param superSafe ID's of the superSafe
     /// @param group ID's of the group
     /// @return isMember
