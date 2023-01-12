@@ -1,7 +1,6 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.15;
 
-import {console} from "forge-std/console.sol";
 import "./helpers/DeployHelper.t.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
@@ -53,15 +52,15 @@ contract KeyperRolesTest is DeployHelper {
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     // Target Info: Type-> EOA, Name -> EAO, Hierarchy related to caller -> N/A
     function testCan_ROOT_SAFE_SetRole_SAFE_LEAD_to_EAO() public {
-        (uint256 rootId, uint256 safeGroupA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (uint256 rootId, uint256 safeSquadA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         address userEOALead = address(0x123);
 
         vm.startPrank(rootAddr);
         keyperModule.setRole(
-            DataTypes.Role.SAFE_LEAD, userEOALead, safeGroupA1, true
+            DataTypes.Role.SAFE_LEAD, userEOALead, safeSquadA1, true
         );
 
         assertEq(
@@ -71,22 +70,22 @@ contract KeyperRolesTest is DeployHelper {
             true
         );
 
-        assertEq(keyperModule.isSafeLead(safeGroupA1, userEOALead), true);
+        assertEq(keyperModule.isSafeLead(safeSquadA1, userEOALead), true);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
-    // Target Info: Type-> SAFE, Name -> GroupA, Hierarchy related to caller -> N/A
+    // Target Info: Type-> SAFE, Name -> SquadA, Hierarchy related to caller -> N/A
     function testCan_ROOT_SAFE_SetRole_SAFE_LEAD_to_SAFE() public {
-        (uint256 rootId, uint256 safeGroupA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (uint256 rootId, uint256 safeSquadA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
         address safeLead = gnosisHelper.newKeyperSafe(4, 2);
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         vm.startPrank(rootAddr);
 
         keyperModule.setRole(
-            DataTypes.Role.SAFE_LEAD, safeLead, safeGroupA1, true
+            DataTypes.Role.SAFE_LEAD, safeLead, safeSquadA1, true
         );
 
         assertEq(
@@ -96,16 +95,16 @@ contract KeyperRolesTest is DeployHelper {
             true
         );
 
-        assertEq(keyperModule.isSafeLead(safeGroupA1, safeLead), true);
+        assertEq(keyperModule.isSafeLead(safeSquadA1, safeLead), true);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
-    // Target Info: Type-> EOA, Name -> GroupA, Hierarchy related to caller -> N/A
+    // Target Info: Type-> EOA, Name -> SquadA, Hierarchy related to caller -> N/A
     function testCannot_ROOT_SAFE_SetRole_ROOT_SAFE_to_EAO() public {
-        (uint256 rootId, uint256 safeGroupA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (uint256 rootId, uint256 safeSquadA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
 
         address user = address(0xABCDE);
 
@@ -113,75 +112,75 @@ contract KeyperRolesTest is DeployHelper {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.SetRoleForbidden.selector, 4)
         );
-        keyperModule.setRole(DataTypes.Role.ROOT_SAFE, user, safeGroupA1, true);
+        keyperModule.setRole(DataTypes.Role.ROOT_SAFE, user, safeSquadA1, true);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> groupA
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> squadA
     // Target Info: Type-> EOA, Name -> user, Hierarchy related to caller -> N/A
     function testCannot_SUPER_SAFE_SetRole_SAFE_LEAD_to_EAO() public {
-        (, uint256 groupA1Id) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (, uint256 squadA1Id) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
 
         address user = address(0xABCDE);
 
-        vm.startPrank(groupA1Addr);
+        vm.startPrank(squadA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, groupA1Addr
+                Errors.InvalidGnosisRootSafe.selector, squadA1Addr
             )
         );
-        keyperModule.setRole(DataTypes.Role.SAFE_LEAD, user, groupA1Id, true);
+        keyperModule.setRole(DataTypes.Role.SAFE_LEAD, user, squadA1Id, true);
     }
 
-    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> root
-    // Target Info: Type-> SAFE, Name -> groupA, Hierarchy related to caller -> N/A
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> root
+    // Target Info: Type-> SAFE, Name -> squadA, Hierarchy related to caller -> N/A
     function testCannot_ROOT_SAFE_SetRole_SUPER_SAFE_to_SAFE() public {
-        (uint256 rootId, uint256 groupA1Id, uint256 subGroupAId) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadAId) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
+            orgName, squadA1Name, subSquadA1Name
         );
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);
 
         vm.startPrank(rootAddr);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.SetRoleForbidden.selector, 3)
         );
         keyperModule.setRole(
-            DataTypes.Role.SUPER_SAFE, groupAddr, subGroupAId, true
+            DataTypes.Role.SUPER_SAFE, squadAddr, subSquadAId, true
         );
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
-    // Target Info: Type-> EOA, Name -> GroupA, Hierarchy related to caller -> N/A
+    // Target Info: Type-> EOA, Name -> SquadA, Hierarchy related to caller -> N/A
     function testCannot_ROOT_SAFE_SetRole_SUPER_SAFE_to_EAO() public {
-        (uint256 rootId, uint256 safeGroupA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (uint256 rootId, uint256 safeSquadA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         address user = address(0xABCDE);
 
         vm.startPrank(rootAddr);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.SetRoleForbidden.selector, 3)
         );
-        keyperModule.setRole(DataTypes.Role.SUPER_SAFE, user, safeGroupA1, true);
+        keyperModule.setRole(DataTypes.Role.SUPER_SAFE, user, safeSquadA1, true);
     }
 
     //  Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
-    // Target Info: Type-> EOA, Name -> GroupA, Hierarchy related to caller -> N/A
+    // Target Info: Type-> EOA, Name -> SquadA, Hierarchy related to caller -> N/A
     function testCannot_ROOT_SAFE_SetRole_ROOT_SAFE_to_EOA_DifferentTree_Safe()
         public
     {
-        (uint256 rootIdA,,, uint256 groupBId) = keyperSafeBuilder
-            .setupTwoRootOrgWithOneGroupEach(
-            orgName, groupA1Name, root2Name, groupBName
+        (uint256 rootIdA,,, uint256 squadBId) = keyperSafeBuilder
+            .setupTwoRootOrgWithOneSquadEach(
+            orgName, squadA1Name, root2Name, squadBName
         );
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootIdA);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootIdA);
         address user = address(0xABCDE);
         vm.startPrank(rootAddr);
         vm.expectRevert(
@@ -189,6 +188,6 @@ contract KeyperRolesTest is DeployHelper {
                 Errors.NotAuthorizedSetRoleAnotherTree.selector
             )
         );
-        keyperModule.setRole(DataTypes.Role.SAFE_LEAD, user, groupBId, true);
+        keyperModule.setRole(DataTypes.Role.SAFE_LEAD, user, squadBId, true);
     }
 }

@@ -13,7 +13,6 @@ import {KeyperModule, IGnosisSafe} from "../../src/KeyperModule.sol";
 import {KeyperRoles} from "../../src/KeyperRoles.sol";
 import {KeyperGuard} from "../../src/KeyperGuard.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
-import {console} from "forge-std/console.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
 contract DeployHelper is Test {
@@ -34,16 +33,16 @@ contract DeployHelper is Test {
     address zeroAddress = address(0x0);
     address sentinel = address(0x1);
 
-    // Org, Group and subGroup String names
+    // Org, Squad and subSquad String names
     string orgName = "Main Org";
     string org2Name = "Second Org";
     string root2Name = "Second Root";
-    string groupA1Name = "GroupA1";
-    string groupA2Name = "GroupA2";
-    string groupBName = "GroupB";
-    string subGroupA1Name = "subGroupA1";
-    string subGroupB1Name = "subGroupB1";
-    string subSubGroupA1Name = "SubSubGroupA";
+    string squadA1Name = "SquadA1";
+    string squadA2Name = "SquadA2";
+    string squadBName = "SquadB";
+    string subSquadA1Name = "subSquadA1";
+    string subSquadB1Name = "subSquadB1";
+    string subSubSquadA1Name = "SubSubSquadA";
 
     bytes32 orgHash;
 

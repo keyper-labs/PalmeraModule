@@ -4,7 +4,6 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import "./GnosisSafeHelper.t.sol";
 import {KeyperModule} from "../../src/KeyperModule.sol";
-import {console} from "forge-std/console.sol";
 
 contract KeyperSafeBuilder is Test {
     GnosisSafeHelper public gnosisHelper;
@@ -20,304 +19,304 @@ contract KeyperSafeBuilder is Test {
         gnosisHelper = gnosisHelperArg;
     }
 
-    // Just deploy a root org and a Group
+    // Just deploy a root org and a Squad
     //           RootOrg
     //              |
-    //           groupA1
-    function setupRootOrgAndOneGroup(
+    //           squadA1
+    function setupRootOrgAndOneSquad(
         string memory orgNameArg,
-        string memory groupA1NameArg
-    ) public returns (uint256 rootId, uint256 groupIdA1) {
+        string memory squadA1NameArg
+    ) public returns (uint256 rootId, uint256 squadIdA1) {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
         bool result = gnosisHelper.registerOrgTx(orgNameArg);
         // Get org Id
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        rootId = keyperModule.getGroupIdBySafe(orgHash, rootAddr);
+        rootId = keyperModule.getSquadIdBySafe(orgHash, rootAddr);
 
-        address groupSafe = gnosisHelper.newKeyperSafe(4, 2);
-        // Create group through safe tx
-        result = gnosisHelper.createAddGroupTx(rootId, groupA1NameArg);
-        groupIdA1 = keyperModule.getGroupIdBySafe(orgHash, groupSafe);
+        address squadSafe = gnosisHelper.newKeyperSafe(4, 2);
+        // Create squad through safe tx
+        result = gnosisHelper.createAddSquadTx(rootId, squadA1NameArg);
+        squadIdA1 = keyperModule.getSquadIdBySafe(orgHash, squadSafe);
 
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(groupSafe, 100 gwei);
+        vm.deal(squadSafe, 100 gwei);
 
-        return (rootId, groupIdA1);
+        return (rootId, squadIdA1);
     }
 
-    // Deploy 1 org with 2 group at same level
+    // Deploy 1 org with 2 squad at same level
     //           RootA
     //         |         |
-    //     groupA1    groupA2
-    function setupRootWithTwoGroups(
+    //     squadA1    squadA2
+    function setupRootWithTwoSquads(
         string memory orgNameArg,
-        string memory groupA1NameArg,
-        string memory groupA2NameArg
-    ) public returns (uint256 rootIdA, uint256 groupIdA1, uint256 groupIdA2) {
-        (rootIdA, groupIdA1) =
-            setupRootOrgAndOneGroup(orgNameArg, groupA1NameArg);
-        (,,, address rootAddr,,) = keyperModule.getGroupInfo(rootIdA);
+        string memory squadA1NameArg,
+        string memory squadA2NameArg
+    ) public returns (uint256 rootIdA, uint256 squadIdA1, uint256 squadIdA2) {
+        (rootIdA, squadIdA1) =
+            setupRootOrgAndOneSquad(orgNameArg, squadA1NameArg);
+        (,,, address rootAddr,,) = keyperModule.getSquadInfo(rootIdA);
 
-        // Create groupA2
-        address groupA2 = gnosisHelper.newKeyperSafe(4, 2);
+        // Create squadA2
+        address squadA2 = gnosisHelper.newKeyperSafe(4, 2);
 
-        // Create group through safe tx
-        gnosisHelper.createAddGroupTx(rootIdA, groupA2NameArg);
+        // Create squad through safe tx
+        gnosisHelper.createAddSquadTx(rootIdA, squadA2NameArg);
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        groupIdA2 = keyperModule.getGroupIdBySafe(orgHash, groupA2);
-        vm.deal(groupA2, 100 gwei);
+        squadIdA2 = keyperModule.getSquadIdBySafe(orgHash, squadA2);
+        vm.deal(squadA2, 100 gwei);
 
-        return (rootIdA, groupIdA1, groupIdA2);
+        return (rootIdA, squadIdA1, squadIdA2);
     }
 
-    // Deploy 1 org with 2 root safe with 1 group each
+    // Deploy 1 org with 2 root safe with 1 squad each
     //           RootA      RootB
     //              |         |
-    //           groupA1    groupB1
-    function setupTwoRootOrgWithOneGroupEach(
+    //           squadA1    squadB1
+    function setupTwoRootOrgWithOneSquadEach(
         string memory orgNameArg,
-        string memory groupA1NameArg,
+        string memory squadA1NameArg,
         string memory rootBNameArg,
-        string memory groupB1NameArg
+        string memory squadB1NameArg
     )
         public
         returns (
             uint256 rootIdA,
-            uint256 groupIdA1,
+            uint256 squadIdA1,
             uint256 rootIdB,
-            uint256 groupIdB1
+            uint256 squadIdB1
         )
     {
-        (rootIdA, groupIdA1) =
-            setupRootOrgAndOneGroup(orgNameArg, groupA1NameArg);
-        (,,, address rootAddr,,) = keyperModule.getGroupInfo(rootIdA);
+        (rootIdA, squadIdA1) =
+            setupRootOrgAndOneSquad(orgNameArg, squadA1NameArg);
+        (,,, address rootAddr,,) = keyperModule.getSquadInfo(rootIdA);
 
         // Create Another Safe like Root Safe
         address rootBAddr = gnosisHelper.newKeyperSafe(3, 2);
         // update safe of gonsis helper
         gnosisHelper.updateSafeInterface(rootAddr);
-        // Create Root Safe Group
+        // Create Root Safe Squad
         bool result = gnosisHelper.createRootSafeTx(rootBAddr, rootBNameArg);
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        rootIdB = keyperModule.getGroupIdBySafe(orgHash, rootBAddr);
+        rootIdB = keyperModule.getSquadIdBySafe(orgHash, rootBAddr);
         vm.deal(rootBAddr, 100 gwei);
 
-        // Create groupB for rootB
-        address groupSafeB = gnosisHelper.newKeyperSafe(4, 2);
+        // Create squadB for rootB
+        address squadSafeB = gnosisHelper.newKeyperSafe(4, 2);
 
-        // Create group through safe tx
-        result = gnosisHelper.createAddGroupTx(rootIdB, groupB1NameArg);
-        groupIdB1 = keyperModule.getGroupIdBySafe(orgHash, groupSafeB);
-        vm.deal(groupSafeB, 100 gwei);
+        // Create squad through safe tx
+        result = gnosisHelper.createAddSquadTx(rootIdB, squadB1NameArg);
+        squadIdB1 = keyperModule.getSquadIdBySafe(orgHash, squadSafeB);
+        vm.deal(squadSafeB, 100 gwei);
 
-        return (rootIdA, groupIdA1, rootIdB, groupIdB1);
+        return (rootIdA, squadIdA1, rootIdB, squadIdB1);
     }
 
-    // Deploy 1 org with 2 root safe with 1 group each
+    // Deploy 1 org with 2 root safe with 1 squad each
     //           RootA         RootB
     //              |            |
-    //           groupA1      groupB1
+    //           squadA1      squadB1
     //              |            |
-    //        childGroupA1  childGroupA1
-    function setupTwoRootOrgWithOneGroupAndOneChildEach(
+    //        childSquadA1  childSquadA1
+    function setupTwoRootOrgWithOneSquadAndOneChildEach(
         string memory orgNameArg,
-        string memory groupA1NameArg,
+        string memory squadA1NameArg,
         string memory rootBNameArg,
-        string memory groupB1NameArg,
-        string memory childGroupA1NameArg,
-        string memory childGroupB1NameArg
+        string memory squadB1NameArg,
+        string memory childSquadA1NameArg,
+        string memory childSquadB1NameArg
     )
         public
         returns (
             uint256 rootIdA,
-            uint256 groupIdA1,
+            uint256 squadIdA1,
             uint256 rootIdB,
-            uint256 groupIdB1,
-            uint256 childGroupIdA1,
-            uint256 childGroupIdB1
+            uint256 squadIdB1,
+            uint256 childSquadIdA1,
+            uint256 childSquadIdB1
         )
     {
-        (rootIdA, groupIdA1, rootIdB, groupIdB1) =
-        setupTwoRootOrgWithOneGroupEach(
-            orgNameArg, groupA1NameArg, rootBNameArg, groupB1NameArg
+        (rootIdA, squadIdA1, rootIdB, squadIdB1) =
+        setupTwoRootOrgWithOneSquadEach(
+            orgNameArg, squadA1NameArg, rootBNameArg, squadB1NameArg
         );
-        (,,, address rootAddr,,) = keyperModule.getGroupInfo(rootIdA);
+        (,,, address rootAddr,,) = keyperModule.getSquadInfo(rootIdA);
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        // Create childGroupA1
-        address childGroupA1 = gnosisHelper.newKeyperSafe(4, 2);
-        gnosisHelper.createAddGroupTx(groupIdA1, childGroupA1NameArg);
-        childGroupIdA1 = keyperModule.getGroupIdBySafe(orgHash, childGroupA1);
-        vm.deal(childGroupA1, 100 gwei);
+        // Create childSquadA1
+        address childSquadA1 = gnosisHelper.newKeyperSafe(4, 2);
+        gnosisHelper.createAddSquadTx(squadIdA1, childSquadA1NameArg);
+        childSquadIdA1 = keyperModule.getSquadIdBySafe(orgHash, childSquadA1);
+        vm.deal(childSquadA1, 100 gwei);
 
-        // Create childGroupB1
-        address childGroupB1 = gnosisHelper.newKeyperSafe(4, 2);
-        gnosisHelper.createAddGroupTx(groupIdB1, childGroupB1NameArg);
-        childGroupIdB1 = keyperModule.getGroupIdBySafe(orgHash, childGroupB1);
-        vm.deal(childGroupB1, 100 gwei);
+        // Create childSquadB1
+        address childSquadB1 = gnosisHelper.newKeyperSafe(4, 2);
+        gnosisHelper.createAddSquadTx(squadIdB1, childSquadB1NameArg);
+        childSquadIdB1 = keyperModule.getSquadIdBySafe(orgHash, childSquadB1);
+        vm.deal(childSquadB1, 100 gwei);
 
         return (
             rootIdA,
-            groupIdA1,
+            squadIdA1,
             rootIdB,
-            groupIdB1,
-            childGroupIdA1,
-            childGroupIdB1
+            squadIdB1,
+            childSquadIdA1,
+            childSquadIdB1
         );
     }
 
-    // Deploy 2 org with 2 root safe with 1 group each
+    // Deploy 2 org with 2 root safe with 1 squad each
     //           RootA         RootB
     //              |            |
-    //           groupA1      groupB1
+    //           squadA1      squadB1
     //              |            |
-    //        childGroupA1  childGroupA1
-    function setupTwoOrgWithOneRootOneGroupAndOneChildEach(
+    //        childSquadA1  childSquadA1
+    function setupTwoOrgWithOneRootOneSquadAndOneChildEach(
         string memory orgNameArg,
-        string memory groupA1NameArg,
+        string memory squadA1NameArg,
         string memory rootBNameArg,
-        string memory groupB1NameArg,
-        string memory childGroupA1NameArg,
-        string memory childGroupB1NameArg
+        string memory squadB1NameArg,
+        string memory childSquadA1NameArg,
+        string memory childSquadB1NameArg
     )
         public
         returns (
             uint256 rootIdA,
-            uint256 groupIdA1,
+            uint256 squadIdA1,
             uint256 rootIdB,
-            uint256 groupIdB1,
-            uint256 childGroupIdA1,
-            uint256 childGroupIdB1
+            uint256 squadIdB1,
+            uint256 childSquadIdA1,
+            uint256 childSquadIdB1
         )
     {
-        (rootIdA, groupIdA1) =
-            setupRootOrgAndOneGroup(orgNameArg, groupA1NameArg);
-        (rootIdB, groupIdB1) =
-            setupRootOrgAndOneGroup(rootBNameArg, groupB1NameArg);
-        bytes32 orgHash1 = keyperModule.getOrgByGroup(rootIdA);
-        bytes32 orgHash2 = keyperModule.getOrgByGroup(rootIdB);
+        (rootIdA, squadIdA1) =
+            setupRootOrgAndOneSquad(orgNameArg, squadA1NameArg);
+        (rootIdB, squadIdB1) =
+            setupRootOrgAndOneSquad(rootBNameArg, squadB1NameArg);
+        bytes32 orgHash1 = keyperModule.getOrgBySquad(rootIdA);
+        bytes32 orgHash2 = keyperModule.getOrgBySquad(rootIdB);
 
-        // Create childGroupA1
-        address childGroupA1 = gnosisHelper.newKeyperSafe(4, 2);
-        gnosisHelper.createAddGroupTx(groupIdA1, childGroupA1NameArg);
-        childGroupIdA1 = keyperModule.getGroupIdBySafe(orgHash1, childGroupA1);
-        vm.deal(childGroupA1, 100 gwei);
+        // Create childSquadA1
+        address childSquadA1 = gnosisHelper.newKeyperSafe(4, 2);
+        gnosisHelper.createAddSquadTx(squadIdA1, childSquadA1NameArg);
+        childSquadIdA1 = keyperModule.getSquadIdBySafe(orgHash1, childSquadA1);
+        vm.deal(childSquadA1, 100 gwei);
 
-        // Create childGroupB1
-        address childGroupB1 = gnosisHelper.newKeyperSafe(4, 2);
-        gnosisHelper.createAddGroupTx(groupIdB1, childGroupB1NameArg);
-        childGroupIdB1 = keyperModule.getGroupIdBySafe(orgHash2, childGroupB1);
-        vm.deal(childGroupB1, 100 gwei);
+        // Create childSquadB1
+        address childSquadB1 = gnosisHelper.newKeyperSafe(4, 2);
+        gnosisHelper.createAddSquadTx(squadIdB1, childSquadB1NameArg);
+        childSquadIdB1 = keyperModule.getSquadIdBySafe(orgHash2, childSquadB1);
+        vm.deal(childSquadB1, 100 gwei);
 
         return (
             rootIdA,
-            groupIdA1,
+            squadIdA1,
             rootIdB,
-            groupIdB1,
-            childGroupIdA1,
-            childGroupIdB1
+            squadIdB1,
+            childSquadIdA1,
+            childSquadIdB1
         );
     }
 
     // Deploy 3 keyperSafes : following structure
     //           RootOrg
     //              |
-    //         safeGroupA1
+    //         safeSquadA1
     //              |
-    //        safeSubGroupA1
+    //        safeSubSquadA1
     function setupOrgThreeTiersTree(
         string memory orgNameArg,
-        string memory groupA1NameArg,
-        string memory subGroupA1NameArg
+        string memory squadA1NameArg,
+        string memory subSquadA1NameArg
     )
         public
-        returns (uint256 rootId, uint256 groupIdA1, uint256 subGroupIdA1)
+        returns (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1)
     {
-        // Create root & groupA1
-        (rootId, groupIdA1) =
-            setupRootOrgAndOneGroup(orgNameArg, groupA1NameArg);
-        address safeSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
+        // Create root & squadA1
+        (rootId, squadIdA1) =
+            setupRootOrgAndOneSquad(orgNameArg, squadA1NameArg);
+        address safeSubSquadA1 = gnosisHelper.newKeyperSafe(2, 1);
 
-        // Create subgroupA1
-        gnosisHelper.createAddGroupTx(groupIdA1, subGroupA1NameArg);
-        bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
-        // Get subgroupA1 Id
-        subGroupIdA1 = keyperModule.getGroupIdBySafe(orgHash, safeSubGroupA1);
-        return (rootId, groupIdA1, subGroupIdA1);
+        // Create subsquadA1
+        gnosisHelper.createAddSquadTx(squadIdA1, subSquadA1NameArg);
+        bytes32 orgHash = keyperModule.getOrgBySquad(squadIdA1);
+        // Get subsquadA1 Id
+        subSquadIdA1 = keyperModule.getSquadIdBySafe(orgHash, safeSubSquadA1);
+        return (rootId, squadIdA1, subSquadIdA1);
     }
 
     // Deploy 4 keyperSafes : following structure
     //           RootOrg
     //              |
-    //         safeGroupA1
+    //         safeSquadA1
     //              |
-    //        safeSubGroupA1
+    //        safeSubSquadA1
     //              |
-    //      safeSubSubGroupA1
+    //      safeSubSubSquadA1
     function setupOrgFourTiersTree(
         string memory orgNameArg,
-        string memory groupA1NameArg,
-        string memory subGroupA1NameArg,
-        string memory subSubGroupA1NameArg
+        string memory squadA1NameArg,
+        string memory subSquadA1NameArg,
+        string memory subSubSquadA1NameArg
     )
         public
         returns (
             uint256 rootId,
-            uint256 groupIdA1,
-            uint256 subGroupIdA1,
-            uint256 subSubGroupIdA1
+            uint256 squadIdA1,
+            uint256 subSquadIdA1,
+            uint256 subSubSquadIdA1
         )
     {
-        (rootId, groupIdA1, subGroupIdA1) = setupOrgThreeTiersTree(
-            orgNameArg, groupA1NameArg, subGroupA1NameArg
+        (rootId, squadIdA1, subSquadIdA1) = setupOrgThreeTiersTree(
+            orgNameArg, squadA1NameArg, subSquadA1NameArg
         );
 
-        address safeSubSubGroupA1 = gnosisHelper.newKeyperSafe(2, 1);
+        address safeSubSubSquadA1 = gnosisHelper.newKeyperSafe(2, 1);
 
-        gnosisHelper.createAddGroupTx(subGroupIdA1, subSubGroupA1NameArg);
-        bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
-        // Get subgroupA1 Id
-        subSubGroupIdA1 =
-            keyperModule.getGroupIdBySafe(orgHash, safeSubSubGroupA1);
+        gnosisHelper.createAddSquadTx(subSquadIdA1, subSubSquadA1NameArg);
+        bytes32 orgHash = keyperModule.getOrgBySquad(squadIdA1);
+        // Get subsquadA1 Id
+        subSubSquadIdA1 =
+            keyperModule.getSquadIdBySafe(orgHash, safeSubSubSquadA1);
 
-        return (rootId, groupIdA1, subGroupIdA1, subSubGroupIdA1);
+        return (rootId, squadIdA1, subSquadIdA1, subSubSquadIdA1);
     }
 
     // Deploy 4 keyperSafes : following structure
     //           RootOrg
     //          |      |
-    //      groupA1   GroupB
+    //      squadA1   SquadB
     //        |
-    //  subGroupA1
+    //  subSquadA1
     //      |
-    //  SubSubGroupA1
+    //  SubSubSquadA1
     function setUpBaseOrgTree(
         string memory orgNameArg,
-        string memory groupA1NameArg,
-        string memory groupBNameArg,
-        string memory subGroupA1NameArg,
-        string memory subSubGroupA1NameArg
+        string memory squadA1NameArg,
+        string memory squadBNameArg,
+        string memory subSquadA1NameArg,
+        string memory subSubSquadA1NameArg
     )
         public
         returns (
             uint256 rootId,
-            uint256 groupIdA1,
-            uint256 groupIdB,
-            uint256 subGroupIdA1,
-            uint256 subSubGroupIdA1
+            uint256 squadIdA1,
+            uint256 squadIdB,
+            uint256 subSquadIdA1,
+            uint256 subSubSquadIdA1
         )
     {
-        (rootId, groupIdA1, subGroupIdA1, subSubGroupIdA1) =
+        (rootId, squadIdA1, subSquadIdA1, subSubSquadIdA1) =
         setupOrgFourTiersTree(
-            orgNameArg, groupA1NameArg, subGroupA1NameArg, subSubGroupA1NameArg
+            orgNameArg, squadA1NameArg, subSquadA1NameArg, subSubSquadA1NameArg
         );
 
-        address safeGroupB = gnosisHelper.newKeyperSafe(2, 1);
-        gnosisHelper.createAddGroupTx(rootId, groupBNameArg);
-        bytes32 orgHash = keyperModule.getOrgByGroup(groupIdA1);
-        // Get groupIdB Id
-        groupIdB = keyperModule.getGroupIdBySafe(orgHash, safeGroupB);
+        address safeSquadB = gnosisHelper.newKeyperSafe(2, 1);
+        gnosisHelper.createAddSquadTx(rootId, squadBNameArg);
+        bytes32 orgHash = keyperModule.getOrgBySquad(squadIdA1);
+        // Get squadIdB Id
+        squadIdB = keyperModule.getSquadIdBySafe(orgHash, safeSquadB);
 
-        return (rootId, groupIdA1, groupIdB, subGroupIdA1, subSubGroupIdA1);
+        return (rootId, squadIdA1, squadIdB, subSquadIdA1, subSubSquadIdA1);
     }
 }
