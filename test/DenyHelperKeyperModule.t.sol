@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
-import "./helpers/GnosisSafeHelper.t.sol";
 import "./helpers/DeployHelper.t.sol";
-import {Test} from "forge-std/Test.sol";
-import {KeyperModule} from "../src/KeyperModule.sol";
-import {Errors} from "../libraries/Errors.sol";
 
 contract DenyHelperKeyperModuleTest is DeployHelper {
     address org1;

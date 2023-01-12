@@ -2,10 +2,6 @@
 pragma solidity ^0.8.15;
 
 import "./helpers/DeployHelper.t.sol";
-import {stdStorage, StdStorage, Test} from "forge-std/Test.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Errors} from "../libraries/Errors.sol";
 
 contract Hierarchies is DeployHelper {
     // Function called before each test is run

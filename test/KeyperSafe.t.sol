@@ -3,9 +3,6 @@ pragma solidity ^0.8.15;
 
 import "../src/SigningUtils.sol";
 import "./helpers/DeployHelper.t.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Errors} from "../libraries/Errors.sol";
 
 contract TestKeyperSafe is SigningUtils, DeployHelper {
     function setUp() public {
