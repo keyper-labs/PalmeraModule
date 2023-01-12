@@ -38,7 +38,7 @@ library Constants {
         bytes4(keccak256(bytes("setRole(uint8,address,uint256,bool)")));
 
     bytes4 internal constant CREATE_ROOT_SAFE =
-        bytes4(keccak256(bytes("createRootSafeGroup(address,string)")));
+        bytes4(keccak256(bytes("createRootSafeSquad(address,string)")));
 
     bytes4 internal constant ENABLE_ALLOWLIST =
         bytes4(keccak256(bytes("enableAllowlist()")));
@@ -70,8 +70,8 @@ library Constants {
             )
         );
 
-    bytes4 internal constant REMOVE_GROUP =
-        bytes4(keccak256(bytes("removeGroup(uint256)")));
+    bytes4 internal constant REMOVE_SQUAD =
+        bytes4(keccak256(bytes("removeSquad(uint256)")));
 
     bytes4 internal constant DISCONNECTED_SAFE =
         bytes4(keccak256(bytes("disconnectedSafe(uint256)")));

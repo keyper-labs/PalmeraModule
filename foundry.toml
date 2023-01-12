@@ -11,7 +11,7 @@ optimizer_runs = 500
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 # Gas Report
-gas_reports = ['KeyperModule', 'KeyperRoles']
+gas_reports = ['KeyperModule', 'KeyperRoles', 'KeyperGuard']
 
 # No match contracts
 no_match_contract = "StressTestStorage"

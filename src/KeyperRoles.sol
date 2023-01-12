@@ -106,11 +106,11 @@ contract KeyperRoles is RolesAuthority, DenyHelper {
             true
         );
         /// Target contract: KeyperModule
-        /// Auth function removeGroup
+        /// Auth function removeSquad
         setRoleCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
             keyperModule,
-            Constants.REMOVE_GROUP,
+            Constants.REMOVE_SQUAD,
             true
         );
 
@@ -172,7 +172,7 @@ contract KeyperRoles is RolesAuthority, DenyHelper {
             true
         );
         /// Target contract: KeyperModule
-        /// Auth function createRootSafeGroup
+        /// Auth function createRootSafeSquad
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
             keyperModule,

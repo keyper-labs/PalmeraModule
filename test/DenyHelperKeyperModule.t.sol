@@ -1,19 +1,18 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.15;
 
 import "./helpers/GnosisSafeHelper.t.sol";
 import "./helpers/DeployHelper.t.sol";
-import {DenyHelper} from "../src/DenyHelper.sol";
 import {Test} from "forge-std/Test.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 import {Errors} from "../libraries/Errors.sol";
 
 contract DenyHelperKeyperModuleTest is DeployHelper {
     address org1;
-    address groupA;
+    address squadA;
     address[] public owners = new address[](5);
     uint256 RootOrgId;
-    uint256 groupIdA1;
+    uint256 squadIdA1;
 
     // Function called before each test is run
     function setUp() public {
@@ -21,13 +20,13 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         deployAllContracts(60);
         // Setup of all Safe for Testing
         // org1 = gnosisHelper.setupSeveralSafeEnv(30);
-        // groupA = gnosisHelper.setupSeveralSafeEnv(30);
-        (RootOrgId, groupIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
-        org1 = keyperModule.getGroupSafeAddress(RootOrgId);
-        groupA = keyperModule.getGroupSafeAddress(groupIdA1);
+        // squadA = gnosisHelper.setupSeveralSafeEnv(30);
+        (RootOrgId, squadIdA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        org1 = keyperModule.getSquadSafeAddress(RootOrgId);
+        squadA = keyperModule.getSquadSafeAddress(squadIdA1);
         vm.label(org1, "Org 1");
-        vm.label(groupA, "GroupA");
+        vm.label(squadA, "SquadA");
     }
 
     function testAddToList() public {
@@ -155,40 +154,40 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
 
     function testRevertInvalidGnosisRootSafe() public {
         listOfOwners();
-        vm.startPrank(groupA);
+        vm.startPrank(squadA);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, groupA
+                Errors.InvalidGnosisRootSafe.selector, squadA
             )
         );
         keyperModule.enableAllowlist();
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, groupA
+                Errors.InvalidGnosisRootSafe.selector, squadA
             )
         );
         keyperModule.enableDenylist();
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, groupA
+                Errors.InvalidGnosisRootSafe.selector, squadA
             )
         );
         keyperModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, groupA
+                Errors.InvalidGnosisRootSafe.selector, squadA
             )
         );
         keyperModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, groupA
+                Errors.InvalidGnosisRootSafe.selector, squadA
             )
         );
         keyperModule.dropFromList(owners[2]);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, groupA
+                Errors.InvalidGnosisRootSafe.selector, squadA
             )
         );
         keyperModule.dropFromList(owners[2]);

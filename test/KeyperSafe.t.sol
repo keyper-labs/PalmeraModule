@@ -1,18 +1,11 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.15;
 
 import "../src/SigningUtils.sol";
-import "./helpers/GnosisSafeHelper.t.sol";
-import "./helpers/KeyperModuleHelper.t.sol";
-import "./helpers/KeyperSafeBuilder.t.sol";
 import "./helpers/DeployHelper.t.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 import {Errors} from "../libraries/Errors.sol";
-import {KeyperModule, IGnosisSafe} from "../src/KeyperModule.sol";
-import {KeyperRoles} from "../src/KeyperRoles.sol";
-import {DenyHelper} from "../src/DenyHelper.sol";
-import {console} from "forge-std/console.sol";
 
 contract TestKeyperSafe is SigningUtils, DeployHelper {
     function setUp() public {
@@ -43,34 +36,34 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
     // ! ********************** Allow/Deny list Test ********************
 
-    // Revert AddresNotAllowed() execTransactionOnBehalf (safeGroupA1 is not on AllowList)
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> safeGroupA1
-    // Target Info: Type-> SAFE, Name -> safeSubGroupA1, Hierarchy related to caller -> NOT_ALLOW_LIST
+    // Revert AddresNotAllowed() execTransactionOnBehalf (safeSquadA1 is not on AllowList)
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
+    // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> NOT_ALLOW_LIST
     function testRevertSuperSafeExecOnBehalfIsNotAllowList() public {
-        (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
+            orgName, squadA1Name, subSquadA1Name
         );
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
-        address subGroupA1Addr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address subSquadA1Addr = keyperModule.getSquadSafeAddress(subSquadA1Id);
 
-        // Send ETH to group&subgroup
-        vm.deal(groupA1Addr, 100 gwei);
-        vm.deal(subGroupA1Addr, 100 gwei);
+        // Send ETH to squad&subsquad
+        vm.deal(squadA1Addr, 100 gwei);
+        vm.deal(subSquadA1Addr, 100 gwei);
 
         /// Enable allowlist
         vm.startPrank(rootAddr);
         keyperModule.enableAllowlist();
         vm.stopPrank();
 
-        // Set keyperhelper gnosis safe to safeGroupA1
-        keyperHelper.setGnosisSafe(groupA1Addr);
+        // Set keyperhelper gnosis safe to safeSquadA1
+        keyperHelper.setGnosisSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            groupA1Addr,
-            subGroupA1Addr,
+            squadA1Addr,
+            subSquadA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -78,11 +71,11 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
 
         // Execute on behalf function
-        vm.startPrank(groupA1Addr);
+        vm.startPrank(squadA1Addr);
         vm.expectRevert(Errors.AddresNotAllowed.selector);
         keyperModule.execTransactionOnBehalf(
             orgHash,
-            subGroupA1Addr,
+            subSquadA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -91,22 +84,22 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
     }
 
-    // Revert AddressDenied() execTransactionOnBehalf (safeGroupA1 is on DeniedList)
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> safeGroupA1
-    // Target Info: Type-> SAFE, Name -> safeSubGroupA1, Hierarchy related to caller -> DENY_LIST
+    // Revert AddressDenied() execTransactionOnBehalf (safeSquadA1 is on DeniedList)
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
+    // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> DENY_LIST
     function testRevertSuperSafeExecOnBehalfIsDenyList() public {
-        (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
+            orgName, squadA1Name, subSquadA1Name
         );
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
-        address subGroupA1Addr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address subSquadA1Addr = keyperModule.getSquadSafeAddress(subSquadA1Id);
 
-        // Send ETH to group&subgroup
-        vm.deal(groupA1Addr, 100 gwei);
-        vm.deal(subGroupA1Addr, 100 gwei);
+        // Send ETH to squad&subsquad
+        vm.deal(squadA1Addr, 100 gwei);
+        vm.deal(subSquadA1Addr, 100 gwei);
         address[] memory receiverList = new address[](1);
         receiverList[0] = address(0xDDD);
 
@@ -116,12 +109,12 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         keyperModule.addToList(receiverList);
         vm.stopPrank();
 
-        // Set keyperhelper gnosis safe to safeGroupA1
-        keyperHelper.setGnosisSafe(groupA1Addr);
+        // Set keyperhelper gnosis safe to safeSquadA1
+        keyperHelper.setGnosisSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            groupA1Addr,
-            subGroupA1Addr,
+            squadA1Addr,
+            subSquadA1Addr,
             receiverList[0],
             2 gwei,
             emptyData,
@@ -129,11 +122,11 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
 
         // Execute on behalf function
-        vm.startPrank(groupA1Addr);
+        vm.startPrank(squadA1Addr);
         vm.expectRevert(Errors.AddressDenied.selector);
         keyperModule.execTransactionOnBehalf(
             orgHash,
-            subGroupA1Addr,
+            subSquadA1Addr,
             receiverList[0],
             2 gwei,
             emptyData,
@@ -142,22 +135,22 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
     }
 
-    // Revert AddressDenied() execTransactionOnBehalf (safeGroupA1 is on DeniedList)
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> safeGroupA1
-    // Target Info: Type-> SAFE, Name -> safeSubGroupA1, Hierarchy related to caller -> DENY_LIST
+    // Revert AddressDenied() execTransactionOnBehalf (safeSquadA1 is on DeniedList)
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
+    // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> DENY_LIST
     function testDisableDenyHelperList() public {
-        (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
+            orgName, squadA1Name, subSquadA1Name
         );
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
-        address subGroupA1Addr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address subSquadA1Addr = keyperModule.getSquadSafeAddress(subSquadA1Id);
 
-        // Send ETH to group&subgroup
-        vm.deal(groupA1Addr, 100 gwei);
-        vm.deal(subGroupA1Addr, 100 gwei);
+        // Send ETH to squad&subsquad
+        vm.deal(squadA1Addr, 100 gwei);
+        vm.deal(subSquadA1Addr, 100 gwei);
         address[] memory receiverList = new address[](1);
         receiverList[0] = address(0xDDD);
 
@@ -169,12 +162,12 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         keyperModule.disableDenyHelper();
         vm.stopPrank();
 
-        // Set keyperhelper gnosis safe to safeGroupA1
-        keyperHelper.setGnosisSafe(groupA1Addr);
+        // Set keyperhelper gnosis safe to safeSquadA1
+        keyperHelper.setGnosisSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
-            groupA1Addr,
-            subGroupA1Addr,
+            squadA1Addr,
+            subSquadA1Addr,
             receiverList[0],
             2 gwei,
             emptyData,
@@ -182,10 +175,10 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
 
         // Execute on behalf function
-        vm.startPrank(groupA1Addr);
+        vm.startPrank(squadA1Addr);
         keyperModule.execTransactionOnBehalf(
             orgHash,
-            subGroupA1Addr,
+            subSquadA1Addr,
             receiverList[0],
             2 gwei,
             emptyData,
@@ -205,149 +198,149 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
     }
 
-    // ! ******************** removeGroup Test *************************************
+    // ! ******************** removeSquad Test *************************************
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
-    // Target Info: Type-> SAFE, Name -> safeGroupA1, Hierarchy related to caller -> SAME_TREE
-    function testCan_RemoveGroup_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree()
+    // Target Info: Type-> SAFE, Name -> safeSquadA1, Hierarchy related to caller -> SAME_TREE
+    function testCan_RemoveSquad_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree()
         public
     {
         (
             uint256 rootId,
-            uint256 groupA1Id,
-            uint256 subGroupA1Id,
-            uint256 subSubgroupA1Id
+            uint256 squadA1Id,
+            uint256 subSquadA1Id,
+            uint256 subSubsquadA1Id
         ) = keyperSafeBuilder.setupOrgFourTiersTree(
-            orgName, groupA1Name, subGroupA1Name, subSubGroupA1Name
+            orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
         );
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
 
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveGroupTx(subGroupA1Id);
+        bool result = gnosisHelper.createRemoveSquadTx(subSquadA1Id);
         assertEq(result, true);
-        assertEq(keyperModule.isSuperSafe(rootId, subGroupA1Id), false);
+        assertEq(keyperModule.isSuperSafe(rootId, subSquadA1Id), false);
 
-        // Check safeSubGroupA1 is now a child of org
-        assertEq(keyperModule.isTreeMember(rootId, subSubgroupA1Id), true);
-        // Check org is parent of safeSubGroupA1
-        assertEq(keyperModule.isSuperSafe(groupA1Id, subSubgroupA1Id), true);
+        // Check safeSubSquadA1 is now a child of org
+        assertEq(keyperModule.isTreeMember(rootId, subSubsquadA1Id), true);
+        // Check org is parent of safeSubSquadA1
+        assertEq(keyperModule.isSuperSafe(squadA1Id, subSubsquadA1Id), true);
 
-        // Check removed group parent has subSafeGroup A as child an not safeGroupA1
+        // Check removed squad parent has subSafeSquad A as child an not safeSquadA1
         uint256[] memory child;
-        (,,,, child,) = keyperModule.getGroupInfo(groupA1Id);
+        (,,,, child,) = keyperModule.getSquadInfo(squadA1Id);
         assertEq(child.length, 1);
-        assertEq(child[0] == subGroupA1Id, false);
-        assertEq(child[0] == subSubgroupA1Id, true);
-        assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), false);
+        assertEq(child[0] == subSquadA1Id, false);
+        assertEq(child[0] == subSubsquadA1Id, true);
+        assertEq(keyperModule.isTreeMember(rootId, subSquadA1Id), false);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
-    // Target Info: Type-> SAFE, Name -> groupB, Hierarchy related to caller -> DIFFERENT_TREE
-    function testCannot_RemoveGroup_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentTree(
+    // Target Info: Type-> SAFE, Name -> squadB, Hierarchy related to caller -> DIFFERENT_TREE
+    function testCannot_RemoveSquad_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentTree(
     ) public {
-        (uint256 rootIdA, uint256 groupAId, uint256 rootIdB, uint256 groupBId) =
-        keyperSafeBuilder.setupTwoRootOrgWithOneGroupEach(
-            orgName, groupA1Name, root2Name, groupBName
+        (uint256 rootIdA, uint256 squadAId, uint256 rootIdB, uint256 squadBId) =
+        keyperSafeBuilder.setupTwoRootOrgWithOneSquadEach(
+            orgName, squadA1Name, root2Name, squadBName
         );
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootIdA);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootIdA);
         vm.startPrank(rootAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveGroupFromOtherTree.selector);
-        keyperModule.removeGroup(groupBId);
+        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherTree.selector);
+        keyperModule.removeSquad(squadBId);
         vm.stopPrank();
 
-        address rootBAddr = keyperModule.getGroupSafeAddress(rootIdB);
+        address rootBAddr = keyperModule.getSquadSafeAddress(rootIdB);
         vm.startPrank(rootBAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveGroupFromOtherTree.selector);
-        keyperModule.removeGroup(groupAId);
+        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherTree.selector);
+        keyperModule.removeSquad(squadAId);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> groupA
-    // Target Info: Type-> SAFE, Name -> subGroupA, Hierarchy related to caller -> SAME_TREE, CHILDREN
-    function testCan_RemoveGroup_SUPER_SAFE_as_SAFE_is_SUPER_SAFE_SameTree()
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> squadA
+    // Target Info: Type-> SAFE, Name -> subSquadA, Hierarchy related to caller -> SAME_TREE, CHILDREN
+    function testCan_RemoveSquad_SUPER_SAFE_as_SAFE_is_SUPER_SAFE_SameTree()
         public
     {
-        (uint256 rootId, uint256 groupA1Id, uint256 subGroupA1Id) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
-            orgName, groupA1Name, subGroupA1Name
+            orgName, squadA1Name, subSquadA1Name
         );
 
-        address groupAAddr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address squadAAddr = keyperModule.getSquadSafeAddress(squadA1Id);
 
-        gnosisHelper.updateSafeInterface(groupAAddr);
-        bool result = gnosisHelper.createRemoveGroupTx(subGroupA1Id);
+        gnosisHelper.updateSafeInterface(squadAAddr);
+        bool result = gnosisHelper.createRemoveSquadTx(subSquadA1Id);
         assertEq(result, true);
-        assertEq(keyperModule.isSuperSafe(groupA1Id, subGroupA1Id), false);
-        assertEq(keyperModule.isSuperSafe(rootId, subGroupA1Id), false);
-        assertEq(keyperModule.isTreeMember(rootId, subGroupA1Id), false);
+        assertEq(keyperModule.isSuperSafe(squadA1Id, subSquadA1Id), false);
+        assertEq(keyperModule.isSuperSafe(rootId, subSquadA1Id), false);
+        assertEq(keyperModule.isTreeMember(rootId, subSquadA1Id), false);
 
         // Check supersafe has not any children
-        (,,,, uint256[] memory child,) = keyperModule.getGroupInfo(groupA1Id);
+        (,,,, uint256[] memory child,) = keyperModule.getSquadInfo(squadA1Id);
         assertEq(child.length, 0);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> groupA
-    // Target Info: Type-> SAFE, Name -> groupB, Hierarchy related to caller -> DIFFERENT_TREE,NOT_DIRECT_CHILDREN
-    function testCannot_RemoveGroup_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_DifferentTree(
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> squadA
+    // Target Info: Type-> SAFE, Name -> squadB, Hierarchy related to caller -> DIFFERENT_TREE,NOT_DIRECT_CHILDREN
+    function testCannot_RemoveSquad_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_DifferentTree(
     ) public {
-        (, uint256 groupAId,, uint256 groupBId,,) = keyperSafeBuilder
-            .setupTwoOrgWithOneRootOneGroupAndOneChildEach(
+        (, uint256 squadAId,, uint256 squadBId,,) = keyperSafeBuilder
+            .setupTwoOrgWithOneRootOneSquadAndOneChildEach(
             orgName,
-            groupA1Name,
+            squadA1Name,
             root2Name,
-            groupBName,
-            subGroupA1Name,
-            subGroupB1Name
+            squadBName,
+            subSquadA1Name,
+            subSquadB1Name
         );
 
-        address groupAAddr = keyperModule.getGroupSafeAddress(groupAId);
-        vm.startPrank(groupAAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveGroupFromOtherOrg.selector);
-        keyperModule.removeGroup(groupBId);
+        address squadAAddr = keyperModule.getSquadSafeAddress(squadAId);
+        vm.startPrank(squadAAddr);
+        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherOrg.selector);
+        keyperModule.removeSquad(squadBId);
         vm.stopPrank();
 
-        address groupBAddr = keyperModule.getGroupSafeAddress(groupBId);
-        vm.startPrank(groupBAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveGroupFromOtherOrg.selector);
-        keyperModule.removeGroup(groupAId);
+        address squadBAddr = keyperModule.getSquadSafeAddress(squadBId);
+        vm.startPrank(squadBAddr);
+        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherOrg.selector);
+        keyperModule.removeSquad(squadAId);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Group, Name -> groupA
-    // Target Info: Type-> SAFE, Name -> subsubGroupA, Hierarchy related to caller -> SAME_TREE,NOT_DIRECT_CHILDREN
-    function testCannot_RemoveGroup_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_SameTree(
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> squadA
+    // Target Info: Type-> SAFE, Name -> subsubSquadA, Hierarchy related to caller -> SAME_TREE,NOT_DIRECT_CHILDREN
+    function testCannot_RemoveSquad_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_SameTree(
     ) public {
-        (, uint256 groupAId,, uint256 subSubGroupA1) = keyperSafeBuilder
+        (, uint256 squadAId,, uint256 subSubSquadA1) = keyperSafeBuilder
             .setupOrgFourTiersTree(
-            orgName, groupA1Name, subGroupA1Name, subSubGroupA1Name
+            orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
         );
 
-        address groupAAddr = keyperModule.getGroupSafeAddress(groupAId);
-        vm.startPrank(groupAAddr);
+        address squadAAddr = keyperModule.getSquadSafeAddress(squadAId);
+        vm.startPrank(squadAAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotSuperSafe.selector);
-        keyperModule.removeGroup(subSubGroupA1);
+        keyperModule.removeSquad(subSubSquadA1);
         vm.stopPrank();
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
-    // Target Info: Type-> SAFE, Name -> groupA, Hierarchy related to caller -> SAME_TREE, CHILDREN
-    function testRemoveGroupAndCheckDisables() public {
-        (uint256 rootId, uint256 groupA1Id) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+    // Target Info: Type-> SAFE, Name -> squadA, Hierarchy related to caller -> SAME_TREE, CHILDREN
+    function testRemoveSquadAndCheckDisables() public {
+        (uint256 rootId, uint256 squadA1Id) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address groupA1Addr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
 
-        (,,,,, uint256 superSafe) = keyperModule.getGroupInfo(groupA1Id);
-        (,, address superSafeAddr,,) = keyperModule.groups(orgHash, superSafe);
+        (,,,,, uint256 superSafe) = keyperModule.getSquadInfo(squadA1Id);
+        (,, address superSafeAddr,,) = keyperModule.squads(orgHash, superSafe);
 
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveGroupTx(groupA1Id);
+        bool result = gnosisHelper.createRemoveSquadTx(squadA1Id);
         assertEq(result, true);
 
         assertEq(
             keyperRolesContract.doesUserHaveRole(
-                groupA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
+                squadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
@@ -368,14 +361,14 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     }
 
     function testCan_hasNotPermissionOverTarget_is_root_of_target() public {
-        (uint256 rootId, uint256 groupA1Id) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (uint256 rootId, uint256 squadA1Id) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);
 
         bool result = keyperModule.hasNotPermissionOverTarget(
-            rootAddr, orgHash, groupAddr
+            rootAddr, orgHash, squadAddr
         );
         assertFalse(result);
     }
@@ -383,14 +376,14 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_hasNotPermissionOverTarget_is_not_root_of_target()
         public
     {
-        (uint256 rootId, uint256 groupA1Id) =
-            keyperSafeBuilder.setupRootOrgAndOneGroup(orgName, groupA1Name);
+        (uint256 rootId, uint256 squadA1Id) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getGroupSafeAddress(rootId);
-        address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);
 
         bool result = keyperModule.hasNotPermissionOverTarget(
-            groupAddr, orgHash, rootAddr
+            squadAddr, orgHash, rootAddr
         );
         assertTrue(result);
     }
@@ -398,14 +391,14 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_hasNotPermissionOverTarget_is_super_safe_of_target()
         public
     {
-        (, uint256 groupA1Id, uint256 subGroupA1Id) = keyperSafeBuilder
-            .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
+        (, uint256 squadA1Id, uint256 subSquadA1Id) = keyperSafeBuilder
+            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
-        address subGroupAddr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+        address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address subSquadAddr = keyperModule.getSquadSafeAddress(subSquadA1Id);
 
         bool result = keyperModule.hasNotPermissionOverTarget(
-            groupAddr, orgHash, subGroupAddr
+            squadAddr, orgHash, subSquadAddr
         );
         assertFalse(result);
     }
@@ -413,14 +406,14 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_hasNotPermissionOverTarget_is_not_super_safe_of_target()
         public
     {
-        (, uint256 groupA1Id, uint256 subGroupA1Id) = keyperSafeBuilder
-            .setupOrgThreeTiersTree(orgName, groupA1Name, subGroupA1Name);
+        (, uint256 squadA1Id, uint256 subSquadA1Id) = keyperSafeBuilder
+            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address groupAddr = keyperModule.getGroupSafeAddress(groupA1Id);
-        address subGroupAddr = keyperModule.getGroupSafeAddress(subGroupA1Id);
+        address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address subSquadAddr = keyperModule.getSquadSafeAddress(subSquadA1Id);
 
         bool result = keyperModule.hasNotPermissionOverTarget(
-            subGroupAddr, orgHash, groupAddr
+            subSquadAddr, orgHash, squadAddr
         );
         assertTrue(result);
     }
