@@ -2,16 +2,19 @@
 pragma solidity ^0.8.15;
 
 import {Enum} from "@safe-contracts/common/Enum.sol";
-import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
-import {DenyHelper, Address} from "./DenyHelper.sol";
+import {
+    DenyHelper,
+    Errors,
+    Constants,
+    DataTypes,
+    Events,
+    Address,
+    GnosisSafeMath
+} from "./DenyHelper.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
-import {Errors} from "../libraries/Errors.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {Events} from "../libraries/Events.sol";
 
 /// @title Keyper Module
 /// @custom:security-contact general@palmeradao.xyz
@@ -107,12 +110,8 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         uint256 maxDepthTreeLimitInitial
     ) Auth(address(0), Authority(authorityAddress)) {
         if (
-            masterCopyAddress == address(0) || proxyFactoryAddress == address(0)
-                || authorityAddress == address(0)
-        ) revert Errors.ZeroAddressProvided();
-
-        if (
-            !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
+            (authorityAddress == address(0)) || !masterCopyAddress.isContract()
+                || !proxyFactoryAddress.isContract()
         ) revert Errors.InvalidAddressProvided();
 
         masterCopy = masterCopyAddress;
@@ -484,24 +483,12 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (squads[org][squad].tier == DataTypes.Tier.REMOVED) {
             revert Errors.SquadAlreadyRemoved();
         }
-        /// Another Org usecase: Check if the squad is part of caller's org
-        if (org != getOrgBySquad(squad)) {
-            revert Errors.NotAuthorizedRemoveSquadFromOtherOrg();
-        }
-        /// RootSafe usecase : Check if the squad is part of caller's Tree
-        if (
-            (squads[org][callerSafe].tier == DataTypes.Tier.ROOT)
-                && (!isTreeMember(callerSafe, squad))
-        ) {
-            revert Errors.NotAuthorizedRemoveSquadFromOtherTree();
-        }
         // SuperSafe usecase : Check caller is superSafe of the squad
         if ((!isRootSafeOf(caller, squad)) && (!isSuperSafe(callerSafe, squad)))
         {
-            revert Errors.NotAuthorizedAsNotSuperSafe();
+            revert Errors.NotAuthorizedAsNotRootOrSuperSafe();
         }
         DataTypes.Squad storage _squad = squads[org][squad];
-
         // Check if the squad is Root Safe and has child
         if (
             ((_squad.tier == DataTypes.Tier.ROOT) || (_squad.superSafe == 0))
@@ -651,7 +638,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         newRootSafe.lead = address(0);
         newRootSafe.superSafe = 0;
         emit Events.RootSafePromoted(
-            org, squad, caller, getSquadSafeAddress(squad), newRootSafe.name
+            org, squad, caller, newRootSafe.safe, newRootSafe.name
             );
     }
 
@@ -897,7 +884,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         bytes32 org = getOrgBySquad(superSafe);
         DataTypes.Squad memory childSquad = squads[org][squad];
         if (childSquad.safe == address(0)) return false;
-        /// TODO: verify is open a back door
         if (superSafe == squad) return true;
         (isMember,,) = _seekMember(superSafe, squad);
     }
@@ -975,10 +961,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     {
         bytes32 org = getOrgBySquad(squadId);
         DataTypes.Squad memory childSquad = squads[org][squadId];
-        if (childSquad.superSafe == 0) {
-            rootSafeId = squadId;
-            return rootSafeId;
-        }
+        if (childSquad.superSafe == 0) return squadId;
         (,, rootSafeId) = _seekMember(indexId + 1, squadId);
     }
 
@@ -1000,16 +983,23 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         ) {
             return (isMember, level, rootSafeId);
         }
+        // Storage the Root Safe Address in the next superSafe is Zero
         rootSafeId = childSquad.superSafe;
         uint256 currentSuperSafe = rootSafeId;
         level = 2; // Level start in 1
         while (currentSuperSafe != 0) {
             childSquad = squads[org][currentSuperSafe];
+            // Validate if the Current Super Safe is Equal the SuperSafe try to Found, in case is True, storage True in isMember
             isMember =
                 !isMember && currentSuperSafe == superSafe ? true : isMember;
+            // Validate if the Current Super Safe of the Chield Squad is Equal Zero
+            // Return the isMember, level and rootSafeId with actual value
             if (childSquad.superSafe == 0) return (isMember, level, rootSafeId);
+            // else update the Vaule of possible Root Safe
             else rootSafeId = childSquad.superSafe;
+            // Update the Current Super Safe with the Super Safe of the Child Squad
             currentSuperSafe = childSquad.superSafe;
+            // Update the Level for the next iteration
             level++;
         }
     }

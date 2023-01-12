@@ -246,13 +246,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootIdA);
         vm.startPrank(rootAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherTree.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(squadBId);
         vm.stopPrank();
 
         address rootBAddr = keyperModule.getSquadSafeAddress(rootIdB);
         vm.startPrank(rootBAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherTree.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(squadAId);
     }
 
@@ -270,13 +270,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootIdA);
         vm.startPrank(rootAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherOrg.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(squadBId);
         vm.stopPrank();
 
         address rootBAddr = keyperModule.getSquadSafeAddress(rootIdB);
         vm.startPrank(rootBAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherOrg.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(squadAId);
     }
 
@@ -320,13 +320,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address squadAAddr = keyperModule.getSquadSafeAddress(squadAId);
         vm.startPrank(squadAAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherOrg.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(squadBId);
         vm.stopPrank();
 
         address squadBAddr = keyperModule.getSquadSafeAddress(squadBId);
         vm.startPrank(squadBAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherOrg.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(squadAId);
     }
 
@@ -341,7 +341,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address squadAAddr = keyperModule.getSquadSafeAddress(squadAId);
         vm.startPrank(squadAAddr);
-        vm.expectRevert(Errors.NotAuthorizedAsNotSuperSafe.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(subSubSquadA1);
         vm.stopPrank();
     }
