@@ -4,9 +4,6 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./helpers/DeployHelper.t.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Errors} from "../libraries/Errors.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 
 contract KeyperGuardTest is DeployHelper, SigningUtils {
@@ -72,7 +69,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         /// Remove Squad A1
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectedSafeTx(squadA1Id);
+        bool result = gnosisHelper.createDisconnectSafeTx(squadA1Id);
         assertEq(result, true);
         // Replay attack
         vm.startPrank(rootAddr);
@@ -81,7 +78,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.SquadNotRegistered.selector, squadA1Id
             )
         );
-        keyperModule.disconnectedSafe(squadA1Id);
+        keyperModule.disconnectSafe(squadA1Id);
         vm.stopPrank();
     }
 
@@ -96,7 +93,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Remove Squad A1
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectedSafeTx(squadIdA1);
+        bool result = gnosisHelper.createDisconnectSafeTx(squadIdA1);
         assertEq(result, true);
 
         // Verify Safe is disconnected
@@ -126,7 +123,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Disconnect Safe
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectedSafeTx(subSquadA1Id);
+        bool result = gnosisHelper.createDisconnectSafeTx(subSquadA1Id);
         assertEq(result, true);
 
         // Verify Safe is disconnected
@@ -160,7 +157,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.CannotRemoveSquadBeforeRemoveChild.selector, 1
             )
         );
-        keyperModule.disconnectedSafe(rootId);
+        keyperModule.disconnectSafe(rootId);
         vm.stopPrank();
 
         /// Verify Safe still enabled
@@ -195,7 +192,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(result, true);
 
         /// Disconnect Safe
-        result = gnosisHelper.createDisconnectedSafeTx(rootId);
+        result = gnosisHelper.createDisconnectSafeTx(rootId);
         assertEq(result, true);
 
         /// Verify Safe has been removed
@@ -232,7 +229,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.InvalidGnosisRootSafe.selector, squadA1Addr
             )
         );
-        keyperModule.disconnectedSafe(subSquadA1Id);
+        keyperModule.disconnectSafe(subSquadA1Id);
         vm.stopPrank();
 
         // Verify module still enabled
@@ -277,7 +274,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.InvalidGnosisRootSafe.selector, squadB1Addr
             )
         );
-        keyperModule.disconnectedSafe(subSquadA1Id);
+        keyperModule.disconnectSafe(subSquadA1Id);
         vm.stopPrank();
 
         // Verify module still enabled
@@ -317,8 +314,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Try to Disconnect Safe
         vm.startPrank(rootAddrB);
-        vm.expectRevert(Errors.NotAuthorizedDisconnectedChildrenSquad.selector);
-        keyperModule.disconnectedSafe(subSquadA1Id);
+        vm.expectRevert(Errors.NotAuthorizedDisconnectChildrenSquad.selector);
+        keyperModule.disconnectSafe(subSquadA1Id);
         vm.stopPrank();
 
         // Verify module still enabled
@@ -345,7 +342,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Disconnect Safe before to remove squad
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectedSafeTx(squadIdA1);
+        bool result = gnosisHelper.createDisconnectSafeTx(squadIdA1);
         assertEq(result, true);
 
         // Verify module has been disabled
@@ -375,7 +372,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Try to Disconnect Safe before to remove squad
         // Disconnect Safe before to remove squad
         gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectedSafeTx(subSquadIdA1);
+        bool result = gnosisHelper.createDisconnectSafeTx(subSquadIdA1);
         assertEq(result, true);
 
         // Verify module has been disabled
@@ -426,7 +423,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.InvalidGnosisSafe.selector, fakerCaller
             )
         );
-        keyperModule.disconnectedSafe(childSquadA1);
+        keyperModule.disconnectSafe(childSquadA1);
         vm.stopPrank();
     }
 
@@ -463,7 +460,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
                 Errors.SafeNotRegistered.selector, fakerCaller
             )
         );
-        keyperModule.disconnectedSafe(childSquadA1);
+        keyperModule.disconnectSafe(childSquadA1);
         vm.stopPrank();
     }
 
@@ -622,5 +619,338 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
             (address)
         );
         assertEq(GuardAddress, address(keyperGuard)); // If disable Guard, the address storage will be ZeroAddress (0x0)
+    }
+
+    function testDisconnectSafe_As_ROOTSAFE_TARGET_ROOT_SAFE() public {
+        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, squadA1Name, subSquadA1Name
+        );
+
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address childSquadA1Addr =
+            keyperModule.getSquadSafeAddress(childSquadA1);
+
+        /// Remove Squad A1
+        gnosisHelper.updateSafeInterface(squadA1Addr);
+        bool result = gnosisHelper.createRemoveSquadTx(childSquadA1);
+        assertEq(result, true);
+
+        /// Disconnect Safe
+        gnosisHelper.updateSafeInterface(rootAddr);
+        result = gnosisHelper.createDisconnectSafeTx(childSquadA1);
+        assertEq(result, true);
+
+        /// Verify Safe has been removed
+        /// Verify module has been removed
+        gnosisHelper.updateSafeInterface(childSquadA1Addr);
+        bool isKeyperModuleEnabled =
+            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+        assertEq(isKeyperModuleEnabled, false);
+        /// Verify guard has been removed
+        address ZeroAddress = abi.decode(
+            StorageAccessible(childSquadA1Addr).getStorageAt(
+                uint256(Constants.GUARD_STORAGE_SLOT), 2
+            ),
+            (address)
+        );
+        assertEq(ZeroAddress, zeroAddress);
+    }
+
+    // ! **************** List of Promote to Root *******************************
+
+    function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SQUAD_SAFE() public {
+        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, squadA1Name, subSquadA1Name
+        );
+
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address childSquadA1Addr =
+            keyperModule.getSquadSafeAddress(childSquadA1);
+
+        /// Promote to Root
+        vm.startPrank(rootAddr);
+        vm.expectRevert(Errors.NotAuthorizedUpdateNonSuperSafe.selector);
+        keyperModule.promoteRoot(childSquadA1);
+        vm.stopPrank();
+
+        /// Verify child Safe is not an Root
+        assertEq(keyperModule.getRootSafe(childSquadA1) == rootId, true);
+        assertEq(keyperModule.getRootSafe(childSquadA1) == childSquadA1, false);
+        assertEq(keyperModule.isRootSafeOf(childSquadA1Addr, rootId), false);
+        assertEq(keyperModule.isRootSafeOf(rootAddr, childSquadA1), true);
+        assertEq(keyperModule.isRootSafeOf(squadA1Addr, childSquadA1), false);
+        assertEq(keyperModule.isSuperSafe(rootId, squadA1Id), true);
+        assertEq(keyperModule.isSuperSafe(squadA1Id, childSquadA1), true);
+        assertEq(keyperModule.isTreeMember(rootId, squadA1Id), true);
+        assertEq(keyperModule.isTreeMember(squadA1Id, childSquadA1), true);
+    }
+
+    function testCanPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE() public {
+        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, squadA1Name, subSquadA1Name
+        );
+
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+
+        /// Promote to Root
+        gnosisHelper.updateSafeInterface(rootAddr);
+        bool result = gnosisHelper.createPromoteToRootTx(squadA1Id);
+        assertEq(result, true);
+
+        /// Verify Safe has been promoted to Root
+        assertEq(keyperModule.getRootSafe(squadA1Id) == rootId, false);
+        assertEq(keyperModule.getRootSafe(squadA1Id) == squadA1Id, true);
+        assertEq(keyperModule.isRootSafeOf(squadA1Addr, rootId), false);
+        assertEq(keyperModule.isRootSafeOf(rootAddr, squadA1Id), false);
+        assertEq(keyperModule.isRootSafeOf(squadA1Addr, squadA1Id), true);
+        assertEq(keyperModule.isRootSafeOf(squadA1Addr, childSquadA1), true);
+        assertEq(keyperModule.isSuperSafe(rootId, squadA1Id), false);
+        assertEq(keyperModule.isSuperSafe(squadA1Id, childSquadA1), true);
+        assertEq(keyperModule.isTreeMember(rootId, squadA1Id), false);
+        assertEq(keyperModule.isTreeMember(squadA1Id, childSquadA1), true);
+
+        // Validate Info Safe Squad
+        (
+            DataTypes.Tier tier,
+            string memory name,
+            address lead,
+            address safe,
+            uint256[] memory child,
+            uint256 superSafe
+        ) = keyperModule.getSquadInfo(squadA1Id);
+
+        assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
+        assertEq(name, squadA1Name);
+        assertEq(lead, address(0));
+        assertEq(safe, squadA1Addr);
+        assertEq(child.length, 1);
+        assertEq(child[0], childSquadA1);
+        assertEq(superSafe, 0);
+    }
+
+    function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE_ANOTHER_TREE(
+    ) public {
+        (
+            uint256 rootIdA,
+            uint256 squadA1Id,
+            uint256 rootIdB,
+            ,
+            uint256 childSquadA1,
+        ) = keyperSafeBuilder.setupTwoRootOrgWithOneSquadAndOneChildEach(
+            orgName,
+            squadA1Name,
+            org2Name,
+            squadBName,
+            subSquadA1Name,
+            subSquadB1Name
+        );
+
+        address rootAddrA = keyperModule.getSquadSafeAddress(rootIdA);
+        address rootAddrB = keyperModule.getSquadSafeAddress(rootIdB);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+
+        /// Try Promote to Root
+        vm.startPrank(rootAddrB);
+        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenSquad.selector);
+        keyperModule.promoteRoot(squadA1Id);
+        vm.stopPrank();
+
+        /// Verify SuperSafe is not an Root
+        assertEq(keyperModule.getRootSafe(squadA1Id) == rootIdA, true);
+        assertEq(keyperModule.getRootSafe(squadA1Id) == childSquadA1, false);
+        assertEq(keyperModule.isRootSafeOf(squadA1Addr, rootIdA), false);
+        assertEq(keyperModule.isRootSafeOf(rootAddrA, squadA1Id), true);
+        assertEq(keyperModule.isRootSafeOf(squadA1Addr, childSquadA1), false);
+        assertEq(keyperModule.isSuperSafe(rootIdA, squadA1Id), true);
+        assertEq(keyperModule.isSuperSafe(squadA1Id, childSquadA1), true);
+        assertEq(keyperModule.isTreeMember(rootIdA, squadA1Id), true);
+        assertEq(keyperModule.isTreeMember(squadA1Id, childSquadA1), true);
+    }
+
+    function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE_ANOTHER_ORG()
+        public
+    {
+        (
+            uint256 rootIdA,
+            uint256 squadA1Id,
+            uint256 rootIdB,
+            ,
+            uint256 childSquadA1,
+        ) = keyperSafeBuilder.setupTwoOrgWithOneRootOneSquadAndOneChildEach(
+            orgName,
+            squadA1Name,
+            org2Name,
+            squadBName,
+            subSquadA1Name,
+            subSquadB1Name
+        );
+
+        address rootAddrA = keyperModule.getSquadSafeAddress(rootIdA);
+        address rootAddrB = keyperModule.getSquadSafeAddress(rootIdB);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+
+        /// Try Promote to Root
+        vm.startPrank(rootAddrB);
+        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenSquad.selector);
+        keyperModule.promoteRoot(squadA1Id);
+        vm.stopPrank();
+
+        /// Verify SuperSafe is not an Root
+        assertEq(keyperModule.getRootSafe(squadA1Id) == rootIdA, true);
+        assertEq(keyperModule.getRootSafe(squadA1Id) == childSquadA1, false);
+        assertEq(keyperModule.isRootSafeOf(squadA1Addr, rootIdA), false);
+        assertEq(keyperModule.isRootSafeOf(rootAddrA, squadA1Id), true);
+        assertEq(keyperModule.isRootSafeOf(squadA1Addr, childSquadA1), false);
+        assertEq(keyperModule.isSuperSafe(rootIdA, squadA1Id), true);
+        assertEq(keyperModule.isSuperSafe(squadA1Id, childSquadA1), true);
+        assertEq(keyperModule.isTreeMember(rootIdA, squadA1Id), true);
+        assertEq(keyperModule.isTreeMember(squadA1Id, childSquadA1), true);
+    }
+
+    // ! **************** List of Remove Whole Tree *******************************
+
+    function testCanRemoveWholeTree() public {
+        (
+            uint256 rootId,
+            uint256 squadA1Id,
+            uint256 rootId2,
+            uint256 squadB1Id,
+            uint256 childSquadA1,
+            uint256 childSquadB1
+        ) = keyperSafeBuilder.setupTwoRootOrgWithOneSquadAndOneChildEach(
+            orgName,
+            squadA1Name,
+            org2Name,
+            squadBName,
+            subSquadA1Name,
+            subSquadB1Name
+        );
+
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address rootAddr2 = keyperModule.getSquadSafeAddress(rootId2);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address squadB1Addr = keyperModule.getSquadSafeAddress(squadB1Id);
+        address childSquadA1Addr =
+            keyperModule.getSquadSafeAddress(childSquadA1);
+        address childSquadB1Addr =
+            keyperModule.getSquadSafeAddress(childSquadB1);
+
+        /// Remove Whole Tree A
+        gnosisHelper.updateSafeInterface(rootAddr);
+        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        assertTrue(result);
+
+        /// Verify Whole Tree A is removed
+        assertEq(keyperModule.isSafeRegistered(rootAddr), false);
+        assertEq(keyperModule.isSafeRegistered(squadA1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(childSquadA1Addr), false);
+        assertTrue(keyperModule.isSafeRegistered(rootAddr2));
+        assertTrue(keyperModule.isSafeRegistered(squadB1Addr));
+        assertTrue(keyperModule.isSafeRegistered(childSquadB1Addr));
+
+        /// Remove Whole Tree B
+        gnosisHelper.updateSafeInterface(rootAddr2);
+        result = gnosisHelper.createRemoveWholeTreeTx();
+        assertTrue(result);
+
+        /// Verify Tree is removed
+        assertEq(keyperModule.isSafeRegistered(rootAddr2), false);
+        assertEq(keyperModule.isSafeRegistered(squadB1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(childSquadB1Addr), false);
+    }
+
+    function testCanRemoveWholeTreeFourthLevel() public {
+        (
+            uint256 rootId,
+            uint256 squadA1Id,
+            uint256 squadB1Id,
+            uint256 childSquadA1,
+            uint256 subChildSquadA1
+        ) = keyperSafeBuilder.setUpBaseOrgTree(
+            orgName, squadA1Name, squadBName, subSquadA1Name, subSquadB1Name
+        );
+
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address squadB1Addr = keyperModule.getSquadSafeAddress(squadB1Id);
+        address childSquadA1Addr =
+            keyperModule.getSquadSafeAddress(childSquadA1);
+        address subChildSquadB1Addr =
+            keyperModule.getSquadSafeAddress(subChildSquadA1);
+
+        /// Remove Whole Tree A
+        gnosisHelper.updateSafeInterface(rootAddr);
+        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        assertTrue(result);
+
+        /// Verify Whole Tree A is removed
+        assertEq(keyperModule.isSafeRegistered(rootAddr), false);
+        assertEq(keyperModule.isSafeRegistered(squadA1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(childSquadA1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(subChildSquadB1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(squadB1Addr), false);
+
+        // Validate Info Root Safe Squad
+        vm.startPrank(rootAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.SquadNotRegistered.selector, rootId)
+        );
+        keyperModule.getSquadInfo(rootId);
+        vm.stopPrank();
+        // Validate Info Root Safe Squad
+        vm.startPrank(subChildSquadB1Addr);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.SquadNotRegistered.selector, subChildSquadA1
+            )
+        );
+        keyperModule.getSquadInfo(subChildSquadA1);
+        vm.stopPrank();
+    }
+
+    function testCannotReplayAttackRemoveWholeTree() public {
+        (
+            uint256 rootId,
+            uint256 squadA1Id,
+            uint256 squadB1Id,
+            uint256 childSquadA1,
+            uint256 subChildSquadA1
+        ) = keyperSafeBuilder.setUpBaseOrgTree(
+            orgName, squadA1Name, squadBName, subSquadA1Name, subSquadB1Name
+        );
+
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address squadB1Addr = keyperModule.getSquadSafeAddress(squadB1Id);
+        address childSquadA1Addr =
+            keyperModule.getSquadSafeAddress(childSquadA1);
+        address subChildSquadB1Addr =
+            keyperModule.getSquadSafeAddress(subChildSquadA1);
+
+        /// Remove Whole Tree A
+        gnosisHelper.updateSafeInterface(rootAddr);
+        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        assertTrue(result);
+
+        // Try Replay Attack
+        vm.startPrank(rootAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.SafeNotRegistered.selector, rootAddr)
+        );
+        keyperModule.removeWholeTree();
+        vm.stopPrank();
+
+        /// Verify Whole Tree A is removed
+        assertEq(keyperModule.isSafeRegistered(rootAddr), false);
+        assertEq(keyperModule.isSafeRegistered(squadA1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(childSquadA1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(subChildSquadB1Addr), false);
+        assertEq(keyperModule.isSafeRegistered(squadB1Addr), false);
     }
 }

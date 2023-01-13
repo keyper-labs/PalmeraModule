@@ -34,11 +34,12 @@ library Errors {
     /// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
     error NotAuthorizedAsNotSafeLead();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Super Safe
-    error NotAuthorizedAsNotSuperSafe();
+    error NotAuthorizedAsNotRootOrSuperSafe();
     /// @dev Error messages when the Root Safe is not Autorized Update Super Safe for a Squad in Another Tree
     error NotAuthorizedUpdateNonChildrenSquad();
+    error NotAuthorizedUpdateNonSuperSafe();
     /// @dev Error messages when the Root Safe is not Autorized to Disconnect an Safe in Another Tree
-    error NotAuthorizedDisconnectedChildrenSquad();
+    error NotAuthorizedDisconnectChildrenSquad();
     /// @dev Error messages when the Root Safe is not Autorized to Update a Role in a Squad in Another Tree
     error NotAuthorizedSetRoleAnotherTree();
     /// @dev Error messages the Owner is not Found into the Safe Owners
@@ -51,6 +52,7 @@ library Errors {
     error InvalidThreshold();
     /// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
     error TxExecutionModuleFaild();
+    error PreviewModuleNotFound(address squad);
     /// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
     error TxOnBehalfExecutedFailed();
     /// @dev Error messages when the caller is an Invalid Gnosis Safe

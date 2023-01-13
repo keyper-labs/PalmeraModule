@@ -335,9 +335,30 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createDisconnectedSafeTx(uint256 squad) public returns (bool) {
+    function createRemoveWholeTreeTx() public returns (bool) {
+        bytes memory data = abi.encodeWithSignature("removeWholeTree()");
+        // Create module safe tx
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
+    function createPromoteToRootTx(uint256 squad) public returns (bool) {
         bytes memory data =
-            abi.encodeWithSignature("disconnectedSafe(uint256)", squad);
+            abi.encodeWithSignature("promoteRoot(uint256)", squad);
+        // Create module safe tx
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
+    function createDisconnectSafeTx(uint256 squad) public returns (bool) {
+        bytes memory data =
+            abi.encodeWithSignature("disconnectSafe(uint256)", squad);
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx

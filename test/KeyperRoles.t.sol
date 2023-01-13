@@ -2,8 +2,6 @@
 pragma solidity ^0.8.15;
 
 import "./helpers/DeployHelper.t.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
 
 contract KeyperRolesTest is DeployHelper {
     function setUp() public {
@@ -37,7 +35,6 @@ contract KeyperRolesTest is DeployHelper {
         address org1 = gnosisSafeAddr;
         vm.startPrank(org1);
 
-        KeyperModule keyperModule = KeyperModule(keyperModuleAddr);
         keyperModule.registerOrg(orgName);
         // Check Role
         assertEq(

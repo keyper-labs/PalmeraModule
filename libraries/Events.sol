@@ -88,6 +88,32 @@ library Events {
         string name
     );
 
+    /// @dev Event Fire when update SuperSafe of a Squad To Root Safe
+    /// @param org Hash(DAO's name)
+    /// @param newIdRootSafeSquad ID of the squad updated
+    /// @param updater Address of the updater of the squad
+    /// @param newRootSafeSquad Address of the new Root Safe
+    /// @param name String name of the new Root Safe
+    event RootSafePromoted(
+        bytes32 indexed org,
+        uint256 indexed newIdRootSafeSquad,
+        address indexed updater,
+        address newRootSafeSquad,
+        string name
+    );
+
+    /// @dev Event Fire when an Root Safe Remove Whole of Tree
+    /// @param org Hash(DAO's name)
+    /// @param rootSafeSquadId ID of the squad updated
+    /// @param remover Address of the remover of the squad
+    /// @param name String name of the new Root Safe
+    event WholeTreeRemoved(
+        bytes32 indexed org,
+        uint256 indexed rootSafeSquadId,
+        address indexed remover,
+        string name
+    );
+
     /// @dev Event Fire when any Root Safe change Depth Tree Limit
     /// @param org Hash(DAO's name)
     /// @param rootSafeSquadId New ID of the Root Safe Squad

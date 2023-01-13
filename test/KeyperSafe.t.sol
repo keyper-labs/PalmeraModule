@@ -3,9 +3,6 @@ pragma solidity ^0.8.15;
 
 import "../src/SigningUtils.sol";
 import "./helpers/DeployHelper.t.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Errors} from "../libraries/Errors.sol";
 
 contract TestKeyperSafe is SigningUtils, DeployHelper {
     function setUp() public {
@@ -246,13 +243,37 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootIdA);
         vm.startPrank(rootAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherTree.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(squadBId);
         vm.stopPrank();
 
         address rootBAddr = keyperModule.getSquadSafeAddress(rootIdB);
         vm.startPrank(rootBAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherTree.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
+        keyperModule.removeSquad(squadAId);
+    }
+
+    function testCannot_RemoveSquad_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentOrg(
+    ) public {
+        (uint256 rootIdA, uint256 squadAId, uint256 rootIdB, uint256 squadBId,,)
+        = keyperSafeBuilder.setupTwoOrgWithOneRootOneSquadAndOneChildEach(
+            orgName,
+            squadA1Name,
+            root2Name,
+            squadBName,
+            subSquadA1Name,
+            subSubSquadA1Name
+        );
+
+        address rootAddr = keyperModule.getSquadSafeAddress(rootIdA);
+        vm.startPrank(rootAddr);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
+        keyperModule.removeSquad(squadBId);
+        vm.stopPrank();
+
+        address rootBAddr = keyperModule.getSquadSafeAddress(rootIdB);
+        vm.startPrank(rootBAddr);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(squadAId);
     }
 
@@ -296,13 +317,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address squadAAddr = keyperModule.getSquadSafeAddress(squadAId);
         vm.startPrank(squadAAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherOrg.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(squadBId);
         vm.stopPrank();
 
         address squadBAddr = keyperModule.getSquadSafeAddress(squadBId);
         vm.startPrank(squadBAddr);
-        vm.expectRevert(Errors.NotAuthorizedRemoveSquadFromOtherOrg.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(squadAId);
     }
 
@@ -317,7 +338,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address squadAAddr = keyperModule.getSquadSafeAddress(squadAId);
         vm.startPrank(squadAAddr);
-        vm.expectRevert(Errors.NotAuthorizedAsNotSuperSafe.selector);
+        vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
         keyperModule.removeSquad(subSubSquadA1);
         vm.stopPrank();
     }

@@ -58,6 +58,9 @@ library Constants {
     bytes4 internal constant UPDATE_SUPER_SAFE =
         bytes4(keccak256(bytes("updateSuper(uint256,uint256)")));
 
+    bytes4 internal constant PROMOTE_ROOT =
+        bytes4(keccak256(bytes("promoteRoot(uint256)")));
+
     bytes4 internal constant UPDATE_DEPTH_TREE_LIMIT =
         bytes4(keccak256(bytes("updateDepthTreeLimit(uint256)")));
 
@@ -73,8 +76,11 @@ library Constants {
     bytes4 internal constant REMOVE_SQUAD =
         bytes4(keccak256(bytes("removeSquad(uint256)")));
 
-    bytes4 internal constant DISCONNECTED_SAFE =
-        bytes4(keccak256(bytes("disconnectedSafe(uint256)")));
+    bytes4 internal constant REMOVE_WHOLE_TREE =
+        bytes4(keccak256(bytes("removeWholeTree()")));
+
+    bytes4 internal constant DISCONNECT_SAFE =
+        bytes4(keccak256(bytes("disconnectSafe(uint256)")));
 
     // keccak256("guard_manager.guard.address")
     bytes32 internal constant GUARD_STORAGE_SLOT =

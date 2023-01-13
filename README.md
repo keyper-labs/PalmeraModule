@@ -60,7 +60,12 @@ The address of the calling safe is going to be registered with the input name
 
 # Add Subsquads to main organisation
 
+<<<<<<< HEAD
 `function addSquad(address org, address superSafe, string memory name)`
+=======
+`function addSquad(address org, address superSafe, string memory name)`
+
+> > > > > > > dev
 
 Need to specify to which organisation the new squad will belong
 

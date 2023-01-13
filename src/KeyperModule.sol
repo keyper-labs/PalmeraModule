@@ -2,16 +2,19 @@
 pragma solidity ^0.8.15;
 
 import {Enum} from "@safe-contracts/common/Enum.sol";
-import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
-import {DenyHelper, Address} from "./DenyHelper.sol";
+import {
+    DenyHelper,
+    Errors,
+    Constants,
+    DataTypes,
+    Events,
+    Address,
+    GnosisSafeMath
+} from "./DenyHelper.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
-import {Errors} from "../libraries/Errors.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {Events} from "../libraries/Events.sol";
 
 /// @title Keyper Module
 /// @custom:security-contact general@palmeradao.xyz
@@ -107,12 +110,8 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         uint256 maxDepthTreeLimitInitial
     ) Auth(address(0), Authority(authorityAddress)) {
         if (
-            masterCopyAddress == address(0) || proxyFactoryAddress == address(0)
-                || authorityAddress == address(0)
-        ) revert Errors.ZeroAddressProvided();
-
-        if (
-            !masterCopyAddress.isContract() || !proxyFactoryAddress.isContract()
+            (authorityAddress == address(0)) || !masterCopyAddress.isContract()
+                || !proxyFactoryAddress.isContract()
         ) revert Errors.InvalidAddressProvided();
 
         masterCopy = masterCopyAddress;
@@ -274,10 +273,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             IGnosisSafe.addOwnerWithThreshold.selector, ownerAdded, threshold
         );
         /// Execute transaction from target safe
-        bool result = gnosisTargetSafe.execTransactionFromModule(
-            targetSafe, uint256(0), data, Enum.Operation.Call
-        );
-        if (!result) revert Errors.TxExecutionModuleFaild();
+        _executeModuleTransaction(targetSafe, data);
     }
 
     /// @notice This function will allow User Lead/Super/Root to remove an owner
@@ -317,10 +313,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         );
 
         /// Execute transaction from target safe
-        bool result = gnosisTargetSafe.execTransactionFromModule(
-            targetSafe, uint256(0), data, Enum.Operation.Call
-        );
-        if (!result) revert Errors.TxExecutionModuleFaild();
+        _executeModuleTransaction(targetSafe, data);
     }
 
     /// @notice This function checks that caller has permission (as Root/Super/Lead safe) of the target safe
@@ -392,7 +385,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         depthTreeLimit[name] = 8;
 
         emit Events.OrganizationCreated(caller, name, daoName);
-        return squadId;
     }
 
     /// @notice Call has to be done from another root safe to the organization
@@ -473,7 +465,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         emit Events.SquadCreated(
             org, squadId, newSquad.lead, caller, superSafe, name
             );
-        return squadId;
     }
 
     /// @notice Remove squad and reasign all child to the superSafe
@@ -492,24 +483,12 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (squads[org][squad].tier == DataTypes.Tier.REMOVED) {
             revert Errors.SquadAlreadyRemoved();
         }
-        /// Another Org usecase: Check if the squad is part of caller's org
-        if (org != getOrgBySquad(squad)) {
-            revert Errors.NotAuthorizedRemoveSquadFromOtherOrg();
-        }
-        /// RootSafe usecase : Check if the squad is part of caller's Tree
-        if (
-            (squads[org][callerSafe].tier == DataTypes.Tier.ROOT)
-                && (!isTreeMember(callerSafe, squad))
-        ) {
-            revert Errors.NotAuthorizedRemoveSquadFromOtherTree();
-        }
         // SuperSafe usecase : Check caller is superSafe of the squad
         if ((!isRootSafeOf(caller, squad)) && (!isSuperSafe(callerSafe, squad)))
         {
-            revert Errors.NotAuthorizedAsNotSuperSafe();
+            revert Errors.NotAuthorizedAsNotRootOrSuperSafe();
         }
         DataTypes.Squad storage _squad = squads[org][squad];
-
         // Check if the squad is Root Safe and has child
         if (
             ((_squad.tier == DataTypes.Tier.ROOT) || (_squad.superSafe == 0))
@@ -540,7 +519,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             childrenSquad.superSafe = _squad.superSafe;
         }
         /// we guarantee the child was moving to another SuperSafe in the Org
-        /// and validate after in the disconnectedSafe method
+        /// and validate after in the Disconnect Safe method
         _squad.child = new uint256[](0);
 
         // Revoke roles to squad
@@ -563,10 +542,72 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             : DataTypes.Tier.REMOVED;
     }
 
-    /// @notice Disconnected Safe of a squad
-    /// @dev Disconnected Safe of a squad, Call must come from the root safe
+    /// @notice Disconnect Safe of a squad
+    /// @dev Disconnect Safe of a squad, Call must come from the root safe
     /// @param squad address of the squad to be updated
-    function disconnectedSafe(uint256 squad)
+    function disconnectSafe(uint256 squad)
+        external
+        IsRootSafe(_msgSender())
+        SquadRegistered(squad)
+        requiresAuth
+    {
+        address caller = _msgSender();
+        bytes32 org = getOrgHashBySafe(caller);
+        uint256 rootSafe = getSquadIdBySafe(org, caller);
+        DataTypes.Squad memory disconnectSquad = squads[org][squad];
+        /// RootSafe usecase : Check if the squad is Member of the Tree of the caller (rootSafe)
+        if (
+            (
+                (!isRootSafeOf(caller, squad))
+                    && (disconnectSquad.tier != DataTypes.Tier.REMOVED)
+            )
+                || (
+                    (!isPendingRemove(rootSafe, squad))
+                        && (disconnectSquad.tier == DataTypes.Tier.REMOVED)
+                )
+        ) {
+            revert Errors.NotAuthorizedDisconnectChildrenSquad();
+        }
+        /// In case Root Safe Disconnect Safe without removeSquad Before
+        if (disconnectSquad.tier != DataTypes.Tier.REMOVED) {
+            removeSquad(squad);
+        }
+        // Disconnect Safe
+        _exitSafe(squad);
+        if (indexSquad[org].length == 0) removeOrg(org);
+    }
+
+    /// @notice Remove whole tree of a RootSafe
+    /// @dev Remove whole tree of a RootSafe
+    function removeWholeTree() external IsRootSafe(_msgSender()) requiresAuth {
+        address caller = _msgSender();
+        bytes32 org = getOrgHashBySafe(caller);
+        uint256 rootSafe = getSquadIdBySafe(org, caller);
+        uint256[] memory _indexSquad = getTreeMember(org, rootSafe);
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        for (uint256 j = 0; j < _indexSquad.length; j++) {
+            uint256 squad = _indexSquad[j];
+            DataTypes.Squad memory _squad = squads[org][squad];
+            // Revoke roles to squad
+            _authority.setUserRole(
+                _squad.safe, uint8(DataTypes.Role.SUPER_SAFE), false
+            );
+            // Disable safe lead role
+            disableSafeLeadRoles(squads[org][squad].safe);
+            _exitSafe(squad);
+        }
+        // After Disconnect Root Safe
+        emit Events.WholeTreeRemoved(
+            org, rootSafe, caller, squads[org][rootSafe].name
+            );
+        _exitSafe(rootSafe);
+        if (indexSquad[org].length == 0) removeOrg(org);
+    }
+
+    /// @notice Method to Promete a squad to Root Safe of an Org to Root Safe
+    /// @dev Method to Promete a squad to Root Safe of an Org to Root Safe
+    /// @param squad address of the squad to be updated
+    function promoteRoot(uint256 squad)
         external
         IsRootSafe(_msgSender())
         SquadRegistered(squad)
@@ -576,39 +617,28 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         address caller = _msgSender();
         /// RootSafe usecase : Check if the squad is Member of the Tree of the caller (rootSafe)
         if (!isRootSafeOf(caller, squad)) {
-            revert Errors.NotAuthorizedDisconnectedChildrenSquad();
+            revert Errors.NotAuthorizedUpdateNonChildrenSquad();
         }
-        /// In case Root Safe Disconnected Safe without removeSquad Before
-        if (squads[org][squad].tier != DataTypes.Tier.REMOVED) {
-            removeSquad(squad);
+        DataTypes.Squad storage newRootSafe = squads[org][squad];
+        /// Check if the squad is a Super Safe, and an Direct Children of thr Root Safe
+        if (
+            (newRootSafe.child.length <= 0)
+                || (!isSuperSafe(getSquadIdBySafe(org, caller), squad))
+        ) {
+            revert Errors.NotAuthorizedUpdateNonSuperSafe();
         }
-        IGnosisSafe gnosisTargetSafe = IGnosisSafe(squads[org][squad].safe);
-        removeIndexSquad(org, squad);
-        delete squads[org][squad];
-
-        /// Disable Guard
-        bytes memory data =
-            abi.encodeWithSelector(IGnosisSafe.setGuard.selector, address(0));
-        /// Execute transaction from target safe
-        bool result = gnosisTargetSafe.execTransactionFromModule(
-            address(gnosisTargetSafe), uint256(0), data, Enum.Operation.Call
+        /// Give Role RootSafe if not have it
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        _authority.setUserRole(
+            newRootSafe.safe, uint8(DataTypes.Role.ROOT_SAFE), true
         );
-        if (!result) revert Errors.TxExecutionModuleFaild();
-
-        /// Disable Module
-        address prevModule = getPreviewModule(caller);
-        data = abi.encodeWithSelector(
-            IGnosisSafe.disableModule.selector, prevModule, address(this)
-        );
-
-        /// Execute transaction from target safe
-        result = gnosisTargetSafe.execTransactionFromModule(
-            address(gnosisTargetSafe), uint256(0), data, Enum.Operation.Call
-        );
-        if (!result) revert Errors.TxExecutionModuleFaild();
-
-        emit Events.SafeDisconnected(
-            org, squad, address(gnosisTargetSafe), caller
+        // Update Tier
+        newRootSafe.tier = DataTypes.Tier.ROOT;
+        // Update Root Safe
+        newRootSafe.lead = address(0);
+        newRootSafe.superSafe = 0;
+        emit Events.RootSafePromoted(
+            org, squad, caller, newRootSafe.safe, newRootSafe.name
             );
     }
 
@@ -841,51 +871,31 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         );
     }
 
-    /// @notice Check if the squad is a superSafe of another squad
+    /// @notice Check if the squad is a Is Tree Member of another squad
     /// @param superSafe ID's of the superSafe
     /// @param squad ID's of the squad
-    /// @return bool
+    /// @return isMember
     function isTreeMember(uint256 superSafe, uint256 squad)
         public
         view
-        returns (bool)
+        returns (bool isMember)
     {
         if (superSafe == 0 || squad == 0) return false;
         bytes32 org = getOrgBySquad(superSafe);
         DataTypes.Squad memory childSquad = squads[org][squad];
-        // Check if the Child Squad is was removed or not Exist and Return False
-        if (
-            (childSquad.safe == address(0))
-                || (childSquad.tier == DataTypes.Tier.REMOVED)
-        ) {
-            return false;
-        }
-        if (squads[org][superSafe].safe == address(0)) return false;
-        /// TODO: verify is open a back door
-        if (childSquad.safe == squads[org][superSafe].safe) return true;
-        uint256 currentSuperSafe = childSquad.superSafe;
-        /// TODO: probably more efficient to just create a superSafes mapping instead of this iterations
-        while (currentSuperSafe != 0) {
-            if (currentSuperSafe == superSafe) return true;
-            childSquad = squads[org][currentSuperSafe];
-            currentSuperSafe = childSquad.superSafe;
-        }
-        return false;
+        if (childSquad.safe == address(0)) return false;
+        if (superSafe == squad) return true;
+        (isMember,,) = _seekMember(superSafe, squad);
     }
 
     /// @dev Method to validate if is Depth Tree Limit
     /// @param superSafe ID's of Safe
     /// @return bool
     function isLimitLevel(uint256 superSafe) public view returns (bool) {
+        if ((superSafe == 0) || (superSafe > indexId)) return false;
         bytes32 org = getOrgBySquad(superSafe);
-        DataTypes.Squad memory childSquad = squads[org][superSafe];
-        uint256 currentSuperSafe = childSquad.superSafe;
-        for (uint256 i = 1; i < depthTreeLimit[org]; i++) {
-            if (currentSuperSafe == 0) return false;
-            childSquad = squads[org][currentSuperSafe];
-            currentSuperSafe = childSquad.superSafe;
-        }
-        return true;
+        (, uint256 level,) = _seekMember(indexId + 1, superSafe);
+        return level >= depthTreeLimit[org];
     }
 
     /// @dev Method to Validate is ID Squad a SuperSafe of a Squad
@@ -904,11 +914,32 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         if (
             (childSquad.safe == address(0))
                 || (childSquad.tier == DataTypes.Tier.REMOVED)
+                || (childSquad.tier == DataTypes.Tier.ROOT)
         ) {
             return false;
         }
-        uint256 currentSuperSafe = childSquad.superSafe;
-        return (currentSuperSafe == superSafe);
+        return (childSquad.superSafe == superSafe);
+    }
+
+    /// @dev Method to Validate is ID Squad is Pending to Disconnect (was Removed by SuperSafe)
+    /// @param squad ID's of the squad
+    /// @param rootSafe ID's of Root Safe
+    /// @return bool
+    function isPendingRemove(uint256 rootSafe, uint256 squad)
+        public
+        view
+        returns (bool)
+    {
+        DataTypes.Squad memory childSquad = squads[getOrgBySquad(squad)][squad];
+        // Check if the Child Squad is was removed or not Exist and Return False
+        if (
+            (childSquad.safe == address(0))
+                || (childSquad.tier == DataTypes.Tier.SQUAD)
+                || (childSquad.tier == DataTypes.Tier.ROOT)
+        ) {
+            return false;
+        }
+        return (childSquad.superSafe == rootSafe);
     }
 
     function isSafeRegistered(address safe) public view returns (bool) {
@@ -931,13 +962,45 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         bytes32 org = getOrgBySquad(squadId);
         DataTypes.Squad memory childSquad = squads[org][squadId];
         if (childSquad.superSafe == 0) return squadId;
+        (,, rootSafeId) = _seekMember(indexId + 1, squadId);
+    }
+
+    /// @notice Method for refactoring the methods getRootSafe, isTreeMember, and isLimitTree, in one method
+    /// @dev Method to Getting if is Member, the  Level and Root Safe
+    /// @param superSafe ID's of the Super Safe squad
+    /// @param childSafe ID's of the Child Safe
+    function _seekMember(uint256 superSafe, uint256 childSafe)
+        private
+        view
+        returns (bool isMember, uint256 level, uint256 rootSafeId)
+    {
+        bytes32 org = getOrgBySquad(childSafe);
+        DataTypes.Squad memory childSquad = squads[org][childSafe];
+        // Check if the Child Squad is was removed or not Exist and Return False
+        if (
+            (childSquad.safe == address(0))
+                || (childSquad.tier == DataTypes.Tier.REMOVED)
+        ) {
+            return (isMember, level, rootSafeId);
+        }
+        // Storage the Root Safe Address in the next superSafe is Zero
         rootSafeId = childSquad.superSafe;
         uint256 currentSuperSafe = rootSafeId;
+        level = 2; // Level start in 1
         while (currentSuperSafe != 0) {
             childSquad = squads[org][currentSuperSafe];
-            if (childSquad.superSafe == 0) return rootSafeId;
+            // Validate if the Current Super Safe is Equal the SuperSafe try to Found, in case is True, storage True in isMember
+            isMember =
+                !isMember && currentSuperSafe == superSafe ? true : isMember;
+            // Validate if the Current Super Safe of the Chield Squad is Equal Zero
+            // Return the isMember, level and rootSafeId with actual value
+            if (childSquad.superSafe == 0) return (isMember, level, rootSafeId);
+            // else update the Vaule of possible Root Safe
             else rootSafeId = childSquad.superSafe;
+            // Update the Current Super Safe with the Super Safe of the Child Squad
             currentSuperSafe = childSquad.superSafe;
+            // Update the Level for the next iteration
+            level++;
         }
     }
 
@@ -1126,7 +1189,7 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
     /// @dev Method to get Preview Module of the Safe
     /// @param safe address of the Safe
     /// @return address of the Preview Module
-    function getPreviewModule(address safe) internal view returns (address) {
+    function getPreviewModule(address safe) private view returns (address) {
         // create Instance of the Gnosis Safe
         IGnosisSafe gnosisSafe = IGnosisSafe(safe);
         // get the modules of the Safe
@@ -1140,6 +1203,38 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
                 if (modules[i] == address(this)) {
                     return modules[i - 1];
                 }
+            }
+        }
+    }
+
+    /// @dev Method to getting the All Gorup Member for the Tree of the Root Safe/Org indicate in the args
+    /// @param org HAsh of the DAO of the org
+    /// @param rootSafe Gorup ID's of the root safe
+    /// @return indexTree Array of the Squad ID's of the Tree
+    function getTreeMember(bytes32 org, uint256 rootSafe)
+        private
+        view
+        returns (uint256[] memory indexTree)
+    {
+        uint256 index;
+        uint256[] memory _indexSquad = indexSquad[org];
+        for (uint256 i = 0; i < _indexSquad.length; i++) {
+            if (
+                (getRootSafe(_indexSquad[i]) == rootSafe)
+                    && (_indexSquad[i] != rootSafe)
+            ) {
+                index++;
+            }
+        }
+        indexTree = new uint256[](index);
+        index = 0;
+        for (uint256 i = 0; i < _indexSquad.length; i++) {
+            if (
+                (getRootSafe(_indexSquad[i]) == rootSafe)
+                    && (_indexSquad[i] != rootSafe)
+            ) {
+                indexTree[index] = _indexSquad[i];
+                index++;
             }
         }
     }
@@ -1184,8 +1279,20 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         }
     }
 
+    /// @notice Private method to remove Org from Array of Hashes of organizations
+    /// @param org ID's of the organization
+    function removeOrg(bytes32 org) private {
+        for (uint256 i = 0; i < orgHash.length; i++) {
+            if (orgHash[i] == org) {
+                orgHash[i] = orgHash[orgHash.length - 1];
+                orgHash.pop();
+                break;
+            }
+        }
+    }
+
     /// @notice Refactoring method for Create Org or RootSafe
-    /// @dev Method Internal for Create Org or RootSafe
+    /// @dev Method Private for Create Org or RootSafe
     /// @param name String Name of the Organization
     /// @param caller Safe Caller to Create Org or RootSafe
     /// @param newRootSafe Safe Address to Create Org or RootSafe
@@ -1226,5 +1333,50 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         _authority.setUserRole(
             newRootSafe, uint8(DataTypes.Role.SUPER_SAFE), true
         );
+    }
+
+    /// @dev Function for refactoring DisconnectSafe Method, and RemoveWholeTree in one Method
+    /// @param squad ID's of the organization
+    function _exitSafe(uint256 squad) private {
+        bytes32 org = getOrgBySquad(squad);
+        address _squad = squads[org][squad].safe;
+        address caller = _msgSender();
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(_squad);
+        removeIndexSquad(org, squad);
+        delete squads[org][squad];
+
+        /// Disable Guard
+        bytes memory data =
+            abi.encodeWithSelector(IGnosisSafe.setGuard.selector, address(0));
+        /// Execute transaction from target safe
+        _executeModuleTransaction(_squad, data);
+
+        /// Disable Module
+        address prevModule = getPreviewModule(caller);
+        if (prevModule == address(0)) {
+            revert Errors.PreviewModuleNotFound(_squad);
+        }
+        data = abi.encodeWithSelector(
+            IGnosisSafe.disableModule.selector, prevModule, address(this)
+        );
+        /// Execute transaction from target safe
+        _executeModuleTransaction(_squad, data);
+
+        emit Events.SafeDisconnected(
+            org, squad, address(gnosisTargetSafe), caller
+            );
+    }
+
+    /// @dev refactoring of execution of Tx with the privilege of the Module Keyper Labs, and avoid repeat code
+    /// @param safe Safe Address to execute Tx
+    /// @param data Data to execute Tx
+    function _executeModuleTransaction(address safe, bytes memory data)
+        private
+    {
+        IGnosisSafe gnosisTargetSafe = IGnosisSafe(safe);
+        bool result = gnosisTargetSafe.execTransactionFromModule(
+            safe, uint256(0), data, Enum.Operation.Call
+        );
+        if (!result) revert Errors.TxExecutionModuleFaild();
     }
 }

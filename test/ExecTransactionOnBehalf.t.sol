@@ -5,10 +5,6 @@ import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./helpers/ReentrancyAttackHelper.t.sol";
 import "./helpers/DeployHelper.t.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Errors} from "../libraries/Errors.sol";
-import {Attacker} from "../src/ReentrancyAttack.sol";
 
 contract ExecTransactionOnBehalf is DeployHelper {
     function setUp() public {
@@ -636,7 +632,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
     // testCannot_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_DifferentTree
     //    -> SUPER_SAFE ROLE, caller try call function from another tree
-    // Revert NotAuthorizedAsNotSuperSafe() execTransactionOnBehalf : Super Safe in another tree
+    // Revert NotAuthorizedAsNotRootOrSuperSafe() execTransactionOnBehalf : Super Safe in another tree
     // Deploy 1 org with 2 root safe with 1 squad each, 1 subsquad each
     //           RootA              RootB
     //              |                 |
@@ -686,7 +682,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
     // 3: testCannot_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_DifferentTree
     //    --> ROOTSAFE from another tree try call function
-    // Revert NotAuthorizedAsNotSuperSafe() execTransactionOnBehalf : Root Safe in another tree
+    // Revert NotAuthorizedAsNotRootOrSuperSafe() execTransactionOnBehalf : Root Safe in another tree
     // Deploy 1 org with 2 root safe with 1 squad each, 1 subsquad each
     //           RootA   ---┐        RootB
     //              |       │          |
@@ -749,7 +745,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
     // testCannot_ExecTransactionOnBehalf_SAFE_LEAD_as_SAFE_Different_Target
     //    --> SAFE_LEAD from another squad try call function
-    // Revert NotAuthorizedAsNotSuperSafe() execTransactionOnBehalf : Safe Lead in another tree
+    // Revert NotAuthorizedAsNotRootOrSuperSafe() execTransactionOnBehalf : Safe Lead in another tree
     // Deploy 1 org with 2 root safe with 1 squad each, 1 subsquad each
     //           RootA               RootB
     //              |                  |
@@ -828,7 +824,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
     // testCannot_ExecTransactionOnBehalf_SAFE_LEAD_as_EOA_Different_Target
     //    --> SAFE_LEAD from another squad try call function
-    // Revert NotAuthorizedAsNotSuperSafe() execTransactionOnBehalf : Safe Lead in another tree by EOA as caller
+    // Revert NotAuthorizedAsNotRootOrSuperSafe() execTransactionOnBehalf : Safe Lead in another tree by EOA as caller
     // Deploy 1 org with 2 root safe with 1 squad each, 1 subsquad each
     //                  RootA               RootB
     //                    |                   |

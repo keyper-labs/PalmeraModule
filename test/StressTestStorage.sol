@@ -90,6 +90,12 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     function testAddThreeSubSquadLinealSecuenceMaxLevel() public {
         address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
         createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 3, 30000);
+
+        /// Remove Whole Tree A
+        gnosisHelper.updateSafeInterface(orgSafe);
+        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        assertTrue(result);
+        console.log("All Org Removed");
     }
 
     // Stress Test for Verification of maximal level when add Four sub Squad, in a lineal secuencial way

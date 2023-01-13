@@ -2,10 +2,6 @@
 pragma solidity ^0.8.15;
 
 import "./helpers/DeployHelper.t.sol";
-import {stdStorage, StdStorage, Test} from "forge-std/Test.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Errors} from "../libraries/Errors.sol";
 
 contract Hierarchies is DeployHelper {
     // Function called before each test is run
@@ -557,6 +553,7 @@ contract Hierarchies is DeployHelper {
         /// depth Tree Lmit by org
         bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
         uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        console.log("depthTreeLimit: ", depthTreeLimit);
 
         for (uint256 i = 3; i < depthTreeLimit; i++) {
             // Create a new Safe
