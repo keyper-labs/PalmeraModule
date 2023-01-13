@@ -63,30 +63,6 @@ abstract contract DenyHelper is Context {
             && listed[org][wallet] != address(0) && wallet != address(0);
     }
 
-    /// @dev Method to get All Wallet of the List
-    /// @param org Hash (Dao's name) of the Org
-    /// @return result returns Array of Wallets
-    /// TODO: evalute use theGraph for this method
-    function getAll(bytes32 org)
-        public
-        view
-        returns (address[] memory result)
-    {
-        uint256 count = listCount[org];
-        if (count == 0) {
-            return new address[](0);
-        }
-        result = new address[](count);
-        address currentWallet = listed[org][Constants.SENTINEL_ADDRESS];
-        uint256 i = 0;
-        while (currentWallet != Constants.SENTINEL_ADDRESS) {
-            result[i] = currentWallet;
-            currentWallet = listed[org][currentWallet];
-            i++;
-        }
-        return result;
-    }
-
     /// @dev Function to get the Previous User of the Wallet
     /// @param org Address of Org where get the Previous User of the Wallet
     /// @param wallet Address of the Wallet
