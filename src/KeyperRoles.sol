@@ -3,7 +3,15 @@ pragma solidity ^0.8.15;
 
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Authority} from "@solmate/auth/Auth.sol";
-import {DenyHelper, Constants, DataTypes, Events} from "./DenyHelper.sol";
+import {
+    DenyHelper,
+    Errors,
+    Constants,
+    DataTypes,
+    Events,
+    Address,
+    GnosisSafeMath
+} from "./DenyHelper.sol";
 
 /// @title Keyper Roles
 /// @custom:security-contact general@palmeradao.xyz
@@ -103,11 +111,11 @@ contract KeyperRoles is RolesAuthority, DenyHelper {
             true
         );
         /// Target contract: KeyperModule
-        /// Auth function removeGroup
+        /// Auth function removeSquad
         setRoleCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
             keyperModule,
-            Constants.REMOVE_GROUP,
+            Constants.REMOVE_SQUAD,
             true
         );
 
@@ -169,7 +177,7 @@ contract KeyperRoles is RolesAuthority, DenyHelper {
             true
         );
         /// Target contract: KeyperModule
-        /// Auth function createRootSafeGroup
+        /// Auth function createRootSafeSquad
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
             keyperModule,

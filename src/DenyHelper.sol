@@ -5,6 +5,7 @@ import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 import {Context} from "@openzeppelin/utils/Context.sol";
 import {Errors} from "../libraries/Errors.sol";
+import {DataTypes} from "../libraries/DataTypes.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {Events} from "../libraries/Events.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";

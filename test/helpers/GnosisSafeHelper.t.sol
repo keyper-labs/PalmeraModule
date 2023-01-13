@@ -295,12 +295,12 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createAddGroupTx(uint256 superSafe, string memory name)
+    function createAddSquadTx(uint256 superSafe, string memory name)
         public
         returns (bool)
     {
         bytes memory data =
-            abi.encodeWithSignature("addGroup(uint256,string)", superSafe, name);
+            abi.encodeWithSignature("addSquad(uint256,string)", superSafe, name);
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
@@ -314,7 +314,7 @@ contract GnosisSafeHelper is
         returns (bool)
     {
         bytes memory data = abi.encodeWithSignature(
-            "createRootSafeGroup(address,string)", newRootSafe, name
+            "createRootSafeSquad(address,string)", newRootSafe, name
         );
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
@@ -324,9 +324,9 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createRemoveGroupTx(uint256 group) public returns (bool) {
+    function createRemoveSquadTx(uint256 squad) public returns (bool) {
         bytes memory data =
-            abi.encodeWithSignature("removeGroup(uint256)", group);
+            abi.encodeWithSignature("removeSquad(uint256)", squad);
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
@@ -345,9 +345,9 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createPromoteToRootTx(uint256 group) public returns (bool) {
+    function createPromoteToRootTx(uint256 squad) public returns (bool) {
         bytes memory data =
-            abi.encodeWithSignature("promoteRoot(uint256)", group);
+            abi.encodeWithSignature("promoteRoot(uint256)", squad);
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
@@ -356,9 +356,9 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createDisconnectSafeTx(uint256 group) public returns (bool) {
+    function createDisconnectSafeTx(uint256 squad) public returns (bool) {
         bytes memory data =
-            abi.encodeWithSignature("disconnectSafe(uint256)", group);
+            abi.encodeWithSignature("disconnectSafe(uint256)", squad);
         // Create module safe tx
         Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx

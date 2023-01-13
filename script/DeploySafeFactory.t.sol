@@ -1,8 +1,8 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-
 import {GnosisSafeProxyFactory} from
     "@safe-contracts/proxies/GnosisSafeProxyFactory.sol";
 import {GnosisSafeProxy} from "@safe-contracts/proxies/GnosisSafeProxy.sol";

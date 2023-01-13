@@ -11,48 +11,48 @@ library Events {
         string name
     );
 
-    /// @dev Event Fire when create a New Group (Tier 0) into the organization
+    /// @dev Event Fire when create a New Squad (Tier 0) into the organization
     /// @param org Hash(DAO's name)
-    /// @param groupCreated ID of the group
-    /// @param lead Address of Safe Lead of the group
-    /// @param creator Address of the creator of the group
-    /// @param superSafe ID of Superior Group
-    /// @param name String name of the group
-    event GroupCreated(
+    /// @param squadCreated ID of the squad
+    /// @param lead Address of Safe Lead of the squad
+    /// @param creator Address of the creator of the squad
+    /// @param superSafe ID of Superior Squad
+    /// @param name String name of the squad
+    event SquadCreated(
         bytes32 indexed org,
-        uint256 indexed groupCreated,
+        uint256 indexed squadCreated,
         address lead,
         address indexed creator,
         uint256 superSafe,
         string name
     );
 
-    /// @dev Event Fire when remove a Group (Tier 0) from the organization
+    /// @dev Event Fire when remove a Squad (Tier 0) from the organization
     /// @param org Hash(DAO's name)
-    /// @param groupRemoved ID of the group removed
-    /// @param lead Address of Safe Lead of the group
-    /// @param remover Address of the creator of the group
-    /// @param superSafe ID of Superior Group
-    /// @param name String name of the group
-    event GroupRemoved(
+    /// @param squadRemoved ID of the squad removed
+    /// @param lead Address of Safe Lead of the squad
+    /// @param remover Address of the creator of the squad
+    /// @param superSafe ID of Superior Squad
+    /// @param name String name of the squad
+    event SquadRemoved(
         bytes32 indexed org,
-        uint256 indexed groupRemoved,
+        uint256 indexed squadRemoved,
         address lead,
         address indexed remover,
         uint256 superSafe,
         string name
     );
 
-    /// @dev Event Fire when update SuperSafe of a Group (Tier 0) from the organization
+    /// @dev Event Fire when update SuperSafe of a Squad (Tier 0) from the organization
     /// @param org Hash(DAO's name)
-    /// @param groupUpdated ID of the group updated
-    /// @param lead Address of Safe Lead of the group
-    /// @param updater Address of the updater of the group
-    /// @param oldSuperSafe ID of old Super Safe Group
-    /// @param newSuperSafe ID of new Super Safe Group
-    event GroupSuperUpdated(
+    /// @param squadUpdated ID of the squad updated
+    /// @param lead Address of Safe Lead of the squad
+    /// @param updater Address of the updater of the squad
+    /// @param oldSuperSafe ID of old Super Safe Squad
+    /// @param newSuperSafe ID of new Super Safe Squad
+    event SquadSuperUpdated(
         bytes32 indexed org,
-        uint256 indexed groupUpdated,
+        uint256 indexed squadUpdated,
         address lead,
         address indexed updater,
         uint256 oldSuperSafe,
@@ -76,66 +76,66 @@ library Events {
 
     /// @dev Event Fire when any Root Safe create a new Root Safe
     /// @param org Hash(DAO's name)
-    /// @param newIdRootSafeGroup New ID of the Root Safe Group
+    /// @param newIdRootSafeSquad New ID of the Root Safe Squad
     /// @param creator Address of the creator
-    /// @param newRootSafeGroup Address of the new Root Safe
+    /// @param newRootSafeSquad Address of the new Root Safe
     /// @param name String name of the new Root Safe
-    event RootSafeGroupCreated(
+    event RootSafeSquadCreated(
         bytes32 indexed org,
-        uint256 indexed newIdRootSafeGroup,
+        uint256 indexed newIdRootSafeSquad,
         address indexed creator,
-        address newRootSafeGroup,
+        address newRootSafeSquad,
         string name
     );
 
-    /// @dev Event Fire when update SuperSafe of a Group To Root Safe
+    /// @dev Event Fire when update SuperSafe of a Squad To Root Safe
     /// @param org Hash(DAO's name)
-    /// @param newIdRootSafeGroup ID of the group updated
-    /// @param updater Address of the updater of the group
-    /// @param newRootSafeGroup Address of the new Root Safe
+    /// @param newIdRootSafeSquad ID of the squad updated
+    /// @param updater Address of the updater of the squad
+    /// @param newRootSafeSquad Address of the new Root Safe
     /// @param name String name of the new Root Safe
     event RootSafePromoted(
         bytes32 indexed org,
-        uint256 indexed newIdRootSafeGroup,
+        uint256 indexed newIdRootSafeSquad,
         address indexed updater,
-        address newRootSafeGroup,
+        address newRootSafeSquad,
         string name
     );
 
     /// @dev Event Fire when an Root Safe Remove Whole of Tree
     /// @param org Hash(DAO's name)
-    /// @param rootSafeGroupId ID of the group updated
-    /// @param remover Address of the remover of the group
+    /// @param rootSafeSquadId ID of the squad updated
+    /// @param remover Address of the remover of the squad
     /// @param name String name of the new Root Safe
     event WholeTreeRemoved(
         bytes32 indexed org,
-        uint256 indexed rootSafeGroupId,
+        uint256 indexed rootSafeSquadId,
         address indexed remover,
         string name
     );
 
     /// @dev Event Fire when any Root Safe change Depth Tree Limit
     /// @param org Hash(DAO's name)
-    /// @param rootSafeGroupId New ID of the Root Safe Group
+    /// @param rootSafeSquadId New ID of the Root Safe Squad
     /// @param updater Address of the Root Safe
     /// @param oldLimit uint256 Old Limit of Tree
     /// @param newLimit uint256 New Limit of Tree
     event NewLimitLevel(
         bytes32 indexed org,
-        uint256 indexed rootSafeGroupId,
+        uint256 indexed rootSafeSquadId,
         address indexed updater,
         uint256 oldLimit,
         uint256 newLimit
     );
 
-    /// @dev Event Fire when remove a Group (Tier 0) from the organization
+    /// @dev Event Fire when remove a Squad (Tier 0) from the organization
     /// @param org Hash(DAO's name)
-    /// @param group ID of the group Disconnect
-    /// @param safe Address of Safe Address of the group Disconnect
+    /// @param squad ID of the squad Disconnect
+    /// @param safe Address of Safe Address of the squad Disconnect
     /// @param disconnector Address of the disconnector
     event SafeDisconnected(
         bytes32 indexed org,
-        uint256 indexed group,
+        uint256 indexed squad,
         address indexed safe,
         address disconnector
     );

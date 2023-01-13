@@ -1,6 +1,6 @@
 # KeyperModule - Gnosis safe module for keyper
 
-This contract is a registry of keyper organization/groups setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
+This contract is a registry of keyper organization/squads setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
 
 ## Tech requirements
 
@@ -58,31 +58,36 @@ All the following calls have to be executed from a safe using safe execTransatio
 
 The address of the calling safe is going to be registered with the input name
 
-# Add Subgroups to main organisation
+# Add Subsquads to main organisation
 
-`function addGroup(address org, address superSafe, string memory name)`
+<<<<<<< HEAD
+`function addSquad(address org, address superSafe, string memory name)`
+=======
+`function addSquad(address org, address superSafe, string memory name)`
 
-Need to specify to which organisation the new group will belong
+> > > > > > > dev
+
+Need to specify to which organisation the new squad will belong
 
 ## Requirements (not finalized)
 
-Organization=Safe Root has multiple groups
-Groups/Safe relationship
+Organization=Safe Root has multiple squads
+Squads/Safe relationship
 
--   Each group is associated to a safe
--   Each group has a superSafe (superSafe has ownership over the group)
--   Each group has set of child
+-   Each squad is associated to a safe
+-   Each squad has a superSafe (superSafe has ownership over the squad)
+-   Each squad has set of child
 
 Validate transfer rules - execTransactionFromModule:
 
 -   Safe signers can execute transactions if threshold met (normal safe verification)
--   Safe group signers can execute transactions in behalf of any child safe
-    -   Group threshold kept
+-   Safe squad signers can execute transactions in behalf of any child safe
+    -   Squad threshold kept
 
-Setup groups rules:
+Setup squads rules:
 
--   Root lead has full control over all groups (or over all groups that he is a designed lead?)
-    => Remove/Add groups.
+-   Root lead has full control over all squads (or over all squads that he is a designed lead?)
+    => Remove/Add squads.
     => Remove/Add signers of any child safe
--   Each group has a designed lead (full ownership of the safe)
+-   Each squad has a designed lead (full ownership of the safe)
 -   Can an lead be something different than a Safe contract?

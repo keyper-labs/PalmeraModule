@@ -10,38 +10,37 @@ library Errors {
     /// @dev Errors Keyper Modules
     /// @dev Error messages when the Org Hash (Dao's name) is not Registered
     error OrgNotRegistered(bytes32 org);
-    /// @dev Error messages when the Group(`group`) is not Registered
-    error GroupNotRegistered(uint256 group);
-    /// @dev Error messages when the Super safe Group(`superSafe`) is not Registered
+    /// @dev Error messages when the Squad(`squad`) is not Registered
+    error SquadNotRegistered(uint256 squad);
+    /// @dev Error messages when the Super safe Squad(`superSafe`) is not Registered
     error SuperSafeNotRegistered(uint256 superSafe);
     /// @dev Error messages when the Safe(`safe`) is not Registered
     error SafeNotRegistered(address safe);
     /// @dev Error messages when the Safe is not Autorized to Add Owner like Lead/Super/Root Safe
     error NotAuthorizedAddOwnerWithThreshold();
     /// @dev Error messages when the Safe is not Autorized to Remove Owner like Lead/Safe/Root Safe
-    error NotAuthorizedRemoveGroupFromOtherTree();
-    error NotAuthorizedRemoveGroupFromOtherOrg();
+    error NotAuthorizedRemoveSquadFromOtherTree();
+    error NotAuthorizedRemoveSquadFromOtherOrg();
     error NotAuthorizedRemoveOwner();
     error NotAuthorizedExecOnBehalf();
-    error NotAuthorizedUpdateGroupToOtherOrg();
-    error NotAuthorizedUpdateNonSuperSafe();
-    error PreviewModuleNotFound(address safe);
-    /// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's children Group Id's
-    error CannotDisconnectSafeBeforeRemoveChild(uint256 children);
-    /// @dev Error messages when try to remove Group before remove it's children, and show the Group's children Group Id's
-    error CannotRemoveGroupBeforeRemoveChild(uint256 children);
+    error NotAuthorizedUpdateSquadToOtherOrg();
+    /// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's children Squad Id's
+    error CannotDisconnectedSafeBeforeRemoveChild(uint256 children);
+    /// @dev Error messages when try to remove Squad before remove it's children, and show the Squad's children Squad Id's
+    error CannotRemoveSquadBeforeRemoveChild(uint256 children);
     error CannotDisableKeyperModule(address module);
     error CannotDisableKeyperGuard(address guard);
-    error GroupAlreadyRemoved();
+    error SquadAlreadyRemoved();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
     error NotAuthorizedAsNotSafeLead();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Super Safe
-    error NotAuthorizedAsNotSuperSafe();
-    /// @dev Error messages when the Root Safe is not Autorized Update Super Safe for a Group in Another Tree
-    error NotAuthorizedUpdateNonChildrenGroup();
+    error NotAuthorizedAsNotRootOrSuperSafe();
+    /// @dev Error messages when the Root Safe is not Autorized Update Super Safe for a Squad in Another Tree
+    error NotAuthorizedUpdateNonChildrenSquad();
+    error NotAuthorizedUpdateNonSuperSafe();
     /// @dev Error messages when the Root Safe is not Autorized to Disconnect an Safe in Another Tree
-    error NotAuthorizedDisconnectChildrenGroup();
-    /// @dev Error messages when the Root Safe is not Autorized to Update a Role in a Group in Another Tree
+    error NotAuthorizedDisconnectChildrenSquad();
+    /// @dev Error messages when the Root Safe is not Autorized to Update a Role in a Squad in Another Tree
     error NotAuthorizedSetRoleAnotherTree();
     /// @dev Error messages the Owner is not Found into the Safe Owners
     error OwnerNotFound();
@@ -53,20 +52,21 @@ library Errors {
     error InvalidThreshold();
     /// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
     error TxExecutionModuleFaild();
+    error PreviewModuleNotFound(address squad);
     /// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
     error TxOnBehalfExecutedFailed();
     /// @dev Error messages when the caller is an Invalid Gnosis Safe
     error InvalidGnosisSafe(address safe);
     /// @dev Error messages when the caller is an Invalid Gnosis Root Safe
     error InvalidGnosisRootSafe(address safe);
-    /// @dev Error messages when the Group is an Invalid ID's
-    error InvalidGroupId();
+    /// @dev Error messages when the Squad is an Invalid ID's
+    error InvalidSquadId();
     /// @dev Error messages when the Try to Modify a Role Not Permitted
     error SetRoleForbidden(DataTypes.Role role);
     /// @dev Error messages when Org Already Registered
     error OrgAlreadyRegistered(bytes32 safe);
-    /// @dev Error messages when Group Already Registered
-    error GroupAlreadyRegistered();
+    /// @dev Error messages when Squad Already Registered
+    error SquadAlreadyRegistered();
     /// @dev Error messages when Safe Already Registered
     error SafeAlreadyRegistered(address safe);
     /// @dev Error messages when the String Name is Empty
