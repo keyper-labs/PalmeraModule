@@ -4,11 +4,10 @@ pragma solidity ^0.8.15;
 import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 import {Context} from "@openzeppelin/utils/Context.sol";
-import {Errors} from "../libraries/Errors.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
 import {Constants} from "../libraries/Constants.sol";
-import {Events} from "../libraries/Events.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
+import {Errors} from "../libraries/Errors.sol";
+import {Events} from "../libraries/Events.sol";
 
 /// @title DenyHelper
 /// @custom:security-contact general@palmeradao.xyz
@@ -67,6 +66,7 @@ abstract contract DenyHelper is Context {
     /// @dev Method to get All Wallet of the List
     /// @param org Hash (Dao's name) of the Org
     /// @return result returns Array of Wallets
+    /// TODO: evalute use theGraph for this method
     function getAll(bytes32 org)
         public
         view

@@ -1,25 +1,26 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
-import {Enum} from "@safe-contracts/common/Enum.sol";
-import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {
-    DenyHelper,
+    Helpers,
     Context,
     Errors,
     Constants,
     DataTypes,
     Events,
     Address,
-    GnosisSafeMath
-} from "./DenyHelper.sol";
+    GnosisSafeMath,
+    Enum,
+    IGnosisSafe,
+    IGnosisSafeProxy
+} from "./Helpers.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
 /// @title Keyper Module
 /// @custom:security-contact general@palmeradao.xyz
-contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
+contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     using GnosisSafeMath for uint256;
     using Address for address;
 
@@ -226,21 +227,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         emit Events.TxOnBehalfExecuted(org, caller, targetSafe, result);
     }
 
-    /// @dev Function for enable Keyper module in a Gnosis Safe Multisig Wallet
-    /// @param module Address of Keyper module
-    function internalEnableModule(address module)
-        external
-        validAddress(module)
-    {
-        this.enableModule(module);
-    }
-
-    /// @dev Non-executed code, function called by the new safe
-    /// @param module Address of Keyper module
-    function enableModule(address module) external validAddress(module) {
-        emit Events.ModuleEnabled(address(this), module);
-    }
-
     /// @notice This function will allow Safe Lead & Safe Lead modify only roles
     /// @notice to to add owner and set a threshold without passing by normal multisig check
     /// @dev For instance addOwnerWithThreshold can be called by Safe Lead & Safe Lead modify only roles
@@ -315,22 +301,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
 
         /// Execute transaction from target safe
         _executeModuleTransaction(targetSafe, data);
-    }
-
-    /// @notice This function checks that caller has permission (as Root/Super/Lead safe) of the target safe
-    /// @param caller Caller's address
-    /// @param org Hash(DAO's name)
-    /// @param targetSafe Address of the target Gnosis Safe Multisig Wallet
-    function hasNotPermissionOverTarget(
-        address caller,
-        bytes32 org,
-        address targetSafe
-    ) public view returns (bool hasPermission) {
-        hasPermission = !isRootSafeOf(caller, getSquadIdBySafe(org, targetSafe))
-            && !isSuperSafe(
-                getSquadIdBySafe(org, caller), getSquadIdBySafe(org, targetSafe)
-            ) && !isSafeLead(getSquadIdBySafe(org, targetSafe), caller);
-        return hasPermission;
     }
 
     /// @notice Give user roles
@@ -844,6 +814,22 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         );
     }
 
+    /// @notice This function checks that caller has permission (as Root/Super/Lead safe) of the target safe
+    /// @param caller Caller's address
+    /// @param org Hash(DAO's name)
+    /// @param targetSafe Address of the target Gnosis Safe Multisig Wallet
+    function hasNotPermissionOverTarget(
+        address caller,
+        bytes32 org,
+        address targetSafe
+    ) public view returns (bool hasPermission) {
+        hasPermission = !isRootSafeOf(caller, getSquadIdBySafe(org, targetSafe))
+            && !isSuperSafe(
+                getSquadIdBySafe(org, caller), getSquadIdBySafe(org, targetSafe)
+            ) && !isSafeLead(getSquadIdBySafe(org, targetSafe), caller);
+        return hasPermission;
+    }
+
     /// @notice check if the organisation is registered
     /// @param org address
     /// @return bool
@@ -966,45 +952,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         (,, rootSafeId) = _seekMember(indexId + 1, squadId);
     }
 
-    /// @notice Method for refactoring the methods getRootSafe, isTreeMember, and isLimitTree, in one method
-    /// @dev Method to Getting if is Member, the  Level and Root Safe
-    /// @param superSafe ID's of the Super Safe squad
-    /// @param childSafe ID's of the Child Safe
-    function _seekMember(uint256 superSafe, uint256 childSafe)
-        private
-        view
-        returns (bool isMember, uint256 level, uint256 rootSafeId)
-    {
-        bytes32 org = getOrgBySquad(childSafe);
-        DataTypes.Squad memory childSquad = squads[org][childSafe];
-        // Check if the Child Squad is was removed or not Exist and Return False
-        if (
-            (childSquad.safe == address(0))
-                || (childSquad.tier == DataTypes.Tier.REMOVED)
-        ) {
-            return (isMember, level, rootSafeId);
-        }
-        // Storage the Root Safe Address in the next superSafe is Zero
-        rootSafeId = childSquad.superSafe;
-        uint256 currentSuperSafe = rootSafeId;
-        level = 2; // Level start in 1
-        while (currentSuperSafe != 0) {
-            childSquad = squads[org][currentSuperSafe];
-            // Validate if the Current Super Safe is Equal the SuperSafe try to Found, in case is True, storage True in isMember
-            isMember =
-                !isMember && currentSuperSafe == superSafe ? true : isMember;
-            // Validate if the Current Super Safe of the Chield Squad is Equal Zero
-            // Return the isMember, level and rootSafeId with actual value
-            if (childSquad.superSafe == 0) return (isMember, level, rootSafeId);
-            // else update the Vaule of possible Root Safe
-            else rootSafeId = childSquad.superSafe;
-            // Update the Current Super Safe with the Super Safe of the Child Squad
-            currentSuperSafe = childSquad.superSafe;
-            // Update the Level for the next iteration
-            level++;
-        }
-    }
-
     /// @notice Get the safe address of a squad
     /// @dev Method for getting the safe address of a squad
     /// @param squad uint256 of the squad
@@ -1088,210 +1035,6 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
         return false;
     }
 
-    /// @notice Method to Validate if address is a Gnosis Safe Multisig Wallet
-    /// @dev This method is used to validate if the address is a Gnosis Safe Multisig Wallet
-    /// @param safe Address to validate
-    /// @return bool
-    function isSafe(address safe) public view returns (bool) {
-        /// Check if the address is a Gnosis Safe Multisig Wallet
-        if (safe.isContract()) {
-            /// Check if the address is a Gnosis Safe Multisig Wallet
-            bytes memory payload = abi.encodeWithSignature("getThreshold()");
-            (bool success, bytes memory returnData) = safe.staticcall(payload);
-            if (!success) return false;
-            /// Check if the address is a Gnosis Safe Multisig Wallet
-            uint256 threshold = abi.decode(returnData, (uint256));
-            if (threshold == 0) return false;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /// @dev Method to get the domain separator for Keyper Module
-    /// @return Hash of the domain separator
-    function domainSeparator() public view returns (bytes32) {
-        return keccak256(
-            abi.encode(Constants.DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)
-        );
-    }
-
-    /// @dev Returns the chain id used by this contract.
-    /// @return The Chain ID
-    function getChainId() public view returns (uint256) {
-        uint256 id;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            id := chainid()
-        }
-        return id;
-    }
-
-    /// @dev Method to get the Encoded Packed Data for Keyper Transaction
-    /// @param caller address of the caller
-    /// @param safe address of the Safe
-    /// @param to address of the receiver
-    /// @param value value of the transaction
-    /// @param data data of the transaction
-    /// @param operation operation of the transaction
-    /// @param _nonce nonce of the transaction
-    /// @return Hash of the encoded data
-    function encodeTransactionData(
-        address caller,
-        address safe,
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation,
-        uint256 _nonce
-    ) public view returns (bytes memory) {
-        bytes32 keyperTxHash = keccak256(
-            abi.encode(
-                Constants.KEYPER_TX_TYPEHASH,
-                caller,
-                safe,
-                to,
-                value,
-                keccak256(data),
-                operation,
-                _nonce
-            )
-        );
-        return abi.encodePacked(
-            bytes1(0x19), bytes1(0x01), domainSeparator(), keyperTxHash
-        );
-    }
-
-    /// @dev Method to get the Hash Encoded Packed Data for Keyper Transaction
-    /// @param caller address of the caller
-    /// @param safe address of the Safe
-    /// @param to address of the receiver
-    /// @param value value of the transaction
-    /// @param data data of the transaction
-    /// @param operation operation of the transaction
-    /// @param _nonce nonce of the transaction
-    /// @return Hash of the encoded packed data
-    function getTransactionHash(
-        address caller,
-        address safe,
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation,
-        uint256 _nonce
-    ) public view returns (bytes32) {
-        return keccak256(
-            encodeTransactionData(
-                caller, safe, to, value, data, operation, _nonce
-            )
-        );
-    }
-
-    /// @dev Method to get Preview Module of the Safe
-    /// @param safe address of the Safe
-    /// @return address of the Preview Module
-    function getPreviewModule(address safe) private view returns (address) {
-        // create Instance of the Gnosis Safe
-        IGnosisSafe gnosisSafe = IGnosisSafe(safe);
-        // get the modules of the Safe
-        (address[] memory modules, address nextModule) =
-            gnosisSafe.getModulesPaginated(address(this), 25);
-        if ((modules.length == 0) && (nextModule == Constants.SENTINEL_ADDRESS))
-        {
-            return Constants.SENTINEL_ADDRESS;
-        } else {
-            for (uint256 i = 1; i < modules.length; i++) {
-                if (modules[i] == address(this)) {
-                    return modules[i - 1];
-                }
-            }
-        }
-    }
-
-    /// @dev Method to getting the All Gorup Member for the Tree of the Root Safe/Org indicate in the args
-    /// @param org HAsh of the DAO of the org
-    /// @param rootSafe Gorup ID's of the root safe
-    /// @return indexTree Array of the Squad ID's of the Tree
-    function getTreeMember(bytes32 org, uint256 rootSafe)
-        private
-        view
-        returns (uint256[] memory indexTree)
-    {
-        uint256 index;
-        uint256[] memory _indexSquad = indexSquad[org];
-        for (uint256 i = 0; i < _indexSquad.length; i++) {
-            if (
-                (getRootSafe(_indexSquad[i]) == rootSafe)
-                    && (_indexSquad[i] != rootSafe)
-            ) {
-                index++;
-            }
-        }
-        indexTree = new uint256[](index);
-        index = 0;
-        for (uint256 i = 0; i < _indexSquad.length; i++) {
-            if (
-                (getRootSafe(_indexSquad[i]) == rootSafe)
-                    && (_indexSquad[i] != rootSafe)
-            ) {
-                indexTree[index] = _indexSquad[i];
-                index++;
-            }
-        }
-    }
-
-    /// @notice disable safe lead roles
-    /// @dev Associated roles: SAFE_LEAD || SAFE_LEAD_EXEC_ON_BEHALF_ONLY || SAFE_LEAD_MODIFY_OWNERS_ONLY
-    /// @param user Address of the user to disable roles
-    function disableSafeLeadRoles(address user) private {
-        RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        if (_authority.doesUserHaveRole(user, uint8(DataTypes.Role.SAFE_LEAD)))
-        {
-            _authority.setUserRole(user, uint8(DataTypes.Role.SAFE_LEAD), false);
-        } else if (
-            _authority.doesUserHaveRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
-            )
-        ) {
-            _authority.setUserRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY), false
-            );
-        } else if (
-            _authority.doesUserHaveRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
-            )
-        ) {
-            _authority.setUserRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY), false
-            );
-        }
-    }
-
-    /// @notice Private method to remove indexId from mapping of indexes into organizations
-    /// @param org ID's of the organization
-    /// @param squad uint256 of the squad
-    function removeIndexSquad(bytes32 org, uint256 squad) private {
-        for (uint256 i = 0; i < indexSquad[org].length; i++) {
-            if (indexSquad[org][i] == squad) {
-                indexSquad[org][i] = indexSquad[org][indexSquad[org].length - 1];
-                indexSquad[org].pop();
-                break;
-            }
-        }
-    }
-
-    /// @notice Private method to remove Org from Array of Hashes of organizations
-    /// @param org ID's of the organization
-    function removeOrg(bytes32 org) private {
-        for (uint256 i = 0; i < orgHash.length; i++) {
-            if (orgHash[i] == org) {
-                orgHash[i] = orgHash[orgHash.length - 1];
-                orgHash.pop();
-                break;
-            }
-        }
-    }
-
     /// @notice Refactoring method for Create Org or RootSafe
     /// @dev Method Private for Create Org or RootSafe
     /// @param name String Name of the Organization
@@ -1368,16 +1111,126 @@ contract KeyperModule is Auth, ReentrancyGuard, DenyHelper {
             );
     }
 
-    /// @dev refactoring of execution of Tx with the privilege of the Module Keyper Labs, and avoid repeat code
-    /// @param safe Safe Address to execute Tx
-    /// @param data Data to execute Tx
-    function _executeModuleTransaction(address safe, bytes memory data)
+    /// @notice disable safe lead roles
+    /// @dev Associated roles: SAFE_LEAD || SAFE_LEAD_EXEC_ON_BEHALF_ONLY || SAFE_LEAD_MODIFY_OWNERS_ONLY
+    /// @param user Address of the user to disable roles
+    function disableSafeLeadRoles(address user) private {
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        if (_authority.doesUserHaveRole(user, uint8(DataTypes.Role.SAFE_LEAD)))
+        {
+            _authority.setUserRole(user, uint8(DataTypes.Role.SAFE_LEAD), false);
+        } else if (
+            _authority.doesUserHaveRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            )
+        ) {
+            _authority.setUserRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY), false
+            );
+        } else if (
+            _authority.doesUserHaveRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            )
+        ) {
+            _authority.setUserRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY), false
+            );
+        }
+    }
+
+    /// @notice Private method to remove indexId from mapping of indexes into organizations
+    /// @param org ID's of the organization
+    /// @param squad uint256 of the squad
+    function removeIndexSquad(bytes32 org, uint256 squad) private {
+        for (uint256 i = 0; i < indexSquad[org].length; i++) {
+            if (indexSquad[org][i] == squad) {
+                indexSquad[org][i] = indexSquad[org][indexSquad[org].length - 1];
+                indexSquad[org].pop();
+                break;
+            }
+        }
+    }
+
+    /// @notice Private method to remove Org from Array of Hashes of organizations
+    /// @param org ID's of the organization
+    function removeOrg(bytes32 org) private {
+        for (uint256 i = 0; i < orgHash.length; i++) {
+            if (orgHash[i] == org) {
+                orgHash[i] = orgHash[orgHash.length - 1];
+                orgHash.pop();
+                break;
+            }
+        }
+    }
+
+    /// @notice Method for refactoring the methods getRootSafe, isTreeMember, and isLimitTree, in one method
+    /// @dev Method to Getting if is Member, the  Level and Root Safe
+    /// @param superSafe ID's of the Super Safe squad
+    /// @param childSafe ID's of the Child Safe
+    function _seekMember(uint256 superSafe, uint256 childSafe)
         private
+        view
+        returns (bool isMember, uint256 level, uint256 rootSafeId)
     {
-        IGnosisSafe gnosisTargetSafe = IGnosisSafe(safe);
-        bool result = gnosisTargetSafe.execTransactionFromModule(
-            safe, uint256(0), data, Enum.Operation.Call
-        );
-        if (!result) revert Errors.TxExecutionModuleFaild();
+        bytes32 org = getOrgBySquad(childSafe);
+        DataTypes.Squad memory childSquad = squads[org][childSafe];
+        // Check if the Child Squad is was removed or not Exist and Return False
+        if (
+            (childSquad.safe == address(0))
+                || (childSquad.tier == DataTypes.Tier.REMOVED)
+        ) {
+            return (isMember, level, rootSafeId);
+        }
+        // Storage the Root Safe Address in the next superSafe is Zero
+        rootSafeId = childSquad.superSafe;
+        uint256 currentSuperSafe = rootSafeId;
+        level = 2; // Level start in 1
+        while (currentSuperSafe != 0) {
+            childSquad = squads[org][currentSuperSafe];
+            // Validate if the Current Super Safe is Equal the SuperSafe try to Found, in case is True, storage True in isMember
+            isMember =
+                !isMember && currentSuperSafe == superSafe ? true : isMember;
+            // Validate if the Current Super Safe of the Chield Squad is Equal Zero
+            // Return the isMember, level and rootSafeId with actual value
+            if (childSquad.superSafe == 0) return (isMember, level, rootSafeId);
+            // else update the Vaule of possible Root Safe
+            else rootSafeId = childSquad.superSafe;
+            // Update the Current Super Safe with the Super Safe of the Child Squad
+            currentSuperSafe = childSquad.superSafe;
+            // Update the Level for the next iteration
+            level++;
+        }
+    }
+
+    /// @dev Method to getting the All Gorup Member for the Tree of the Root Safe/Org indicate in the args
+    /// @param org HAsh of the DAO of the org
+    /// @param rootSafe Gorup ID's of the root safe
+    /// @return indexTree Array of the Squad ID's of the Tree
+    function getTreeMember(bytes32 org, uint256 rootSafe)
+        private
+        view
+        returns (uint256[] memory indexTree)
+    {
+        uint256 index;
+        uint256[] memory _indexSquad = indexSquad[org];
+        for (uint256 i = 0; i < _indexSquad.length; i++) {
+            if (
+                (getRootSafe(_indexSquad[i]) == rootSafe)
+                    && (_indexSquad[i] != rootSafe)
+            ) {
+                index++;
+            }
+        }
+        indexTree = new uint256[](index);
+        index = 0;
+        for (uint256 i = 0; i < _indexSquad.length; i++) {
+            if (
+                (getRootSafe(_indexSquad[i]) == rootSafe)
+                    && (_indexSquad[i] != rootSafe)
+            ) {
+                indexTree[index] = _indexSquad[i];
+                index++;
+            }
+        }
     }
 }
