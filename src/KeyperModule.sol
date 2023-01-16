@@ -554,7 +554,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 rootSafe = getSquadIdBySafe(org, caller);
-        uint256[] memory _indexSquad = getTreeMember(org, rootSafe);
+        uint256[] memory _indexSquad = getTreeMember(rootSafe, indexSquad[org]);
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         for (uint256 j = 0; j < _indexSquad.length; j++) {
             uint256 squad = _indexSquad[j];
@@ -1203,32 +1203,31 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     }
 
     /// @dev Method to getting the All Gorup Member for the Tree of the Root Safe/Org indicate in the args
-    /// @param org HAsh of the DAO of the org
     /// @param rootSafe Gorup ID's of the root safe
+    /// @param indexSquadByOrg Array of the Squad ID's of the Org
     /// @return indexTree Array of the Squad ID's of the Tree
-    function getTreeMember(bytes32 org, uint256 rootSafe)
+    function getTreeMember(uint256 rootSafe, uint256[] memory indexSquadByOrg)
         private
         view
         returns (uint256[] memory indexTree)
     {
         uint256 index;
-        uint256[] memory _indexSquad = indexSquad[org];
-        for (uint256 i = 0; i < _indexSquad.length; i++) {
+        for (uint256 i = 0; i < indexSquadByOrg.length; i++) {
             if (
-                (getRootSafe(_indexSquad[i]) == rootSafe)
-                    && (_indexSquad[i] != rootSafe)
+                (getRootSafe(indexSquadByOrg[i]) == rootSafe)
+                    && (indexSquadByOrg[i] != rootSafe)
             ) {
                 index++;
             }
         }
         indexTree = new uint256[](index);
         index = 0;
-        for (uint256 i = 0; i < _indexSquad.length; i++) {
+        for (uint256 i = 0; i < indexSquadByOrg.length; i++) {
             if (
-                (getRootSafe(_indexSquad[i]) == rootSafe)
-                    && (_indexSquad[i] != rootSafe)
+                (getRootSafe(indexSquadByOrg[i]) == rootSafe)
+                    && (indexSquadByOrg[i] != rootSafe)
             ) {
-                indexTree[index] = _indexSquad[i];
+                indexTree[index] = indexSquadByOrg[i];
                 index++;
             }
         }
