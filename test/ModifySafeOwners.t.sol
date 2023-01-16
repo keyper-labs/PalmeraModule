@@ -386,7 +386,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         uint256 zeroThreshold = 0;
 
         vm.startPrank(safeLead);
-        vm.expectRevert(Errors.TxExecutionModuleFaild.selector); // safe Contract Internal Error GS202 "Threshold needs to be greater than 0"
+        vm.expectRevert(Errors.TxExecutionModuleFailed.selector); // safe Contract Internal Error GS202 "Threshold needs to be greater than 0"
         keyperModule.addOwnerWithThreshold(
             newOwner, zeroThreshold, rootAddr, orgHash
         );
@@ -395,7 +395,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         uint256 wrongThreshold =
             gnosisHelper.gnosisSafe().getOwners().length + 2;
 
-        vm.expectRevert(Errors.TxExecutionModuleFaild.selector); // safe Contract Internal Error GS201 "Threshold cannot exceed owner count"
+        vm.expectRevert(Errors.TxExecutionModuleFailed.selector); // safe Contract Internal Error GS201 "Threshold cannot exceed owner count"
         keyperModule.addOwnerWithThreshold(
             newOwner, wrongThreshold, rootAddr, orgHash
         );
@@ -535,7 +535,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         uint256 zeroThreshold = 0;
 
         vm.startPrank(safeLead);
-        vm.expectRevert(Errors.TxExecutionModuleFaild.selector); // safe Contract Internal Error GS202 "Threshold needs to be greater than 0"
+        vm.expectRevert(Errors.TxExecutionModuleFailed.selector); // safe Contract Internal Error GS202 "Threshold needs to be greater than 0"
         keyperModule.removeOwner(
             prevOwner, removeOwner, zeroThreshold, rootAddr, orgHash
         );
@@ -544,7 +544,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         uint256 wrongThreshold =
             gnosisHelper.gnosisSafe().getOwners().length + 2;
 
-        vm.expectRevert(Errors.TxExecutionModuleFaild.selector); // safe Contract Internal Error GS201 "Threshold cannot exceed owner count"
+        vm.expectRevert(Errors.TxExecutionModuleFailed.selector); // safe Contract Internal Error GS201 "Threshold cannot exceed owner count"
         keyperModule.removeOwner(
             prevOwner, removeOwner, wrongThreshold, rootAddr, orgHash
         );

@@ -166,6 +166,6 @@ abstract contract Helpers is DenyHelper {
         bool result = gnosisTargetSafe.execTransactionFromModule(
             safe, uint256(0), data, Enum.Operation.Call
         );
-        if (!result) revert Errors.TxExecutionModuleFaild();
+        if (!result) revert Errors.TxExecutionModuleFailed();
     }
 }

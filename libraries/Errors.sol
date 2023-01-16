@@ -51,7 +51,7 @@ library Errors {
     /// @dev Error messages when Invalid Threshold is provided
     error InvalidThreshold();
     /// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
-    error TxExecutionModuleFaild();
+    error TxExecutionModuleFailed();
     error PreviewModuleNotFound(address squad);
     /// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
     error TxOnBehalfExecutedFailed();
