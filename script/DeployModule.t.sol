@@ -13,6 +13,18 @@ contract DeployModule is Script {
         address proxyFactory = vm.envAddress("PROXY_FACTORY_ADDRESS");
         address rolesAuthority = address(0xBEEF);
         uint256 maxTreeDepth = 50;
+        // Deploy Constants Libraries
+        address constantsAddr = deployCode("Constants.sol");
+        console.log("Constants deployed at: ", constantsAddr);
+        // Deploy DataTypes Libraries
+        address dataTypesAddr = deployCode("DataTypes.sol");
+        console.log("DataTypes deployed at: ", dataTypesAddr);
+        // Deploy Errors Libraries
+        address errorsAddr = deployCode("Errors.sol");
+        console.log("Errors deployed at: ", errorsAddr);
+        // Deploy Events Libraries
+        address eventsAddr = deployCode("Events.sol");
+        console.log("Events deployed at: ", eventsAddr);
         vm.startBroadcast();
         MockedContract masterCopyMocked = new MockedContract();
         MockedContract proxyFactoryMocked = new MockedContract();
