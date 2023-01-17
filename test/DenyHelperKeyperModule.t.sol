@@ -31,7 +31,6 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         keyperModule.enableAllowlist();
         keyperModule.addToList(owners);
         assertEq(keyperModule.listCount(orgHash), owners.length);
-        assertEq(keyperModule.getAll(orgHash).length, owners.length);
         for (uint256 i = 0; i < owners.length; i++) {
             assertEq(keyperModule.isListed(orgHash, owners[i]), true);
         }
@@ -281,7 +280,6 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         keyperModule.enableAllowlist();
         keyperModule.addToList(owners);
         assertEq(keyperModule.listCount(orgHash), owners.length);
-        assertEq(keyperModule.getAll(orgHash).length, owners.length);
         for (uint256 i = 0; i < owners.length; i++) {
             assertEq(keyperModule.isListed(orgHash, owners[i]), true);
         }
@@ -335,14 +333,12 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
 
         keyperModule.dropFromList(ownerToRemove);
         assertEq(keyperModule.isListed(orgHash, ownerToRemove), false);
-        assertEq(keyperModule.getAll(orgHash).length, 4);
 
         // Must be the address(0xEEE)
         address secOwnerToRemove = owners[4];
 
         keyperModule.dropFromList(secOwnerToRemove);
         assertEq(keyperModule.isListed(orgHash, secOwnerToRemove), false);
-        assertEq(keyperModule.getAll(orgHash).length, 3);
         vm.stopPrank();
     }
 

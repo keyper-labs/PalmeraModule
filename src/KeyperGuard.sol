@@ -3,13 +3,15 @@ pragma solidity ^0.8.15;
 
 import {Guard, BaseGuard} from "@safe-contracts/base/GuardManager.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
-import {Enum} from "@safe-contracts/common/Enum.sol";
-import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
-import {KeyperModule} from "./KeyperModule.sol";
-import {Context} from "@openzeppelin/utils/Context.sol";
-import {Errors} from "../libraries/Errors.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {Events} from "../libraries/Events.sol";
+import {
+    KeyperModule,
+    Context,
+    Errors,
+    Constants,
+    IGnosisSafe,
+    IGnosisSafeProxy,
+    Enum
+} from "./KeyperModule.sol";
 
 /// @title Keyper Guard
 /// @custom:security-contact general@palmeradao.xyz
