@@ -4,7 +4,9 @@ pragma solidity ^0.8.15;
 import "./helpers/DeployHelper.t.sol";
 
 contract EventsChekers is DeployHelper {
+    address[] public owners = new address[](5);
     /// @dev Event Fire when create a new Organization
+
     event OrganizationCreated(
         address indexed creator, bytes32 indexed org, string name
     );
@@ -44,9 +46,6 @@ contract EventsChekers is DeployHelper {
         address indexed target,
         bool result
     );
-
-    /// @dev Event Fire when any Gnosis Safe enable the Keyper Module
-    event ModuleEnabled(address indexed safe, address indexed module);
 
     /// @dev Event Fire when any Root Safe create a new Root Safe
     event RootSafeSquadCreated(
@@ -99,10 +98,7 @@ contract EventsChekers is DeployHelper {
     /// @dev Event Fire when drop a wallet into the deny/allow list
     event DroppedFromList(address indexed user);
 
-    /// @dev Event when a new keyperModule is setting up
-    event KeyperModuleSetup(address keyperModule, address caller);
     // Function called before each test is run
-
     function setUp() public {
         DeployHelper.deployAllContracts(90);
     }
@@ -427,5 +423,36 @@ contract EventsChekers is DeployHelper {
             keccak256(abi.encodePacked(orgName)), rootId, rootAddr, 8, 49
             );
         keyperModule.updateDepthTreeLimit(49);
+    }
+
+    function testEventWhenAddToList() public {
+        listOfOwners();
+        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        vm.startPrank(rootAddr);
+        uint256 rootId = keyperModule.registerOrg(orgName);
+        keyperModule.enableAllowlist();
+        vm.expectEmit(true, false, false, true);
+        emit AddedToList(owners);
+        keyperModule.addToList(owners);
+    }
+
+    function testEventWhenDropFromList() public {
+        listOfOwners();
+        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        vm.startPrank(rootAddr);
+        uint256 rootId = keyperModule.registerOrg(orgName);
+        keyperModule.enableAllowlist();
+        keyperModule.addToList(owners);
+        vm.expectEmit(true, false, false, true);
+        emit DroppedFromList(owners[0]);
+        keyperModule.dropFromList(owners[0]);
+    }
+
+    function listOfOwners() internal {
+        owners[0] = address(0xAAA);
+        owners[1] = address(0xBBB);
+        owners[2] = address(0xCCC);
+        owners[3] = address(0xDDD);
+        owners[4] = address(0xEEE);
     }
 }
