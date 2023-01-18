@@ -370,6 +370,45 @@ contract EventsChekers is DeployHelper {
         keyperModule.disconnectSafe(squadId);
     }
 
+    function testEventWhenExecutionOnBehalf() public {
+        (uint256 rootId, uint256 safeSquadA1) =
+            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+
+        // Set keyperhelper gnosis safe to org
+        keyperHelper.setGnosisSafe(rootAddr);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            rootAddr,
+            safeSquadA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        // Execute on behalf function
+        vm.startPrank(rootAddr);
+        vm.expectEmit(true, true, true, true);
+        emit TxOnBehalfExecuted(
+            keccak256(abi.encodePacked(orgName)),
+            rootAddr,
+            safeSquadA1Addr,
+            true
+            );
+        keyperModule.execTransactionOnBehalf(
+            orgHash,
+            safeSquadA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        vm.stopPrank();
+    }
+
     function testEventWhenRemoveWholeTree() public {
         (
             uint256 rootId,
