@@ -60,16 +60,7 @@ contract DeployHelper is Test {
             address dataTypesAddr,
             address errorsAddr,
             address eventsAddr
-        ) = libraries();
-
-        // // Deploy Constants Libraries
-        // console.log("Constants deployed at: ", constantsAddr);
-        // // Deploy DataTypes Libraries
-        // console.log("DataTypes deployed at: ", dataTypesAddr);
-        // // Deploy Errors Libraries
-        // console.log("Errors deployed at: ", errorsAddr);
-        // // Deploy Events Libraries
-        // console.log("Events deployed at: ", eventsAddr);
+        ) = deployLibraries();
 
         // Predict the future address of keyper roles
         keyperRolesDeployed = factory.getDeployed(address(this), salt);
@@ -125,7 +116,10 @@ contract DeployHelper is Test {
         );
     }
 
-    function libraries() public returns (address, address, address, address) {
+    function deployLibraries()
+        public
+        returns (address, address, address, address)
+    {
         // Deploy Constants Libraries
         address constantsAddr =
             address(0x2e234DAe75C793f67A35089C9d99245E1C58470b);
