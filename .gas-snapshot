@@ -159,5 +159,5 @@ ModifySafeOwners:testRevertSafeNotRegisteredRemoveOwner_EOA_Caller() (gas: 50632
 ModifySafeOwners:testRevertSafeNotRegisteredRemoveOwner_SAFE_Caller() (gas: 510491)
 ModifySafeOwners:testRevertZeroAddressAddOwnerWithThreshold() (gas: 1486364)
 ModifySafeOwners:testRevertZeroAddressProvidedRemoveOwner() (gas: 2895596)
-TestDeploy:testDeploy() (gas: 6249020)
+TestDeploy:testDeploy() (gas: 6067748)
 GnosisSafeHelper:testNewKeyperSafe() (gas: 9869471)
