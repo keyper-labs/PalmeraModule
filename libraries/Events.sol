@@ -4,7 +4,10 @@ pragma solidity ^0.8.15;
 /// @title Library Events
 /// @custom:security-contact general@palmeradao.xyz
 library Events {
-    /// @dev Events
+	/// @dev Event Fire when create a new Organization
+	/// @param creator Address of the creator
+	/// @param org Hash(DAO's name)
+	/// @param name String name of the organization
     event OrganizationCreated(
         address indexed creator,
         bytes32 indexed org,
