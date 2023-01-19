@@ -21,6 +21,18 @@ abstract contract Helpers is DenyHelper {
     using GnosisSafeMath for uint256;
     using Address for address;
 
+    /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet
+    /// @param safe Address of the Gnosis Safe Multisig Wallet
+    modifier IsGnosisSafe(address safe) {
+        if (
+            safe == address(0) || safe == Constants.SENTINEL_ADDRESS
+                || !isSafe(safe)
+        ) {
+            revert Errors.InvalidGnosisSafe(safe);
+        }
+        _;
+    }
+
     /// @dev Function for enable Keyper module in a Gnosis Safe Multisig Wallet
     /// @param module Address of Keyper module
     function internalEnableModule(address module)
