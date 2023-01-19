@@ -101,6 +101,12 @@ contract EventsChekers is DeployHelper {
     // Function called before each test is run
     function setUp() public {
         DeployHelper.deployAllContracts(90);
+        /// Owners
+        owners[0] = address(0xAAA);
+        owners[1] = address(0xBBB);
+        owners[2] = address(0xCCC);
+        owners[3] = address(0xDDD);
+        owners[4] = address(0xEEE);
     }
 
     function testEventWhenRegisterRootOrg() public {
@@ -465,7 +471,6 @@ contract EventsChekers is DeployHelper {
     }
 
     function testEventWhenAddToList() public {
-        listOfOwners();
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         uint256 rootId = keyperModule.registerOrg(orgName);
@@ -476,7 +481,6 @@ contract EventsChekers is DeployHelper {
     }
 
     function testEventWhenDropFromList() public {
-        listOfOwners();
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         uint256 rootId = keyperModule.registerOrg(orgName);
@@ -485,13 +489,5 @@ contract EventsChekers is DeployHelper {
         vm.expectEmit(true, false, false, true);
         emit DroppedFromList(owners[0]);
         keyperModule.dropFromList(owners[0]);
-    }
-
-    function listOfOwners() internal {
-        owners[0] = address(0xAAA);
-        owners[1] = address(0xBBB);
-        owners[2] = address(0xCCC);
-        owners[3] = address(0xDDD);
-        owners[4] = address(0xEEE);
     }
 }
