@@ -111,6 +111,8 @@ KeyperRolesTest:testCannot_ROOT_SAFE_SetRole_ROOT_SAFE_to_EOA_DifferentTree_Safe
 KeyperRolesTest:testCannot_ROOT_SAFE_SetRole_SUPER_SAFE_to_EAO() (gas: 1493652)
 KeyperRolesTest:testCannot_ROOT_SAFE_SetRole_SUPER_SAFE_to_SAFE() (gas: 2111558)
 KeyperRolesTest:testCannot_SUPER_SAFE_SetRole_SAFE_LEAD_to_EAO() (gas: 1492993)
+KeyperRoleDeployTest:testSetUserRoles() (gas: 32560)
+KeyperRoleDeployTest:testSetupRolesCapabilities() (gas: 158201)
 TestKeyperSafe:testAuthorityAddress() (gas: 10929)
 TestKeyperSafe:testCan_RemoveSquad_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree() (gas: 2833477)
 TestKeyperSafe:testCan_RemoveSquad_SUPER_SAFE_as_SAFE_is_SUPER_SAFE_SameTree() (gas: 2218277)
