@@ -474,7 +474,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         DataTypes.Squad storage superSafe = squads[org][_squad.superSafe];
 
         /// Remove child from superSafe
-        for (uint256 i = 0; i < superSafe.child.length; i++) {
+        for (uint256 i = 0; i < superSafe.child.length; ++i) {
             if (superSafe.child[i] == squad) {
                 superSafe.child[i] = superSafe.child[superSafe.child.length - 1];
                 superSafe.child.pop();
@@ -482,7 +482,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             }
         }
         // Handle child from removed squad
-        for (uint256 i = 0; i < _squad.child.length; i++) {
+        for (uint256 i = 0; i < _squad.child.length; ++i) {
             // Add removed squad child to superSafe
             superSafe.child.push(_squad.child[i]);
             DataTypes.Squad storage childrenSquad = squads[org][_squad.child[i]];
@@ -642,7 +642,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         DataTypes.Squad storage oldSuper = squads[org][_squad.superSafe];
 
         /// Remove child from superSafe
-        for (uint256 i = 0; i < oldSuper.child.length; i++) {
+        for (uint256 i = 0; i < oldSuper.child.length; ++i) {
             if (oldSuper.child[i] == squad) {
                 oldSuper.child[i] = oldSuper.child[oldSuper.child.length - 1];
                 oldSuper.child.pop();
@@ -719,7 +719,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             revert Errors.DenyHelpersDisabled();
         }
         address currentWallet = Constants.SENTINEL_ADDRESS;
-        for (uint256 i = 0; i < users.length; i++) {
+        for (uint256 i = 0; i < users.length; ++i) {
             address wallet = users[i];
             if (
                 wallet == address(0) || wallet == Constants.SENTINEL_ADDRESS
@@ -970,7 +970,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @param safe address of Safe
     /// @return Org Hashed Name
     function getOrgHashBySafe(address safe) public view returns (bytes32) {
-        for (uint256 i = 0; i < orgHash.length; i++) {
+        for (uint256 i = 0; i < orgHash.length; ++i) {
             if (getSquadIdBySafe(orgHash[i], safe) != 0) {
                 return orgHash[i];
             }
@@ -991,7 +991,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             revert Errors.OrgNotRegistered(org);
         }
         /// Check if the Safe address is into an Squad mapping
-        for (uint256 i = 0; i < indexSquad[org].length; i++) {
+        for (uint256 i = 0; i < indexSquad[org].length; ++i) {
             if (squads[org][indexSquad[org][i]].safe == safe) {
                 return indexSquad[org][i];
             }
@@ -1009,7 +1009,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         returns (bytes32 orgSquad)
     {
         if ((squad == 0) || (squad > indexId)) revert Errors.InvalidSquadId();
-        for (uint256 i = 0; i < orgHash.length; i++) {
+        for (uint256 i = 0; i < orgHash.length; ++i) {
             if (squads[orgHash[i]][squad].safe != address(0)) {
                 orgSquad = orgHash[i];
             }
@@ -1142,7 +1142,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @param org ID's of the organization
     /// @param squad uint256 of the squad
     function removeIndexSquad(bytes32 org, uint256 squad) private {
-        for (uint256 i = 0; i < indexSquad[org].length; i++) {
+        for (uint256 i = 0; i < indexSquad[org].length; ++i) {
             if (indexSquad[org][i] == squad) {
                 indexSquad[org][i] = indexSquad[org][indexSquad[org].length - 1];
                 indexSquad[org].pop();
@@ -1154,7 +1154,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @notice Private method to remove Org from Array of Hashes of organizations
     /// @param org ID's of the organization
     function removeOrg(bytes32 org) private {
-        for (uint256 i = 0; i < orgHash.length; i++) {
+        for (uint256 i = 0; i < orgHash.length; ++i) {
             if (orgHash[i] == org) {
                 orgHash[i] = orgHash[orgHash.length - 1];
                 orgHash.pop();
@@ -1212,7 +1212,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         returns (uint256[] memory indexTree)
     {
         uint256 index;
-        for (uint256 i = 0; i < indexSquadByOrg.length; i++) {
+        for (uint256 i = 0; i < indexSquadByOrg.length; ++i) {
             if (
                 (getRootSafe(indexSquadByOrg[i]) == rootSafe)
                     && (indexSquadByOrg[i] != rootSafe)
@@ -1222,7 +1222,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         }
         indexTree = new uint256[](index);
         index = 0;
-        for (uint256 i = 0; i < indexSquadByOrg.length; i++) {
+        for (uint256 i = 0; i < indexSquadByOrg.length; ++i) {
             if (
                 (getRootSafe(indexSquadByOrg[i]) == rootSafe)
                     && (indexSquadByOrg[i] != rootSafe)

@@ -62,7 +62,7 @@ contract KeyperGuard is BaseGuard, Context {
             if (!keyperModule.isSafe(caller)) {
                 bool isSafeLead;
                 // Caller is EAO (lead) : check if it has the rights over the target safe
-                for (uint256 i = 1; i < keyperModule.indexId(); i++) {
+                for (uint256 i = 1; i < keyperModule.indexId(); ++i) {
                     if (keyperModule.isSafeLead(i, caller)) {
                         isSafeLead = true;
                         break;
