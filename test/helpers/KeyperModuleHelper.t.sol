@@ -27,7 +27,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         initOnwers(numberOwners);
     }
 
-    function setGnosisSafe(address safe) public {
+    function setSafe(address safe) public {
         gnosisSafe = GnosisSafe(payable(safe));
     }
 

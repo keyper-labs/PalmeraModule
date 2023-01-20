@@ -13,9 +13,8 @@ contract Hierarchies is DeployHelper {
         bool result = gnosisHelper.registerOrgTx(orgName);
         assertEq(result, true);
         assertEq(orgHash, keccak256(abi.encodePacked(orgName)));
-        uint256 rootId = keyperModule.getSquadIdBySafe(
-            orgHash, address(gnosisHelper.gnosisSafe())
-        );
+        uint256 rootId =
+            keyperModule.getSquadIdBySafe(orgHash, address(gnosisHelper.safe()));
         (
             DataTypes.Tier tier,
             string memory name,
@@ -27,7 +26,7 @@ contract Hierarchies is DeployHelper {
         assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
         assertEq(name, orgName);
         assertEq(lead, address(0));
-        assertEq(safe, address(gnosisHelper.gnosisSafe()));
+        assertEq(safe, address(gnosisHelper.safe()));
         assertEq(superSafe, 0);
         assertEq(child.length, 0);
         assertEq(keyperModule.isOrgRegistered(orgHash), true);
@@ -54,7 +53,7 @@ contract Hierarchies is DeployHelper {
         assertEq(uint256(tier), uint256(DataTypes.Tier.SQUAD));
         assertEq(squadName, squadA1Name);
         assertEq(lead, address(0));
-        assertEq(safe, address(gnosisHelper.gnosisSafe()));
+        assertEq(safe, address(gnosisHelper.safe()));
         assertEq(child.length, 0);
         assertEq(superSafe, rootId);
 

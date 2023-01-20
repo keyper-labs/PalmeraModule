@@ -37,7 +37,7 @@ contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
         // Send funds to safe
         vm.deal(safeAddr, 2 ether);
         // Create encoded tx to be signed
-        uint256 nonce = gnosisHelper.gnosisSafe().nonce();
+        uint256 nonce = gnosisHelper.safe().nonce();
         bytes32 transferSafeTx = gnosisHelper.createSafeTxHash(mockTx, nonce);
         // Sign encoded tx with 1 owner
         uint256[] memory privateKeyOwner = new uint256[](1);
@@ -45,7 +45,7 @@ contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
 
         bytes memory signatures = signDigestTx(privateKeyOwner, transferSafeTx);
         // Exec tx
-        bool result = gnosisHelper.gnosisSafe().execTransaction(
+        bool result = gnosisHelper.safe().execTransaction(
             mockTx.to,
             mockTx.value,
             mockTx.data,

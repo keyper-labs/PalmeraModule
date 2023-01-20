@@ -61,7 +61,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         returns (address, address, address)
     {
         gnosisHelper.registerOrgTx(_orgName);
-        keyperSafes[_orgName] = address(gnosisHelper.gnosisSafe());
+        keyperSafes[_orgName] = address(gnosisHelper.safe());
         address orgAddr = keyperSafes[_orgName];
 
         gnosisHelper.updateSafeInterface(address(attacker));

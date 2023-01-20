@@ -30,7 +30,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
     function testDisableKeyperModule() public {
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         // Check guard is disabled
         bool result =
@@ -38,7 +38,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(result, true);
         // Verify module has been disabled
         isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
     }
 
@@ -98,7 +98,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Verify module has been disabled
         gnosisHelper.updateSafeInterface(squadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         // Verify guard has been enabled
         address ZeroAddress = abi.decode(
@@ -128,7 +128,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Verify module has been disabled
         gnosisHelper.updateSafeInterface(subSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         // Verify guard has been enabled
         address ZeroAddress = abi.decode(
@@ -161,7 +161,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         /// Verify Safe still enabled
         /// Verify module still enabled
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         /// Verify guard still enabled
         address guardAddress = abi.decode(
@@ -196,7 +196,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         /// Verify Safe has been removed
         /// Verify module has been removed
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         /// Verify guard has been removed
         address ZeroAddress = abi.decode(
@@ -231,7 +231,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Verify module still enabled
         gnosisHelper.updateSafeInterface(subSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
@@ -274,7 +274,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Verify module still enabled
         gnosisHelper.updateSafeInterface(subSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
@@ -315,7 +315,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Verify module still enabled
         gnosisHelper.updateSafeInterface(subSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
@@ -342,7 +342,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Verify module has been disabled
         gnosisHelper.updateSafeInterface(squadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         // Verify guard has been disabled
         address ZeroAddress = abi.decode(
@@ -372,7 +372,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Verify module has been disabled
         gnosisHelper.updateSafeInterface(subSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         // Verify guard has been disabled
         address ZeroAddress = abi.decode(
@@ -511,7 +511,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Verify module is still enabled
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
 
         // Try to disable Module from squad
@@ -528,7 +528,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Verify module is still enabled
         isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
     }
 
@@ -558,7 +558,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Verify module still enabled
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
     }
 
@@ -581,7 +581,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Verify Guard is still enabled
         address keyperGuardAddrTest = abi.decode(
-            StorageAccessible(address(gnosisHelper.gnosisSafe())).getStorageAt(
+            StorageAccessible(address(gnosisHelper.safe())).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -600,7 +600,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Verify Guard is still enabled
         keyperGuardAddrTest = abi.decode(
-            StorageAccessible(address(gnosisHelper.gnosisSafe())).getStorageAt(
+            StorageAccessible(address(gnosisHelper.safe())).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -640,7 +640,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Verify Guard still enabled
         address GuardAddress = abi.decode(
-            StorageAccessible(address(gnosisHelper.gnosisSafe())).getStorageAt(
+            StorageAccessible(address(gnosisHelper.safe())).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -673,7 +673,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         /// Verify module has been removed
         gnosisHelper.updateSafeInterface(childSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         /// Verify guard has been removed
         address ZeroAddress = abi.decode(

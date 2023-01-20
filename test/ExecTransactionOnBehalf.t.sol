@@ -24,7 +24,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
 
         // Set keyperhelper safe to org
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             rootAddr,
@@ -71,7 +71,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         // Set keyperhelper safe to org
 
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             rootAddr,
@@ -132,7 +132,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         assertEq(
             keyperModule.isSuperSafe(safeSquadBId, safeSubSubSquadA1Id), false
         );
-        keyperHelper.setGnosisSafe(safeSquadBAddr);
+        keyperHelper.setSafe(safeSquadBAddr);
 
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
@@ -171,7 +171,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
 
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
@@ -225,7 +225,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         vm.deal(safeSubSquadA1Addr, 100 gwei);
 
         // Set keyperhelper safe to safeSquadA1
-        keyperHelper.setGnosisSafe(safeSquadA1Addr);
+        keyperHelper.setSafe(safeSquadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             safeSquadA1Addr,
@@ -290,7 +290,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         vm.deal(safeSquadA1Addr, 100 gwei);
 
         // Set keyperhelper safe to safeSubSquadA1
-        keyperHelper.setGnosisSafe(safeSubSquadA1Addr);
+        keyperHelper.setSafe(safeSubSquadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             safeSubSquadA1Addr,
@@ -329,12 +329,12 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
 
         // Random wallet instead of a safe (EOA)
         address fakeCaller = address(0xFED);
 
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             rootAddr,
@@ -370,10 +370,10 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
 
         // Try onbehalf with incorrect signers
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeInvalidSignaturesKeyperTx(
             rootAddr,
@@ -418,7 +418,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         address fakeReceiver = address(0);
 
         // Set keyperhelper safe to org
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             rootAddr,
@@ -463,7 +463,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
 
         // Set keyperhelper safe to org
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             rootAddr,
@@ -510,7 +510,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
 
         // Set keyperhelper safe to org
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             rootAddr,
@@ -551,7 +551,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         address fakeTargetSafe = address(0xFFE);
 
         // Set keyperhelper safe to org
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             rootAddr,
@@ -591,7 +591,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
-        keyperHelper.setGnosisSafe(rootAddr);
+        keyperHelper.setSafe(rootAddr);
         address fakeCaller = gnosisHelper.newKeyperSafe(4, 2);
 
         // Random wallet instead of a safe (EOA)
@@ -943,7 +943,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         assertEq(result, true);
 
         // Set keyperhelper safe to rightCaller
-        keyperHelper.setGnosisSafe(rightCaller);
+        keyperHelper.setSafe(rightCaller);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             rightCaller,
@@ -1079,7 +1079,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         vm.stopPrank();
 
         // Set keyperhelper safe to fakeCaller
-        keyperHelper.setGnosisSafe(fakeCaller);
+        keyperHelper.setSafe(fakeCaller);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             fakeCaller,
@@ -1161,7 +1161,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         bytes memory emptyData;
         bytes memory signatures;
         // Set keyperhelper safe to rootAddr
-        keyperHelper.setGnosisSafe(childSquadA1Addr);
+        keyperHelper.setSafe(childSquadA1Addr);
         bytes memory signatures2 = keyperHelper.encodeSignaturesKeyperTx(
             childSquadA1Addr,
             rootAddr,
@@ -1211,7 +1211,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
             attackerHelper.setAttackerTree(orgName);
 
         gnosisHelper.updateSafeInterface(victim);
-        attackerContract.setOwners(gnosisHelper.gnosisSafe().getOwners());
+        attackerContract.setOwners(gnosisHelper.safe().getOwners());
 
         gnosisHelper.updateSafeInterface(attacker);
         vm.startPrank(attacker);

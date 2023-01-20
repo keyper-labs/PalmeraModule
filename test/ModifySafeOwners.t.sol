@@ -33,7 +33,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
 
         gnosisHelper.updateSafeInterface(squadA1Addr);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         vm.startPrank(userLeadModifyOwnersOnly);
         address newOwner = address(0xaaaf);
@@ -41,8 +41,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
             newOwner, threshold + 1, squadA1Addr, orgHash
         );
 
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold + 1);
-        assertEq(gnosisHelper.gnosisSafe().isOwner(newOwner), true);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold + 1);
+        assertEq(gnosisHelper.safe().isOwner(newOwner), true);
     }
 
     // Caller Info: Role-> SAFE_LEAD, Type -> SAFE, Hierarchy -> squad, Name -> squadBAddr
@@ -70,11 +70,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory squadA1Owners = gnosisHelper.safe().getOwners();
         address newOwner = address(0xDEF);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
-        assertEq(gnosisHelper.gnosisSafe().isOwner(squadA1Owners[1]), true);
+        assertEq(gnosisHelper.safe().isOwner(squadA1Owners[1]), true);
 
         // SquadB AddOwnerWithThreshold from squadA
         gnosisHelper.updateSafeInterface(squadBAddr);
@@ -84,12 +84,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(result, true);
 
         gnosisHelper.updateSafeInterface(squadAAddr);
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold);
         assertEq(
-            gnosisHelper.gnosisSafe().getOwners().length,
-            squadA1Owners.length + 1
+            gnosisHelper.safe().getOwners().length, squadA1Owners.length + 1
         );
-        assertEq(gnosisHelper.gnosisSafe().isOwner(newOwner), true);
+        assertEq(gnosisHelper.safe().isOwner(newOwner), true);
     }
 
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> squadAAddr
@@ -104,11 +103,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(childAAddr);
-        address[] memory childA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory childA1Owners = gnosisHelper.safe().getOwners();
         address newOwner = address(0xDEF);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
-        assertEq(gnosisHelper.gnosisSafe().isOwner(childA1Owners[1]), true);
+        assertEq(gnosisHelper.safe().isOwner(childA1Owners[1]), true);
 
         // SquadB AddOwnerWithThreshold from squadA
         gnosisHelper.updateSafeInterface(squadAAddr);
@@ -118,12 +117,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(result, true);
 
         gnosisHelper.updateSafeInterface(childAAddr);
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold);
         assertEq(
-            gnosisHelper.gnosisSafe().getOwners().length,
-            childA1Owners.length + 1
+            gnosisHelper.safe().getOwners().length, childA1Owners.length + 1
         );
-        assertEq(gnosisHelper.gnosisSafe().isOwner(newOwner), true);
+        assertEq(gnosisHelper.safe().isOwner(newOwner), true);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> rootAddrA
@@ -138,11 +136,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory squadA1Owners = gnosisHelper.safe().getOwners();
         address newOwner = address(0xDEF);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
-        assertEq(gnosisHelper.gnosisSafe().isOwner(squadA1Owners[1]), true);
+        assertEq(gnosisHelper.safe().isOwner(squadA1Owners[1]), true);
 
         // SquadB AddOwnerWithThreshold from squadA
         gnosisHelper.updateSafeInterface(rootAddrA);
@@ -152,12 +150,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(result, true);
 
         gnosisHelper.updateSafeInterface(squadAAddr);
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold);
         assertEq(
-            gnosisHelper.gnosisSafe().getOwners().length,
-            squadA1Owners.length + 1
+            gnosisHelper.safe().getOwners().length, squadA1Owners.length + 1
         );
-        assertEq(gnosisHelper.gnosisSafe().isOwner(newOwner), true);
+        assertEq(gnosisHelper.safe().isOwner(newOwner), true);
     }
 
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> SUPER, Name -> squadBAddr
@@ -179,11 +176,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory squadA1Owners = gnosisHelper.safe().getOwners();
         address newOwner = address(0xDEF);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
-        assertEq(gnosisHelper.gnosisSafe().isOwner(squadA1Owners[1]), true);
+        assertEq(gnosisHelper.safe().isOwner(squadA1Owners[1]), true);
 
         // SquadB AddOwnerWithThreshold from squadA
         vm.startPrank(squadBAddr);
@@ -208,11 +205,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(rootAddrA);
-        address[] memory rootAOwners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory rootAOwners = gnosisHelper.safe().getOwners();
         address newOwner = address(0xDEF);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
-        assertEq(gnosisHelper.gnosisSafe().isOwner(rootAOwners[1]), true);
+        assertEq(gnosisHelper.safe().isOwner(rootAOwners[1]), true);
 
         // SquadB AddOwnerWithThreshold from squadA
         vm.startPrank(rootAddrB);
@@ -246,11 +243,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory squadA1Owners = gnosisHelper.safe().getOwners();
         address newOwner = address(0xDEF);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
-        assertEq(gnosisHelper.gnosisSafe().isOwner(squadA1Owners[1]), true);
+        assertEq(gnosisHelper.safe().isOwner(squadA1Owners[1]), true);
 
         // SquadB AddOwnerWithThreshold from squadA
         gnosisHelper.updateSafeInterface(squadBAddr);
@@ -260,12 +257,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(result, true);
 
         gnosisHelper.updateSafeInterface(squadAAddr);
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold);
         assertEq(
-            gnosisHelper.gnosisSafe().getOwners().length,
-            squadA1Owners.length + 1
+            gnosisHelper.safe().getOwners().length, squadA1Owners.length + 1
         );
-        assertEq(gnosisHelper.gnosisSafe().isOwner(newOwner), true);
+        assertEq(gnosisHelper.safe().isOwner(newOwner), true);
     }
 
     // Caller Info: Role-> SAFE_LEAD, Type -> EOA, Hierarchy -> squad, Name -> rightCaller
@@ -291,11 +287,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory squadA1Owners = gnosisHelper.safe().getOwners();
         address newOwner = address(0xDEF);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
-        assertEq(gnosisHelper.gnosisSafe().isOwner(squadA1Owners[1]), true);
+        assertEq(gnosisHelper.safe().isOwner(squadA1Owners[1]), true);
 
         vm.startPrank(rightCaller);
         keyperModule.addOwnerWithThreshold(
@@ -304,12 +300,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
 
         gnosisHelper.updateSafeInterface(squadAAddr);
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold);
         assertEq(
-            gnosisHelper.gnosisSafe().getOwners().length,
-            squadA1Owners.length + 1
+            gnosisHelper.safe().getOwners().length, squadA1Owners.length + 1
         );
-        assertEq(gnosisHelper.gnosisSafe().isOwner(newOwner), true);
+        assertEq(gnosisHelper.safe().isOwner(newOwner), true);
     }
 
     // Caller Info: Role-> SAFE_LEAD, Type -> EOA, Hierarchy -> NOT_REGISTERED, Name -> safeLead
@@ -328,14 +323,14 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(keyperModule.isSafeLead(rootId, safeLead), true);
 
         gnosisHelper.updateSafeInterface(rootAddr);
-        address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory owners = gnosisHelper.safe().getOwners();
         address newOwner;
 
         for (uint256 i = 0; i < owners.length; i++) {
             newOwner = owners[i];
         }
 
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         vm.startPrank(safeLead);
         vm.expectRevert(Errors.OwnerAlreadyExists.selector);
@@ -353,7 +348,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
 
         gnosisHelper.updateSafeInterface(rootAddr);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         vm.startPrank(rootAddr);
         vm.expectRevert(Errors.InvalidAddressProvided.selector);
@@ -392,8 +387,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         );
 
         // When threshold > max current threshold
-        uint256 wrongThreshold =
-            gnosisHelper.gnosisSafe().getOwners().length + 2;
+        uint256 wrongThreshold = gnosisHelper.safe().getOwners().length + 2;
 
         vm.expectRevert(Errors.TxExecutionModuleFailed.selector); // safe Contract Internal Error GS201 "Threshold cannot exceed owner count"
         keyperModule.addOwnerWithThreshold(
@@ -407,7 +401,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         public
     {
         address safeNotRegistered = gnosisHelper.newKeyperSafe(4, 2);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         address newOwner = gnosisHelper.newKeyperSafe(4, 2);
 
@@ -430,7 +424,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     {
         gnosisHelper.newKeyperSafe(4, 2);
         address InvalidSafeCaller = address(0x123);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         address newOwner = gnosisHelper.newKeyperSafe(4, 2);
 
@@ -458,7 +452,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address rootBAddr = keyperModule.getSquadSafeAddress(rootIdB);
 
         address newOwnerOnOrgA = address(0xF1F1);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         vm.expectRevert(Errors.NotAuthorizedAddOwnerWithThreshold.selector);
 
@@ -485,10 +479,10 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory squadA1Owners = gnosisHelper.safe().getOwners();
         address prevOwner = squadA1Owners[0];
         address ownerToRemove = squadA1Owners[1];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         vm.startPrank(fakeCaller);
         vm.expectRevert(Errors.ZeroAddressProvided.selector);
@@ -529,7 +523,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // (When threshold < 1)
         gnosisHelper.updateSafeInterface(squadA1Addr);
-        address[] memory squadA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory squadA1Owners = gnosisHelper.safe().getOwners();
         address prevOwner = squadA1Owners[0];
         address removeOwner = squadA1Owners[1];
         uint256 zeroThreshold = 0;
@@ -541,8 +535,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         );
 
         // When threshold > max current threshold
-        uint256 wrongThreshold =
-            gnosisHelper.gnosisSafe().getOwners().length + 2;
+        uint256 wrongThreshold = gnosisHelper.safe().getOwners().length + 2;
 
         vm.expectRevert(Errors.TxExecutionModuleFailed.selector); // safe Contract Internal Error GS201 "Threshold cannot exceed owner count"
         keyperModule.removeOwner(
@@ -554,10 +547,10 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Target Info: Name -> fakeCaller, Type -> SAFE, Hierarchy related to caller -> ITSELF,
     function testRevertSafeNotRegisteredRemoveOwner_SAFE_Caller() public {
         address fakeCaller = gnosisHelper.newKeyperSafe(4, 2);
-        address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory owners = gnosisHelper.safe().getOwners();
         address prevOwner = owners[0];
         address ownerToRemove = owners[1];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         vm.startPrank(fakeCaller);
         vm.expectRevert(
@@ -576,10 +569,10 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     function testRevertSafeNotRegisteredRemoveOwner_EOA_Caller() public {
         gnosisHelper.newKeyperSafe(4, 2);
         address invalidSafeCaller = address(0x123);
-        address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory owners = gnosisHelper.safe().getOwners();
         address prevOwner = owners[0];
         address ownerToRemove = owners[1];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         vm.startPrank(invalidSafeCaller);
         vm.expectRevert(
@@ -611,23 +604,22 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
 
         gnosisHelper.updateSafeInterface(squadA1Addr);
-        address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory ownersList = gnosisHelper.safe().getOwners();
 
         address prevOwner = ownersList[0];
         address owner = ownersList[1];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         vm.startPrank(userLeadEOA);
         keyperModule.removeOwner(
             prevOwner, owner, threshold, squadA1Addr, orgHash
         );
 
-        address[] memory postRemoveOwnersList =
-            gnosisHelper.gnosisSafe().getOwners();
+        address[] memory postRemoveOwnersList = gnosisHelper.safe().getOwners();
 
         assertEq(postRemoveOwnersList.length, ownersList.length - 1);
-        assertEq(gnosisHelper.gnosisSafe().isOwner(owner), false);
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
+        assertEq(gnosisHelper.safe().isOwner(owner), false);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold);
     }
 
     // Caller Info: Role-> SAFE_LEAD, Type -> SAFE, Hierarchy -> squad, Name -> squadA2Addr
@@ -649,23 +641,22 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
 
         gnosisHelper.updateSafeInterface(squadA1Addr);
-        address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory ownersList = gnosisHelper.safe().getOwners();
 
         address prevOwner = ownersList[0];
         address owner = ownersList[1];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         gnosisHelper.updateSafeInterface(squadA2Addr);
         gnosisHelper.removeOwnerTx(
             prevOwner, owner, threshold, squadA1Addr, orgHash
         );
         gnosisHelper.updateSafeInterface(squadA1Addr);
-        address[] memory postRemoveOwnersList =
-            gnosisHelper.gnosisSafe().getOwners();
+        address[] memory postRemoveOwnersList = gnosisHelper.safe().getOwners();
 
         assertEq(postRemoveOwnersList.length, ownersList.length - 1);
-        assertEq(gnosisHelper.gnosisSafe().isOwner(owner), false);
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
+        assertEq(gnosisHelper.safe().isOwner(owner), false);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold);
     }
 
     // Caller Info: Role-> SAFE_LEAD, Type -> SAFE, Hierarchy -> ROOT, Name -> rootAddrA
@@ -689,8 +680,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = gnosisHelper.gnosisSafe().getOwners();
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        address[] memory squadA1Owners = gnosisHelper.safe().getOwners();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         // SquadB RemoveOwner from squadA
         gnosisHelper.updateSafeInterface(squadBAddr);
@@ -698,7 +689,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
             squadA1Owners[0], squadA1Owners[1], threshold, squadAAddr, orgHash
         );
         assertEq(result, true);
-        assertEq(gnosisHelper.gnosisSafe().isOwner(squadA1Owners[1]), false);
+        assertEq(gnosisHelper.safe().isOwner(squadA1Owners[1]), false);
     }
 
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> squad, Name -> squadAAddr
@@ -713,23 +704,22 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address childAAddr = keyperModule.getSquadSafeAddress(childIdA);
 
         gnosisHelper.updateSafeInterface(childAAddr);
-        address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory ownersList = gnosisHelper.safe().getOwners();
 
         address prevOwner = ownersList[0];
         address owner = ownersList[1];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         gnosisHelper.updateSafeInterface(squadAAddr);
         gnosisHelper.removeOwnerTx(
             prevOwner, owner, threshold, childAAddr, orgHash
         );
         gnosisHelper.updateSafeInterface(childAAddr);
-        address[] memory postRemoveOwnersList =
-            gnosisHelper.gnosisSafe().getOwners();
+        address[] memory postRemoveOwnersList = gnosisHelper.safe().getOwners();
 
         assertEq(postRemoveOwnersList.length, ownersList.length - 1);
-        assertEq(gnosisHelper.gnosisSafe().isOwner(owner), false);
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
+        assertEq(gnosisHelper.safe().isOwner(owner), false);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> rootAddrA
@@ -744,11 +734,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address squadAAddr = keyperModule.getSquadSafeAddress(squadIdA1);
 
         gnosisHelper.updateSafeInterface(squadAAddr);
-        address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory ownersList = gnosisHelper.safe().getOwners();
 
         address prevOwner = ownersList[0];
         address owner = ownersList[1];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         gnosisHelper.updateSafeInterface(rootAddrA);
         gnosisHelper.removeOwnerTx(
@@ -756,12 +746,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         );
 
         gnosisHelper.updateSafeInterface(squadAAddr);
-        address[] memory postRemoveOwnersList =
-            gnosisHelper.gnosisSafe().getOwners();
+        address[] memory postRemoveOwnersList = gnosisHelper.safe().getOwners();
 
         assertEq(postRemoveOwnersList.length, ownersList.length - 1);
-        assertEq(gnosisHelper.gnosisSafe().isOwner(owner), false);
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
+        assertEq(gnosisHelper.safe().isOwner(owner), false);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> rootAddrA
@@ -783,12 +772,12 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory squadA1Owners = gnosisHelper.safe().getOwners();
         address prevOwner = squadA1Owners[1];
         address removeOwner = squadA1Owners[2];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
-        assertEq(gnosisHelper.gnosisSafe().isOwner(squadA1Owners[1]), true);
+        assertEq(gnosisHelper.safe().isOwner(squadA1Owners[1]), true);
 
         // SquadB AddOwnerWithThreshold from squadA
         vm.startPrank(squadBAddr);
@@ -813,12 +802,12 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(rootAddrA);
-        address[] memory rootAOwners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory rootAOwners = gnosisHelper.safe().getOwners();
         address prevOwner = rootAOwners[1];
         address removeOwner = rootAOwners[2];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
-        assertEq(gnosisHelper.gnosisSafe().isOwner(rootAOwners[1]), true);
+        assertEq(gnosisHelper.safe().isOwner(rootAOwners[1]), true);
 
         // SquadB AddOwnerWithThreshold from squadA
         vm.startPrank(rootAddrB);
@@ -854,12 +843,12 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         // Get squadA signers info
         gnosisHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory squadA1Owners = gnosisHelper.safe().getOwners();
         address prevOwner = squadA1Owners[1];
         address removeOwner = squadA1Owners[2];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
-        assertEq(gnosisHelper.gnosisSafe().isOwner(squadA1Owners[1]), true);
+        assertEq(gnosisHelper.safe().isOwner(squadA1Owners[1]), true);
 
         // SquadB AddOwnerWithThreshold from squadA
         gnosisHelper.updateSafeInterface(squadBAddr);
@@ -869,12 +858,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(result, true);
 
         gnosisHelper.updateSafeInterface(squadAAddr);
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold);
         assertEq(
-            gnosisHelper.gnosisSafe().getOwners().length,
-            squadA1Owners.length - 1
+            gnosisHelper.safe().getOwners().length, squadA1Owners.length - 1
         );
-        assertEq(gnosisHelper.gnosisSafe().isOwner(removeOwner), false);
+        assertEq(gnosisHelper.safe().isOwner(removeOwner), false);
     }
 
     // Caller Info: Role-> SAFE_LEAD_MODIFY_OWNERS_ONLY, Type -> EOA, Hierarchy -> NOT_REGISTERED, Name -> userLeadModifyOwnersOnly
@@ -888,7 +876,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address squadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
         address userLeadModifyOwnersOnly = address(0x123);
 
-        address[] memory squadA1Owners = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory squadA1Owners = gnosisHelper.safe().getOwners();
         address prevOwner = squadA1Owners[1];
         address removeOwner = squadA1Owners[2];
 
@@ -902,15 +890,15 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
 
         gnosisHelper.updateSafeInterface(squadA1Addr);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         vm.startPrank(userLeadModifyOwnersOnly);
         keyperModule.removeOwner(
             prevOwner, removeOwner, threshold - 1, squadA1Addr, orgHash
         );
 
-        assertEq(gnosisHelper.gnosisSafe().getThreshold(), threshold - 1);
-        assertEq(gnosisHelper.gnosisSafe().isOwner(removeOwner), false);
+        assertEq(gnosisHelper.safe().getThreshold(), threshold - 1);
+        assertEq(gnosisHelper.safe().isOwner(removeOwner), false);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> rootBAddr
@@ -924,10 +912,9 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address rootAddr = keyperModule.getSquadSafeAddress(rootIdA);
         address rootBAddr = keyperModule.getSquadSafeAddress(rootIdB);
 
-        address prevOwnerToRemoveOnOrgA =
-            gnosisHelper.gnosisSafe().getOwners()[0];
-        address ownerToRemove = gnosisHelper.gnosisSafe().getOwners()[1];
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        address prevOwnerToRemoveOnOrgA = gnosisHelper.safe().getOwners()[0];
+        address ownerToRemove = gnosisHelper.safe().getOwners()[1];
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         vm.expectRevert(Errors.NotAuthorizedRemoveOwner.selector);
 
@@ -941,7 +928,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Target Info: Name -> rootAddr, Type -> SAFE, Hierarchy related to caller -> SAFE Leading by caller,
     function testRevertOwnerNotFoundRemoveOwner() public {
         bool result = gnosisHelper.registerOrgTx(orgName);
-        keyperSafes[orgName] = address(gnosisHelper.gnosisSafe());
+        keyperSafes[orgName] = address(gnosisHelper.safe());
         vm.label(keyperSafes[orgName], orgName);
 
         assertEq(result, true);
@@ -955,11 +942,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         keyperModule.setRole(DataTypes.Role.SAFE_LEAD, safeLead, rootId, true);
         vm.stopPrank();
 
-        address[] memory ownersList = gnosisHelper.gnosisSafe().getOwners();
+        address[] memory ownersList = gnosisHelper.safe().getOwners();
 
         address prevOwner = ownersList[0];
         address wrongOwnerToRemove = address(0xabdcf);
-        uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
+        uint256 threshold = gnosisHelper.safe().getThreshold();
 
         assertEq(ownersList.length, 3);
 

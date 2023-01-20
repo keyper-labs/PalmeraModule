@@ -56,7 +56,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         vm.stopPrank();
 
         // Set keyperhelper safe to safeSquadA1
-        keyperHelper.setGnosisSafe(squadA1Addr);
+        keyperHelper.setSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             squadA1Addr,
@@ -107,7 +107,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         vm.stopPrank();
 
         // Set keyperhelper safe to safeSquadA1
-        keyperHelper.setGnosisSafe(squadA1Addr);
+        keyperHelper.setSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             squadA1Addr,
@@ -160,7 +160,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         vm.stopPrank();
 
         // Set keyperhelper safe to safeSquadA1
-        keyperHelper.setGnosisSafe(squadA1Addr);
+        keyperHelper.setSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             squadA1Addr,

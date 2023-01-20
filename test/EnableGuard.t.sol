@@ -40,7 +40,7 @@ contract TestEnableGuard is Test {
         assertEq(result, true);
         // Verify module has been enabled
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
     }
 

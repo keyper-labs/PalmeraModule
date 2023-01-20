@@ -15,7 +15,7 @@ contract GnosisSafeHelper is
     SignDigestHelper,
     SignersHelper
 {
-    GnosisSafe public gnosisSafe;
+    GnosisSafe public safe;
     DeploySafeFactory public safeFactory;
 
     address public keyperRolesAddr;
@@ -35,7 +35,7 @@ contract GnosisSafeHelper is
         gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
         bytes memory emptyData;
         address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
-        gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
+        safe = GnosisSafe(payable(gnosisSafeProxy));
         initOnwers(30);
 
         // Setup safe with 3 owners, 1 threshold
@@ -46,7 +46,7 @@ contract GnosisSafeHelper is
         // Update privateKeyOwners used
         updateCount(3);
 
-        gnosisSafe.setup(
+        safe.setup(
             owners,
             uint256(1),
             address(0x0),
@@ -57,7 +57,7 @@ contract GnosisSafeHelper is
             payable(address(0x0))
         );
 
-        return address(gnosisSafe);
+        return address(safe);
     }
 
     // Create new safe test environment
@@ -72,7 +72,7 @@ contract GnosisSafeHelper is
         salt++;
         bytes memory emptyData = abi.encodePacked(salt);
         address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
-        gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
+        safe = GnosisSafe(payable(gnosisSafeProxy));
         initOnwers(initOwners);
 
         // Setup safe with 3 owners, 1 threshold
@@ -83,7 +83,7 @@ contract GnosisSafeHelper is
         // Update privateKeyOwners used
         updateCount(3);
 
-        gnosisSafe.setup(
+        safe.setup(
             owners,
             uint256(1),
             address(0x0),
@@ -94,7 +94,7 @@ contract GnosisSafeHelper is
             payable(address(0x0))
         );
 
-        return address(gnosisSafe);
+        return address(safe);
     }
 
     function setKeyperRoles(address keyperRoles) public {
@@ -142,29 +142,29 @@ contract GnosisSafeHelper is
         );
 
         address gnosisSafeProxy = safeFactory.newSafeProxy(initializer);
-        gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
+        safe = GnosisSafe(payable(address(gnosisSafeProxy)));
 
         // Enable module
-        bool result = enableModuleTx(address(gnosisSafe));
+        bool result = enableModuleTx(address(safe));
         require(result == true, "failed enable module");
 
         // Enable Guard
-        result = enableGuardTx(address(gnosisSafe));
+        result = enableGuardTx(address(safe));
         require(result == true, "failed enable guard");
-        return address(gnosisSafe);
+        return address(safe);
     }
 
     function testNewKeyperSafe() public {
         setupSafeEnv();
         setKeyperModule(address(0x678));
         newKeyperSafe(4, 2);
-        address[] memory owners = gnosisSafe.getOwners();
+        address[] memory owners = safe.getOwners();
         assertEq(owners.length, 4);
-        assertEq(gnosisSafe.getThreshold(), 2);
+        assertEq(safe.getThreshold(), 2);
     }
 
-    function updateSafeInterface(address safe) public {
-        gnosisSafe = GnosisSafe(payable(address(safe)));
+    function updateSafeInterface(address newsafe) public {
+        safe = GnosisSafe(payable(address(newsafe)));
     }
 
     function createSafeTxHash(Transaction memory safeTx, uint256 nonce)
@@ -172,7 +172,7 @@ contract GnosisSafeHelper is
         view
         returns (bytes32)
     {
-        bytes32 txHashed = gnosisSafe.getTransactionHash(
+        bytes32 txHashed = safe.getTransactionHash(
             safeTx.to,
             safeTx.value,
             safeTx.data,
@@ -265,7 +265,7 @@ contract GnosisSafeHelper is
         internal
         returns (bool)
     {
-        bool result = gnosisSafe.execTransaction(
+        bool result = safe.execTransaction(
             mockTx.to,
             mockTx.value,
             mockTx.data,
@@ -444,13 +444,13 @@ contract GnosisSafeHelper is
         returns (bytes memory)
     {
         // Create encoded tx to be signed
-        uint256 nonce = gnosisSafe.nonce();
+        uint256 nonce = safe.nonce();
         bytes32 enableModuleSafeTx = createSafeTxHash(mockTx, nonce);
 
-        address[] memory owners = gnosisSafe.getOwners();
+        address[] memory owners = safe.getOwners();
         // Order owners
         address[] memory sortedOwners = sortAddresses(owners);
-        uint256 threshold = gnosisSafe.getThreshold();
+        uint256 threshold = safe.getThreshold();
 
         // Get pk for the signing threshold
         uint256[] memory privateKeySafeOwners = new uint256[](threshold);
