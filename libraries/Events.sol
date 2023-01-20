@@ -74,7 +74,7 @@ library Events {
         bool result
     );
 
-    /// @dev Event Fire when any Gnosis Safe enable the Keyper Module
+    /// @dev Event Fire when any Safe enable the Keyper Module
     event ModuleEnabled(address indexed safe, address indexed module);
 
     /// @dev Event Fire when any Root Safe create a new Root Safe

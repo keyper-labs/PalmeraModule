@@ -32,7 +32,7 @@ contract KeyperRolesTest is DeployHelper {
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     function testCan_ROOT_SAFE_SetRole_ROOT_SAFE_When_RegisterOrg() public {
-        address org1 = gnosisSafeAddr;
+        address org1 = safeAddr;
         vm.startPrank(org1);
 
         keyperModule.registerOrg(orgName);
@@ -125,9 +125,7 @@ contract KeyperRolesTest is DeployHelper {
 
         vm.startPrank(squadA1Addr);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadA1Addr
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA1Addr)
         );
         keyperModule.setRole(DataTypes.Role.SAFE_LEAD, user, squadA1Id, true);
     }

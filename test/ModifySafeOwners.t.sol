@@ -423,25 +423,25 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
-    // Caller Info: Role-> NONE, Type -> EOA, Hierarchy -> NOT_REGISTERED, Name -> invalidGnosisSafeCaller
+    // Caller Info: Role-> NONE, Type -> EOA, Hierarchy -> NOT_REGISTERED, Name -> InvalidSafeCaller
     // Target Info: Name -> rootAddr, Type -> SAFE, Hierarchy related to caller -> ITSELF,
     function testRevertSafeNotRegisteredAddOwnerWithThreshold_EOA_Caller()
         public
     {
         gnosisHelper.newKeyperSafe(4, 2);
-        address invalidGnosisSafeCaller = address(0x123);
+        address InvalidSafeCaller = address(0x123);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
         address newOwner = gnosisHelper.newKeyperSafe(4, 2);
 
-        vm.startPrank(invalidGnosisSafeCaller);
+        vm.startPrank(InvalidSafeCaller);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, invalidGnosisSafeCaller
+                Errors.InvalidSafe.selector, InvalidSafeCaller
             )
         );
         keyperModule.addOwnerWithThreshold(
-            newOwner, threshold + 1, invalidGnosisSafeCaller, orgHash
+            newOwner, threshold + 1, InvalidSafeCaller, orgHash
         );
         vm.stopPrank();
     }
@@ -584,7 +584,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.startPrank(invalidSafeCaller);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, invalidSafeCaller
+                Errors.InvalidSafe.selector, invalidSafeCaller
             )
         );
         keyperModule.removeOwner(

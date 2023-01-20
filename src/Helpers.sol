@@ -21,7 +21,7 @@ abstract contract Helpers is DenyHelper {
     using GnosisSafeMath for uint256;
     using Address for address;
 
-    /// @dev Function for enable Keyper module in a Gnosis Safe Multisig Wallet
+    /// @dev Function for enable Keyper module in a Safe Multisig Wallet
     /// @param module Address of Keyper module
     function internalEnableModule(address module)
         external
@@ -115,18 +115,18 @@ abstract contract Helpers is DenyHelper {
         );
     }
 
-    /// @notice Method to Validate if address is a Gnosis Safe Multisig Wallet
-    /// @dev This method is used to validate if the address is a Gnosis Safe Multisig Wallet
+    /// @notice Method to Validate if address is a Safe Multisig Wallet
+    /// @dev This method is used to validate if the address is a Safe Multisig Wallet
     /// @param safe Address to validate
     /// @return bool
     function isSafe(address safe) public view returns (bool) {
-        /// Check if the address is a Gnosis Safe Multisig Wallet
+        /// Check if the address is a Safe Multisig Wallet
         if (safe.isContract()) {
-            /// Check if the address is a Gnosis Safe Multisig Wallet
+            /// Check if the address is a Safe Multisig Wallet
             bytes memory payload = abi.encodeWithSignature("getThreshold()");
             (bool success, bytes memory returnData) = safe.staticcall(payload);
             if (!success) return false;
-            /// Check if the address is a Gnosis Safe Multisig Wallet
+            /// Check if the address is a Safe Multisig Wallet
             uint256 threshold = abi.decode(returnData, (uint256));
             if (threshold == 0) return false;
             return true;
@@ -139,7 +139,7 @@ abstract contract Helpers is DenyHelper {
     /// @param safe address of the Safe
     /// @return address of the Preview Module
     function getPreviewModule(address safe) internal view returns (address) {
-        // create Instance of the Gnosis Safe
+        // create Instance of the Safe
         IGnosisSafe gnosisSafe = IGnosisSafe(safe);
         // get the modules of the Safe
         (address[] memory modules, address nextModule) =

@@ -10,12 +10,12 @@ import "./helpers/GnosisSafeHelper.t.sol";
 /// @custom:security-contact general@palmeradao.xyz
 contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
     GnosisSafeHelper gnosisHelper;
-    address gnosisSafeAddr;
+    address safeAddr;
 
     // Init new safe
     function setUp() public {
         gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
+        safeAddr = gnosisHelper.setupSafeEnv();
     }
 
     function testTransferFundsSafe() public {
@@ -35,7 +35,7 @@ contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
         );
 
         // Send funds to safe
-        vm.deal(gnosisSafeAddr, 2 ether);
+        vm.deal(safeAddr, 2 ether);
         // Create encoded tx to be signed
         uint256 nonce = gnosisHelper.gnosisSafe().nonce();
         bytes32 transferSafeTx = gnosisHelper.createSafeTxHash(mockTx, nonce);
@@ -58,6 +58,6 @@ contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
             signatures
         );
         assertEq(result, true);
-        assertEq(gnosisSafeAddr.balance, 1.5 ether);
+        assertEq(safeAddr.balance, 1.5 ether);
     }
 }

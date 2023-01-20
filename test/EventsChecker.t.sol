@@ -383,7 +383,7 @@ contract EventsChekers is DeployHelper {
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
 
-        // Set keyperhelper gnosis safe to org
+        // Set keyperhelper safe to org
         keyperHelper.setGnosisSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(

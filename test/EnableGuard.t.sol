@@ -13,12 +13,12 @@ contract TestEnableGuard is Test {
     KeyperModule keyperModule;
     KeyperGuard keyperGuard;
     GnosisSafeHelper gnosisHelper;
-    address gnosisSafeAddr;
+    address safeAddr;
 
     function setUp() public {
         // Init new safe
         gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
+        safeAddr = gnosisHelper.setupSafeEnv();
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
@@ -36,7 +36,7 @@ contract TestEnableGuard is Test {
     }
 
     function testEnableKeyperModule() public {
-        bool result = gnosisHelper.enableModuleTx(gnosisSafeAddr);
+        bool result = gnosisHelper.enableModuleTx(safeAddr);
         assertEq(result, true);
         // Verify module has been enabled
         bool isKeyperModuleEnabled =
@@ -45,11 +45,11 @@ contract TestEnableGuard is Test {
     }
 
     function testEnableKeyperGuard() public {
-        bool result = gnosisHelper.enableGuardTx(gnosisSafeAddr);
+        bool result = gnosisHelper.enableGuardTx(safeAddr);
         assertEq(result, true);
         // Verify guard has been enabled
         address guardAddress = abi.decode(
-            StorageAccessible(gnosisSafeAddr).getStorageAt(
+            StorageAccessible(safeAddr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)

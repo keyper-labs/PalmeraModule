@@ -8,7 +8,7 @@ import "./SignersHelper.t.sol";
 import "../../script/DeploySafeFactory.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
-// Helper contract handling deployment Gnosis Safe contracts
+// Helper contract handling deployment Safe contracts
 contract GnosisSafeHelper is
     Test,
     SigningUtils,
@@ -25,7 +25,7 @@ contract GnosisSafeHelper is
 
     uint256 public salt;
 
-    // Create new gnosis safe test environment
+    // Create new safe test environment
     // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
     // Init signers
     // Deploy a new safe proxy
@@ -38,7 +38,7 @@ contract GnosisSafeHelper is
         gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
         initOnwers(30);
 
-        // Setup gnosis safe with 3 owners, 1 threshold
+        // Setup safe with 3 owners, 1 threshold
         address[] memory owners = new address[](3);
         owners[0] = vm.addr(privateKeyOwners[0]);
         owners[1] = vm.addr(privateKeyOwners[1]);
@@ -60,7 +60,7 @@ contract GnosisSafeHelper is
         return address(gnosisSafe);
     }
 
-    // Create new gnosis safe test environment
+    // Create new safe test environment
     // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
     // Init signers
     // Permit create a specific numbers of owners
@@ -75,7 +75,7 @@ contract GnosisSafeHelper is
         gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
         initOnwers(initOwners);
 
-        // Setup gnosis safe with 3 owners, 1 threshold
+        // Setup safe with 3 owners, 1 threshold
         address[] memory owners = new address[](3);
         owners[0] = vm.addr(privateKeyOwners[0]);
         owners[1] = vm.addr(privateKeyOwners[1]);

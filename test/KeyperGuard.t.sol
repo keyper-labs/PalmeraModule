@@ -13,15 +13,14 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
     function testDisableKeyperGuard() public {
         // Check guard is disabled
-        bool result = gnosisHelper.disableGuardTx(gnosisSafeAddr);
+        bool result = gnosisHelper.disableGuardTx(safeAddr);
         assertEq(result, true);
-        result = gnosisHelper.disableModuleTx(
-            Constants.SENTINEL_ADDRESS, gnosisSafeAddr
-        );
+        result =
+            gnosisHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, safeAddr);
         assertEq(result, true);
         // Verify guard has been enabled
         address ZeroAddress = abi.decode(
-            StorageAccessible(gnosisSafeAddr).getStorageAt(
+            StorageAccessible(safeAddr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -34,9 +33,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         // Check guard is disabled
-        bool result = gnosisHelper.disableModuleTx(
-            Constants.SENTINEL_ADDRESS, gnosisSafeAddr
-        );
+        bool result =
+            gnosisHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, safeAddr);
         assertEq(result, true);
         // Verify module has been disabled
         isKeyperModuleEnabled =
@@ -225,9 +223,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Try to Disconnect Safe
         vm.startPrank(squadA1Addr);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadA1Addr
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA1Addr)
         );
         keyperModule.disconnectSafe(subSquadA1Id);
         vm.stopPrank();
@@ -270,9 +266,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Try to Disconnect Safe
         vm.startPrank(squadB1Addr);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadB1Addr
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadB1Addr)
         );
         keyperModule.disconnectSafe(subSquadA1Id);
         vm.stopPrank();
@@ -390,6 +384,41 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(ZeroAddress, zeroAddress);
     }
 
+    function testDisconnectSafe_As_SafeLead_As_EOA() public {
+        (uint256 rootId,, uint256 childSquadA1) = keyperSafeBuilder
+            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address childSquadA1Addr =
+            keyperModule.getSquadSafeAddress(childSquadA1);
+
+        // Send ETH to squad&subsquad
+        vm.deal(rootAddr, 100 gwei);
+        vm.deal(childSquadA1Addr, 100 gwei);
+
+        // Create a a Ramdom Right EOA Caller
+        address fakerCaller = address(0xCBA);
+
+        // Set Safe Role in Safe Squad A1 over Child Squad A1
+        vm.startPrank(rootAddr);
+        keyperModule.setRole(
+            DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+            fakerCaller,
+            childSquadA1,
+            true
+        );
+        assertTrue(keyperModule.isSafeLead(childSquadA1, fakerCaller));
+        vm.stopPrank();
+
+        // Try to Disconnect Safe before to remove squad
+        vm.startPrank(fakerCaller);
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, fakerCaller)
+        );
+        keyperModule.disconnectSafe(childSquadA1);
+        vm.stopPrank();
+    }
+
     function testCannotDisconnectSafe_As_SafeLead_As_EOA() public {
         (uint256 rootId,, uint256 childSquadA1) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
@@ -419,9 +448,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Try to Disconnect Safe before to remove squad
         vm.startPrank(fakerCaller);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, fakerCaller
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, fakerCaller)
         );
         keyperModule.disconnectSafe(childSquadA1);
         vm.stopPrank();

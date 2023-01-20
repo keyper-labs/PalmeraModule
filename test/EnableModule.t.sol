@@ -10,12 +10,12 @@ import {KeyperModule} from "../src/KeyperModule.sol";
 contract TestEnableModule is Test {
     KeyperModule keyperModule;
     GnosisSafeHelper gnosisHelper;
-    address gnosisSafeAddr;
+    address safeAddr;
 
     function setUp() public {
         // Init new safe
         gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
+        safeAddr = gnosisHelper.setupSafeEnv();
         // Init KeyperModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
@@ -31,7 +31,7 @@ contract TestEnableModule is Test {
     }
 
     function testEnableKeyperModule() public {
-        bool result = gnosisHelper.enableModuleTx(gnosisSafeAddr);
+        bool result = gnosisHelper.enableModuleTx(safeAddr);
         assertEq(result, true);
         // Verify module has been enabled
         bool isKeyperModuleEnabled =

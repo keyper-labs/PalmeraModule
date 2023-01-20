@@ -287,7 +287,7 @@ contract StressTestStorage is DeployHelper, SigningUtils {
                     console.log("indexLevel: ", indexLevel);
                     console.log("SubOldLevels: ", subOldlevel);
                     console.log(
-                        "Gnosis Helpers Owners: ", gnosisHelper.getOwnersUsed()
+                        "Helpers Owners: ", gnosisHelper.getOwnersUsed()
                     );
                     structLevel++;
                 }

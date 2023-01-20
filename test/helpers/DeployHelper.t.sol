@@ -27,7 +27,7 @@ contract DeployHelper is Test {
     KeyperRoles keyperRolesContract;
     KeyperSafeBuilder keyperSafeBuilder;
 
-    address gnosisSafeAddr;
+    address safeAddr;
     address keyperModuleAddr;
     address keyperGuardAddr;
     address keyperRolesDeployed;
@@ -67,7 +67,7 @@ contract DeployHelper is Test {
 
         // Init a new safe as main organization (3 owners, 1 threshold)
         gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSeveralSafeEnv(initOwners);
+        safeAddr = gnosisHelper.setupSeveralSafeEnv(initOwners);
 
         // setting keyperRoles Address
         gnosisHelper.setKeyperRoles(keyperRolesDeployed);
@@ -96,9 +96,9 @@ contract DeployHelper is Test {
         // Update gnosisHelper
         gnosisHelper.setKeyperGuard(keyperGuardAddr);
         // Enable keyper module
-        gnosisHelper.enableModuleTx(gnosisSafeAddr);
+        gnosisHelper.enableModuleTx(safeAddr);
         // Enable keyper Guard
-        gnosisHelper.enableGuardTx(gnosisSafeAddr);
+        gnosisHelper.enableGuardTx(safeAddr);
 
         orgHash = keccak256(abi.encodePacked(orgName));
 

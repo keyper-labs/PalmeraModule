@@ -66,33 +66,33 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
                 || !isSafe(safe)
         ) {
-            revert Errors.InvalidGnosisSafe(safe);
+            revert Errors.InvalidSafe(safe);
         } else if (!isSafeRegistered(safe)) {
             revert Errors.SafeNotRegistered(safe);
         }
         _;
     }
 
-    /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet
-    /// @param safe Address of the Gnosis Safe Multisig Wallet
-    modifier IsGnosisSafe(address safe) {
+    /// @dev Modifier for Validate if the address is a Safe Multisig Wallet
+    /// @param safe Address of the Safe Multisig Wallet
+    modifier IsSafe(address safe) {
         if (
             safe == address(0) || safe == Constants.SENTINEL_ADDRESS
                 || !isSafe(safe)
         ) {
-            revert Errors.InvalidGnosisSafe(safe);
+            revert Errors.InvalidSafe(safe);
         }
         _;
     }
 
-    /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet and Root Safe
-    /// @param safe Address of the Gnosis Safe Multisig Wallet
+    /// @dev Modifier for Validate if the address is a Safe Multisig Wallet and Root Safe
+    /// @param safe Address of the Safe Multisig Wallet
     modifier IsRootSafe(address safe) {
         if (
             (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
                 || !isSafe(safe)
         ) {
-            revert Errors.InvalidGnosisSafe(safe);
+            revert Errors.InvalidSafe(safe);
         } else if (!isSafeRegistered(safe)) {
             revert Errors.SafeNotRegistered(safe);
         } else if (
@@ -100,7 +100,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
                 getOrgHashBySafe(safe), safe
             )].tier != DataTypes.Tier.ROOT
         ) {
-            revert Errors.InvalidGnosisRootSafe(safe);
+            revert Errors.InvalidRootSafe(safe);
         }
         _;
     }
@@ -124,9 +124,9 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         maxDepthTreeLimit = maxDepthTreeLimitInitial;
     }
 
-    /// @dev Function to create Gnosis Safe Multisig Wallet with our module enabled
-    /// @param owners Array of owners of the Gnosis Safe Multisig Wallet
-    /// @param threshold Threshold of the Gnosis Safe Multisig Wallet
+    /// @dev Function to create Safe Multisig Wallet with our module enabled
+    /// @param owners Array of owners of the Safe Multisig Wallet
+    /// @param threshold Threshold of the Safe Multisig Wallet
     /// @return safe Address of Safe created with the module enabled
     function createSafeProxy(address[] memory owners, uint256 threshold)
         external
@@ -231,8 +231,8 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @notice to to add owner and set a threshold without passing by normal multisig check
     /// @dev For instance addOwnerWithThreshold can be called by Safe Lead & Safe Lead modify only roles
     /// @param ownerAdded Address of the owner to be added
-    /// @param threshold Threshold of the Gnosis Safe Multisig Wallet
-    /// @param targetSafe Address of the Gnosis Safe Multisig Wallet
+    /// @param threshold Threshold of the Safe Multisig Wallet
+    /// @param targetSafe Address of the Safe Multisig Wallet
     /// @param org Hash(DAO's name)
     function addOwnerWithThreshold(
         address ownerAdded,
@@ -264,11 +264,11 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     }
 
     /// @notice This function will allow User Lead/Super/Root to remove an owner
-    /// @dev For instance of Remove Owner of Gnosis Safe, the user lead/super/root can remove an owner without passing by normal multisig check signature
+    /// @dev For instance of Remove Owner of Safe, the user lead/super/root can remove an owner without passing by normal multisig check signature
     /// @param prevOwner Address of the previous owner
     /// @param ownerRemoved Address of the owner to be removed
-    /// @param threshold Threshold of the Gnosis Safe Multisig Wallet
-    /// @param targetSafe Address of the Gnosis Safe Multisig Wallet
+    /// @param threshold Threshold of the Safe Multisig Wallet
+    /// @param targetSafe Address of the Safe Multisig Wallet
     /// @param org Hash(DAO's name)
     function removeOwner(
         address prevOwner,
@@ -345,7 +345,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @param daoName String with of the org (This name will be hashed into smart contract)
     function registerOrg(string calldata daoName)
         external
-        IsGnosisSafe(_msgSender())
+        IsSafe(_msgSender())
         returns (uint256 squadId)
     {
         bytes32 name = keccak256(abi.encodePacked(daoName));
@@ -364,7 +364,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @param name string name of the squad
     function createRootSafeSquad(address newRootSafe, string calldata name)
         external
-        IsGnosisSafe(newRootSafe)
+        IsSafe(newRootSafe)
         IsRootSafe(_msgSender())
         requiresAuth
         returns (uint256 squadId)
@@ -388,7 +388,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     function addSquad(uint256 superSafe, string memory name)
         external
         SquadRegistered(superSafe)
-        IsGnosisSafe(_msgSender())
+        IsSafe(_msgSender())
         returns (uint256 squadId)
     {
         // check the name of squad is not empty
@@ -817,7 +817,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @notice This function checks that caller has permission (as Root/Super/Lead safe) of the target safe
     /// @param caller Caller's address
     /// @param org Hash(DAO's name)
-    /// @param targetSafe Address of the target Gnosis Safe Multisig Wallet
+    /// @param targetSafe Address of the target Safe Multisig Wallet
     function hasNotPermissionOverTarget(
         address caller,
         bytes32 org,

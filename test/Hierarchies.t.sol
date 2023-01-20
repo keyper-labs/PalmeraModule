@@ -212,9 +212,7 @@ contract Hierarchies is DeployHelper {
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         vm.startPrank(address(0xDDD));
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, address(0xDDD)
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, address(0xDDD))
         );
         keyperModule.updateSuper(squadIdA1, rootId);
         vm.stopPrank();
@@ -362,9 +360,7 @@ contract Hierarchies is DeployHelper {
         address squadA = keyperModule.getSquadSafeAddress(squadA1Id);
         vm.startPrank(squadA);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadA
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
         keyperModule.updateDepthTreeLimit(10);
         vm.stopPrank();
@@ -376,7 +372,7 @@ contract Hierarchies is DeployHelper {
         vm.startPrank(LastSubSquad);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, LastSubSquad
+                Errors.InvalidRootSafe.selector, LastSubSquad
             )
         );
         keyperModule.updateDepthTreeLimit(10);
