@@ -2,22 +2,33 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
+import "forge-std/Script.sol";
+import "forge-std/console.sol";
+import {GnosisSafeProxyFactory} from
+    "@safe-contracts/proxies/GnosisSafeProxyFactory.sol";
+import {GnosisSafeProxy} from "@safe-contracts/proxies/GnosisSafeProxy.sol";
+import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
+import {IProxyCreationCallback} from
+    "@safe-contracts/proxies/IProxyCreationCallback.sol";
 import "../../src/SigningUtils.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
-import "../../script/DeploySafeFactory.t.sol";
-import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
+import "../../src/KeyperModule.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
+import {Random} from "../../libraries/Random.sol";
 
 // Helper contract handling deployment Gnosis Safe contracts
-contract GnosisSafeHelper is
+contract SkipGnosisSafeHelperGoerli is
     Test,
     SigningUtils,
     SignDigestHelper,
     SignersHelper
 {
     GnosisSafe public gnosisSafe;
-    DeploySafeFactory public safeFactory;
+    KeyperModule public keyper;
+    GnosisSafeProxyFactory public proxyFactory;
+    GnosisSafe public gnosisSafeContract;
+    GnosisSafeProxy safeProxy;
 
     address public keyperRolesAddr;
     address private keyperModuleAddr;
@@ -31,11 +42,10 @@ contract GnosisSafeHelper is
     // Init signers
     // Deploy a new safe proxy
     function setupSafeEnv() public returns (address) {
-        safeFactory = new DeploySafeFactory();
-        safeFactory.run();
-        gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
+        start();
+        gnosisMasterCopy = address(gnosisSafeContract);
         bytes memory emptyData;
-        address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
+        address gnosisSafeProxy = newSafeProxy(emptyData);
         gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
         initOnwers(30);
 
@@ -67,12 +77,11 @@ contract GnosisSafeHelper is
     // Permit create a specific numbers of owners
     // Deploy a new safe proxy
     function setupSeveralSafeEnv(uint256 initOwners) public returns (address) {
-        safeFactory = new DeploySafeFactory();
-        safeFactory.run();
-        gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
-        salt++;
+        start();
+        gnosisMasterCopy = address(gnosisSafeContract);
+        salt = Random.randint();
         bytes memory emptyData = abi.encodePacked(salt);
-        address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
+        address gnosisSafeProxy = newSafeProxy(emptyData);
         gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
         initOnwers(initOwners);
 
@@ -98,12 +107,20 @@ contract GnosisSafeHelper is
         return address(gnosisSafe);
     }
 
+    function start() public {
+        proxyFactory =
+            GnosisSafeProxyFactory(vm.envAddress("PROXY_FACTORY_ADDRESS"));
+        gnosisSafeContract =
+            GnosisSafe(payable(vm.envAddress("MASTER_COPY_ADDRESS")));
+    }
+
     function setKeyperRoles(address keyperRoles) public {
         keyperRolesAddr = keyperRoles;
     }
 
     function setKeyperModule(address keyperModule) public {
         keyperModuleAddr = keyperModule;
+        keyper = KeyperModule(keyperModuleAddr);
     }
 
     function setKeyperGuard(address keyperGuard) public {
@@ -129,7 +146,7 @@ contract GnosisSafeHelper is
             owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
             countUsed++;
         }
-        bytes memory emptyData;
+        bytes memory emptyData = abi.encodePacked(Random.randint());
         bytes memory initializer = abi.encodeWithSignature(
             "setup(address[],uint256,address,bytes,address,address,uint256,address)",
             owners,
@@ -142,7 +159,7 @@ contract GnosisSafeHelper is
             payable(address(0x0))
         );
 
-        address gnosisSafeProxy = safeFactory.newSafeProxy(initializer);
+        address gnosisSafeProxy = newSafeProxy(initializer);
         gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
 
         // Enable module
@@ -153,6 +170,14 @@ contract GnosisSafeHelper is
         result = enableGuardTx(address(gnosisSafe));
         require(result == true, "failed enable guard");
         return address(gnosisSafe);
+    }
+
+    function newSafeProxy(bytes memory initializer) public returns (address) {
+        uint256 nonce = uint256(keccak256(initializer));
+        safeProxy = proxyFactory.createProxyWithNonce(
+            address(gnosisSafeContract), initializer, nonce
+        );
+        return address(safeProxy);
     }
 
     function testNewKeyperSafe() public {
@@ -296,6 +321,24 @@ contract GnosisSafeHelper is
         return result;
     }
 
+    function createSetRole(
+        uint8 role,
+        address user,
+        uint256 squad,
+        bool enabled,
+        address safe
+    ) public returns (bool) {
+        bytes memory data = abi.encodeWithSignature(
+            "setRole(uint8,address,uint256,bool)", role, user, squad, enabled
+        );
+        // Create module safe tx
+        Transaction memory mockTx = createDefaultTx(safe, data);
+        // Sign tx
+        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
+        bool result = executeSafeTx(mockTx, signatures);
+        return result;
+    }
+
     function createAddSquadTx(uint256 superSafe, string memory name)
         public
         returns (bool)
@@ -357,28 +400,6 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createSetRole(
-        uint8 role,
-        address user,
-        uint256 squad,
-        bool enabled,
-        address safe
-    ) public returns (bool) {
-        bytes memory data = abi.encodeWithSignature(
-            "setRole(uint8,address,uint256,bool)",
-            uint8(role),
-            user,
-            squad,
-            enabled
-        );
-        // Create module safe tx
-        Transaction memory mockTx = createDefaultTx(safe, data);
-        // Sign tx
-        bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
-        bool result = executeSafeTx(mockTx, signatures);
-        return result;
-    }
-
     function createDisconnectSafeTx(uint256 squad) public returns (bool) {
         bytes memory data =
             abi.encodeWithSignature("disconnectSafe(uint256)", squad);
@@ -395,7 +416,7 @@ contract GnosisSafeHelper is
         address targetSafe,
         address to,
         uint256 value,
-        bytes calldata data,
+        bytes memory data,
         Enum.Operation operation,
         bytes memory signaturesExec
     ) public returns (bool) {
@@ -486,5 +507,78 @@ contract GnosisSafeHelper is
             signDigestTx(privateKeySafeOwners, enableModuleSafeTx);
 
         return signatures;
+    }
+
+    /// @notice Encode signatures for a keypertx
+    function encodeSignaturesKeyperTx(
+        address caller,
+        address safe,
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation
+    ) public view returns (bytes memory) {
+        // Create encoded tx to be signed
+        uint256 nonce = keyper.nonce();
+        bytes32 txHashed = keyper.getTransactionHash(
+            caller, safe, to, value, data, operation, nonce
+        );
+
+        address[] memory owners = gnosisSafe.getOwners();
+        // Order owners
+        address[] memory sortedOwners = sortAddresses(owners);
+        uint256 threshold = gnosisSafe.getThreshold();
+
+        // Get pk for the signing threshold
+        uint256[] memory privateKeySafeOwners = new uint256[](threshold);
+        for (uint256 i = 0; i < threshold; i++) {
+            privateKeySafeOwners[i] = ownersPK[sortedOwners[i]];
+        }
+
+        bytes memory signatures = signDigestTx(privateKeySafeOwners, txHashed);
+
+        return signatures;
+    }
+
+    /// @notice Sign keyperTx with invalid signatures (do not belong to any safe owner)
+    function encodeInvalidSignaturesKeyperTx(
+        address caller,
+        address safe,
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation
+    ) public view returns (bytes memory) {
+        // Create encoded tx to be signed
+        uint256 nonce = keyper.nonce();
+        bytes32 txHashed = keyper.getTransactionHash(
+            caller, safe, to, value, data, operation, nonce
+        );
+
+        uint256 threshold = gnosisSafe.getThreshold();
+        // Get invalid pk for the signing threshold
+        uint256[] memory invalidSafeOwnersPK = new uint256[](threshold);
+        for (uint256 i = 0; i < threshold; i++) {
+            invalidSafeOwnersPK[i] = invalidPrivateKeyOwners[i];
+        }
+
+        bytes memory signatures = signDigestTx(invalidSafeOwnersPK, txHashed);
+
+        return signatures;
+    }
+
+    function createKeyperTxHash(
+        address caller,
+        address safe,
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation,
+        uint256 nonce
+    ) public view returns (bytes32) {
+        bytes32 txHashed = keyper.getTransactionHash(
+            caller, safe, to, value, data, operation, nonce
+        );
+        return txHashed;
     }
 }

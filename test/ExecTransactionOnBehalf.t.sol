@@ -123,7 +123,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
         vm.deal(safeSquadBAddr, 100 gwei);
 
         vm.startPrank(rootAddr);
-        bytes32 orgHash = keyperModule.getOrgBySquad(rootId);
         keyperModule.setRole(
             DataTypes.Role.SAFE_LEAD, safeSquadBAddr, safeSubSubSquadA1Id, true
         );
@@ -617,7 +616,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
         assertEq(keyperModule.isSafeLead(rootId, fakeCaller), true);
 
         vm.startPrank(fakeCaller);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(fakeCaller);
         vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector);
         keyperModule.execTransactionOnBehalf(
             orgHash,
@@ -666,7 +664,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         // Execute on behalf function from a not authorized caller
         vm.startPrank(fakeCaller);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(fakeCaller);
         vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector);
         keyperModule.execTransactionOnBehalf(
             orgHash,
@@ -788,7 +785,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         // Set Safe Role in Safe Squad A1 over Child Squad A1
         vm.startPrank(rootAddrA);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
         uint256 childSquadA1 = keyperModule.getSquadIdBySafe(orgHash, ChildA1);
         keyperModule.setRole(
             DataTypes.Role.SAFE_LEAD, fakeCaller, childSquadA1, true
@@ -870,7 +866,6 @@ contract ExecTransactionOnBehalf is DeployHelper {
 
         // Set Safe Role in Safe Squad A1 over Child Squad A1
         vm.startPrank(rootAddrA);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddrA);
         uint256 childSquadA1 = keyperModule.getSquadIdBySafe(orgHash, ChildA1);
         keyperModule.setRole(
             DataTypes.Role.SAFE_LEAD, fakeCaller, childSquadA1, true

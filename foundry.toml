@@ -19,7 +19,7 @@ libraries = ['./libraries/Constants.sol:Constants:0xc0f208cD760C472476A4Af93cf88
 gas_reports = ['KeyperModule', 'KeyperRoles', 'KeyperGuard']
 
 # No match contracts
-no_match_contract = "StressTestStorage"
+no_match_contract = 'Skip*'
 
 
 [fmt]
