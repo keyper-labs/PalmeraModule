@@ -18,7 +18,7 @@ contract DeployKeyperEnv is Script {
         // More info https://github.com/ZeframLou/create3-factory
         CREATE3Factory factory =
             CREATE3Factory(0x9fBB3DF7C40Da2e5A0dE984fFE2CCB7C47cd0ABf);
-        bytes32 salt = keccak256(abi.encode(0xcfff));
+        bytes32 salt = keccak256(abi.encode(0xdfff));
         address keyperModulePredicted = factory.getDeployed(msg.sender, salt);
 
         // Deploy Safe contracts in goerli
