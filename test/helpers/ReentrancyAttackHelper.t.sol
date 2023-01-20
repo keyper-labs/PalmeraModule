@@ -12,7 +12,7 @@ import {DataTypes} from "../../libraries/DataTypes.sol";
 
 contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
     KeyperModule public keyper;
-    GnosisSafeHelper public gnosisHelper;
+    GnosisSafeHelper public safeHelper;
     Attacker public attacker;
 
     mapping(string => address) public keyperSafes;
@@ -25,7 +25,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
     ) public {
         keyper = keyperArg;
         attacker = attackerArg;
-        gnosisHelper = gnosisHelperArg;
+        safeHelper = gnosisHelperArg;
         initOnwers(numberOwners);
     }
 
@@ -60,11 +60,11 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         public
         returns (address, address, address)
     {
-        gnosisHelper.registerOrgTx(_orgName);
-        keyperSafes[_orgName] = address(gnosisHelper.safe());
+        safeHelper.registerOrgTx(_orgName);
+        keyperSafes[_orgName] = address(safeHelper.safe());
         address orgAddr = keyperSafes[_orgName];
 
-        gnosisHelper.updateSafeInterface(address(attacker));
+        safeHelper.updateSafeInterface(address(attacker));
         string memory nameAttacker = "Attacker";
         keyperSafes[nameAttacker] = address(attacker);
 
@@ -76,7 +76,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         keyper.addSquad(rootOrgId, nameAttacker);
         vm.stopPrank();
 
-        address victim = gnosisHelper.newKeyperSafe(2, 1);
+        address victim = safeHelper.newKeyperSafe(2, 1);
         string memory nameVictim = "Victim";
         keyperSafes[nameVictim] = address(victim);
         uint256 attackerSquadId = keyper.getSquadIdBySafe(orgHash, attackerSafe);

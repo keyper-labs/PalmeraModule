@@ -15,8 +15,8 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         // Initial Deploy Contracts
         deployAllContracts(60);
         // Setup of all Safe for Testing
-        // org1 = gnosisHelper.setupSeveralSafeEnv(30);
-        // squadA = gnosisHelper.setupSeveralSafeEnv(30);
+        // org1 = safeHelper.setupSeveralSafeEnv(30);
+        // squadA = safeHelper.setupSeveralSafeEnv(30);
         (RootOrgId, squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         org1 = keyperModule.getSquadSafeAddress(RootOrgId);
@@ -155,7 +155,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
 
     function testRevertIfCallAnotherSafeNotRegistered() public {
         listOfOwners();
-        address anotherWallet = gnosisHelper.setupSeveralSafeEnv(30);
+        address anotherWallet = safeHelper.setupSeveralSafeEnv(30);
         vm.startPrank(anotherWallet);
         vm.expectRevert(
             abi.encodeWithSelector(

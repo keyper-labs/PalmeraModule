@@ -9,13 +9,13 @@ import "./helpers/GnosisSafeHelper.t.sol";
 /// @title TestDeploySafe
 /// @custom:security-contact general@palmeradao.xyz
 contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
-    GnosisSafeHelper gnosisHelper;
+    GnosisSafeHelper safeHelper;
     address safeAddr;
 
     // Init new safe
     function setUp() public {
-        gnosisHelper = new GnosisSafeHelper();
-        safeAddr = gnosisHelper.setupSafeEnv();
+        safeHelper = new GnosisSafeHelper();
+        safeAddr = safeHelper.setupSafeEnv();
     }
 
     function testTransferFundsSafe() public {
@@ -37,15 +37,15 @@ contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
         // Send funds to safe
         vm.deal(safeAddr, 2 ether);
         // Create encoded tx to be signed
-        uint256 nonce = gnosisHelper.safe().nonce();
-        bytes32 transferSafeTx = gnosisHelper.createSafeTxHash(mockTx, nonce);
+        uint256 nonce = safeHelper.safe().nonce();
+        bytes32 transferSafeTx = safeHelper.createSafeTxHash(mockTx, nonce);
         // Sign encoded tx with 1 owner
         uint256[] memory privateKeyOwner = new uint256[](1);
-        privateKeyOwner[0] = gnosisHelper.privateKeyOwners(0);
+        privateKeyOwner[0] = safeHelper.privateKeyOwners(0);
 
         bytes memory signatures = signDigestTx(privateKeyOwner, transferSafeTx);
         // Exec tx
-        bool result = gnosisHelper.safe().execTransaction(
+        bool result = safeHelper.safe().execTransaction(
             mockTx.to,
             mockTx.value,
             mockTx.data,

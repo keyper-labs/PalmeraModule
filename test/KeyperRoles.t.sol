@@ -77,7 +77,7 @@ contract KeyperRolesTest is DeployHelper {
         (uint256 rootId, uint256 safeSquadA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address safeLead = gnosisHelper.newKeyperSafe(4, 2);
+        address safeLead = safeHelper.newKeyperSafe(4, 2);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         vm.startPrank(rootAddr);

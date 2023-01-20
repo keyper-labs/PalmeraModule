@@ -22,7 +22,7 @@ contract DeployHelper is Test {
 
     KeyperModule keyperModule;
     KeyperGuard keyperGuard;
-    GnosisSafeHelper gnosisHelper;
+    GnosisSafeHelper safeHelper;
     KeyperModuleHelper keyperHelper;
     KeyperRoles keyperRolesContract;
     KeyperSafeBuilder keyperSafeBuilder;
@@ -66,15 +66,15 @@ contract DeployHelper is Test {
         keyperRolesDeployed = factory.getDeployed(address(this), salt);
 
         // Init a new safe as main organization (3 owners, 1 threshold)
-        gnosisHelper = new GnosisSafeHelper();
-        safeAddr = gnosisHelper.setupSeveralSafeEnv(initOwners);
+        safeHelper = new GnosisSafeHelper();
+        safeAddr = safeHelper.setupSeveralSafeEnv(initOwners);
 
         // setting keyperRoles Address
-        gnosisHelper.setKeyperRoles(keyperRolesDeployed);
+        safeHelper.setKeyperRoles(keyperRolesDeployed);
 
         // Init KeyperModule
-        address masterCopy = gnosisHelper.gnosisMasterCopy();
-        address safeFactory = address(gnosisHelper.safeFactory());
+        address masterCopy = safeHelper.gnosisMasterCopy();
+        address safeFactory = address(safeHelper.safeFactory());
         uint256 maxTreeDepth = 50;
 
         keyperModule = new KeyperModule(
@@ -91,14 +91,14 @@ contract DeployHelper is Test {
         // Init keyperModuleHelper
         keyperHelper = new KeyperModuleHelper();
         keyperHelper.initHelper(keyperModule, initOwners.div(3));
-        // Update gnosisHelper
-        gnosisHelper.setKeyperModule(keyperModuleAddr);
-        // Update gnosisHelper
-        gnosisHelper.setKeyperGuard(keyperGuardAddr);
+        // Update safeHelper
+        safeHelper.setKeyperModule(keyperModuleAddr);
+        // Update safeHelper
+        safeHelper.setKeyperGuard(keyperGuardAddr);
         // Enable keyper module
-        gnosisHelper.enableModuleTx(safeAddr);
+        safeHelper.enableModuleTx(safeAddr);
         // Enable keyper Guard
-        gnosisHelper.enableGuardTx(safeAddr);
+        safeHelper.enableGuardTx(safeAddr);
 
         orgHash = keccak256(abi.encodePacked(orgName));
 
@@ -110,9 +110,9 @@ contract DeployHelper is Test {
         keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
 
         keyperSafeBuilder = new KeyperSafeBuilder();
-        // keyperSafeBuilder.setGnosisHelper(GnosisSafeHelper(gnosisHelper));
+        // keyperSafeBuilder.setGnosisHelper(GnosisSafeHelper(safeHelper));
         keyperSafeBuilder.setUpParams(
-            KeyperModule(keyperModule), GnosisSafeHelper(gnosisHelper)
+            KeyperModule(keyperModule), GnosisSafeHelper(safeHelper)
         );
     }
 

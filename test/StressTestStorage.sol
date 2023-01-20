@@ -20,7 +20,7 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     function testAddSubSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
-        address squadBaddr = gnosisHelper.newKeyperSafe(4, 2);
+        address squadBaddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(squadBaddr);
         uint256 squadIdB = keyperModule.addSquad(squadIdA1, squadBName);
         assertEq(keyperModule.isTreeMember(rootId, squadIdA1), true);
@@ -49,7 +49,7 @@ contract StressTestStorage is DeployHelper, SigningUtils {
 
         for (uint256 i = 2; i < 8100; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
             // Start Prank
             vm.startPrank(subSquadAaddr[i]);
             // Add the new Safe as a subSquad
@@ -88,12 +88,12 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     // 	      /|\     /|\    /|\
     // 	     B1B2B3  B1B2B3 B1B2B3 ........
     function testAddThreeSubSquadLinealSecuenceMaxLevel() public {
-        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newKeyperSafe(3, 1);
         createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 3, 30000);
 
         /// Remove Whole Tree A
-        gnosisHelper.updateSafeInterface(orgSafe);
-        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        safeHelper.updateSafeInterface(orgSafe);
+        bool result = safeHelper.createRemoveWholeTreeTx();
         assertTrue(result);
         console.log("All Org Removed");
     }
@@ -106,7 +106,7 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     // 	       /|\\      /|\\     /|\\       /|\\
     // 	     B1B2B3B4  B1B2B3B4  B1B2B3B4  B1B2B3B4
     function testAddFourthSubSquadLinealSecuenceMaxLevel() public {
-        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newKeyperSafe(3, 1);
         createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 4, 22000);
     }
 
@@ -118,15 +118,15 @@ contract StressTestStorage is DeployHelper, SigningUtils {
     // 	       /|\\\       /|\\\       /|\\\      /|\\\        /|\\\
     // 	     B1B2B3B4B5  B1B2B3B4B5  B1B2B3B4B5 B1B2B3B4B5   B1B2B3B4B5
     function testAddFifthSubSquadLinealSecuenceMaxLevel() public {
-        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newKeyperSafe(3, 1);
         createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 5, 20000);
     }
 
     function testSeveralsSmallOrgsSquadSecuenceMaxLevel() public {
         setUp();
-        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
-        address orgSafe1 = gnosisHelper.newKeyperSafe(3, 1);
-        address orgSafe2 = gnosisHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newKeyperSafe(3, 1);
+        address orgSafe1 = safeHelper.newKeyperSafe(3, 1);
+        address orgSafe2 = safeHelper.newKeyperSafe(3, 1);
         console.log("Test Severals Small Orgs Squad Secuence Max Level");
         console.log("Squad of 3 Members");
         console.log("---------------------");
@@ -147,9 +147,9 @@ contract StressTestStorage is DeployHelper, SigningUtils {
 
     function testSeveralsBigOrgsSquadSecuenceMaxLevel() public {
         setUp();
-        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
-        address orgSafe1 = gnosisHelper.newKeyperSafe(3, 1);
-        address orgSafe2 = gnosisHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newKeyperSafe(3, 1);
+        address orgSafe1 = safeHelper.newKeyperSafe(3, 1);
+        address orgSafe2 = safeHelper.newKeyperSafe(3, 1);
         console.log("Full Org 1");
         console.log("---------------------");
         createTreeStressTest("RootOrg3", "RootOrg3", orgSafe, orgSafe, 3, 30000);
@@ -167,9 +167,9 @@ contract StressTestStorage is DeployHelper, SigningUtils {
 
     function testFullOrgSquadSecuenceMaxLevel() public {
         setUp();
-        address orgSafe = gnosisHelper.newKeyperSafe(3, 1);
-        address rootSafe1 = gnosisHelper.newKeyperSafe(3, 1);
-        address rootSafe2 = gnosisHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newKeyperSafe(3, 1);
+        address rootSafe1 = safeHelper.newKeyperSafe(3, 1);
+        address rootSafe2 = safeHelper.newKeyperSafe(3, 1);
         console.log("Full Org 2");
         console.log("---------------------");
         createTreeStressTest("RootOrg2", "RootOrg2", orgSafe, orgSafe, 3, 30000);
@@ -202,13 +202,13 @@ contract StressTestStorage is DeployHelper, SigningUtils {
                         != keccak256(abi.encodePacked(OrgName))
                 )
         ) {
-            gnosisHelper.updateSafeInterface(orgSafe);
-            bool result = gnosisHelper.createRootSafeTx(rootSafe, RootSafeName);
+            safeHelper.updateSafeInterface(orgSafe);
+            bool result = safeHelper.createRootSafeTx(rootSafe, RootSafeName);
             assertEq(result, true);
             rootId = keyperModule.getSquadIdBySafe(org, rootSafe);
         } else {
-            gnosisHelper.updateSafeInterface(orgSafe);
-            bool result = gnosisHelper.registerOrgTx(OrgName);
+            safeHelper.updateSafeInterface(orgSafe);
+            bool result = safeHelper.registerOrgTx(OrgName);
             assertEq(result, true);
             rootId = keyperModule.getSquadIdBySafe(org, orgSafe);
         }
@@ -234,7 +234,7 @@ contract StressTestStorage is DeployHelper, SigningUtils {
             uint256 superSafe = subSquadAid[level[i]];
             for (uint256 j = 0; j < members; j++) {
                 // Create a new Safe
-                subSquadAaddr[indexSquad] = gnosisHelper.newKeyperSafe(3, 1);
+                subSquadAaddr[indexSquad] = safeHelper.newKeyperSafe(3, 1);
                 // Start Prank
                 vm.startPrank(subSquadAaddr[indexSquad]);
                 // Add the new Safe as a subSquad
@@ -286,9 +286,7 @@ contract StressTestStorage is DeployHelper, SigningUtils {
                     console.log("indexSquad / Amount of Safe: ", indexSquad + 1);
                     console.log("indexLevel: ", indexLevel);
                     console.log("SubOldLevels: ", subOldlevel);
-                    console.log(
-                        "Helpers Owners: ", gnosisHelper.getOwnersUsed()
-                    );
+                    console.log("Helpers Owners: ", safeHelper.getOwnersUsed());
                     structLevel++;
                 }
             }

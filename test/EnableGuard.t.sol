@@ -12,16 +12,16 @@ import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 contract TestEnableGuard is Test {
     KeyperModule keyperModule;
     KeyperGuard keyperGuard;
-    GnosisSafeHelper gnosisHelper;
+    GnosisSafeHelper safeHelper;
     address safeAddr;
 
     function setUp() public {
         // Init new safe
-        gnosisHelper = new GnosisSafeHelper();
-        safeAddr = gnosisHelper.setupSafeEnv();
+        safeHelper = new GnosisSafeHelper();
+        safeAddr = safeHelper.setupSafeEnv();
         // Init KeyperModule
-        address masterCopy = gnosisHelper.gnosisMasterCopy();
-        address safeFactory = address(gnosisHelper.safeFactory());
+        address masterCopy = safeHelper.gnosisMasterCopy();
+        address safeFactory = address(safeHelper.safeFactory());
         address rolesAuthority = address(0xBEEF);
         uint256 maxTreeDepth = 50;
         keyperModule = new KeyperModule(
@@ -31,21 +31,21 @@ contract TestEnableGuard is Test {
             maxTreeDepth
         );
         keyperGuard = new KeyperGuard(address(keyperModule));
-        gnosisHelper.setKeyperModule(address(keyperModule));
-        gnosisHelper.setKeyperGuard(address(keyperGuard));
+        safeHelper.setKeyperModule(address(keyperModule));
+        safeHelper.setKeyperGuard(address(keyperGuard));
     }
 
     function testEnableKeyperModule() public {
-        bool result = gnosisHelper.enableModuleTx(safeAddr);
+        bool result = safeHelper.enableModuleTx(safeAddr);
         assertEq(result, true);
         // Verify module has been enabled
         bool isKeyperModuleEnabled =
-            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
+            safeHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
     }
 
     function testEnableKeyperGuard() public {
-        bool result = gnosisHelper.enableGuardTx(safeAddr);
+        bool result = safeHelper.enableGuardTx(safeAddr);
         assertEq(result, true);
         // Verify guard has been enabled
         address guardAddress = abi.decode(

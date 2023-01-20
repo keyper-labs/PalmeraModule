@@ -36,8 +36,8 @@ contract ExecTransactionOnBehalf is DeployHelper {
         );
         // Execute on behalf function
 
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.execTransactionOnBehalfTx(
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.execTransactionOnBehalfTx(
             orgHash,
             safeSquadA1Addr,
             receiver,
@@ -81,8 +81,8 @@ contract ExecTransactionOnBehalf is DeployHelper {
             emptyData,
             Enum.Operation(0)
         );
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.execTransactionOnBehalfTx(
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.execTransactionOnBehalfTx(
             orgHash,
             safeSubSquadA1Addr,
             receiver,
@@ -145,7 +145,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         );
 
         // Execute on behalf function
-        bool result = gnosisHelper.execTransactionOnBehalfTx(
+        bool result = safeHelper.execTransactionOnBehalfTx(
             orgHash,
             safeSubSubSquadA1Addr,
             receiver,
@@ -245,8 +245,8 @@ contract ExecTransactionOnBehalf is DeployHelper {
         );
 
         // Execute on safe tx
-        gnosisHelper.updateSafeInterface(safeSquadA1Addr);
-        bool result = gnosisHelper.execTransactionOnBehalfTx(
+        safeHelper.updateSafeInterface(safeSquadA1Addr);
+        bool result = safeHelper.execTransactionOnBehalfTx(
             orgHash,
             safeSubSquadA1Addr,
             receiver,
@@ -384,10 +384,10 @@ contract ExecTransactionOnBehalf is DeployHelper {
             Enum.Operation(0)
         );
 
-        gnosisHelper.updateSafeInterface(rootAddr);
+        safeHelper.updateSafeInterface(rootAddr);
         vm.expectRevert("GS013");
         // Execute invalid OnBehalf function
-        gnosisHelper.execTransactionOnBehalfTx(
+        safeHelper.execTransactionOnBehalfTx(
             orgHash,
             safeSquadA1Addr,
             receiver,
@@ -592,12 +592,12 @@ contract ExecTransactionOnBehalf is DeployHelper {
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
         keyperHelper.setSafe(rootAddr);
-        address fakeCaller = gnosisHelper.newKeyperSafe(4, 2);
+        address fakeCaller = safeHelper.newKeyperSafe(4, 2);
 
         // Random wallet instead of a safe (EOA)
 
         vm.startPrank(fakeCaller);
-        bool result = gnosisHelper.createAddSquadTx(safeSquadA1, "fakeSquad");
+        bool result = safeHelper.createAddSquadTx(safeSquadA1, "fakeSquad");
         vm.stopPrank();
         assertEq(result, true);
 
@@ -938,8 +938,8 @@ contract ExecTransactionOnBehalf is DeployHelper {
         vm.deal(childSquadA1Addr, 100 gwei);
 
         // Create a child safe for squad A2
-        address rightCaller = gnosisHelper.newKeyperSafe(4, 2);
-        bool result = gnosisHelper.createAddSquadTx(safeSquadA1, "ChildSquadA2");
+        address rightCaller = safeHelper.newKeyperSafe(4, 2);
+        bool result = safeHelper.createAddSquadTx(safeSquadA1, "ChildSquadA2");
         assertEq(result, true);
 
         // Set keyperhelper safe to rightCaller
@@ -966,9 +966,9 @@ contract ExecTransactionOnBehalf is DeployHelper {
         vm.stopPrank();
 
         // Execute on behalf function from a not authorized caller (Root Safe of Another Tree) over Super Safe and Squad Safe in another Three
-        gnosisHelper.updateSafeInterface(rightCaller);
+        safeHelper.updateSafeInterface(rightCaller);
 
-        gnosisHelper.execTransactionOnBehalfTx(
+        safeHelper.execTransactionOnBehalfTx(
             orgHash,
             childSquadA1Addr,
             receiver,
@@ -1063,8 +1063,8 @@ contract ExecTransactionOnBehalf is DeployHelper {
         vm.deal(childSquadA1Addr, 100 gwei);
 
         // Create a child safe for squad A2
-        address fakeCaller = gnosisHelper.newKeyperSafe(4, 2);
-        bool result = gnosisHelper.createAddSquadTx(safeSquadA1, "ChildSquadA2");
+        address fakeCaller = safeHelper.newKeyperSafe(4, 2);
+        bool result = safeHelper.createAddSquadTx(safeSquadA1, "ChildSquadA2");
         assertEq(result, true);
 
         // Set Safe Role in Safe Squad A1 over Child Squad A1
@@ -1110,9 +1110,9 @@ contract ExecTransactionOnBehalf is DeployHelper {
         );
 
         // Execute on behalf function from a not authorized caller (Root Safe of Another Tree) over Super Safe and Squad Safe in another Three
-        gnosisHelper.updateSafeInterface(fakeCaller);
+        safeHelper.updateSafeInterface(fakeCaller);
         vm.expectRevert("GS013");
-        result = gnosisHelper.execTransactionOnBehalfTx(
+        result = safeHelper.execTransactionOnBehalfTx(
             orgHash,
             childSquadA1Addr,
             receiver,
@@ -1204,16 +1204,16 @@ contract ExecTransactionOnBehalf is DeployHelper {
         Attacker attackerContract = new Attacker(address(keyperModule));
         AttackerHelper attackerHelper = new AttackerHelper();
         attackerHelper.initHelper(
-            keyperModule, attackerContract, gnosisHelper, 30
+            keyperModule, attackerContract, safeHelper, 30
         );
 
         (, address attacker, address victim) =
             attackerHelper.setAttackerTree(orgName);
 
-        gnosisHelper.updateSafeInterface(victim);
-        attackerContract.setOwners(gnosisHelper.safe().getOwners());
+        safeHelper.updateSafeInterface(victim);
+        attackerContract.setOwners(safeHelper.safe().getOwners());
 
-        gnosisHelper.updateSafeInterface(attacker);
+        safeHelper.updateSafeInterface(attacker);
         vm.startPrank(attacker);
 
         bytes memory emptyData;

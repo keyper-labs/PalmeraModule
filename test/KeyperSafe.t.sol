@@ -213,8 +213,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
 
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveSquadTx(subSquadA1Id);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
         assertEq(result, true);
         assertEq(keyperModule.isSuperSafe(rootId, subSquadA1Id), false);
 
@@ -289,8 +289,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address squadAAddr = keyperModule.getSquadSafeAddress(squadA1Id);
 
-        gnosisHelper.updateSafeInterface(squadAAddr);
-        bool result = gnosisHelper.createRemoveSquadTx(subSquadA1Id);
+        safeHelper.updateSafeInterface(squadAAddr);
+        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
         assertEq(result, true);
         assertEq(keyperModule.isSuperSafe(squadA1Id, subSquadA1Id), false);
         assertEq(keyperModule.isSuperSafe(rootId, subSquadA1Id), false);
@@ -355,8 +355,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         (,,,,, uint256 superSafe) = keyperModule.getSquadInfo(squadA1Id);
         (,, address superSafeAddr,,) = keyperModule.squads(orgHash, superSafe);
 
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveSquadTx(squadA1Id);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createRemoveSquadTx(squadA1Id);
         assertEq(result, true);
 
         assertEq(

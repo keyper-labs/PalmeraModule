@@ -9,16 +9,16 @@ import {KeyperModule} from "../src/KeyperModule.sol";
 /// @custom:security-contact general@palmeradao.xyz
 contract TestEnableModule is Test {
     KeyperModule keyperModule;
-    GnosisSafeHelper gnosisHelper;
+    GnosisSafeHelper safeHelper;
     address safeAddr;
 
     function setUp() public {
         // Init new safe
-        gnosisHelper = new GnosisSafeHelper();
-        safeAddr = gnosisHelper.setupSafeEnv();
+        safeHelper = new GnosisSafeHelper();
+        safeAddr = safeHelper.setupSafeEnv();
         // Init KeyperModule
-        address masterCopy = gnosisHelper.gnosisMasterCopy();
-        address safeFactory = address(gnosisHelper.safeFactory());
+        address masterCopy = safeHelper.gnosisMasterCopy();
+        address safeFactory = address(safeHelper.safeFactory());
         address rolesAuthority = address(0xBEEF);
         uint256 maxTreeDepth = 50;
         keyperModule = new KeyperModule(
@@ -27,23 +27,23 @@ contract TestEnableModule is Test {
             rolesAuthority,
             maxTreeDepth
         );
-        gnosisHelper.setKeyperModule(address(keyperModule));
+        safeHelper.setKeyperModule(address(keyperModule));
     }
 
     function testEnableKeyperModule() public {
-        bool result = gnosisHelper.enableModuleTx(safeAddr);
+        bool result = safeHelper.enableModuleTx(safeAddr);
         assertEq(result, true);
         // Verify module has been enabled
         bool isKeyperModuleEnabled =
-            gnosisHelper.safe().isModuleEnabled(address(keyperModule));
+            safeHelper.safe().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
     }
 
     function testNewSafeWithKeyperModule() public {
         // Create new safe with setup called while creating contract
-        gnosisHelper.newKeyperSafe(4, 2);
-        address[] memory owners = gnosisHelper.safe().getOwners();
+        safeHelper.newKeyperSafe(4, 2);
+        address[] memory owners = safeHelper.safe().getOwners();
         assertEq(owners.length, 4);
-        assertEq(gnosisHelper.safe().getThreshold(), 2);
+        assertEq(safeHelper.safe().getThreshold(), 2);
     }
 }
