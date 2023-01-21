@@ -153,11 +153,10 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
 
         // Create a fakeCaller with Ramdom EOA
         address fakeCaller = address(msg.sender);
-        (bool sent, bytes memory data) = fakeCaller.call{value: 1 ether}("");
+        (bool sent, bytes memory data) =
+            childSquadA1Addr.call{value: 5e5 gwei}("");
         require(sent, "Failed to send Ether");
-        (sent, data) = childSquadA1Addr.call{value: 500 gwei}("");
-        require(sent, "Failed to send Ether");
-        (sent, data) = rootAddr.call{value: 500 gwei}("");
+        (sent, data) = rootAddr.call{value: 5e5 gwei}("");
         require(sent, "Failed to send Ether");
 
         // Set Safe Role in Safe Squad A1 over Child Squad A1
@@ -166,9 +165,10 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
             uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY),
             fakeCaller,
             childSquadA1,
-            true,
-            address(rootAddr)
+            true
         );
+        assertEq(result, true);
+        assertEq(keyperModule.isSafeLead(childSquadA1, fakeCaller), true);
 
         // Value to be sent to the receiver with rightCaller
         bytes memory emptyData;
@@ -180,17 +180,16 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
             childSquadA1Addr,
             rootAddr,
             receiver,
-            100 gwei,
+            57 gwei,
             emptyData,
             Enum.Operation(0)
         );
-
         bytes memory internalData = abi.encodeWithSignature(
             "execTransactionOnBehalf(bytes32,address,address,uint256,bytes,uint8,bytes)",
             orgHash,
             rootAddr,
             receiver,
-            100 gwei,
+            57 gwei,
             emptyData,
             Enum.Operation(0),
             signatures2
@@ -201,7 +200,7 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
             orgHash,
             childSquadA1Addr,
             receiver,
-            50 gwei,
+            2 gwei,
             internalData,
             Enum.Operation(0),
             signatures

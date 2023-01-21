@@ -361,18 +361,13 @@ contract GnosisSafeHelper is
         uint8 role,
         address user,
         uint256 squad,
-        bool enabled,
-        address safe
+        bool enabled
     ) public returns (bool) {
         bytes memory data = abi.encodeWithSignature(
-            "setRole(uint8,address,uint256,bool)",
-            uint8(role),
-            user,
-            squad,
-            enabled
+            "setRole(uint8,address,uint256,bool)", role, user, squad, enabled
         );
-        // Create module safe tx
-        Transaction memory mockTx = createDefaultTx(safe, data);
+        // Create module tx
+        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
         // Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
