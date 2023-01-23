@@ -73,18 +73,6 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         _;
     }
 
-    /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet
-    /// @param safe Address of the Gnosis Safe Multisig Wallet
-    modifier IsGnosisSafe(address safe) {
-        if (
-            safe == address(0) || safe == Constants.SENTINEL_ADDRESS
-                || !isSafe(safe)
-        ) {
-            revert Errors.InvalidGnosisSafe(safe);
-        }
-        _;
-    }
-
     /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet and Root Safe
     /// @param safe Address of the Gnosis Safe Multisig Wallet
     modifier IsRootSafe(address safe) {
