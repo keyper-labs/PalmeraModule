@@ -160,7 +160,7 @@ abstract contract Helpers is DenyHelper {
         {
             return Constants.SENTINEL_ADDRESS;
         } else {
-            for (uint256 i = 1; i < modules.length; i++) {
+            for (uint256 i = 1; i < modules.length; ++i) {
                 if (modules[i] == address(this)) {
                     return modules[i - 1];
                 }

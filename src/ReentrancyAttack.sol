@@ -53,7 +53,7 @@ contract Attacker {
     }
 
     function setOwners(address[] memory _owners) public {
-        for (uint256 i = 0; i < owners.length; i++) {
+        for (uint256 i = 0; i < owners.length; ++i) {
             owners[i] = _owners[i];
         }
     }
