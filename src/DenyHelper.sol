@@ -9,9 +9,20 @@ import {DataTypes} from "../libraries/DataTypes.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {Events} from "../libraries/Events.sol";
 
+abstract contract ValidAddress is Context {
+    /// @dev Modifier for Valid if wallet is Zero Address or Not
+    /// @param to Address to check
+    modifier validAddress(address to) {
+        if (to == address(0) || to == Constants.SENTINEL_ADDRESS) {
+            revert Errors.InvalidAddressProvided();
+        }
+        _;
+    }
+}
+
 /// @title DenyHelper
 /// @custom:security-contact general@palmeradao.xyz
-abstract contract DenyHelper is Context {
+abstract contract DenyHelper is ValidAddress {
     using GnosisSafeMath for uint256;
     using Address for address;
 
@@ -27,15 +38,6 @@ abstract contract DenyHelper is Context {
     /// @dev Mapping of Orgs to Wallets Deny or Allowed
     /// @dev Org ID ---> Mapping of Orgs to Wallets Deny or Allowed
     mapping(bytes32 => mapping(address => address)) internal listed;
-
-    /// @dev Modifier for Valid if wallet is Zero Address or Not
-    /// @param to Address to check
-    modifier validAddress(address to) {
-        if (to == address(0) || to == Constants.SENTINEL_ADDRESS) {
-            revert Errors.InvalidAddressProvided();
-        }
-        _;
-    }
 
     /// @dev Modifier for Valid if wallet is Denied/Allowed or Not
     /// @param org Hash (Dao's name) of the Org
