@@ -7,7 +7,7 @@ import "test/mocks/MockedContract.t.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import "@solenv/Solenv.sol";
 
-contract DeployModule is Script {
+contract DeployModuleWithMockedSafe is Script {
     function run() public {
         Solenv.config();
         address masterCopy = vm.envAddress("MASTER_COPY_ADDRESS");

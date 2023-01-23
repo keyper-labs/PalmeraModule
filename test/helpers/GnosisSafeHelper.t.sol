@@ -8,6 +8,7 @@ import "./SignersHelper.t.sol";
 import "../../script/DeploySafeFactory.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
+import {Random} from "../../libraries/Random.sol";
 
 // Helper contract handling deployment Gnosis Safe contracts
 contract GnosisSafeHelper is
@@ -20,7 +21,7 @@ contract GnosisSafeHelper is
     DeploySafeFactory public safeFactory;
 
     address public keyperRolesAddr;
-    address private keyperModuleAddr;
+    address public keyperModuleAddr;
     address public keyperGuardAddr;
     address public gnosisMasterCopy;
 
@@ -66,7 +67,11 @@ contract GnosisSafeHelper is
     // Init signers
     // Permit create a specific numbers of owners
     // Deploy a new safe proxy
-    function setupSeveralSafeEnv(uint256 initOwners) public returns (address) {
+    function setupSeveralSafeEnv(uint256 initOwners)
+        public
+        virtual
+        returns (address)
+    {
         safeFactory = new DeploySafeFactory();
         safeFactory.run();
         gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
@@ -102,7 +107,7 @@ contract GnosisSafeHelper is
         keyperRolesAddr = keyperRoles;
     }
 
-    function setKeyperModule(address keyperModule) public {
+    function setKeyperModule(address keyperModule) public virtual {
         keyperModuleAddr = keyperModule;
     }
 
@@ -113,6 +118,7 @@ contract GnosisSafeHelper is
     // Create GnosisSafe with Keyper and send module enabled tx
     function newKeyperSafe(uint256 numberOwners, uint256 threshold)
         public
+        virtual
         returns (address)
     {
         require(
@@ -357,7 +363,7 @@ contract GnosisSafeHelper is
         return result;
     }
 
-    function createSetRole(
+    function createSetRoleTx(
         uint8 role,
         address user,
         uint256 squad,
@@ -390,7 +396,7 @@ contract GnosisSafeHelper is
         address targetSafe,
         address to,
         uint256 value,
-        bytes calldata data,
+        bytes memory data,
         Enum.Operation operation,
         bytes memory signaturesExec
     ) public returns (bool) {

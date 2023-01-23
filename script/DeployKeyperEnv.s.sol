@@ -16,6 +16,7 @@ contract DeployKeyperEnv is Script {
         vm.startBroadcast();
         // Using CREATE3Factory to be able to predic deployment address for KeyperModule
         // More info https://github.com/ZeframLou/create3-factory
+        // The address https://goerli.etherscan.io/address/0x9fBB3DF7C40Da2e5A0dE984fFE2CCB7C47cd0ABf#code, is the address of the CREATE3Factory in Goerli
         CREATE3Factory factory =
             CREATE3Factory(0x9fBB3DF7C40Da2e5A0dE984fFE2CCB7C47cd0ABf);
         bytes32 salt = keccak256(abi.encode(0xdfff));

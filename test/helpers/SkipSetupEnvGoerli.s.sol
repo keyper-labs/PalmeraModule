@@ -4,12 +4,10 @@ pragma solidity ^0.8.15;
 import "forge-std/Script.sol";
 import "../../src/SigningUtils.sol";
 import "./SkipGnosisSafeHelperGoerli.t.sol";
-import "./KeyperModuleHelper.t.sol";
-import {KeyperModule, IGnosisSafe} from "../../src/KeyperModule.sol";
+import {KeyperModule} from "../../src/KeyperModule.sol";
 import {KeyperRoles} from "../../src/KeyperRoles.sol";
 import {KeyperGuard} from "../../src/KeyperGuard.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
-import {console} from "forge-std/console.sol";
 
 contract SkipSetupEnvGoerli is Script, SkipGnosisSafeHelperGoerli {
     using SafeMath for uint256;
@@ -19,7 +17,6 @@ contract SkipSetupEnvGoerli is Script, SkipGnosisSafeHelperGoerli {
     KeyperRoles keyperRolesContract;
 
     address gnosisSafeAddr;
-    address keyperModuleAddr;
     address keyperRolesDeployed;
     address receiver;
     address zeroAddress = address(0x0);

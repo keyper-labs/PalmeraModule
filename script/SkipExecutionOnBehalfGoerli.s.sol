@@ -6,11 +6,16 @@ import "../src/SigningUtils.sol";
 import "../test/helpers/SkipSetupEnvGoerli.s.sol";
 
 contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
+    /// Setup the Environment, with run() from SkipSetupEnvGoerli
     function setUp() public {
         // Set up env
         run();
     }
 
+    // Test Execution On Behalf
+    // This test is to check if the execution on behalf is working correctly
+    // Previously, Create a Org, Root Safe and Squad A1 Safe
+    // and them will send ETH from the safe squad A1 to the receiver
     function TestExecutionOnBehalf() public {
         vm.startBroadcast();
         (uint256 rootId, uint256 safeSquadA1) =
@@ -60,7 +65,6 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
     //    Squad A starts a executeOnBehalf tx for his children B
     //    -> The calldata for the function is another executeOnBehalfTx for children C
     //       -> Verify that this wrapped executeOnBehalf tx does not work
-    // TODO: test this scenario in Live Testnet
     function testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(
     ) public {
         vm.startBroadcast();
@@ -102,7 +106,7 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
             emptyData,
             Enum.Operation(0)
         );
-
+        /// Wrapper of Execution On Behalf, for  try to avoid the verification in the Gnosis Safe / Keyper Module
         bytes memory internalData = abi.encodeWithSignature(
             "execTransactionOnBehalf(bytes32,address,address,uint256,bytes,uint8,bytes)",
             orgHash,
@@ -132,12 +136,11 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
     //    Squad A starts a executeOnBehalf tx for his children B
     //    -> The calldata for the function is another executeOnBehalfTx for children C
     //       -> Verify that this wrapped executeOnBehalf tx does not work
-    // TODO: test this scenario in Live Testnet
     function testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_EOA(
     ) public {
         vm.startBroadcast();
         (uint256 rootId, uint256 safeSquadA1) =
-            setupRootOrgAndOneSquad("org3Name", "squadA3Name");
+            setupRootOrgAndOneSquad("org5Name", "squadA1Name");
 
         address payable rootAddr =
             payable(keyperModule.getSquadSafeAddress(rootId));
@@ -159,9 +162,9 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
         (sent, data) = rootAddr.call{value: 5e5 gwei}("");
         require(sent, "Failed to send Ether");
 
-        // Set Safe Role in Safe Squad A1 over Child Squad A1
+        // Set Safe Role in FakeCaller (msg.sender) over Child Squad A1
         gnosisSafe = GnosisSafe(rootAddr);
-        result = createSetRole(
+        result = createSetRoleTx(
             uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY),
             fakeCaller,
             childSquadA1,
@@ -205,5 +208,6 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
             Enum.Operation(0),
             signatures
         );
+        vm.stopBroadcast();
     }
 }

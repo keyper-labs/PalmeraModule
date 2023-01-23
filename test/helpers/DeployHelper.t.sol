@@ -10,12 +10,11 @@ import {Constants} from "../../libraries/Constants.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 import {Errors} from "../../libraries/Errors.sol";
 import {Events} from "../../libraries/Events.sol";
-import {KeyperModule, IGnosisSafe} from "../../src/KeyperModule.sol";
+import {KeyperModule} from "../../src/KeyperModule.sol";
 import {KeyperRoles} from "../../src/KeyperRoles.sol";
 import {KeyperGuard} from "../../src/KeyperGuard.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
-import {console} from "forge-std/console.sol";
 
 contract DeployHelper is Test {
     using SafeMath for uint256;

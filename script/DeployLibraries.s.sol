@@ -10,7 +10,6 @@ import {Events} from "../libraries/Events.sol";
 
 contract DeployLibraries is Script {
     function run() public {
-        Solenv.config();
         vm.startBroadcast();
         // Deploy Constants Libraries
         address constantsAddr = deployCode("Constants.sol");
