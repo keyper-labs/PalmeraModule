@@ -1,0 +1,29 @@
+{
+    "name": "KeyperModule",
+    "version": "0.2.0",
+    "description": "Smart Contract Keyper Module",
+    "main": "index.js",
+    "repository": "https://github.com/keyper-labs/KeyperModule.git",
+    "author": "Alfredo Lopez <alfredolopez80@gmail.com>",
+    "license": "MIT",
+    "scripts": {
+        "test": "npx mocha --require ts-node/register test/unit-test-multisend-tx-safe-sdk.test.ts --timeout 1000000"
+    },
+    "dependencies": {
+        "@safe-global/safe-core-sdk": "^3.3.2",
+        "@safe-global/safe-core-sdk-types": "^1.9.0",
+        "@safe-global/safe-ethers-lib": "^1.9.2",
+        "@types/chai": "^4.3.4",
+        "@types/mocha": "^10.0.1",
+        "chai": "^4.3.7",
+        "dotenv": "^16.0.3",
+        "ethereum-checksum-address": "^0.0.8",
+        "ethers": "legacy-v5",
+        "mocha": "^10.2.0",
+        "ts-node": "^10.9.1",
+        "typescript": "^4.9.5"
+    },
+    "devDependencies": {
+        "@types/ethereum-checksum-address": "^0.0.0"
+    }
+}
