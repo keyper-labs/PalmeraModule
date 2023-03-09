@@ -20,7 +20,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     KeyperModule public keyper;
-    GnosisSafe public gnosisSafe;
+    GnosisSafe public safeHelper;
 
     function initHelper(KeyperModule _keyper, uint256 numberOwners) public {
         keyper = _keyper;
@@ -28,7 +28,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     function setGnosisSafe(address safe) public {
-        gnosisSafe = GnosisSafe(payable(safe));
+        safeHelper = GnosisSafe(payable(safe));
     }
 
     /// @notice Encode signatures for a keypertx
@@ -39,17 +39,17 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         uint256 value,
         bytes memory data,
         Enum.Operation operation
-    ) public returns (bytes memory) {
+    ) public view returns (bytes memory) {
         // Create encoded tx to be signed
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
             caller, safe, to, value, data, operation, nonce
         );
 
-        address[] memory owners = gnosisSafe.getOwners();
+        address[] memory owners = safeHelper.getOwners();
         // Order owners
         address[] memory sortedOwners = sortAddresses(owners);
-        uint256 threshold = gnosisSafe.getThreshold();
+        uint256 threshold = safeHelper.getThreshold();
 
         // Get pk for the signing threshold
         uint256[] memory privateKeySafeOwners = new uint256[](threshold);
@@ -70,14 +70,14 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         uint256 value,
         bytes memory data,
         Enum.Operation operation
-    ) public returns (bytes memory) {
+    ) public view returns (bytes memory) {
         // Create encoded tx to be signed
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
             caller, safe, to, value, data, operation, nonce
         );
 
-        uint256 threshold = gnosisSafe.getThreshold();
+        uint256 threshold = safeHelper.getThreshold();
         // Get invalid pk for the signing threshold
         uint256[] memory invalidSafeOwnersPK = new uint256[](threshold);
         for (uint256 i = 0; i < threshold; i++) {

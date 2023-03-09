@@ -2,16 +2,16 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
-import "../script/DeployModule.t.sol";
+import "../script/DeployModuleWithMockedSafe.t.sol";
 import "./helpers/DeployHelper.t.sol";
 
 /// @title TestDeploy
 /// @custom:security-contact general@palmeradao.xyz
 contract TestDeploy is DeployHelper {
-    DeployModule deploy;
+    DeployModuleWithMockedSafe deploy;
 
     function setUp() public {
-        deploy = new DeployModule();
+        deploy = new DeployModuleWithMockedSafe();
     }
 
     function testDeploy() public {

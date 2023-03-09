@@ -7,7 +7,7 @@ import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {console} from "forge-std/console.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
-contract StressTestStorage is DeployHelper, SigningUtils {
+contract SkipStressTestStorage is DeployHelper, SigningUtils {
     using SafeMath for uint256;
 
     function setUp() public {

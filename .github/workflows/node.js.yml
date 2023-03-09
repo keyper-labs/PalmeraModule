@@ -34,7 +34,7 @@ jobs:
           echo "FOUNDRY_VIA_IR=$FOUNDRY_VIA_IR" >> .env
 
       - name: Run Tests
-        run: forge test --no-match-contract StressTestStorage
+        run: forge test --no-match-contract 'Skip*'
 
       - name: Run Coverage
-        run: forge coverage --no-match-contract StressTestStorage
+        run: forge coverage --no-match-contract 'Skip*'

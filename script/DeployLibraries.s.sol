@@ -2,17 +2,15 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
-import "src/KeyperModule.sol";
-import "test/mocks/MockedContract.t.sol";
 import "@solenv/Solenv.sol";
+import {Constants} from "../libraries/Constants.sol";
+import {DataTypes} from "../libraries/DataTypes.sol";
+import {Errors} from "../libraries/Errors.sol";
+import {Events} from "../libraries/Events.sol";
 
-contract DeployModule is Script {
+contract DeployLibraries is Script {
     function run() public {
-        Solenv.config();
-        address masterCopy = vm.envAddress("MASTER_COPY_ADDRESS");
-        address proxyFactory = vm.envAddress("PROXY_FACTORY_ADDRESS");
-        address rolesAuthority = address(0xBEEF);
-        uint256 maxTreeDepth = 50;
+        vm.startBroadcast();
         // Deploy Constants Libraries
         address constantsAddr = deployCode("Constants.sol");
         console.log("Constants deployed at: ", constantsAddr);
@@ -25,15 +23,6 @@ contract DeployModule is Script {
         // Deploy Events Libraries
         address eventsAddr = deployCode("Events.sol");
         console.log("Events deployed at: ", eventsAddr);
-        vm.startBroadcast();
-        MockedContract masterCopyMocked = new MockedContract();
-        MockedContract proxyFactoryMocked = new MockedContract();
-        KeyperModule keyperModule = new KeyperModule(
-            address(masterCopyMocked),
-            address(proxyFactoryMocked),
-            rolesAuthority,
-            maxTreeDepth
-        );
         vm.stopBroadcast();
     }
 }
