@@ -22,9 +22,9 @@ build-size-report :; forge build --sizes
 scripts :; chmod +x ./scripts/*
 
 # Tests
-test :; forge test -vvv
+test :; forge test -vvv --no-match-contract='Skip*'
 
-coverage :; forge coverage -vvv
+coverage :; forge coverage -vvv --no-match-contract='Skip*'
 
 test-gas-report :; forge test --gas-report -vvv
 
@@ -33,7 +33,7 @@ check :; forge fmt --check
 format :; forge fmt
 
 # Generate Gas Snapshots
-snapshot :; forge clean && forge snapshot
+snapshot :; forge clean && forge snapshot --no-match-contract='Skip*'
 
 # Rename all instances of femplate with the new repo name
 rename :; chmod +x ./scripts/* && ./scripts/rename.sh

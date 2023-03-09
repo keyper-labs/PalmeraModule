@@ -12,7 +12,7 @@ ffi=true
 # Local Testnet
 # libraries = ['./libraries/Constants.sol:Constants:0x2e234DAe75C793f67A35089C9d99245E1C58470b', './libraries/DataTypes.sol:DataTypes:0xF62849F9A0B5Bf2913b396098F7c7019b51A820a', './libraries/Errors.sol:Errors:0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9', './libraries/Events.sol:Events:0xc7183455a4C133Ae270771860664b6B7ec320bB1']
 # Goerli Testnet
-libraries = ['./libraries/Constants.sol:Constants:0xc0f208cD760C472476A4Af93cf889aa79A70bb51', './libraries/DataTypes.sol:DataTypes:0xF2313a501B15Ee53a56a4A252864a7c7d53ced88', './libraries/Errors.sol:Errors:0x056a1258E952A5C9B85404C8cD77Fdea627D0362', './libraries/Events.sol:Events:0xA27939f95b4e8DC298B43ACaef4Fd4E7502FEE76']
+# libraries = ['./libraries/Constants.sol:Constants:0xc0f208cD760C472476A4Af93cf889aa79A70bb51', './libraries/DataTypes.sol:DataTypes:0xF2313a501B15Ee53a56a4A252864a7c7d53ced88', './libraries/Errors.sol:Errors:0x056a1258E952A5C9B85404C8cD77Fdea627D0362', './libraries/Events.sol:Events:0xA27939f95b4e8DC298B43ACaef4Fd4E7502FEE76']
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 # Gas Report
