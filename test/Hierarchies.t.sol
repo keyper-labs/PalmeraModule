@@ -96,7 +96,7 @@ contract Hierarchies is DeployHelper {
     function testAddSubSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
-        address squadBaddr = gnosisHelper.newKeyperSafe(4, 2);
+        address squadBaddr = gnosisHelper.newPalmeraSafe(4, 2);
         vm.startPrank(squadBaddr);
         uint256 squadIdB = keyperModule.addSquad(squadIdA1, squadBName);
         assertEq(keyperModule.isTreeMember(rootId, squadIdA1), true);
@@ -320,7 +320,7 @@ contract Hierarchies is DeployHelper {
         (, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address safeSubSquadA1 = gnosisHelper.newKeyperSafe(2, 1);
+        address safeSubSquadA1 = gnosisHelper.newPalmeraSafe(2, 1);
         gnosisHelper.updateSafeInterface(safeSubSquadA1);
 
         bool result = gnosisHelper.createAddSquadTx(squadIdA1, subSquadA1Name);
@@ -414,7 +414,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = gnosisHelper.newPalmeraSafe(3, 1);
             // Start Prank
             vm.startPrank(subSquadAaddr[i]);
             // Add the new Safe as a subSquad
@@ -467,7 +467,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = gnosisHelper.newPalmeraSafe(3, 1);
             // Start Prank
             vm.startPrank(subSquadAaddr[i]);
             // Add the new Safe as a subSquad
@@ -495,7 +495,7 @@ contract Hierarchies is DeployHelper {
         depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subSquadAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[j] = gnosisHelper.newPalmeraSafe(3, 1);
             // Start Prank
             vm.startPrank(subSquadAaddr[j]);
             // Add the new Safe as a subSquad
@@ -557,7 +557,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 3; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = gnosisHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
@@ -622,7 +622,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 3; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = gnosisHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
@@ -652,7 +652,7 @@ contract Hierarchies is DeployHelper {
         depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subSquadAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[j] = gnosisHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (j != 15) {
                 // Start Prank
@@ -711,7 +711,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = gnosisHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
@@ -770,7 +770,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = gnosisHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
@@ -799,7 +799,7 @@ contract Hierarchies is DeployHelper {
         depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subSquadAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[j] = gnosisHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (j != 15) {
                 // Start Prank

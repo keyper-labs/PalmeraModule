@@ -3,13 +3,13 @@ pragma solidity ^0.8.15;
 
 import "./helpers/DeployHelper.t.sol";
 
-contract KeyperRolesTest is DeployHelper {
+contract PalmeraRolesTest is DeployHelper {
     function setUp() public {
         DeployHelper.deployAllContracts(90);
     }
 
-    function testCan_KeyperModule_Setup_RoleContract() public {
-        // Check KeyperModule has role capabilites
+    function testCan_PalmeraModule_Setup_RoleContract() public {
+        // Check PalmeraModule has role capabilites
         assertEq(
             keyperRolesContract.doesRoleHaveCapability(
                 uint8(DataTypes.Role.SAFE_LEAD),
@@ -77,7 +77,7 @@ contract KeyperRolesTest is DeployHelper {
         (uint256 rootId, uint256 safeSquadA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address safeLead = gnosisHelper.newKeyperSafe(4, 2);
+        address safeLead = gnosisHelper.newPalmeraSafe(4, 2);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         vm.startPrank(rootAddr);

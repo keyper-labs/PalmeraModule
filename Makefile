@@ -45,4 +45,4 @@ ts-binding :; npx typechain --target ethers-v5 --out-dir out/types/ './out/**/*.
 deploy-module :; source .env && forge script script/DeployModule.t.sol:DeployModule --rpc-url ${GOERLI_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_KEY} -vvvv
 
 # Deploy New Safe
-deploy-new-safe :; source .env && forge script script/DeployKeyperSafe.t.sol:DeployKeyperSafe --rpc-url ${GOERLI_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast -vvvv
+deploy-new-safe :; source .env && forge script script/DeployPalmeraSafe.t.sol:DeployPalmeraSafe --rpc-url ${GOERLI_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast -vvvv

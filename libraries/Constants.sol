@@ -13,9 +13,9 @@ library Constants {
         0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
     // keccak256(
-    //     "KeyperTx(address org,address safe,address to,uint256 value,bytes data,uint8 operation,uint256 nonce)"
+    //     "PalmeraTx(address org,address safe,address to,uint256 value,bytes data,uint8 operation,uint256 nonce)"
     // );
-    bytes32 internal constant KEYPER_TX_TYPEHASH =
+    bytes32 internal constant PALMERA_TX_TYPEHASH =
         0xbb667b7bf67815e546e48fb8d0e6af5c31fe53b9967ed45225c9d55be21652da;
 
     address internal constant FALLBACK_HANDLER =

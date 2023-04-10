@@ -406,10 +406,10 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     function testRevertSafeNotRegisteredAddOwnerWithThreshold_SAFE_Caller()
         public
     {
-        address safeNotRegistered = gnosisHelper.newKeyperSafe(4, 2);
+        address safeNotRegistered = gnosisHelper.newPalmeraSafe(4, 2);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
-        address newOwner = gnosisHelper.newKeyperSafe(4, 2);
+        address newOwner = gnosisHelper.newPalmeraSafe(4, 2);
 
         vm.startPrank(safeNotRegistered);
         vm.expectRevert(
@@ -428,11 +428,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     function testRevertSafeNotRegisteredAddOwnerWithThreshold_EOA_Caller()
         public
     {
-        gnosisHelper.newKeyperSafe(4, 2);
+        gnosisHelper.newPalmeraSafe(4, 2);
         address invalidGnosisSafeCaller = address(0x123);
         uint256 threshold = gnosisHelper.gnosisSafe().getThreshold();
 
-        address newOwner = gnosisHelper.newKeyperSafe(4, 2);
+        address newOwner = gnosisHelper.newPalmeraSafe(4, 2);
 
         vm.startPrank(invalidGnosisSafeCaller);
         vm.expectRevert(
@@ -553,7 +553,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Caller Info: Role-> NOT ROLE, Type -> SAFE, Hierarchy -> NOT_REGISTERED, Name -> fakeCaller
     // Target Info: Name -> fakeCaller, Type -> SAFE, Hierarchy related to caller -> ITSELF,
     function testRevertSafeNotRegisteredRemoveOwner_SAFE_Caller() public {
-        address fakeCaller = gnosisHelper.newKeyperSafe(4, 2);
+        address fakeCaller = gnosisHelper.newPalmeraSafe(4, 2);
         address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
         address prevOwner = owners[0];
         address ownerToRemove = owners[1];
@@ -574,7 +574,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Caller Info: Role-> NOT ROLE, Type -> EOA, Hierarchy -> NOT_REGISTERED, Name -> invalidSafeCaller
     // Target Info: Name -> invalidSafeCaller, Type -> EOA, Hierarchy related to caller -> ITSELF,
     function testRevertSafeNotRegisteredRemoveOwner_EOA_Caller() public {
-        gnosisHelper.newKeyperSafe(4, 2);
+        gnosisHelper.newPalmeraSafe(4, 2);
         address invalidSafeCaller = address(0x123);
         address[] memory owners = gnosisHelper.gnosisSafe().getOwners();
         address prevOwner = owners[0];

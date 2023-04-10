@@ -6,12 +6,12 @@ import "../src/SigningUtils.sol";
 import "./helpers/DeployHelper.t.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 
-contract KeyperGuardTest is DeployHelper, SigningUtils {
+contract PalmeraGuardTest is DeployHelper, SigningUtils {
     function setUp() public {
         DeployHelper.deployAllContracts(90);
     }
 
-    function testDisableKeyperGuard() public {
+    function testDisablePalmeraGuard() public {
         // Check guard is disabled
         bool result = gnosisHelper.disableGuardTx(gnosisSafeAddr);
         assertEq(result, true);
@@ -29,19 +29,19 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(ZeroAddress, zeroAddress);
     }
 
-    function testDisableKeyperModule() public {
-        bool isKeyperModuleEnabled =
+    function testDisablePalmeraModule() public {
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, true);
+        assertEq(isPalmeraModuleEnabled, true);
         // Check guard is disabled
         bool result = gnosisHelper.disableModuleTx(
             Constants.SENTINEL_ADDRESS, gnosisSafeAddr
         );
         assertEq(result, true);
         // Verify module has been disabled
-        isKeyperModuleEnabled =
+        isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, false);
+        assertEq(isPalmeraModuleEnabled, false);
     }
 
     function testCannotReplayAttackRemoveSquad() public {
@@ -99,9 +99,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Verify Safe is disconnected
         // Verify module has been disabled
         gnosisHelper.updateSafeInterface(squadA1Addr);
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, false);
+        assertEq(isPalmeraModuleEnabled, false);
         // Verify guard has been enabled
         address ZeroAddress = abi.decode(
             StorageAccessible(squadA1Addr).getStorageAt(
@@ -129,9 +129,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Verify Safe is disconnected
         // Verify module has been disabled
         gnosisHelper.updateSafeInterface(subSquadA1Addr);
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, false);
+        assertEq(isPalmeraModuleEnabled, false);
         // Verify guard has been enabled
         address ZeroAddress = abi.decode(
             StorageAccessible(subSquadA1Addr).getStorageAt(
@@ -162,9 +162,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         /// Verify Safe still enabled
         /// Verify module still enabled
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, true);
+        assertEq(isPalmeraModuleEnabled, true);
         /// Verify guard still enabled
         address guardAddress = abi.decode(
             StorageAccessible(rootAddr).getStorageAt(
@@ -197,9 +197,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         /// Verify Safe has been removed
         /// Verify module has been removed
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, false);
+        assertEq(isPalmeraModuleEnabled, false);
         /// Verify guard has been removed
         address ZeroAddress = abi.decode(
             StorageAccessible(rootAddr).getStorageAt(
@@ -234,9 +234,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Verify module still enabled
         gnosisHelper.updateSafeInterface(subSquadA1Addr);
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, true);
+        assertEq(isPalmeraModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
             StorageAccessible(subSquadA1Addr).getStorageAt(
@@ -279,9 +279,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Verify module still enabled
         gnosisHelper.updateSafeInterface(subSquadA1Addr);
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, true);
+        assertEq(isPalmeraModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
             StorageAccessible(subSquadA1Addr).getStorageAt(
@@ -320,9 +320,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Verify module still enabled
         gnosisHelper.updateSafeInterface(subSquadA1Addr);
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, true);
+        assertEq(isPalmeraModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
             StorageAccessible(subSquadA1Addr).getStorageAt(
@@ -347,9 +347,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Verify module has been disabled
         gnosisHelper.updateSafeInterface(squadA1Addr);
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, false);
+        assertEq(isPalmeraModuleEnabled, false);
         // Verify guard has been disabled
         address ZeroAddress = abi.decode(
             StorageAccessible(squadA1Addr).getStorageAt(
@@ -377,9 +377,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Verify module has been disabled
         gnosisHelper.updateSafeInterface(subSquadA1Addr);
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, false);
+        assertEq(isPalmeraModuleEnabled, false);
         // Verify guard has been disabled
         address ZeroAddress = abi.decode(
             StorageAccessible(subSquadA1Addr).getStorageAt(
@@ -440,7 +440,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.deal(childSquadA1Addr, 100 gwei);
 
         // Create a a Ramdom Right EOA Caller
-        address fakerCaller = gnosisHelper.newKeyperSafe(3, 1);
+        address fakerCaller = gnosisHelper.newPalmeraSafe(3, 1);
 
         // Set Safe Role in Safe Squad A1 over Child Squad A1
         vm.startPrank(rootAddr);
@@ -464,7 +464,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
-    function testCannotDisableKeyperModuleIfGuardEnabled() public {
+    function testCannotDisablePalmeraModuleIfGuardEnabled() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
@@ -475,7 +475,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         gnosisHelper.updateSafeInterface(rootAddr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.CannotDisableKeyperModule.selector, address(keyperModule)
+                Errors.CannotDisablePalmeraModule.selector,
+                address(keyperModule)
             )
         );
         bool result =
@@ -483,15 +484,16 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(result, false);
 
         // Verify module is still enabled
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, true);
+        assertEq(isPalmeraModuleEnabled, true);
 
         // Try to disable Module from squad
         gnosisHelper.updateSafeInterface(squadA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.CannotDisableKeyperModule.selector, address(keyperModule)
+                Errors.CannotDisablePalmeraModule.selector,
+                address(keyperModule)
             )
         );
         result = gnosisHelper.disableModuleTx(
@@ -500,12 +502,12 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(result, false);
 
         // Verify module is still enabled
-        isKeyperModuleEnabled =
+        isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, true);
+        assertEq(isPalmeraModuleEnabled, true);
     }
 
-    function testCannotDisableKeyperModuleAfterRemoveSquad() public {
+    function testCannotDisablePalmeraModuleAfterRemoveSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
@@ -521,7 +523,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         gnosisHelper.updateSafeInterface(squadA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.CannotDisableKeyperModule.selector, address(keyperModule)
+                Errors.CannotDisablePalmeraModule.selector,
+                address(keyperModule)
             )
         );
         result = gnosisHelper.disableModuleTx(
@@ -530,12 +533,12 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(result, false);
 
         // Verify module still enabled
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, true);
+        assertEq(isPalmeraModuleEnabled, true);
     }
 
-    function testCannotDisableKeyperGuardIfGuardEnabled() public {
+    function testCannotDisablePalmeraGuardIfGuardEnabled() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
@@ -546,7 +549,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         gnosisHelper.updateSafeInterface(rootAddr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.CannotDisableKeyperGuard.selector, address(keyperGuard)
+                Errors.CannotDisablePalmeraGuard.selector, address(keyperGuard)
             )
         );
         bool result = gnosisHelper.disableGuardTx(rootAddr);
@@ -565,7 +568,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         gnosisHelper.updateSafeInterface(squadA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.CannotDisableKeyperGuard.selector, address(keyperGuard)
+                Errors.CannotDisablePalmeraGuard.selector, address(keyperGuard)
             )
         );
         result = gnosisHelper.disableGuardTx(squadA1Addr);
@@ -581,7 +584,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(keyperGuardAddrTest, keyperGuardAddr);
     }
 
-    function testCannotDisableKeyperGuardAfterRemoveSquad() public {
+    function testCannotDisablePalmeraGuardAfterRemoveSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
@@ -596,7 +599,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         gnosisHelper.updateSafeInterface(squadA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.CannotDisableKeyperModule.selector, address(keyperModule)
+                Errors.CannotDisablePalmeraModule.selector,
+                address(keyperModule)
             )
         );
         result = gnosisHelper.disableModuleTx(
@@ -605,7 +609,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(result, false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.CannotDisableKeyperGuard.selector, address(keyperGuard)
+                Errors.CannotDisablePalmeraGuard.selector, address(keyperGuard)
             )
         );
         result = gnosisHelper.disableGuardTx(squadA1Addr);
@@ -645,9 +649,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         /// Verify Safe has been removed
         /// Verify module has been removed
         gnosisHelper.updateSafeInterface(childSquadA1Addr);
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, false);
+        assertEq(isPalmeraModuleEnabled, false);
         /// Verify guard has been removed
         address ZeroAddress = abi.decode(
             StorageAccessible(childSquadA1Addr).getStorageAt(

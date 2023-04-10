@@ -3,7 +3,7 @@ pragma solidity ^0.8.15;
 
 import "./helpers/DeployHelper.t.sol";
 
-contract DenyHelperKeyperModuleTest is DeployHelper {
+contract DenyHelperPalmeraModuleTest is DeployHelper {
     address org1;
     address squadA;
     address[] public owners = new address[](5);

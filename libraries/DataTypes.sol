@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 /// @title Library DataTypes
 /// @custom:security-contact general@palmeradao.xyz
 library DataTypes {
-    /// @dev typos of Roles into Keyper Modules
+    /// @dev typos of Roles into Palmera Modules
     enum Role {
         SAFE_LEAD,
         SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
@@ -12,7 +12,7 @@ library DataTypes {
         SUPER_SAFE,
         ROOT_SAFE
     }
-    /// @dev typos of squads into Keyper Modules
+    /// @dev typos of squads into Palmera Modules
     enum Tier {
         SQUAD, // 0
         ROOT, // 1

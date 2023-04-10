@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 import "../src/SigningUtils.sol";
 import "./helpers/DeployHelper.t.sol";
 
-contract TestKeyperSafe is SigningUtils, DeployHelper {
+contract TestPalmeraSafe is SigningUtils, DeployHelper {
     function setUp() public {
         DeployHelper.deployAllContracts(90);
     }
@@ -26,9 +26,9 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         assertFalse(newSafe == address(0));
         // Verify newSafe has keyper modulle enabled
         GnosisSafe safe = GnosisSafe(payable(newSafe));
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             safe.isModuleEnabled(address(keyperHelper.keyper()));
-        assertEq(isKeyperModuleEnabled, true);
+        assertEq(isPalmeraModuleEnabled, true);
     }
 
     // ! ********************** Allow/Deny list Test ********************
@@ -58,7 +58,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         // Set keyperhelper gnosis safe to safeSquadA1
         keyperHelper.setGnosisSafe(squadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = keyperHelper.encodeSignaturesPalmeraTx(
             squadA1Addr,
             subSquadA1Addr,
             receiver,
@@ -109,7 +109,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         // Set keyperhelper gnosis safe to safeSquadA1
         keyperHelper.setGnosisSafe(squadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = keyperHelper.encodeSignaturesPalmeraTx(
             squadA1Addr,
             subSquadA1Addr,
             receiverList[0],
@@ -162,7 +162,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         // Set keyperhelper gnosis safe to safeSquadA1
         keyperHelper.setGnosisSafe(squadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = keyperHelper.encodeSignaturesPalmeraTx(
             squadA1Addr,
             subSquadA1Addr,
             receiverList[0],

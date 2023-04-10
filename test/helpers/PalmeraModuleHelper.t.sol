@@ -4,13 +4,13 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {DeploySafeFactory} from "../../script/DeploySafeFactory.t.sol";
 
-contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
-    struct KeyperTransaction {
+contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
+    struct PalmeraTransaction {
         address org;
         address safe;
         address to;
@@ -19,10 +19,10 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         Enum.Operation operation;
     }
 
-    KeyperModule public keyper;
+    PalmeraModule public keyper;
     GnosisSafe public safeHelper;
 
-    function initHelper(KeyperModule _keyper, uint256 numberOwners) public {
+    function initHelper(PalmeraModule _keyper, uint256 numberOwners) public {
         keyper = _keyper;
         initOnwers(numberOwners);
     }
@@ -32,7 +32,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     /// @notice Encode signatures for a keypertx
-    function encodeSignaturesKeyperTx(
+    function encodeSignaturesPalmeraTx(
         address caller,
         address safe,
         address to,
@@ -63,7 +63,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     /// @notice Sign keyperTx with invalid signatures (do not belong to any safe owner)
-    function encodeInvalidSignaturesKeyperTx(
+    function encodeInvalidSignaturesPalmeraTx(
         address caller,
         address safe,
         address to,
@@ -89,7 +89,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         return signatures;
     }
 
-    function createKeyperTxHash(
+    function createPalmeraTxHash(
         address caller,
         address safe,
         address to,
@@ -123,14 +123,14 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         address safeFactory = address(deploySafeFactory.proxyFactory());
         address rolesAuthority = address(deploySafeFactory.proxyFactory());
         uint256 maxTreeDepth = 50;
-        keyper = new KeyperModule(
+        keyper = new PalmeraModule(
             masterCopy,
             safeFactory,
             rolesAuthority,
             maxTreeDepth
         );
 
-        require(address(keyper) != address(0), "Keyper module not deployed");
+        require(address(keyper) != address(0), "Palmera module not deployed");
         address[] memory owners = new address[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
             owners[i] = vm.addr(privateKeyOwners[i + countUsed]);

@@ -5,20 +5,20 @@ import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import "./GnosisSafeHelper.t.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
 import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 
 contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
-    KeyperModule public keyper;
+    PalmeraModule public keyper;
     GnosisSafeHelper public gnosisHelper;
     Attacker public attacker;
 
     mapping(string => address) public keyperSafes;
 
     function initHelper(
-        KeyperModule keyperArg,
+        PalmeraModule keyperArg,
         Attacker attackerArg,
         GnosisSafeHelper gnosisHelperArg,
         uint256 numberOwners
@@ -29,7 +29,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         initOnwers(numberOwners);
     }
 
-    function encodeSignaturesForAttackKeyperTx(
+    function encodeSignaturesForAttackPalmeraTx(
         address org,
         address safe,
         address to,
@@ -76,7 +76,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         keyper.addSquad(rootOrgId, nameAttacker);
         vm.stopPrank();
 
-        address victim = gnosisHelper.newKeyperSafe(2, 1);
+        address victim = gnosisHelper.newPalmeraSafe(2, 1);
         string memory nameVictim = "Victim";
         keyperSafes[nameVictim] = address(victim);
         uint256 attackerSquadId = keyper.getSquadIdBySafe(orgHash, attackerSafe);

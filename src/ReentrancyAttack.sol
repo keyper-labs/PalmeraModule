@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
-import {KeyperModule} from "../src/KeyperModule.sol";
+import {PalmeraModule} from "../src/PalmeraModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
@@ -15,10 +15,10 @@ contract Attacker {
 
     address[] public owners = new address[](2);
 
-    KeyperModule public keyperModule;
+    PalmeraModule public keyperModule;
 
     constructor(address _contractToAttackAddress) {
-        keyperModule = KeyperModule(_contractToAttackAddress);
+        keyperModule = PalmeraModule(_contractToAttackAddress);
     }
 
     //this is called when Attackee sends Ether to this contract (Attacker)

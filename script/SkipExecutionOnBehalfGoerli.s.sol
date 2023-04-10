@@ -38,7 +38,7 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
         // Set keyperhelper gnosis safe to org
         gnosisSafe = GnosisSafe(payable(rootAddr));
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             rootAddr,
             safeSquadA1Addr,
             receiver,
@@ -75,20 +75,20 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
             payable(keyperModule.getSquadSafeAddress(rootId));
         address payable safeSquadA1Addr =
             payable(keyperModule.getSquadSafeAddress(safeSquadA1));
-        address childSquadA1Addr = newKeyperSafe(4, 2);
+        address childSquadA1Addr = newPalmeraSafe(4, 2);
         bool result = createAddSquadTx(safeSquadA1, "ChildSquadA1");
         assertEq(result, true);
         orgHash = keyperModule.getOrgBySquad(rootId);
 
         // Create a child safe for squad A2
-        address fakeCaller = newKeyperSafe(4, 2);
+        address fakeCaller = newPalmeraSafe(4, 2);
         result = createAddSquadTx(safeSquadA1, "ChildSquadA2");
         assertEq(result, true);
 
         // Set keyperhelper gnosis safe to Super Safe Squad A1
         gnosisSafe = GnosisSafe(payable(safeSquadA1Addr));
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             safeSquadA1Addr,
             childSquadA1Addr,
             receiver,
@@ -98,7 +98,7 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
         );
         // Set keyperhelper gnosis safe to Faker Caller
         gnosisSafe = GnosisSafe(payable(fakeCaller));
-        bytes memory signatures2 = encodeSignaturesKeyperTx(
+        bytes memory signatures2 = encodeSignaturesPalmeraTx(
             fakeCaller,
             rootAddr,
             receiver,
@@ -106,7 +106,7 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
             emptyData,
             Enum.Operation(0)
         );
-        /// Wrapper of Execution On Behalf, for  try to avoid the verification in the Gnosis Safe / Keyper Module
+        /// Wrapper of Execution On Behalf, for  try to avoid the verification in the Gnosis Safe / Palmera Module
         bytes memory internalData = abi.encodeWithSignature(
             "execTransactionOnBehalf(bytes32,address,address,uint256,bytes,uint8,bytes)",
             orgHash,
@@ -147,7 +147,7 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
         address payable safeSquadA1Addr =
             payable(keyperModule.getSquadSafeAddress(safeSquadA1));
         address payable receiverAddr = payable(receiver);
-        address childSquadA1Addr = newKeyperSafe(4, 2);
+        address childSquadA1Addr = newPalmeraSafe(4, 2);
         bool result = createAddSquadTx(safeSquadA1, "ChildSquadA1");
         assertEq(result, true);
         orgHash = keyperModule.getOrgBySquad(rootId);
@@ -179,7 +179,7 @@ contract SkipSeveralScenariosGoerli is Script, SkipSetupEnvGoerli {
 
         // Set keyperhelper gnosis safe to rootAddr
         gnosisSafe = GnosisSafe(payable(childSquadA1Addr));
-        bytes memory signatures2 = encodeSignaturesKeyperTx(
+        bytes memory signatures2 = encodeSignaturesPalmeraTx(
             childSquadA1Addr,
             rootAddr,
             receiver,

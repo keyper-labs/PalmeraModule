@@ -2,11 +2,12 @@
 pragma solidity ^0.8.15;
 
 import "./GnosisSafeHelper.t.sol";
-import "./KeyperModuleHelper.t.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
+import "./PalmeraModuleHelper.t.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
+
 // Helper contract handling deployment Gnosis Safe contracts
 
-contract SkipGnosisSafeHelperGoerli is GnosisSafeHelper, KeyperModuleHelper {
+contract SkipGnosisSafeHelperGoerli is GnosisSafeHelper, PalmeraModuleHelper {
     GnosisSafeProxyFactory public proxyFactory;
     GnosisSafe public gnosisSafeContract;
     GnosisSafeProxy safeProxy;
@@ -58,12 +59,12 @@ contract SkipGnosisSafeHelperGoerli is GnosisSafeHelper, KeyperModuleHelper {
             GnosisSafe(payable(vm.envAddress("MASTER_COPY_ADDRESS")));
     }
 
-    function setKeyperModule(address keyperModule) public override {
+    function setPalmeraModule(address keyperModule) public override {
         keyperModuleAddr = keyperModule;
-        keyper = KeyperModule(keyperModuleAddr);
+        keyper = PalmeraModule(keyperModuleAddr);
     }
 
-    function newKeyperSafe(uint256 numberOwners, uint256 threshold)
+    function newPalmeraSafe(uint256 numberOwners, uint256 threshold)
         public
         override
         returns (address)
@@ -76,7 +77,7 @@ contract SkipGnosisSafeHelperGoerli is GnosisSafeHelper, KeyperModuleHelper {
             countUsed + numberOwners <= privateKeyOwners.length,
             "No private keys available"
         );
-        require(keyperModuleAddr != address(0), "Keyper module not set");
+        require(keyperModuleAddr != address(0), "Palmera module not set");
         address[] memory owners = new address[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
             owners[i] = vm.addr(privateKeyOwners[i + countUsed]);

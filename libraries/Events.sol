@@ -4,10 +4,10 @@ pragma solidity ^0.8.15;
 /// @title Library Events
 /// @custom:security-contact general@palmeradao.xyz
 library Events {
-	/// @dev Event Fire when create a new Organization
-	/// @param creator Address of the creator
-	/// @param org Hash(DAO's name)
-	/// @param name String name of the organization
+    /// @dev Event Fire when create a new Organization
+    /// @param creator Address of the creator
+    /// @param org Hash(DAO's name)
+    /// @param name String name of the organization
     event OrganizationCreated(
         address indexed creator,
         bytes32 indexed org,
@@ -62,7 +62,7 @@ library Events {
         uint256 newSuperSafe
     );
 
-    /// @dev Event Fire when Keyper Module execute a transaction on behalf of a Safe
+    /// @dev Event Fire when Palmera Module execute a transaction on behalf of a Safe
     /// @param org Hash(DAO's name)
     /// @param executor Address of the executor
     /// @param target Address of the Target Safe
@@ -74,7 +74,7 @@ library Events {
         bool result
     );
 
-    /// @dev Event Fire when any Gnosis Safe enable the Keyper Module
+    /// @dev Event Fire when any Gnosis Safe enable the Palmera Module
     event ModuleEnabled(address indexed safe, address indexed module);
 
     /// @dev Event Fire when any Root Safe create a new Root Safe
@@ -156,5 +156,5 @@ library Events {
     /// @dev Event when a new keyperModule is setting up
     /// @param keyperModule Address of the new keyperModule
     /// @param caller Address of the deployer
-    event KeyperModuleSetup(address keyperModule, address caller);
+    event PalmeraModuleSetup(address keyperModule, address caller);
 }

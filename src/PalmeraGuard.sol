@@ -4,26 +4,26 @@ pragma solidity ^0.8.15;
 import {Guard, BaseGuard} from "@safe-contracts/base/GuardManager.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 import {
-    KeyperModule,
+    PalmeraModule,
     Context,
     Errors,
     Constants,
     IGnosisSafe,
     IGnosisSafeProxy,
     Enum
-} from "./KeyperModule.sol";
+} from "./PalmeraModule.sol";
 
-/// @title Keyper Guard
+/// @title Palmera Guard
 /// @custom:security-contact general@palmeradao.xyz
-contract KeyperGuard is BaseGuard, Context {
-    KeyperModule keyperModule;
+contract PalmeraGuard is BaseGuard, Context {
+    PalmeraModule keyperModule;
 
-    string public constant NAME = "Keyper Guard";
+    string public constant NAME = "Palmera Guard";
     string public constant VERSION = "0.2.0";
 
     constructor(address keyperModuleAddr) {
         if (keyperModuleAddr == address(0)) revert Errors.ZeroAddressProvided();
-        keyperModule = KeyperModule(keyperModuleAddr);
+        keyperModule = PalmeraModule(keyperModuleAddr);
     }
 
     function checkTransaction(
@@ -43,10 +43,10 @@ contract KeyperGuard is BaseGuard, Context {
     function checkAfterExecution(bytes32, bool) external view {
         address caller = _msgSender();
         // if it does, check if try to disable guard and revert if it does.
-        // if it does, check if try to disable the Keyper Module and revert if it does.
+        // if it does, check if try to disable the Palmera Module and revert if it does.
         if (keyperModule.isSafeRegistered(caller)) {
             if (!IGnosisSafe(caller).isModuleEnabled(address(keyperModule))) {
-                revert Errors.CannotDisableKeyperModule(address(keyperModule));
+                revert Errors.CannotDisablePalmeraModule(address(keyperModule));
             }
             if (
                 abi.decode(
@@ -56,7 +56,7 @@ contract KeyperGuard is BaseGuard, Context {
                     (address)
                 ) != address(this)
             ) {
-                revert Errors.CannotDisableKeyperGuard(address(this));
+                revert Errors.CannotDisablePalmeraGuard(address(this));
             }
         } else {
             if (!keyperModule.isSafe(caller)) {

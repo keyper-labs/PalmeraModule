@@ -103,20 +103,20 @@ contract GnosisSafeHelper is
         return address(gnosisSafe);
     }
 
-    function setKeyperRoles(address keyperRoles) public {
+    function setPalmeraRoles(address keyperRoles) public {
         keyperRolesAddr = keyperRoles;
     }
 
-    function setKeyperModule(address keyperModule) public virtual {
+    function setPalmeraModule(address keyperModule) public virtual {
         keyperModuleAddr = keyperModule;
     }
 
-    function setKeyperGuard(address keyperGuard) public {
+    function setPalmeraGuard(address keyperGuard) public {
         keyperGuardAddr = keyperGuard;
     }
 
-    // Create GnosisSafe with Keyper and send module enabled tx
-    function newKeyperSafe(uint256 numberOwners, uint256 threshold)
+    // Create GnosisSafe with Palmera and send module enabled tx
+    function newPalmeraSafe(uint256 numberOwners, uint256 threshold)
         public
         virtual
         returns (address)
@@ -129,7 +129,7 @@ contract GnosisSafeHelper is
             countUsed + numberOwners <= privateKeyOwners.length,
             "No private keys available"
         );
-        require(keyperModuleAddr != address(0), "Keyper module not set");
+        require(keyperModuleAddr != address(0), "Palmera module not set");
         address[] memory owners = new address[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
             owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
@@ -161,10 +161,10 @@ contract GnosisSafeHelper is
         return address(gnosisSafe);
     }
 
-    function testNewKeyperSafe() public {
+    function testNewPalmeraSafe() public {
         setupSafeEnv();
-        setKeyperModule(address(0x678));
-        newKeyperSafe(4, 2);
+        setPalmeraModule(address(0x678));
+        newPalmeraSafe(4, 2);
         address[] memory owners = gnosisSafe.getOwners();
         assertEq(owners.length, 4);
         assertEq(gnosisSafe.getThreshold(), 2);

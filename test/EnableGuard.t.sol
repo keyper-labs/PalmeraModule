@@ -3,15 +3,15 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 import "./helpers/GnosisSafeHelper.t.sol";
-import {KeyperModule, Errors, Constants} from "../src/KeyperModule.sol";
-import {KeyperGuard} from "../src/KeyperGuard.sol";
+import {PalmeraModule, Errors, Constants} from "../src/PalmeraModule.sol";
+import {PalmeraGuard} from "../src/PalmeraGuard.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 
 /// @title TestEnableModule
 /// @custom:security-contact general@palmeradao.xyz
 contract TestEnableGuard is Test {
-    KeyperModule keyperModule;
-    KeyperGuard keyperGuard;
+    PalmeraModule keyperModule;
+    PalmeraGuard keyperGuard;
     GnosisSafeHelper gnosisHelper;
     address gnosisSafeAddr;
 
@@ -19,32 +19,32 @@ contract TestEnableGuard is Test {
         // Init new safe
         gnosisHelper = new GnosisSafeHelper();
         gnosisSafeAddr = gnosisHelper.setupSafeEnv();
-        // Init KeyperModule
+        // Init PalmeraModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
         address rolesAuthority = address(0xBEEF);
         uint256 maxTreeDepth = 50;
-        keyperModule = new KeyperModule(
+        keyperModule = new PalmeraModule(
             masterCopy,
             safeFactory,
             rolesAuthority,
             maxTreeDepth
         );
-        keyperGuard = new KeyperGuard(address(keyperModule));
-        gnosisHelper.setKeyperModule(address(keyperModule));
-        gnosisHelper.setKeyperGuard(address(keyperGuard));
+        keyperGuard = new PalmeraGuard(address(keyperModule));
+        gnosisHelper.setPalmeraModule(address(keyperModule));
+        gnosisHelper.setPalmeraGuard(address(keyperGuard));
     }
 
-    function testEnableKeyperModule() public {
+    function testEnablePalmeraModule() public {
         bool result = gnosisHelper.enableModuleTx(gnosisSafeAddr);
         assertEq(result, true);
         // Verify module has been enabled
-        bool isKeyperModuleEnabled =
+        bool isPalmeraModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, true);
+        assertEq(isPalmeraModuleEnabled, true);
     }
 
-    function testEnableKeyperGuard() public {
+    function testEnablePalmeraGuard() public {
         bool result = gnosisHelper.enableGuardTx(gnosisSafeAddr);
         assertEq(result, true);
         // Verify guard has been enabled

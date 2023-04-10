@@ -4,27 +4,27 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import "../../src/SigningUtils.sol";
 import "./GnosisSafeHelper.t.sol";
-import "./KeyperModuleHelper.t.sol";
-import "./KeyperSafeBuilder.t.sol";
+import "./PalmeraModuleHelper.t.sol";
+import "./PalmeraSafeBuilder.t.sol";
 import {Constants} from "../../libraries/Constants.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 import {Errors} from "../../libraries/Errors.sol";
 import {Events} from "../../libraries/Events.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
-import {KeyperRoles} from "../../src/KeyperRoles.sol";
-import {KeyperGuard} from "../../src/KeyperGuard.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
+import {PalmeraRoles} from "../../src/PalmeraRoles.sol";
+import {PalmeraGuard} from "../../src/PalmeraGuard.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
 contract DeployHelper is Test {
     using SafeMath for uint256;
 
-    KeyperModule keyperModule;
-    KeyperGuard keyperGuard;
+    PalmeraModule keyperModule;
+    PalmeraGuard keyperGuard;
     GnosisSafeHelper gnosisHelper;
-    KeyperModuleHelper keyperHelper;
-    KeyperRoles keyperRolesContract;
-    KeyperSafeBuilder keyperSafeBuilder;
+    PalmeraModuleHelper keyperHelper;
+    PalmeraRoles keyperRolesContract;
+    PalmeraSafeBuilder keyperSafeBuilder;
 
     address gnosisSafeAddr;
     address keyperModuleAddr;
@@ -69,14 +69,14 @@ contract DeployHelper is Test {
         gnosisSafeAddr = gnosisHelper.setupSeveralSafeEnv(initOwners);
 
         // setting keyperRoles Address
-        gnosisHelper.setKeyperRoles(keyperRolesDeployed);
+        gnosisHelper.setPalmeraRoles(keyperRolesDeployed);
 
-        // Init KeyperModule
+        // Init PalmeraModule
         address masterCopy = gnosisHelper.gnosisMasterCopy();
         address safeFactory = address(gnosisHelper.safeFactory());
         uint256 maxTreeDepth = 50;
 
-        keyperModule = new KeyperModule(
+        keyperModule = new PalmeraModule(
             masterCopy,
             safeFactory,
             address(keyperRolesDeployed),
@@ -84,16 +84,16 @@ contract DeployHelper is Test {
         );
         keyperModuleAddr = address(keyperModule);
         // Deploy Guard Contract
-        keyperGuard = new KeyperGuard(keyperModuleAddr);
+        keyperGuard = new PalmeraGuard(keyperModuleAddr);
         keyperGuardAddr = address(keyperGuard);
 
         // Init keyperModuleHelper
-        keyperHelper = new KeyperModuleHelper();
+        keyperHelper = new PalmeraModuleHelper();
         keyperHelper.initHelper(keyperModule, initOwners.div(3));
         // Update gnosisHelper
-        gnosisHelper.setKeyperModule(keyperModuleAddr);
+        gnosisHelper.setPalmeraModule(keyperModuleAddr);
         // Update gnosisHelper
-        gnosisHelper.setKeyperGuard(keyperGuardAddr);
+        gnosisHelper.setPalmeraGuard(keyperGuardAddr);
         // Enable keyper module
         gnosisHelper.enableModuleTx(gnosisSafeAddr);
         // Enable keyper Guard
@@ -104,14 +104,14 @@ contract DeployHelper is Test {
         bytes memory args = abi.encode(address(keyperModuleAddr));
 
         bytes memory bytecode =
-            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
+            abi.encodePacked(vm.getCode("PalmeraRoles.sol:PalmeraRoles"), args);
 
-        keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
+        keyperRolesContract = PalmeraRoles(factory.deploy(salt, bytecode));
 
-        keyperSafeBuilder = new KeyperSafeBuilder();
+        keyperSafeBuilder = new PalmeraSafeBuilder();
         // keyperSafeBuilder.setGnosisHelper(GnosisSafeHelper(gnosisHelper));
         keyperSafeBuilder.setUpParams(
-            KeyperModule(keyperModule), GnosisSafeHelper(gnosisHelper)
+            PalmeraModule(keyperModule), GnosisSafeHelper(gnosisHelper)
         );
     }
 

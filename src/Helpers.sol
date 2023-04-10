@@ -33,8 +33,8 @@ abstract contract Helpers is DenyHelper {
         _;
     }
 
-    /// @dev Function for enable Keyper module in a Gnosis Safe Multisig Wallet
-    /// @param module Address of Keyper module
+    /// @dev Function for enable Palmera module in a Gnosis Safe Multisig Wallet
+    /// @param module Address of Palmera module
     function internalEnableModule(address module)
         external
         validAddress(module)
@@ -43,12 +43,12 @@ abstract contract Helpers is DenyHelper {
     }
 
     /// @dev Non-executed code, function called by the new safe
-    /// @param module Address of Keyper module
+    /// @param module Address of Palmera module
     function enableModule(address module) external validAddress(module) {
         emit Events.ModuleEnabled(address(this), module);
     }
 
-    /// @dev Method to get the domain separator for Keyper Module
+    /// @dev Method to get the domain separator for Palmera Module
     /// @return Hash of the domain separator
     function domainSeparator() public view returns (bytes32) {
         return keccak256(
@@ -67,7 +67,7 @@ abstract contract Helpers is DenyHelper {
         return id;
     }
 
-    /// @dev Method to get the Encoded Packed Data for Keyper Transaction
+    /// @dev Method to get the Encoded Packed Data for Palmera Transaction
     /// @param caller address of the caller
     /// @param safe address of the Safe
     /// @param to address of the receiver
@@ -87,7 +87,7 @@ abstract contract Helpers is DenyHelper {
     ) public view returns (bytes memory) {
         bytes32 keyperTxHash = keccak256(
             abi.encode(
-                Constants.KEYPER_TX_TYPEHASH,
+                Constants.PALMERA_TX_TYPEHASH,
                 caller,
                 safe,
                 to,
@@ -102,7 +102,7 @@ abstract contract Helpers is DenyHelper {
         );
     }
 
-    /// @dev Method to get the Hash Encoded Packed Data for Keyper Transaction
+    /// @dev Method to get the Hash Encoded Packed Data for Palmera Transaction
     /// @param caller address of the caller
     /// @param safe address of the Safe
     /// @param to address of the receiver
@@ -168,7 +168,7 @@ abstract contract Helpers is DenyHelper {
         }
     }
 
-    /// @dev refactoring of execution of Tx with the privilege of the Module Keyper Labs, and avoid repeat code
+    /// @dev refactoring of execution of Tx with the privilege of the Module Palmera Labs, and avoid repeat code
     /// @param safe Safe Address to execute Tx
     /// @param data Data to execute Tx
     function _executeModuleTransaction(address safe, bytes memory data)
