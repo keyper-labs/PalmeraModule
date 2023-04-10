@@ -553,13 +553,13 @@ DA:756,2
 DA:757,2
 DA:758,2
 DA:759,2
-FN:763,KeyperModule.enableAllowlist
-FNDA:12,KeyperModule.enableAllowlist
+FN:763,KeyperModule.enableAllowList
+FNDA:12,KeyperModule.enableAllowList
 DA:764,7
 DA:765,7
 DA:766,7
-FN:770,KeyperModule.enableDenylist
-FNDA:13,KeyperModule.enableDenylist
+FN:770,KeyperModule.enableDenyList
+FNDA:13,KeyperModule.enableDenyList
 DA:771,8
 DA:772,8
 DA:773,8

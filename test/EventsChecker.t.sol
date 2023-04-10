@@ -474,7 +474,7 @@ contract EventsChekers is DeployHelper {
         address rootAddr = gnosisHelper.newPalmeraSafe(4, 2);
         vm.startPrank(rootAddr);
         uint256 rootId = keyperModule.registerOrg(orgName);
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         vm.expectEmit(true, false, false, true);
         emit AddedToList(owners);
         keyperModule.addToList(owners);
@@ -484,7 +484,7 @@ contract EventsChekers is DeployHelper {
         address rootAddr = gnosisHelper.newPalmeraSafe(4, 2);
         vm.startPrank(rootAddr);
         uint256 rootId = keyperModule.registerOrg(orgName);
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         keyperModule.addToList(owners);
         vm.expectEmit(true, false, false, true);
         emit DroppedFromList(owners[0]);

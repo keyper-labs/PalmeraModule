@@ -52,7 +52,7 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
 
         /// Enable allowlist
         vm.startPrank(rootAddr);
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         vm.stopPrank();
 
         // Set keyperhelper gnosis safe to safeSquadA1
@@ -102,7 +102,7 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
 
         /// Enalbe allowlist
         vm.startPrank(rootAddr);
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         keyperModule.addToList(receiverList);
         vm.stopPrank();
 
@@ -153,7 +153,7 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
 
         /// Enable allowlist
         vm.startPrank(rootAddr);
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         keyperModule.addToList(receiverList);
         /// Disable allowlist
         keyperModule.disableDenyHelper();

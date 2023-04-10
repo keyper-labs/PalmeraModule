@@ -41,10 +41,10 @@ library Constants {
         bytes4(keccak256(bytes("createRootSafeSquad(address,string)")));
 
     bytes4 internal constant ENABLE_ALLOWLIST =
-        bytes4(keccak256(bytes("enableAllowlist()")));
+        bytes4(keccak256(bytes("enableAllowList()")));
 
     bytes4 internal constant ENABLE_DENYLIST =
-        bytes4(keccak256(bytes("enableDenylist()")));
+        bytes4(keccak256(bytes("enableDenyList()")));
 
     bytes4 internal constant DISABLE_DENY_HELPER =
         bytes4(keccak256(bytes("disableDenyHelper()")));

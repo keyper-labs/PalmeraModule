@@ -748,14 +748,14 @@ contract PalmeraModule is Auth, ReentrancyGuard, Helpers {
     }
 
     /// @dev Method to Enable Allowlist
-    function enableAllowlist() external IsRootSafe(_msgSender()) requiresAuth {
+    function enableAllowList() external IsRootSafe(_msgSender()) requiresAuth {
         bytes32 org = getOrgHashBySafe(_msgSender());
         allowFeature[org] = true;
         denyFeature[org] = false;
     }
 
     /// @dev Method to Enable Allowlist
-    function enableDenylist() external IsRootSafe(_msgSender()) requiresAuth {
+    function enableDenyList() external IsRootSafe(_msgSender()) requiresAuth {
         bytes32 org = getOrgHashBySafe(_msgSender());
         allowFeature[org] = false;
         denyFeature[org] = true;

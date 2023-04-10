@@ -28,7 +28,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
     function testAddToList() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         keyperModule.addToList(owners);
         assertEq(keyperModule.listCount(orgHash), owners.length);
         for (uint256 i = 0; i < owners.length; i++) {
@@ -43,11 +43,11 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidGnosisSafe.selector, owners[0])
         );
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidGnosisSafe.selector, owners[0])
         );
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidGnosisSafe.selector, owners[0])
         );
@@ -73,13 +73,13 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
                 Errors.InvalidGnosisSafe.selector, ZeroAddress
             )
         );
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.InvalidGnosisSafe.selector, ZeroAddress
             )
         );
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.InvalidGnosisSafe.selector, ZeroAddress
@@ -113,13 +113,13 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
                 Errors.InvalidGnosisSafe.selector, SentinalAddress
             )
         );
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.InvalidGnosisSafe.selector, SentinalAddress
             )
         );
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.InvalidGnosisSafe.selector, SentinalAddress
@@ -155,13 +155,13 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
                 Errors.InvalidGnosisRootSafe.selector, squadA
             )
         );
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.InvalidGnosisRootSafe.selector, squadA
             )
         );
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.InvalidGnosisRootSafe.selector, squadA
@@ -198,13 +198,13 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
                 Errors.SafeNotRegistered.selector, anotherWallet
             )
         );
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.SafeNotRegistered.selector, anotherWallet
             )
         );
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.SafeNotRegistered.selector, anotherWallet
@@ -247,7 +247,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
         listOfOwners();
         vm.startPrank(org1);
         address dropOwner = owners[1];
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         vm.expectRevert(Errors.ListEmpty.selector);
         keyperModule.dropFromList(dropOwner);
         vm.stopPrank();
@@ -257,7 +257,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
         listOfOwners();
         vm.startPrank(org1);
         address dropOwner = owners[1];
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         vm.expectRevert(Errors.ListEmpty.selector);
         keyperModule.dropFromList(dropOwner);
         vm.stopPrank();
@@ -266,7 +266,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
     function testRevertIfInvalidAddressProvidedForAllowList() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         keyperModule.addToList(owners);
         address dropOwner = address(0xFFF111);
         vm.expectRevert(Errors.InvalidAddressProvided.selector);
@@ -277,7 +277,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
     function testRevertIfInvalidAddressProvidedForDenyList() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         keyperModule.addToList(owners);
         assertEq(keyperModule.listCount(orgHash), owners.length);
         for (uint256 i = 0; i < owners.length; i++) {
@@ -288,7 +288,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
     function testRevertAddToListZeroAddress() public {
         address[] memory voidOwnersArray = new address[](0);
         vm.startPrank(org1);
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         vm.expectRevert(Errors.ZeroAddressProvided.selector);
         keyperModule.addToList(voidOwnersArray);
         vm.stopPrank();
@@ -297,7 +297,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
     function testRevertAddToListInvalidAddress() public {
         listOfInvalidOwners();
         vm.startPrank(org1);
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         vm.expectRevert(Errors.InvalidAddressProvided.selector);
         keyperModule.addToList(owners);
         vm.stopPrank();
@@ -306,7 +306,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
     function testRevertAddToDuplicateAddress() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         keyperModule.addToList(owners);
 
         address[] memory newOwner = new address[](1);
@@ -320,7 +320,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
     function testDropFromList() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         keyperModule.addToList(owners);
 
         // Must be Revert if drop not address (0)
@@ -345,7 +345,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
     function testGetPrevUserList() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         keyperModule.addToList(owners);
         assertEq(keyperModule.getPrevUser(orgHash, owners[1]), owners[0]);
         assertEq(keyperModule.getPrevUser(orgHash, owners[2]), owners[1]);
@@ -359,7 +359,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
 
     function testEnableAllowlist() public {
         vm.startPrank(org1);
-        keyperModule.enableAllowlist();
+        keyperModule.enableAllowList();
         assertEq(keyperModule.allowFeature(orgHash), true);
         assertEq(keyperModule.denyFeature(orgHash), false);
         vm.stopPrank();
@@ -367,7 +367,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
 
     function testEnableDenylist() public {
         vm.startPrank(org1);
-        keyperModule.enableDenylist();
+        keyperModule.enableDenyList();
         assertEq(keyperModule.allowFeature(orgHash), false);
         assertEq(keyperModule.denyFeature(orgHash), true);
         vm.stopPrank();
