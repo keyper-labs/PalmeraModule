@@ -366,7 +366,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
 
         emit Events.RootSafeSquadCreated(
             org, newIndex, caller, newRootSafe, name
-            );
+        );
     }
 
     /// @notice Add a squad to an organization/squad
@@ -423,7 +423,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
 
         emit Events.SquadCreated(
             org, squadId, newSquad.lead, caller, superSafe, name
-            );
+        );
     }
 
     /// @notice Remove squad and reasign all child to the superSafe
@@ -492,7 +492,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         // Store the name before to delete the Squad
         emit Events.SquadRemoved(
             org, squad, superSafe.lead, caller, _squad.superSafe, _squad.name
-            );
+        );
         // Assign the with Root Safe (because is not part of the Tree)
         // If the Squad is not Root Safe, pass to depend on Root Safe directly
         _squad.superSafe = _squad.superSafe == 0 ? 0 : rootSafe;
@@ -558,7 +558,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         // After Disconnect Root Safe
         emit Events.WholeTreeRemoved(
             org, rootSafe, caller, squads[org][rootSafe].name
-            );
+        );
         _exitSafe(rootSafe);
         if (indexSquad[org].length == 0) removeOrg(org);
     }
@@ -598,7 +598,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         newRootSafe.superSafe = 0;
         emit Events.RootSafePromoted(
             org, squad, caller, newRootSafe.safe, newRootSafe.name
-            );
+        );
     }
 
     /// @notice update superSafe of a squad
@@ -668,7 +668,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             caller,
             getSquadIdBySafe(org, oldSuper.safe),
             newSuper
-            );
+        );
     }
 
     /// @dev Method to update Depth Tree Limit
@@ -687,7 +687,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         }
         emit Events.NewLimitLevel(
             org, rootSafe, caller, depthTreeLimit[org], newLimit
-            );
+        );
         depthTreeLimit[org] = newLimit;
     }
 
@@ -1096,7 +1096,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
 
         emit Events.SafeDisconnected(
             org, squad, address(gnosisTargetSafe), caller
-            );
+        );
     }
 
     /// @notice disable safe lead roles
