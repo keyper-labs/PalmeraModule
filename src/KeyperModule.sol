@@ -175,13 +175,13 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         returns (bool result)
     {
         address caller = _msgSender();
-        // Check if caller is a superSafe of the target safe (checking with isTreeMember because is the same method!!)
-        if (hasNotPermissionOverTarget(superSafe, org, targetSafe)) {
-            revert Errors.NotAuthorizedExecOnBehalf();
-        }
         // Caller is Safe Lead: bypass check of signatures
         // Caller is another kind of wallet: check if it has the corrects signatures of the root/super safe
         if (!isSafeLead(getSquadIdBySafe(org, targetSafe), caller)) {
+            // Check if caller is a superSafe of the target safe (checking with isTreeMember because is the same method!!)
+            if (hasNotPermissionOverTarget(superSafe, org, targetSafe)) {
+                revert Errors.NotAuthorizedExecOnBehalf();
+            }
             // Caller is a safe then check caller's safe signatures.
             bytes memory keyperTxHashData = encodeTransactionData(
                 /// Keyper Info

@@ -12,11 +12,11 @@ library Constants {
     bytes32 internal constant DOMAIN_SEPARATOR_TYPEHASH =
         0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
-
+    // keccak256(
+    //     "KeyperTx(address org,address superSafe,address targetSafe,address to,uint256 value,bytes data,uint8 operation,uint256 _nonce)"
+    // );
     bytes32 internal constant KEYPER_TX_TYPEHASH =
-        keccak256(
-            "KeyperTx(address org,address superSafe,address targetSafe,address to,uint256 value,bytes data,uint8 operation,uint256 _nonce)"
-        );
+        0x5576bff5f05f6e5452f02e4fe418b1519cb08f54fae3564c3a4d2a4706584d4e;
 
     address internal constant FALLBACK_HANDLER =
         0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4;
