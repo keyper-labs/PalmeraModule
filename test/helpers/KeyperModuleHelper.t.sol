@@ -124,10 +124,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         address rolesAuthority = address(deploySafeFactory.proxyFactory());
         uint256 maxTreeDepth = 50;
         keyper = new KeyperModule(
-            masterCopy,
-            safeFactory,
-            rolesAuthority,
-            maxTreeDepth
+            masterCopy, safeFactory, rolesAuthority, maxTreeDepth
         );
 
         require(address(keyper) != address(0), "Keyper module not deployed");

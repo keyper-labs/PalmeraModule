@@ -25,10 +25,7 @@ contract TestEnableGuard is Test {
         address rolesAuthority = address(0xBEEF);
         uint256 maxTreeDepth = 50;
         keyperModule = new KeyperModule(
-            masterCopy,
-            safeFactory,
-            rolesAuthority,
-            maxTreeDepth
+            masterCopy, safeFactory, rolesAuthority, maxTreeDepth
         );
         keyperGuard = new KeyperGuard(address(keyperModule));
         gnosisHelper.setKeyperModule(address(keyperModule));
