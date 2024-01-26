@@ -59,7 +59,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
 
     function setAttackerTree(string memory _orgName)
         public
-        returns (address, address, address)
+        returns (bytes32, address, address, address)
     {
         gnosisHelper.registerOrgTx(_orgName);
         keyperSafes[_orgName] = address(gnosisHelper.gnosisSafe());
@@ -95,6 +95,6 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         );
         vm.stopPrank();
 
-        return (orgAddr, attackerSafe, victim);
+        return (orgHash, orgAddr, attackerSafe, victim);
     }
 }
