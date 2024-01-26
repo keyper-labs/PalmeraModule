@@ -43,7 +43,8 @@ contract EventsChekers is DeployHelper {
     event TxOnBehalfExecuted(
         bytes32 indexed org,
         address indexed executor,
-        address indexed target,
+        address superSafe,
+        address indexed targetSafe,
         bool result
     );
 
@@ -387,6 +388,7 @@ contract EventsChekers is DeployHelper {
         keyperHelper.setGnosisSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgHash,
             rootAddr,
             safeSquadA1Addr,
             receiver,
@@ -400,11 +402,13 @@ contract EventsChekers is DeployHelper {
         emit TxOnBehalfExecuted(
             keccak256(abi.encodePacked(orgName)),
             rootAddr,
+            rootAddr,
             safeSquadA1Addr,
             true
         );
         keyperModule.execTransactionOnBehalf(
             orgHash,
+            rootAddr,
             safeSquadA1Addr,
             receiver,
             2 gwei,

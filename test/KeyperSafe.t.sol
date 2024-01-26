@@ -59,6 +59,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         keyperHelper.setGnosisSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgHash,
             squadA1Addr,
             subSquadA1Addr,
             receiver,
@@ -72,6 +73,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         vm.expectRevert(Errors.AddresNotAllowed.selector);
         keyperModule.execTransactionOnBehalf(
             orgHash,
+            squadA1Addr,
             subSquadA1Addr,
             receiver,
             2 gwei,
@@ -110,6 +112,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         keyperHelper.setGnosisSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgHash,
             squadA1Addr,
             subSquadA1Addr,
             receiverList[0],
@@ -123,6 +126,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         vm.expectRevert(Errors.AddressDenied.selector);
         keyperModule.execTransactionOnBehalf(
             orgHash,
+            squadA1Addr,
             subSquadA1Addr,
             receiverList[0],
             2 gwei,
@@ -163,6 +167,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         keyperHelper.setGnosisSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgHash,
             squadA1Addr,
             subSquadA1Addr,
             receiverList[0],
@@ -175,6 +180,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         vm.startPrank(squadA1Addr);
         keyperModule.execTransactionOnBehalf(
             orgHash,
+            squadA1Addr,
             subSquadA1Addr,
             receiverList[0],
             2 gwei,

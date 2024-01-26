@@ -30,8 +30,9 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     function encodeSignaturesForAttackKeyperTx(
-        address org,
-        address safe,
+        bytes32 org,
+        address superSafe,
+        address targetSafe,
         address to,
         uint256 value,
         bytes memory data,
@@ -39,7 +40,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
     ) public returns (bytes memory) {
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
-            org, safe, to, value, data, operation, nonce
+            org, superSafe, targetSafe, to, value, data, operation, nonce
         );
 
         uint256 threshold = attacker.getThreshold();

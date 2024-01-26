@@ -393,6 +393,7 @@ contract GnosisSafeHelper is
 
     function execTransactionOnBehalfTx(
         bytes32 org,
+        address superSafe,
         address targetSafe,
         address to,
         uint256 value,
@@ -401,8 +402,9 @@ contract GnosisSafeHelper is
         bytes memory signaturesExec
     ) public returns (bool) {
         bytes memory internalData = abi.encodeWithSignature(
-            "execTransactionOnBehalf(bytes32,address,address,uint256,bytes,uint8,bytes)",
+            "execTransactionOnBehalf(bytes32,address,address,address,uint256,bytes,uint8,bytes)",
             org,
+            superSafe,
             targetSafe,
             to,
             value,
