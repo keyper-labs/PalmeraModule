@@ -3,10 +3,10 @@ src = 'src'
 out = 'out'
 libs = ['lib']
 # Fixed Version
-solc-version = "0.8.17"
+solc-version = "0.8.23"
 optimizer = true
 optimizer-runs = 200
-# via_ir = true
+via_ir = true
 ffi=true
 
 # Local Testnet

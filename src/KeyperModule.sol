@@ -148,6 +148,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
 
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
     /// @param org ID's Organization
+    /// @param superSafe Safe super address
     /// @param targetSafe Safe target address
     /// @param to Address to which the transaction is being sent
     /// @param value Value (ETH) that is being sent with the transaction
@@ -157,6 +158,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @return result true if transaction was successful.
     function execTransactionOnBehalf(
         bytes32 org,
+        address superSafe, // can be root or super safe
         address targetSafe,
         address to,
         uint256 value,
@@ -167,21 +169,24 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         external
         payable
         nonReentrant
+        SafeRegistered(superSafe)
         SafeRegistered(targetSafe)
         Denied(org, to)
-        requiresAuth
         returns (bool result)
     {
         address caller = _msgSender();
-        if (isSafe(caller)) {
-            // Check if caller is a lead or superSafe of the target safe (checking with isTreeMember because is the same method!!)
-            if (hasNotPermissionOverTarget(caller, org, targetSafe)) {
-                revert Errors.NotAuthorizedExecOnBehalf();
-            }
+        // Check if caller is a superSafe of the target safe (checking with isTreeMember because is the same method!!)
+        if (hasNotPermissionOverTarget(superSafe, org, targetSafe)) {
+            revert Errors.NotAuthorizedExecOnBehalf();
+        }
+        // Caller is Safe Lead: bypass check of signatures
+        // Caller is another kind of wallet: check if it has the corrects signatures of the root/super safe
+        if (!isSafeLead(getSquadIdBySafe(org, targetSafe), caller)) {
             // Caller is a safe then check caller's safe signatures.
             bytes memory keyperTxHashData = encodeTransactionData(
                 /// Keyper Info
-                caller,
+                org,
+                superSafe,
                 targetSafe,
                 /// Transaction info
                 to,
@@ -192,15 +197,10 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
                 nonce
             );
 
-            IGnosisSafe gnosisLeadSafe = IGnosisSafe(caller);
+            IGnosisSafe gnosisLeadSafe = IGnosisSafe(superSafe);
             gnosisLeadSafe.checkSignatures(
                 keccak256(keyperTxHashData), keyperTxHashData, signatures
             );
-        } else {
-            // Caller is EAO (lead) : check if it has the rights over the target safe
-            if (!isSafeLead(getSquadIdBySafe(org, targetSafe), caller)) {
-                revert Errors.NotAuthorizedAsNotSafeLead();
-            }
         }
 
         /// Increase nonce and execute transaction.
@@ -212,7 +212,9 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         );
 
         if (!result) revert Errors.TxOnBehalfExecutedFailed();
-        emit Events.TxOnBehalfExecuted(org, caller, targetSafe, result);
+        emit Events.TxOnBehalfExecuted(
+            org, caller, superSafe, targetSafe, result
+        );
     }
 
     /// @notice This function will allow Safe Lead & Safe Lead modify only roles
@@ -366,7 +368,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
 
         emit Events.RootSafeSquadCreated(
             org, newIndex, caller, newRootSafe, name
-            );
+        );
     }
 
     /// @notice Add a squad to an organization/squad
@@ -423,7 +425,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
 
         emit Events.SquadCreated(
             org, squadId, newSquad.lead, caller, superSafe, name
-            );
+        );
     }
 
     /// @notice Remove squad and reasign all child to the superSafe
@@ -492,7 +494,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         // Store the name before to delete the Squad
         emit Events.SquadRemoved(
             org, squad, superSafe.lead, caller, _squad.superSafe, _squad.name
-            );
+        );
         // Assign the with Root Safe (because is not part of the Tree)
         // If the Squad is not Root Safe, pass to depend on Root Safe directly
         _squad.superSafe = _squad.superSafe == 0 ? 0 : rootSafe;
@@ -558,7 +560,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         // After Disconnect Root Safe
         emit Events.WholeTreeRemoved(
             org, rootSafe, caller, squads[org][rootSafe].name
-            );
+        );
         _exitSafe(rootSafe);
         if (indexSquad[org].length == 0) removeOrg(org);
     }
@@ -598,7 +600,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         newRootSafe.superSafe = 0;
         emit Events.RootSafePromoted(
             org, squad, caller, newRootSafe.safe, newRootSafe.name
-            );
+        );
     }
 
     /// @notice update superSafe of a squad
@@ -668,7 +670,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             caller,
             getSquadIdBySafe(org, oldSuper.safe),
             newSuper
-            );
+        );
     }
 
     /// @dev Method to update Depth Tree Limit
@@ -687,7 +689,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         }
         emit Events.NewLimitLevel(
             org, rootSafe, caller, depthTreeLimit[org], newLimit
-            );
+        );
         depthTreeLimit[org] = newLimit;
     }
 
@@ -1096,7 +1098,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
 
         emit Events.SafeDisconnected(
             org, squad, address(gnosisTargetSafe), caller
-            );
+        );
     }
 
     /// @notice disable safe lead roles

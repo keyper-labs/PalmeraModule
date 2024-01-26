@@ -14,9 +14,9 @@ install :; forge install
 update:; forge update
 
 # Builds
-build:; forge build
+build:; forge clean && forge build
 
-build-size-report :; forge build --sizes
+build-size-report :; forge clean && forge build --sizes
 
 # chmod scripts
 scripts :; chmod +x ./scripts/*

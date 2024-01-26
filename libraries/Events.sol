@@ -70,6 +70,7 @@ library Events {
     event TxOnBehalfExecuted(
         bytes32 indexed org,
         address indexed executor,
+        address superSafe,
         address indexed target,
         bool result
     );

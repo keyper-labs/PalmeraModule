@@ -9,6 +9,7 @@ import {Constants} from "../libraries/Constants.sol";
 
 contract Attacker {
     bytes32 public orgFromAttacker;
+    address public superSafeFromAttacker;
     address public targetSafeFromAttacker;
     bytes public dataFromAttacker;
     bytes public signaturesFromAttacker;
@@ -26,6 +27,7 @@ contract Attacker {
         if (address(targetSafeFromAttacker).balance > 0 gwei) {
             keyperModule.execTransactionOnBehalf(
                 orgFromAttacker,
+                superSafeFromAttacker,
                 targetSafeFromAttacker,
                 address(this),
                 address(targetSafeFromAttacker).balance,
@@ -38,6 +40,7 @@ contract Attacker {
 
     function performAttack(
         bytes32 org,
+        address superSafe,
         address targetSafe,
         address to,
         uint256 value,
@@ -45,9 +48,9 @@ contract Attacker {
         Enum.Operation operation,
         bytes memory signatures
     ) external returns (bool result) {
-        setParamsForAttack(org, targetSafe, data, signatures);
+        setParamsForAttack(org, superSafe, targetSafe, data, signatures);
         result = keyperModule.execTransactionOnBehalf(
-            org, targetSafe, to, value, data, operation, signatures
+            org, superSafe, targetSafe, to, value, data, operation, signatures
         );
         return true;
     }
@@ -86,11 +89,13 @@ contract Attacker {
 
     function setParamsForAttack(
         bytes32 _org,
+        address _superSafe,
         address _targetSafe,
         bytes calldata _data,
         bytes memory _signatures
     ) internal {
         orgFromAttacker = _org;
+        superSafeFromAttacker = _superSafe;
         targetSafeFromAttacker = _targetSafe;
         dataFromAttacker = _data;
         signaturesFromAttacker = _signatures;
