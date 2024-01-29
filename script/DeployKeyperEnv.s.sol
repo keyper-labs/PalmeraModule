@@ -2,6 +2,7 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
+import "@solenv/Solenv.sol";
 import "../src/KeyperRoles.sol";
 import "../src/KeyperModule.sol";
 import {KeyperGuard} from "../src/KeyperGuard.sol";
@@ -15,14 +16,15 @@ contract DeployKeyperEnv is Script {
     function run() public {
         vm.startBroadcast();
         // Using CREATE3Factory to be able to predic deployment address for KeyperModule
-        // More info https://github.com/ZeframLou/create3-factory
-        // The address https://goerli.etherscan.io/address/0x9fBB3DF7C40Da2e5A0dE984fFE2CCB7C47cd0ABf#code, is the address of the CREATE3Factory in Goerli
+        // More info https://github.com/lifinance/create3-factory
+        // The address https://sepolia.etherscan.io/address/0x93FEC2C00BfE902F733B57c5a6CeeD7CD1384AE1#code, is the address of the CREATE3Factory in Sepolia
         CREATE3Factory factory =
-            CREATE3Factory(0x9fBB3DF7C40Da2e5A0dE984fFE2CCB7C47cd0ABf);
+            CREATE3Factory(0x93FEC2C00BfE902F733B57c5a6CeeD7CD1384AE1);
         bytes32 salt = keccak256(abi.encode(0xdfff));
         address keyperModulePredicted = factory.getDeployed(msg.sender, salt);
 
         // Deploy Safe contracts in goerli
+        Solenv.config();
         address masterCopy = vm.envAddress("MASTER_COPY_ADDRESS");
         address proxyFactory = vm.envAddress("PROXY_FACTORY_ADDRESS");
         uint256 maxTreeDepth = 50;
