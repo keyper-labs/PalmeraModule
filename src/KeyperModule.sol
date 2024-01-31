@@ -196,6 +196,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
                 /// Signature info
                 nonce
             );
+            /// Verify Collision of Nonce with multiple txs in the same range of time, study to use a nonce per org
 
             IGnosisSafe gnosisLeadSafe = IGnosisSafe(superSafe);
             gnosisLeadSafe.checkSignatures(
