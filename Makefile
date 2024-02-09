@@ -14,9 +14,9 @@ install :; forge install
 update:; forge update
 
 # Builds
-build:; forge build
+build:; forge clean && forge build
 
-build-size-report :; forge build --sizes
+build-size-report :; forge clean && forge build --sizes
 
 # chmod scripts
 scripts :; chmod +x ./scripts/*
@@ -42,7 +42,7 @@ rename :; chmod +x ./scripts/* && ./scripts/rename.sh
 ts-binding :; npx typechain --target ethers-v5 --out-dir out/types/ './out/**/*.json'
 
 # Deploy module
-deploy-module :; source .env && forge script script/DeployModule.t.sol:DeployModule --rpc-url ${GOERLI_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_KEY} -vvvv
+deploy-keyper-env :; source .env && forge script script/DeployKeyperEnv.s.sol:DeployKeyperEnv --rpc-url ${SEPOLIA_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_KEY} -vvvv
 
 # Deploy New Safe
 deploy-new-safe :; source .env && forge script script/DeployKeyperSafe.t.sol:DeployKeyperSafe --rpc-url ${GOERLI_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast -vvvv

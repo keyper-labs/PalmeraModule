@@ -148,6 +148,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
 
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
     /// @param org ID's Organization
+    /// @param superSafe Safe super address
     /// @param targetSafe Safe target address
     /// @param to Address to which the transaction is being sent
     /// @param value Value (ETH) that is being sent with the transaction
@@ -157,6 +158,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @return result true if transaction was successful.
     function execTransactionOnBehalf(
         bytes32 org,
+        address superSafe, // can be root or super safe
         address targetSafe,
         address to,
         uint256 value,
@@ -167,21 +169,24 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         external
         payable
         nonReentrant
+        SafeRegistered(superSafe)
         SafeRegistered(targetSafe)
         Denied(org, to)
-        requiresAuth
         returns (bool result)
     {
         address caller = _msgSender();
-        if (isSafe(caller)) {
-            // Check if caller is a lead or superSafe of the target safe (checking with isTreeMember because is the same method!!)
-            if (hasNotPermissionOverTarget(caller, org, targetSafe)) {
+        // Caller is Safe Lead: bypass check of signatures
+        // Caller is another kind of wallet: check if it has the corrects signatures of the root/super safe
+        if (!isSafeLead(getSquadIdBySafe(org, targetSafe), caller)) {
+            // Check if caller is a superSafe of the target safe (checking with isTreeMember because is the same method!!)
+            if (hasNotPermissionOverTarget(superSafe, org, targetSafe)) {
                 revert Errors.NotAuthorizedExecOnBehalf();
             }
             // Caller is a safe then check caller's safe signatures.
             bytes memory keyperTxHashData = encodeTransactionData(
                 /// Keyper Info
-                caller,
+                org,
+                superSafe,
                 targetSafe,
                 /// Transaction info
                 to,
@@ -191,16 +196,12 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
                 /// Signature info
                 nonce
             );
+            /// Verify Collision of Nonce with multiple txs in the same range of time, study to use a nonce per org
 
-            IGnosisSafe gnosisLeadSafe = IGnosisSafe(caller);
+            IGnosisSafe gnosisLeadSafe = IGnosisSafe(superSafe);
             gnosisLeadSafe.checkSignatures(
                 keccak256(keyperTxHashData), keyperTxHashData, signatures
             );
-        } else {
-            // Caller is EAO (lead) : check if it has the rights over the target safe
-            if (!isSafeLead(getSquadIdBySafe(org, targetSafe), caller)) {
-                revert Errors.NotAuthorizedAsNotSafeLead();
-            }
         }
 
         /// Increase nonce and execute transaction.
@@ -212,7 +213,9 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         );
 
         if (!result) revert Errors.TxOnBehalfExecutedFailed();
-        emit Events.TxOnBehalfExecuted(org, caller, targetSafe, result);
+        emit Events.TxOnBehalfExecuted(
+            org, caller, superSafe, targetSafe, result
+        );
     }
 
     /// @notice This function will allow Safe Lead & Safe Lead modify only roles

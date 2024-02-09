@@ -33,8 +33,9 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
 
     /// @notice Encode signatures for a keypertx
     function encodeSignaturesKeyperTx(
-        address caller,
-        address safe,
+        bytes32 org,
+        address superSafe,
+        address targetSafe,
         address to,
         uint256 value,
         bytes memory data,
@@ -43,7 +44,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
-            caller, safe, to, value, data, operation, nonce
+            org, superSafe, targetSafe, to, value, data, operation, nonce
         );
 
         address[] memory owners = safeHelper.getOwners();
@@ -64,8 +65,9 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
 
     /// @notice Sign keyperTx with invalid signatures (do not belong to any safe owner)
     function encodeInvalidSignaturesKeyperTx(
-        address caller,
-        address safe,
+        bytes32 org,
+        address superSafe,
+        address targetSafe,
         address to,
         uint256 value,
         bytes memory data,
@@ -74,7 +76,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
-            caller, safe, to, value, data, operation, nonce
+            org, superSafe, targetSafe, to, value, data, operation, nonce
         );
 
         uint256 threshold = safeHelper.getThreshold();
@@ -90,8 +92,9 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     function createKeyperTxHash(
-        address caller,
-        address safe,
+        bytes32 org,
+        address superSafe,
+        address targetSafe,
         address to,
         uint256 value,
         bytes memory data,
@@ -99,7 +102,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         uint256 nonce
     ) public view returns (bytes32) {
         bytes32 txHashed = keyper.getTransactionHash(
-            caller, safe, to, value, data, operation, nonce
+            org, superSafe, targetSafe, to, value, data, operation, nonce
         );
         return txHashed;
     }

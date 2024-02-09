@@ -30,8 +30,9 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     function encodeSignaturesForAttackKeyperTx(
-        address org,
-        address safe,
+        bytes32 org,
+        address superSafe,
+        address targetSafe,
         address to,
         uint256 value,
         bytes memory data,
@@ -39,7 +40,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
     ) public returns (bytes memory) {
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
-            org, safe, to, value, data, operation, nonce
+            org, superSafe, targetSafe, to, value, data, operation, nonce
         );
 
         uint256 threshold = attacker.getThreshold();
@@ -58,7 +59,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
 
     function setAttackerTree(string memory _orgName)
         public
-        returns (address, address, address)
+        returns (bytes32, address, address, address)
     {
         gnosisHelper.registerOrgTx(_orgName);
         keyperSafes[_orgName] = address(gnosisHelper.gnosisSafe());
@@ -94,6 +95,6 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         );
         vm.stopPrank();
 
-        return (orgAddr, attackerSafe, victim);
+        return (orgHash, orgAddr, attackerSafe, victim);
     }
 }

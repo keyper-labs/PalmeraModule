@@ -68,8 +68,9 @@ abstract contract Helpers is DenyHelper {
     }
 
     /// @dev Method to get the Encoded Packed Data for Keyper Transaction
-    /// @param caller address of the caller
-    /// @param safe address of the Safe
+    /// @param org Hash(DAO's name)
+    /// @param superSafe address of the caller
+    /// @param targetSafe address of the Safe
     /// @param to address of the receiver
     /// @param value value of the transaction
     /// @param data data of the transaction
@@ -77,8 +78,9 @@ abstract contract Helpers is DenyHelper {
     /// @param _nonce nonce of the transaction
     /// @return Hash of the encoded data
     function encodeTransactionData(
-        address caller,
-        address safe,
+        bytes32 org,
+        address superSafe,
+        address targetSafe,
         address to,
         uint256 value,
         bytes calldata data,
@@ -88,8 +90,9 @@ abstract contract Helpers is DenyHelper {
         bytes32 keyperTxHash = keccak256(
             abi.encode(
                 Constants.KEYPER_TX_TYPEHASH,
-                caller,
-                safe,
+                org,
+                superSafe,
+                targetSafe,
                 to,
                 value,
                 keccak256(data),
@@ -103,8 +106,9 @@ abstract contract Helpers is DenyHelper {
     }
 
     /// @dev Method to get the Hash Encoded Packed Data for Keyper Transaction
-    /// @param caller address of the caller
-    /// @param safe address of the Safe
+    /// @param org Hash(DAO's name)
+    /// @param superSafe address of the caller
+    /// @param targetSafe address of the Safe
     /// @param to address of the receiver
     /// @param value value of the transaction
     /// @param data data of the transaction
@@ -112,8 +116,9 @@ abstract contract Helpers is DenyHelper {
     /// @param _nonce nonce of the transaction
     /// @return Hash of the encoded packed data
     function getTransactionHash(
-        address caller,
-        address safe,
+        bytes32 org,
+        address superSafe,
+        address targetSafe,
         address to,
         uint256 value,
         bytes calldata data,
@@ -122,7 +127,7 @@ abstract contract Helpers is DenyHelper {
     ) public view returns (bytes32) {
         return keccak256(
             encodeTransactionData(
-                caller, safe, to, value, data, operation, _nonce
+                org, superSafe, targetSafe, to, value, data, operation, _nonce
             )
         );
     }
