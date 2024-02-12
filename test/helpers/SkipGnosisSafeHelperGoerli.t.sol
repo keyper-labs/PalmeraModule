@@ -10,6 +10,7 @@ contract SkipGnosisSafeHelperGoerli is GnosisSafeHelper, KeyperModuleHelper {
     GnosisSafeProxyFactory public proxyFactory;
     GnosisSafe public gnosisSafeContract;
     GnosisSafeProxy safeProxy;
+    uint256 nonce;
 
     // Create new gnosis safe test environment
     // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
@@ -109,10 +110,10 @@ contract SkipGnosisSafeHelperGoerli is GnosisSafeHelper, KeyperModuleHelper {
     }
 
     function newSafeProxy(bytes memory initializer) public returns (address) {
-        uint256 nonce = uint256(keccak256(initializer));
         safeProxy = proxyFactory.createProxyWithNonce(
             address(gnosisSafeContract), initializer, nonce
         );
+        nonce++;
         return address(safeProxy);
     }
 }
