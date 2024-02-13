@@ -11,18 +11,18 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
     function setUp() public {
         // Set up env
         run();
-        // TestExecutionOnBehalf(); // ✅
-        // testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(); // ✅
-        // testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_EOA(); // ???
-        // testCan_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree(); // ✅
-        // testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES(); // ✅
-        // testCan_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_is_TARGETS_LEAD_SameTree(); // ✅
-        // testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_WRONG_SIGNATURES(); // ✅
-        // testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_INVALID_SIGNATURES(); // ✅
-        // testRevertInvalidSignatureExecOnBehalf(); // ✅
-        // testRevertInvalidAddressProvidedExecTransactionOnBehalfScenarioOne(); // ✅
-        // testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo(); // ✅
-        testRevertSuperSafeExecOnBehalf(); // ✅
+        TestExecutionOnBehalf(); // ✅
+            // testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(); // ✅
+            // testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_EOA(); // ???
+            // testCan_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree(); // ✅
+            // testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES(); // ✅
+            // testCan_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_is_TARGETS_LEAD_SameTree(); // ✅
+            // testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_WRONG_SIGNATURES(); // ✅
+            // testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_INVALID_SIGNATURES(); // ✅
+            // testRevertInvalidSignatureExecOnBehalf(); // ✅
+            // testRevertInvalidAddressProvidedExecTransactionOnBehalfScenarioOne(); // ✅
+            // testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo(); // ✅
+            // testRevertSuperSafeExecOnBehalf(); // ✅
     }
 
     // Test Execution On Behalf
@@ -294,48 +294,6 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         assertEq(receiver.balance, 2 gwei);
         vm.stopBroadcast();
     }
-
-    // execTransactionOnBehalf when SafeLead of an Org as EOA
-    // Caller: callerEOA
-    // Caller Type: EOA
-    // Caller Role: SAFE_LEAD of org
-    // TargerSafe: rootAddr
-    // TargetSafe Type: rootSafe
-    // function testCan_ExecTransactionOnBehalf_SAFE_LEAD_as_EOA_is_TARGETS_LEAD()
-    //     public
-    // {
-    //     vm.startBroadcast();
-    //     (uint256 rootId,) = setupRootOrgAndOneSquad(orgName, squadA1Name);
-
-    //     address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-    //     console.log("Root address Test Execution On Behalf: ", rootAddr);
-
-    //     // Random wallet instead of a safe (EOA)
-    //     address callerEOA = address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720);
-
-    //     // Set safe_lead role to fake caller
-    //     setGnosisSafe(rootAddr);
-    //     console.log("Msg Sender: ", msg.sender);
-    //     bool result = createSetRoleTx(uint8(DataTypes.Role.SAFE_LEAD), callerEOA, rootId, true);
-    //     bytes memory emptyData;
-    //     bytes memory signatures;
-
-    //     vm.startPrank(callerEOA);
-    //     result = keyperModule.execTransactionOnBehalf(
-    //         orgHash,
-    //         rootAddr,
-    //         rootAddr,
-    //         receiver,
-    //         2 gwei,
-    //         emptyData,
-    //         Enum.Operation(0),
-    //         signatures
-    //     );
-    //     assertEq(result, true);
-    //     assertEq(receiver.balance, 4 gwei);
-    //     vm.stopPrank();
-    //     vm.stopBroadcast();
-    // }
 
     // execTransactionOnBehalf when is Any EOA, passing the signature of the Root/Super Safe of Target Safe
     // Caller: callerEOA
