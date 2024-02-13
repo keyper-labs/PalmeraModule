@@ -6,7 +6,7 @@ import "./KeyperModuleHelper.t.sol";
 import {KeyperModule} from "../../src/KeyperModule.sol";
 // Helper contract handling deployment Gnosis Safe contracts
 
-contract SkipGnosisSafeHelperGoerli is GnosisSafeHelper, KeyperModuleHelper {
+contract SkipGnosisSafeHelper is GnosisSafeHelper, KeyperModuleHelper {
     GnosisSafeProxyFactory public proxyFactory;
     GnosisSafe public gnosisSafeContract;
     GnosisSafeProxy safeProxy;

@@ -51,4 +51,4 @@ deploy-keyper-env-fork-polygon :; source .env && forge script script/DeployKeype
 deploy-new-safe :; source .env && forge script script/DeployKeyperSafe.t.sol:DeployKeyperSafe --rpc-url ${GOERLI_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast -vvvv
  
 # Run Unit-Test in Fork polygon
-test-fork-polygon :; source .env && forge script script/SkipExecutionOnBehalfPolygon.s.sol:SkipSeveralScenariosPolygon --fork-url http://localhost:8545  --private-key ${PRIVATE_KEY} --broadcast -vvvv
+test-fork-polygon :; source .env && forge script script/SkipExecutionOnBehalf.s.sol:SkipSeveralScenarios --fork-url http://localhost:8545  --private-key ${PRIVATE_KEY} --broadcast -vvvv
