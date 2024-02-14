@@ -34,21 +34,6 @@ abstract contract Helpers is DenyHelper, SignatureDecoder {
         _;
     }
 
-    // /// @dev Function for enable Keyper module in a Gnosis Safe Multisig Wallet
-    // /// @param module Address of Keyper module
-    // function internalEnableModule(address module)
-    //     external
-    //     validAddress(module)
-    // {
-    //     this.enableModule(module);
-    // }
-
-    // /// @dev Non-executed code, function called by the new safe
-    // /// @param module Address of Keyper module
-    // function enableModule(address module) external validAddress(module) {
-    //     emit Events.ModuleEnabled(address(this), module);
-    // }
-
     /// @dev Method to get the domain separator for Keyper Module
     /// @return Hash of the domain separator
     function domainSeparator() public view returns (bytes32) {
