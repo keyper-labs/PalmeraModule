@@ -9,6 +9,9 @@ contract KeyperSafeBuilder is Test {
     GnosisSafeHelper public gnosisHelper;
     KeyperModule public keyperModule;
 
+    // fixed array of 4 owners
+    uint256[] ownersPK = new uint256[](4);
+
     mapping(string => address) public keyperSafes;
 
     function setUpParams(
@@ -28,7 +31,8 @@ contract KeyperSafeBuilder is Test {
         string memory squadA1NameArg
     ) public returns (uint256 rootId, uint256 squadIdA1) {
         // Register Org through safe tx
-        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootAddr;
+        (rootAddr, ownersPK) = gnosisHelper.newKeyperSafeWithPKOwners(4, 2);
         bool result = gnosisHelper.registerOrgTx(orgNameArg);
         // Get org Id
         bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
@@ -230,7 +234,12 @@ contract KeyperSafeBuilder is Test {
         string memory subSquadA1NameArg
     )
         public
-        returns (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1)
+        returns (
+            uint256 rootId,
+            uint256 squadIdA1,
+            uint256 subSquadIdA1,
+            uint256[] memory
+        )
     {
         // Create root & squadA1
         (rootId, squadIdA1) =
@@ -242,7 +251,7 @@ contract KeyperSafeBuilder is Test {
         bytes32 orgHash = keyperModule.getOrgBySquad(squadIdA1);
         // Get subsquadA1 Id
         subSquadIdA1 = keyperModule.getSquadIdBySafe(orgHash, safeSubSquadA1);
-        return (rootId, squadIdA1, subSquadIdA1);
+        return (rootId, squadIdA1, subSquadIdA1, ownersPK);
     }
 
     // Deploy 4 keyperSafes : following structure
@@ -267,7 +276,7 @@ contract KeyperSafeBuilder is Test {
             uint256 subSubSquadIdA1
         )
     {
-        (rootId, squadIdA1, subSquadIdA1) = setupOrgThreeTiersTree(
+        (rootId, squadIdA1, subSquadIdA1,) = setupOrgThreeTiersTree(
             orgNameArg, squadA1NameArg, subSquadA1NameArg
         );
 

@@ -135,7 +135,7 @@ contract KeyperRolesTest is DeployHelper {
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> root
     // Target Info: Type-> SAFE, Name -> squadA, Hierarchy related to caller -> N/A
     function testCannot_ROOT_SAFE_SetRole_SUPER_SAFE_to_SAFE() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadAId) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadAId,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );

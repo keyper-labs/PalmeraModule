@@ -106,36 +106,4 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         );
         return txHashed;
     }
-
-    // function createSafeProxy(uint256 numberOwners, uint256 threshold)
-    //     public
-    //     returns (address)
-    // {
-    //     require(
-    //         privateKeyOwners.length >= numberOwners,
-    //         "not enough initialized owners"
-    //     );
-    //     require(
-    //         countUsed + numberOwners <= privateKeyOwners.length,
-    //         "No private keys available"
-    //     );
-    //     DeploySafeFactory deploySafeFactory = new DeploySafeFactory();
-    //     deploySafeFactory.run();
-
-    //     address masterCopy = address(deploySafeFactory.gnosisSafeContract());
-    //     address safeFactory = address(deploySafeFactory.proxyFactory());
-    //     address rolesAuthority = address(deploySafeFactory.proxyFactory());
-    //     uint256 maxTreeDepth = 50;
-    //     keyper = new KeyperModule(
-    //         masterCopy, safeFactory, rolesAuthority, maxTreeDepth
-    //     );
-
-    //     require(address(keyper) != address(0), "Keyper module not deployed");
-    //     address[] memory owners = new address[](numberOwners);
-    //     for (uint256 i = 0; i < numberOwners; i++) {
-    //         owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
-    //         countUsed++;
-    //     }
-    //     return keyper.createSafeProxy(owners, threshold);
-    // }
 }
