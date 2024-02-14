@@ -112,39 +112,39 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         maxDepthTreeLimit = maxDepthTreeLimitInitial;
     }
 
-    /// @dev Function to create Gnosis Safe Multisig Wallet with our module enabled
-    /// @param owners Array of owners of the Gnosis Safe Multisig Wallet
-    /// @param threshold Threshold of the Gnosis Safe Multisig Wallet
-    /// @return safe Address of Safe created with the module enabled
-    function createSafeProxy(address[] memory owners, uint256 threshold)
-        external
-        returns (address safe)
-    {
-        bytes memory internalEnableModuleData = abi.encodeWithSignature(
-            "internalEnableModule(address)", address(this)
-        );
+    // /// @dev Function to create Gnosis Safe Multisig Wallet with our module enabled
+    // /// @param owners Array of owners of the Gnosis Safe Multisig Wallet
+    // /// @param threshold Threshold of the Gnosis Safe Multisig Wallet
+    // /// @return safe Address of Safe created with the module enabled
+    // function createSafeProxy(address[] memory owners, uint256 threshold)
+    //     external
+    //     returns (address safe)
+    // {
+    //     bytes memory internalEnableModuleData = abi.encodeWithSignature(
+    //         "internalEnableModule(address)", address(this)
+    //     );
 
-        bytes memory data = abi.encodeWithSignature(
-            "setup(address[],uint256,address,bytes,address,address,uint256,address)",
-            owners,
-            threshold,
-            this,
-            internalEnableModuleData,
-            Constants.FALLBACK_HANDLER,
-            address(0x0),
-            uint256(0),
-            payable(address(0x0))
-        );
+    //     bytes memory data = abi.encodeWithSignature(
+    //         "setup(address[],uint256,address,bytes,address,address,uint256,address)",
+    //         owners,
+    //         threshold,
+    //         this,
+    //         internalEnableModuleData,
+    //         Constants.FALLBACK_HANDLER,
+    //         address(0x0),
+    //         uint256(0),
+    //         payable(address(0x0))
+    //     );
 
-        IGnosisSafeProxy gnosisSafeProxy = IGnosisSafeProxy(proxyFactory);
-        try gnosisSafeProxy.createProxy(masterCopy, data) returns (
-            address newSafe
-        ) {
-            return newSafe;
-        } catch {
-            revert Errors.CreateSafeProxyFailed();
-        }
-    }
+    //     IGnosisSafeProxy gnosisSafeProxy = IGnosisSafeProxy(proxyFactory);
+    //     try gnosisSafeProxy.createProxy(masterCopy, data) returns (
+    //         address newSafe
+    //     ) {
+    //         return newSafe;
+    //     } catch {
+    //         revert Errors.CreateSafeProxyFailed();
+    //     }
+    // }
 
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
     /// @param org ID's Organization
@@ -199,8 +199,13 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             /// Verify Collision of Nonce with multiple txs in the same range of time, study to use a nonce per org
 
             IGnosisSafe gnosisLeadSafe = IGnosisSafe(superSafe);
+            bytes memory sortedSignatures = processAndSortSignatures(
+                signatures,
+                keccak256(keyperTxHashData),
+                gnosisLeadSafe.getOwners()
+            );
             gnosisLeadSafe.checkSignatures(
-                keccak256(keyperTxHashData), keyperTxHashData, signatures
+                keccak256(keyperTxHashData), keyperTxHashData, sortedSignatures
             );
         }
 

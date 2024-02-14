@@ -21,15 +21,15 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // ! ********************** createSafeFactory Test **************************
 
     // Checks if a safe is created successfully from Module
-    function testCreateSafeFromModule() public {
-        address newSafe = keyperHelper.createSafeProxy(4, 2);
-        assertFalse(newSafe == address(0));
-        // Verify newSafe has keyper modulle enabled
-        GnosisSafe safe = GnosisSafe(payable(newSafe));
-        bool isKeyperModuleEnabled =
-            safe.isModuleEnabled(address(keyperHelper.keyper()));
-        assertEq(isKeyperModuleEnabled, true);
-    }
+    // function testCreateSafeFromModule() public {
+    //     address newSafe = keyperHelper.createSafeProxy(4, 2);
+    //     assertFalse(newSafe == address(0));
+    //     // Verify newSafe has keyper modulle enabled
+    //     GnosisSafe safe = GnosisSafe(payable(newSafe));
+    //     bool isKeyperModuleEnabled =
+    //         safe.isModuleEnabled(address(keyperHelper.keyper()));
+    //     assertEq(isKeyperModuleEnabled, true);
+    // }
 
     // ! ********************** Allow/Deny list Test ********************
 

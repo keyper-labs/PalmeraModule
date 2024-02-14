@@ -416,7 +416,7 @@ contract ExecTransactionOnBehalf is DeployHelper {
         );
 
         vm.startPrank(callerEOA);
-        vm.expectRevert("GS026");
+        vm.expectRevert("GS020");
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,

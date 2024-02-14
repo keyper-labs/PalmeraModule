@@ -57,6 +57,8 @@ library Errors {
     error TxOnBehalfExecutedFailed();
     /// @dev Error messages when the caller is an Invalid Gnosis Safe
     error InvalidGnosisSafe(address safe);
+    /// @dev Error messages when the caller is an Invalid Signature
+    error InvalidSignature();
     /// @dev Error messages when the caller is an Invalid Gnosis Root Safe
     error InvalidGnosisRootSafe(address safe);
     /// @dev Error messages when the Squad is an Invalid ID's
