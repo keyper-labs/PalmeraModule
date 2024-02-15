@@ -15,8 +15,6 @@ import {
     Events
 } from "./DenyHelper.sol";
 import {SignatureDecoder} from "@safe-contracts/common/SignatureDecoder.sol";
-import {console} from "forge-std/console.sol";
-import {console2} from "forge-std/console2.sol";
 
 /// @title DenyHelper
 /// @custom:security-contact general@palmeradao.xyz
