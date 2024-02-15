@@ -174,7 +174,6 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
                 keccak256(keyperTxHashData), keyperTxHashData, sortedSignatures
             );
         }
-
         /// Increase nonce and execute transaction.
         nonce++;
         /// Execute transaction from target safe

@@ -41,6 +41,9 @@ rename :; chmod +x ./scripts/* && ./scripts/rename.sh
 # Generate typescript bindings
 ts-binding :; npx typechain --target ethers-v5 --out-dir out/types/ './out/**/*.json'
 
+# Deploy module in Polygon
+deploy-keyper-env-polygon :; source .env && forge script script/DeployKeyperEnv.s.sol:DeployKeyperEnv --rpc-url ${POLYGON_RPC_URL}  --private-key ${PRIVATE_KEY} --skip-simulation --broadcast --verify --etherscan-api-key ${POLYGONSCAN_KEY} -vvvv --with-gas-price 120000000000 
+
 # Deploy module
 deploy-keyper-env :; source .env && forge script script/DeployKeyperEnv.s.sol:DeployKeyperEnv --rpc-url ${SEPOLIA_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_KEY} -vvvv
 

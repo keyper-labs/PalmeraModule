@@ -30,6 +30,7 @@ contract DeployKeyperEnv is Script {
         uint256 maxTreeDepth = 50;
 
         // Deploy KeyperRoles: KeyperModule is set as owner of KeyperRoles authority
+        console.log("KeyperModulePredicted: ", keyperModulePredicted);
         KeyperRoles keyperRoles = new KeyperRoles(keyperModulePredicted);
         console.log("KeyperRoles deployed at: ", address(keyperRoles));
 
