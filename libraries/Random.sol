@@ -20,7 +20,7 @@ library Random {
             keccak256(
                 abi.encodePacked(
                     block.timestamp +
-                        block.difficulty +
+                        block.prevrandao +
                         ((
                             uint256(keccak256(abi.encodePacked(block.coinbase)))
                         ) / (_seed)) +

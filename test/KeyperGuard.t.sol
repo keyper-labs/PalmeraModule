@@ -115,7 +115,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
     function testCannotDisconnectSafe_As_ROOTSAFE_TARGET_ROOTSAFE_SAME_TREE()
         public
     {
-        (uint256 rootId,, uint256 subSquadA1Id) = keyperSafeBuilder
+        (uint256 rootId,, uint256 subSquadA1Id,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
@@ -211,7 +211,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
     }
 
     function testCannotDisconnectSafe_As_SuperSafe_As_SameTree() public {
-        (, uint256 squadIdA1, uint256 subSquadA1Id) = keyperSafeBuilder
+        (, uint256 squadIdA1, uint256 subSquadA1Id,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address squadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
@@ -334,7 +334,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
     }
 
     function testDisconnectSafeBeforeToRemoveSquad_One_Level() public {
-        (uint256 rootId, uint256 squadIdA1,) = keyperSafeBuilder
+        (uint256 rootId, uint256 squadIdA1,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
@@ -391,7 +391,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
     }
 
     function testCannotDisconnectSafe_As_SafeLead_As_EOA() public {
-        (uint256 rootId,, uint256 childSquadA1) = keyperSafeBuilder
+        (uint256 rootId,, uint256 childSquadA1,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
@@ -428,7 +428,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
     }
 
     function testCannotDisconnectSafe_As_SafeLead_As_SAFE() public {
-        (uint256 rootId,, uint256 childSquadA1) = keyperSafeBuilder
+        (uint256 rootId,, uint256 childSquadA1,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
@@ -622,7 +622,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
     }
 
     function testDisconnectSafe_As_ROOTSAFE_TARGET_ROOT_SAFE() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1) =
+        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
@@ -661,7 +661,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
     // ! **************** List of Promote to Root *******************************
 
     function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SQUAD_SAFE() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1) =
+        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
@@ -690,7 +690,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
     }
 
     function testCanPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1) =
+        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );

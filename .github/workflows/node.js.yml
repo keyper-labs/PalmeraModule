@@ -37,4 +37,4 @@ jobs:
         run: forge test --no-match-contract 'Skip*'
 
       - name: Run Coverage
-        run: forge coverage --no-match-contract 'Skip*'
+        run: forge test --gas-report -vvv --no-match-contract='Skip*'

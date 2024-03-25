@@ -14,9 +14,9 @@ install :; forge install
 update:; forge update
 
 # Builds
-build:; forge build
+build:; forge clean && forge build
 
-build-size-report :; forge build --sizes
+build-size-report :; forge clean && forge build --sizes
 
 # chmod scripts
 scripts :; chmod +x ./scripts/*
@@ -41,8 +41,17 @@ rename :; chmod +x ./scripts/* && ./scripts/rename.sh
 # Generate typescript bindings
 ts-binding :; npx typechain --target ethers-v5 --out-dir out/types/ './out/**/*.json'
 
+# Deploy module in Polygon
+deploy-keyper-env-polygon :; source .env && forge script script/DeployKeyperEnv.s.sol:DeployKeyperEnv --rpc-url ${POLYGON_RPC_URL}  --private-key ${PRIVATE_KEY} --skip-simulation --broadcast --verify --etherscan-api-key ${POLYGONSCAN_KEY} -vvvv --with-gas-price 120000000000 
+
 # Deploy module
-deploy-module :; source .env && forge script script/DeployModule.t.sol:DeployModule --rpc-url ${GOERLI_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_KEY} -vvvv
+deploy-keyper-env :; source .env && forge script script/DeployKeyperEnv.s.sol:DeployKeyperEnv --rpc-url ${SEPOLIA_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast --verify --etherscan-api-key ${ETHERSCAN_KEY} -vvvv
+
+# Deploy module in fork-polygon
+deploy-keyper-env-fork-polygon :; source .env && forge script script/DeployKeyperEnv.s.sol:DeployKeyperEnv --fork-url http://localhost:8545  --private-key ${PRIVATE_KEY}
 
 # Deploy New Safe
 deploy-new-safe :; source .env && forge script script/DeployKeyperSafe.t.sol:DeployKeyperSafe --rpc-url ${GOERLI_RPC_URL}  --private-key ${PRIVATE_KEY} --broadcast -vvvv
+ 
+# Run Unit-Test in Fork polygon
+test-fork-polygon :; source .env && forge script script/SkipExecutionOnBehalf.s.sol:SkipSeveralScenarios --fork-url http://localhost:8545  --private-key ${PRIVATE_KEY} --broadcast -vvvv

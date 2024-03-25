@@ -3,9 +3,9 @@ src = 'src'
 out = 'out'
 libs = ['lib']
 # Fixed Version
-solc-version = "0.8.17"
+solc-version = "0.8.23"
 optimizer = true
-optimizer-runs = 200
+optimizer-runs = 150
 via_ir = true
 ffi=true
 
@@ -13,6 +13,8 @@ ffi=true
 # libraries = ['./libraries/Constants.sol:Constants:0x2e234DAe75C793f67A35089C9d99245E1C58470b', './libraries/DataTypes.sol:DataTypes:0xF62849F9A0B5Bf2913b396098F7c7019b51A820a', './libraries/Errors.sol:Errors:0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9', './libraries/Events.sol:Events:0xc7183455a4C133Ae270771860664b6B7ec320bB1']
 # Goerli Testnet
 # libraries = ['./libraries/Constants.sol:Constants:0xc0f208cD760C472476A4Af93cf889aa79A70bb51', './libraries/DataTypes.sol:DataTypes:0xF2313a501B15Ee53a56a4A252864a7c7d53ced88', './libraries/Errors.sol:Errors:0x056a1258E952A5C9B85404C8cD77Fdea627D0362', './libraries/Events.sol:Events:0xA27939f95b4e8DC298B43ACaef4Fd4E7502FEE76']
+# Polygon Mainnet
+libraries = ['./libraries/Constants.sol:Constants:0x5F9Ae7E3aF99D13B14324b35E9Ed8E34B72f8973', './libraries/DataTypes.sol:DataTypes:0xC25Fd55932406626EE6133c5CD251ede6ef57df1', './libraries/Errors.sol:Errors:0xD5cc19aBa54FC64811D3050a52dbd274e998b916', './libraries/Events.sol:Events:0xBE874E3f8c49C8976Cf8B80f92B7f6Cc844dE032']
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 # Gas Report
