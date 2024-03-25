@@ -1,4 +1,4 @@
-# KeyperModule - Gnosis safe module for keyper
+# KeyperModule - Safe module for Palmera
 
 This contract is a registry of keyper organization/squads setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
 
@@ -44,7 +44,7 @@ forge test or make test-gas-report
 
 Execute the command `deploy-module` located in the Makefile
 
--   Deploy a new safe using our custom contracts (custom gnosis safe master copy & proxy factory)
+-   Deploy a new safe using our custom contracts (custom safe master copy & proxy factory)
 
 Execute the command `deploy-new-safe` located in the Makefile
 
