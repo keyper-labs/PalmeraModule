@@ -12,8 +12,9 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         // Set up env
         run();
         TestExecutionOnBehalf(); // ✅
+            // These are different chain test scenarios, specifically for the execTransactionOnBehalf function in Polygon and Sepolia.
+            // We test each scenario independently manually and get the results on the Live Mainnet on Polygon and Sepolia.
             // testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(); // ✅
-            // testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_EOA(); // ???
             // testCan_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree(); // ✅
             // testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES(); // ✅
             // testCan_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_is_TARGETS_LEAD_SameTree(); // ✅
