@@ -96,7 +96,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Target Info: Name -> childAAddr, Type -> SAFE,Hierarchy related to caller -> SAME_TREE,CHILDREN
     function testCan_AddOwnerWithThreshold_SUPER_SAFE_as_SAFE_is_TARGETS_SUPER_SAFE(
     ) public {
-        (, uint256 squadIdA1, uint256 childIdA) = keyperSafeBuilder
+        (, uint256 squadIdA1, uint256 childIdA,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address squadAAddr = keyperModule.getSquadSafeAddress(squadIdA1);
@@ -130,7 +130,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Target Info: Name -> squadAAddr, Type -> SAFE, Hierarchy related to caller -> SAME_TREE,CHILDREN
     function testCan_AddOwnerWithThreshold_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SAFE(
     ) public {
-        (uint256 rootIdA, uint256 squadIdA1,) = keyperSafeBuilder
+        (uint256 rootIdA, uint256 squadIdA1,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address rootAddrA = keyperModule.getSquadSafeAddress(rootIdA);
@@ -706,7 +706,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     function testCan_RemoveOwner_SUPER_SAFE_as_SAFE_is_TARGETS_SUPER_SAFE()
         public
     {
-        (, uint256 squadIdA1, uint256 childIdA) = keyperSafeBuilder
+        (, uint256 squadIdA1, uint256 childIdA,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address squadAAddr = keyperModule.getSquadSafeAddress(squadIdA1);
@@ -737,7 +737,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     function testCan_RemoveOwner_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SAFE()
         public
     {
-        (uint256 rootIdA, uint256 squadIdA1,) = keyperSafeBuilder
+        (uint256 rootIdA, uint256 squadIdA1,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address rootAddrA = keyperModule.getSquadSafeAddress(rootIdA);

@@ -161,6 +161,54 @@ contract GnosisSafeHelper is
         return address(gnosisSafe);
     }
 
+    // Create GnosisSafe with Keyper and send module enabled tx
+    function newKeyperSafeWithPKOwners(uint256 numberOwners, uint256 threshold)
+        public
+        virtual
+        returns (address, uint256[] memory)
+    {
+        uint256[] memory ownersPK = new uint256[](numberOwners);
+        require(
+            privateKeyOwners.length >= numberOwners,
+            "not enough initialized owners"
+        );
+        require(
+            countUsed + numberOwners <= privateKeyOwners.length,
+            "No private keys available"
+        );
+        require(keyperModuleAddr != address(0), "Keyper module not set");
+        address[] memory owners = new address[](numberOwners);
+        for (uint256 i = 0; i < numberOwners; i++) {
+            ownersPK[i] = privateKeyOwners[i + countUsed];
+            owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
+            countUsed++;
+        }
+        bytes memory emptyData;
+        bytes memory initializer = abi.encodeWithSignature(
+            "setup(address[],uint256,address,bytes,address,address,uint256,address)",
+            owners,
+            threshold,
+            address(0x0),
+            emptyData,
+            address(0x0),
+            address(0x0),
+            uint256(0),
+            payable(address(0x0))
+        );
+
+        address gnosisSafeProxy = safeFactory.newSafeProxy(initializer);
+        gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
+
+        // Enable module
+        bool result = enableModuleTx(address(gnosisSafe));
+        require(result == true, "failed enable module");
+
+        // Enable Guard
+        result = enableGuardTx(address(gnosisSafe));
+        require(result == true, "failed enable guard");
+        return (address(gnosisSafe), ownersPK);
+    }
+
     function testNewKeyperSafe() public {
         setupSafeEnv();
         setKeyperModule(address(0x678));

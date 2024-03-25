@@ -21,15 +21,15 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // ! ********************** createSafeFactory Test **************************
 
     // Checks if a safe is created successfully from Module
-    function testCreateSafeFromModule() public {
-        address newSafe = keyperHelper.createSafeProxy(4, 2);
-        assertFalse(newSafe == address(0));
-        // Verify newSafe has keyper modulle enabled
-        GnosisSafe safe = GnosisSafe(payable(newSafe));
-        bool isKeyperModuleEnabled =
-            safe.isModuleEnabled(address(keyperHelper.keyper()));
-        assertEq(isKeyperModuleEnabled, true);
-    }
+    // function testCreateSafeFromModule() public {
+    //     address newSafe = keyperHelper.createSafeProxy(4, 2);
+    //     assertFalse(newSafe == address(0));
+    //     // Verify newSafe has keyper modulle enabled
+    //     GnosisSafe safe = GnosisSafe(payable(newSafe));
+    //     bool isKeyperModuleEnabled =
+    //         safe.isModuleEnabled(address(keyperHelper.keyper()));
+    //     assertEq(isKeyperModuleEnabled, true);
+    // }
 
     // ! ********************** Allow/Deny list Test ********************
 
@@ -37,7 +37,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
     // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> NOT_ALLOW_LIST
     function testRevertSuperSafeExecOnBehalfIsNotAllowList() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
@@ -87,7 +87,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
     // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> DENY_LIST
     function testRevertSuperSafeExecOnBehalfIsDenyList() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
@@ -140,7 +140,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
     // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> DENY_LIST
     function testDisableDenyHelperList() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
@@ -288,7 +288,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_RemoveSquad_SUPER_SAFE_as_SAFE_is_SUPER_SAFE_SameTree()
         public
     {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
@@ -418,7 +418,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_hasNotPermissionOverTarget_is_super_safe_of_target()
         public
     {
-        (, uint256 squadA1Id, uint256 subSquadA1Id) = keyperSafeBuilder
+        (, uint256 squadA1Id, uint256 subSquadA1Id,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);
@@ -433,7 +433,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_hasNotPermissionOverTarget_is_not_super_safe_of_target()
         public
     {
-        (, uint256 squadA1Id, uint256 subSquadA1Id) = keyperSafeBuilder
+        (, uint256 squadA1Id, uint256 subSquadA1Id,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);

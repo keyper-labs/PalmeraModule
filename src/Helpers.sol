@@ -14,10 +14,11 @@ import {
     Errors,
     Events
 } from "./DenyHelper.sol";
+import {SignatureDecoder} from "@safe-contracts/common/SignatureDecoder.sol";
 
 /// @title DenyHelper
 /// @custom:security-contact general@palmeradao.xyz
-abstract contract Helpers is DenyHelper {
+abstract contract Helpers is DenyHelper, SignatureDecoder {
     using GnosisSafeMath for uint256;
     using Address for address;
 
@@ -31,21 +32,6 @@ abstract contract Helpers is DenyHelper {
             revert Errors.InvalidGnosisSafe(safe);
         }
         _;
-    }
-
-    /// @dev Function for enable Keyper module in a Gnosis Safe Multisig Wallet
-    /// @param module Address of Keyper module
-    function internalEnableModule(address module)
-        external
-        validAddress(module)
-    {
-        this.enableModule(module);
-    }
-
-    /// @dev Non-executed code, function called by the new safe
-    /// @param module Address of Keyper module
-    function enableModule(address module) external validAddress(module) {
-        emit Events.ModuleEnabled(address(this), module);
     }
 
     /// @dev Method to get the domain separator for Keyper Module
@@ -150,6 +136,40 @@ abstract contract Helpers is DenyHelper {
         } else {
             return false;
         }
+    }
+
+    /// @dev Method to get signatures order
+    /// @param signatures Signature of the transaction
+    /// @param dataHash Hash of the transaction data to sign
+    /// @param owners Array of owners of the  Safe Multisig Wallet
+    /// @return address of the Safe Proxy
+    function processAndSortSignatures(
+        bytes memory signatures,
+        bytes32 dataHash,
+        address[] memory owners
+    ) internal pure returns (bytes memory) {
+        uint256 count = signatures.length / 65;
+        bytes memory concatenatedSignatures;
+
+        for (uint256 j = 0; j < owners.length; j++) {
+            address currentOwner = owners[j];
+            for (uint256 i = 0; i < count; i++) {
+                // Inline 'signatureSplit' logic here (r, s, v extraction)
+                (uint8 v, bytes32 r, bytes32 s) = signatureSplit(signatures, i);
+
+                // Recover signer from the signature
+                address signer = ecrecover(dataHash, v, r, s);
+                // Combine r, s, v into a signature
+                bytes memory signature = abi.encodePacked(r, s, v);
+
+                if (signer == currentOwner) {
+                    concatenatedSignatures =
+                        abi.encodePacked(concatenatedSignatures, signature);
+                    break;
+                }
+            }
+        }
+        return concatenatedSignatures;
     }
 
     /// @dev Method to get Preview Module of the Safe

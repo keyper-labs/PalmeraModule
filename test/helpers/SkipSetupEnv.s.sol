@@ -3,13 +3,14 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
 import "../../src/SigningUtils.sol";
-import "./SkipGnosisSafeHelperGoerli.t.sol";
+import "./SkipGnosisSafeHelper.t.sol";
+import "@solenv/Solenv.sol";
 import {KeyperModule} from "../../src/KeyperModule.sol";
 import {KeyperRoles} from "../../src/KeyperRoles.sol";
 import {KeyperGuard} from "../../src/KeyperGuard.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
-contract SkipSetupEnvGoerli is Script, SkipGnosisSafeHelperGoerli {
+contract SkipSetupEnv is Script, SkipGnosisSafeHelper {
     using SafeMath for uint256;
 
     KeyperModule keyperModule;
@@ -18,9 +19,10 @@ contract SkipSetupEnvGoerli is Script, SkipGnosisSafeHelperGoerli {
 
     address gnosisSafeAddr;
     address keyperRolesDeployed;
-    address receiver;
+    address receiver = address(0xABC123);
     address zeroAddress = address(0x0);
     address sentinel = address(0x1);
+    uint256 initOwners = 10;
 
     // Org, Squad and subSquad String names
     string orgName = "Main Org";
@@ -30,10 +32,13 @@ contract SkipSetupEnvGoerli is Script, SkipGnosisSafeHelperGoerli {
     string squadA2Name = "SquadA2";
     string squadBName = "SquadB";
     string subSquadA1Name = "subSquadA1";
+    string subSquadB1Name = "subSquadB1";
+    string subSubSquadA1Name = "SubSubSquadA";
 
     bytes32 orgHash;
 
     function run() public {
+        Solenv.config();
         vm.startBroadcast();
         keyperRolesContract = KeyperRoles(vm.envAddress("KEYPER_ROLES_ADDRESS"));
         keyperModule = KeyperModule(vm.envAddress("KEYPER_MODULE_ADDRESS"));
@@ -51,6 +56,7 @@ contract SkipSetupEnvGoerli is Script, SkipGnosisSafeHelperGoerli {
         enableModuleTx(gnosisSafeAddr);
         // Enable keyper Guard
         enableGuardTx(gnosisSafeAddr);
+        console.log("Finalize Config Environment... ");
         vm.stopBroadcast();
     }
 
@@ -77,5 +83,32 @@ contract SkipSetupEnvGoerli is Script, SkipGnosisSafeHelperGoerli {
         squadIdA1 = keyperModule.getSquadIdBySafe(orgHash, squadSafe);
 
         return (rootId, squadIdA1);
+    }
+
+    // Deploy 3 keyperSafes : following structure
+    //           RootOrg
+    //              |
+    //         safeSquadA1
+    //              |
+    //        safeSubSquadA1
+    function setupOrgThreeTiersTree(
+        string memory orgNameArg,
+        string memory squadA1NameArg,
+        string memory subSquadA1NameArg
+    )
+        public
+        returns (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1)
+    {
+        // Create root & squadA1
+        (rootId, squadIdA1) =
+            setupRootOrgAndOneSquad(orgNameArg, squadA1NameArg);
+        address safeSubSquadA1 = newKeyperSafe(2, 1);
+
+        // Create subsquadA1
+        bool result = createAddSquadTx(squadIdA1, subSquadA1NameArg);
+        orgHash = keyperModule.getOrgBySquad(squadIdA1);
+        // Get subsquadA1 Id
+        subSquadIdA1 = keyperModule.getSquadIdBySafe(orgHash, safeSubSquadA1);
+        return (rootId, squadIdA1, subSquadIdA1);
     }
 }

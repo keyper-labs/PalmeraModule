@@ -20,7 +20,7 @@ contract DeployKeyperEnv is Script {
         // The address https://sepolia.etherscan.io/address/0x93FEC2C00BfE902F733B57c5a6CeeD7CD1384AE1#code, is the address of the CREATE3Factory in Sepolia
         CREATE3Factory factory =
             CREATE3Factory(0x93FEC2C00BfE902F733B57c5a6CeeD7CD1384AE1);
-        bytes32 salt = keccak256(abi.encode(0xdfff));
+        bytes32 salt = keccak256(abi.encode(0xddff)); // need to be unique to avoid collision
         address keyperModulePredicted = factory.getDeployed(msg.sender, salt);
 
         // Deploy Safe contracts in goerli
@@ -30,6 +30,7 @@ contract DeployKeyperEnv is Script {
         uint256 maxTreeDepth = 50;
 
         // Deploy KeyperRoles: KeyperModule is set as owner of KeyperRoles authority
+        console.log("KeyperModulePredicted: ", keyperModulePredicted);
         KeyperRoles keyperRoles = new KeyperRoles(keyperModulePredicted);
         console.log("KeyperRoles deployed at: ", address(keyperRoles));
 
