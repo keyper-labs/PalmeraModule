@@ -37,7 +37,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         uint256 value,
         bytes memory data,
         Enum.Operation operation
-    ) public returns (bytes memory) {
+    ) public view returns (bytes memory) {
         uint256 nonce = keyper.nonce();
         bytes32 txHashed = keyper.getTransactionHash(
             org, superSafe, targetSafe, to, value, data, operation, nonce
