@@ -19,6 +19,9 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
 
     // Caller Info: ROOT_SAFE(role), SAFE(type), rootSafe(hierachie)
     // TargetSafe Type: Child from same hierachical tree
+    //            rootSafe -----------
+    //               |                |
+    //           safeSquadA1 <--------
     function testCan_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree(
     ) public {
         (uint256 rootId, uint256 safeSquadA1) =
@@ -65,7 +68,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //           safeSubSquadA1 <-----
     function testCan_ExecTransactionOnBehalf_ROOT_SAFE_and_Target_Root_SameTree_2_levels(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,) = keyperSafeBuilder
+        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
@@ -135,7 +138,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             DataTypes.Role.SAFE_LEAD, safeSquadBAddr, safeSubSubSquadA1Id, true
         );
         vm.stopPrank();
-
+        // Verify if the safeSquadBAddr have the role of Safe Lead to execute, executionTransactionOnBehalf
         assertEq(
             keyperModule.isSuperSafe(safeSquadBId, safeSubSubSquadA1Id), false
         );
@@ -189,6 +192,9 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         vm.startPrank(rootAddr);
         keyperModule.setRole(DataTypes.Role.SAFE_LEAD, callerEOA, rootId, true);
         vm.stopPrank();
+
+        // Verify if the callerEOA have the role of Safe Lead to execute, executionTransactionOnBehalf
+        assertEq(keyperModule.isSafeLead(rootId, callerEOA), true);
         bytes memory emptyData;
         bytes memory signatures;
 
@@ -198,13 +204,14 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             rootAddr,
             rootAddr,
             receiver,
-            2 gwei,
+            22 gwei,
             emptyData,
             Enum.Operation(0),
             signatures
         );
         assertEq(result, true);
-        assertEq(receiver.balance, 2 gwei);
+        assertEq(receiver.balance, 22 gwei);
+        vm.stopPrank();
     }
 
     // execTransactionOnBehalf when is Any EOA, passing the signature of owners of the Root/Super Safe of Target Safe
@@ -220,8 +227,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //           safeSubSquadA1 <-----
     function testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Straight_way(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
+        (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK,)
+        = keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
@@ -257,7 +264,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
                 rootAddr,
                 safeSubSquadA1Addr,
                 receiver,
-                25 gwei,
+                37 gwei,
                 emptyData,
                 Enum.Operation(0),
                 nonce
@@ -281,13 +288,13 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             rootAddr,
             safeSubSquadA1Addr,
             receiver,
-            25 gwei,
+            37 gwei,
             emptyData,
             Enum.Operation(0),
             concatenatedSignatures
         );
         assertEq(result, true);
-        assertEq(receiver.balance, 25 gwei);
+        assertEq(receiver.balance, 37 gwei);
         vm.stopPrank();
     }
 
@@ -304,8 +311,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //           safeSubSquadA1 <-----
     function testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Inverse_WAY(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
+        (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK,)
+        = keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
@@ -342,7 +349,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
                 rootAddr,
                 safeSubSquadA1Addr,
                 receiver,
-                25 gwei,
+                26 gwei,
                 emptyData,
                 Enum.Operation(0),
                 nonce
@@ -366,13 +373,13 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             rootAddr,
             safeSubSquadA1Addr,
             receiver,
-            25 gwei,
+            26 gwei,
             emptyData,
             Enum.Operation(0),
             concatenatedSignatures
         );
         assertEq(result, true);
-        assertEq(receiver.balance, 25 gwei);
+        assertEq(receiver.balance, 26 gwei);
         vm.stopPrank();
     }
 
@@ -389,7 +396,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //           safeSubSquadA1 <-----
     function testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,) = keyperSafeBuilder
+        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
@@ -402,7 +409,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
 
-        // Owner of Root Safe sign args
+        // Root Safe sign args
         keyperHelper.setGnosisSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
@@ -445,8 +452,10 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // //           safeSubSquadA1 <------------
     function testCan_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_is_TARGETS_LEAD_SameTree(
     ) public {
-        (, uint256 safeSquadA1Id, uint256 safeSubSquadA1Id,) = keyperSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (, uint256 safeSquadA1Id, uint256 safeSubSquadA1Id,,) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, squadA1Name, subSquadA1Name
+        );
 
         address safeSquadA1Addr =
             keyperModule.getSquadSafeAddress(safeSquadA1Id);
@@ -494,6 +503,94 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         assertEq(receiver.balance, 2 gwei);
     }
 
+    // execTransactionOnBehalf when is Any EOA, passing the signature of owners of the Super Safe of Target Safe
+    // Caller: callerEOA
+    // Caller Type: EOA
+    // Caller Role: nothing
+    // Caller Role: SUPER_SAFE of safeSubSquadA1
+    // SuperSafe: squadA1Name
+    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
+    //           safeSquadA1 ---------
+    //              |                 |
+    //           safeSubSquadA1 <-----
+    function testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Straight_way_from_superSafe(
+    ) public {
+        (
+            ,
+            uint256 squadA1NId,
+            uint256 safeSubSquadA1Id,
+            ,
+            uint256[] memory ownersSuperPK
+        ) = keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, squadA1Name, subSquadA1Name
+        );
+
+        address squadA1NAddr = keyperModule.getSquadSafeAddress(squadA1NId);
+        address safeSubSquadA1Addr =
+            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+
+        vm.deal(squadA1NAddr, 100 gwei);
+        vm.deal(safeSubSquadA1Addr, 100 gwei);
+
+        // Random wallet instead of a safe (EOA)
+        address callerEOA = address(0xFED);
+
+        // get safe from squadA1NAddr
+        GnosisSafe superSafe = GnosisSafe(payable(squadA1NAddr));
+
+        // get owners of the root safe
+        address[] memory owners = superSafe.getOwners();
+        uint256 threshold = superSafe.getThreshold();
+        uint256 nonce = keyperModule.nonce();
+
+        // Init Valid Owners
+        initValidOnwers(4);
+
+        bytes memory concatenatedSignatures;
+        bytes memory emptyData;
+
+        for (uint256 j = 0; j < threshold; j++) {
+            address currentOwner = owners[j];
+            vm.startPrank(currentOwner);
+            bytes memory keyperTxHashData = keyperModule.encodeTransactionData(
+                orgHash,
+                squadA1NAddr,
+                safeSubSquadA1Addr,
+                receiver,
+                39 gwei,
+                emptyData,
+                Enum.Operation(0),
+                nonce
+            );
+            bytes32 digest = keccak256(keyperTxHashData);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownersSuperPK[j], digest);
+            // verify signer
+            address signer = ecrecover(digest, v, r, s);
+            assertEq(signer, currentOwner);
+            bytes memory signature = abi.encodePacked(r, s, v);
+            concatenatedSignatures =
+                abi.encodePacked(concatenatedSignatures, signature);
+            vm.stopPrank();
+        }
+        // verify signature length
+        assertEq(concatenatedSignatures.length, threshold * 65);
+
+        vm.startPrank(callerEOA);
+        bool result = keyperModule.execTransactionOnBehalf(
+            orgHash,
+            squadA1NAddr,
+            safeSubSquadA1Addr,
+            receiver,
+            39 gwei,
+            emptyData,
+            Enum.Operation(0),
+            concatenatedSignatures
+        );
+        assertEq(result, true);
+        assertEq(receiver.balance, 39 gwei);
+        vm.stopPrank();
+    }
+
     // // ! ********************** REVERT ********************
 
     // Revert: "GS026" execTransactionOnBehalf when is Any EOA, passing the wrong signature of the Root/Super Safe of Target Safe
@@ -509,7 +606,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //           safeSubSquadA1 <-----
     function testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_WRONG_SIGNATURES(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,) = keyperSafeBuilder
+        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
@@ -522,7 +619,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
 
-        // Owner of Target Safe signed args
+        // Owner of Target Safe signed args and of Root/Super Safe
         keyperHelper.setGnosisSafe(safeSubSquadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
@@ -562,7 +659,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //           safeSubSquadA1 <-----
     function testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_INVALID_SIGNATURES(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,) = keyperSafeBuilder
+        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
@@ -578,6 +675,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         // Owner of Root Safe sign args
         keyperHelper.setGnosisSafe(rootAddr);
         bytes memory emptyData;
+        // use invalid signatures
         bytes memory signatures = keyperHelper.encodeInvalidSignaturesKeyperTx(
             orgHash,
             rootAddr,
@@ -608,8 +706,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // // Caller Role: SUPER_SAFE
     // // TargerSafe: safeSquadA1
     // // TargetSafe Type: safe as lead
-    // //            rootSafe
-    // //           |
+    // //   rootSafe
+    // //      |
     // //  safeSquadA1 <----
     // //      |            |
     // // safeSubSquadA1 ---
@@ -717,6 +815,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        // Fake receiver = Zero address
         address fakeReceiver = address(0);
 
         // Set keyperhelper gnosis safe to org
@@ -890,6 +989,96 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             Enum.Operation(0),
             signatures
         );
+    }
+
+    // Org with a root safe with 3 child levels: A, B, C
+    //    Squad A starts a executeOnBehalf tx for his children B
+    //    -> The calldata for the function is another executeOnBehalfTx for children C
+    //       -> Verify that this wrapped executeOnBehalf tx does not work
+    // TODO: test this scenario in Live Testnet
+    function testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(
+    ) public {
+        (uint256 rootId, uint256 safeSquadA1, uint256 childSquadA1,,) =
+        keyperSafeBuilder.setupOrgThreeTiersTree(
+            orgName, squadA1Name, subSquadA1Name
+        );
+
+        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address childSquadA1Addr =
+            keyperModule.getSquadSafeAddress(childSquadA1);
+
+        // Send ETH to squad&subsquad
+        vm.deal(rootAddr, 100 gwei);
+        vm.deal(safeSquadA1Addr, 100 gwei);
+        vm.deal(childSquadA1Addr, 100 gwei);
+
+        // Create a child safe for squad A2
+        address fakeCaller = gnosisHelper.newKeyperSafe(4, 2);
+        bool result = gnosisHelper.createAddSquadTx(safeSquadA1, "ChildSquadA2");
+        assertEq(result, true);
+
+        // Set Safe Role in Safe Squad A1 over Child Squad A1
+        vm.startPrank(rootAddr);
+        keyperModule.setRole(
+            DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+            fakeCaller,
+            childSquadA1,
+            true
+        );
+        assertTrue(keyperModule.isSafeLead(childSquadA1, fakeCaller));
+        vm.stopPrank();
+
+        // Set keyperhelper gnosis safe to fakeCaller
+        keyperHelper.setGnosisSafe(fakeCaller);
+        bytes memory emptyData;
+        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+            orgHash,
+            fakeCaller,
+            childSquadA1Addr,
+            receiver,
+            2 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        bytes memory signatures2 = keyperHelper.encodeSignaturesKeyperTx(
+            orgHash,
+            rootAddr,
+            rootAddr,
+            receiver,
+            100 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+
+        vm.startPrank(fakeCaller);
+        bytes memory internalData = abi.encodeWithSignature(
+            "execTransactionOnBehalf(bytes32,address,address,address,uint256,bytes,uint8,bytes)",
+            orgHash,
+            rootAddr,
+            rootAddr,
+            receiver,
+            100 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures2
+        );
+        vm.stopPrank();
+
+        // Execute on behalf function from a not authorized caller (Root Safe of Another Tree) over Super Safe and Squad Safe in another Three
+        gnosisHelper.updateSafeInterface(fakeCaller);
+        result = gnosisHelper.execTransactionOnBehalfTx(
+            orgHash,
+            fakeCaller,
+            childSquadA1Addr,
+            receiver,
+            2 gwei,
+            internalData,
+            Enum.Operation(0),
+            signatures
+        );
+        assertEq(result, true);
+        assertEq(receiver.balance, 2 gwei); // indirect verification, because the receiver is 2 gwei and not 102 gwei
     }
 
     // // ! ****************** Reentrancy Attack Test to execOnBehalf ***************

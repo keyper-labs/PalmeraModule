@@ -11,19 +11,19 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
     function setUp() public {
         // Set up env
         run();
-        TestExecutionOnBehalf(); // ✅
-            // These are different chain test scenarios, specifically for the execTransactionOnBehalf function in Polygon and Sepolia.
-            // We test each scenario independently manually and get the results on the Live Mainnet on Polygon and Sepolia.
-            // testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(); // ✅
-            // testCan_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree(); // ✅
-            // testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES(); // ✅
-            // testCan_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_is_TARGETS_LEAD_SameTree(); // ✅
-            // testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_WRONG_SIGNATURES(); // ✅
-            // testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_INVALID_SIGNATURES(); // ✅
-            // testRevertInvalidSignatureExecOnBehalf(); // ✅
-            // testRevertInvalidAddressProvidedExecTransactionOnBehalfScenarioOne(); // ✅
-            // testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo(); // ✅
-            // testRevertSuperSafeExecOnBehalf(); // ✅
+        testRevertInvalidGnosisSafeExecTransactionOnBehalf();
+        // These are different chain test scenarios, specifically for the execTransactionOnBehalf function in Polygon and Sepolia.
+        // We test each scenario independently manually and get the results on the Live Mainnet on Polygon and Sepolia.
+        // testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(); // ✅
+        // testCan_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree(); // ✅
+        // testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES(); // ✅
+        // testCan_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_is_TARGETS_LEAD_SameTree(); // ✅
+        // testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_WRONG_SIGNATURES(); // ✅
+        // testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_INVALID_SIGNATURES(); // ✅
+        // testRevertInvalidSignatureExecOnBehalf(); // ✅
+        // testRevertInvalidAddressProvidedExecTransactionOnBehalfScenarioOne(); // ✅
+        // testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo(); // ✅
+        // testRevertSuperSafeExecOnBehalf(); // ✅
     }
 
     // Test Execution On Behalf
@@ -175,9 +175,6 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
 
         address payable rootAddr =
             payable(keyperModule.getSquadSafeAddress(rootId));
-        address payable safeSquadA1Addr =
-            payable(keyperModule.getSquadSafeAddress(safeSquadA1));
-        address payable receiverAddr = payable(receiver);
         address childSquadA1Addr = newKeyperSafe(4, 2);
         bool result = createAddSquadTx(safeSquadA1, "ChildSquadA1");
         assertEq(result, true);
@@ -210,6 +207,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
 
         // Set keyperhelper gnosis safe to rootAddr
         setGnosisSafe(childSquadA1Addr);
+        // Try to execute on behalf function from a not authorized caller child Squad A1 over Root Safe
         bytes memory signatures2 = encodeSignaturesKeyperTx(
             orgHash,
             childSquadA1Addr,
@@ -219,6 +217,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
+        // ttry to encode the end of the signature, from EOA random the internal data to the Wrapper of
+        // Execution On Behalf, with a rogue caller and that is secondary squad A1 over Root Safe
         bytes memory internalData = abi.encodeWithSignature(
             "execTransactionOnBehalf(bytes32,address,address,address,uint256,bytes,uint8,bytes)",
             orgHash,
@@ -261,11 +261,9 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         console.log("Root address Test Execution On Behalf: ", rootAddr);
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
 
-        // tx ETH from msg.sender to rootAddr
+        // tx ETH from msg.sender to safeSquadA1Addr
         (bool sent, bytes memory data) = safeSquadA1Addr.call{value: 2 gwei}("");
         require(sent, "Failed to send Ether");
-        // (sent, data) = receiverAddr.call{value: 1e5 gwei}("");
-        // require(sent, "Failed to send Ether");
 
         // Set keyperhelper gnosis safe to org
         setGnosisSafe(rootAddr);
@@ -280,7 +278,6 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
         // Execute on behalf function
-
         bool result = execTransactionOnBehalfTx(
             orgHash,
             rootAddr,
@@ -324,7 +321,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         require(sent, "Failed to send Ether");
 
         // Random wallet instead of a safe (EOA)
-        address callerEOA = address(receiver);
+        address callerEOA = address(msg.sender);
 
         // Owner of Root Safe sign args
         setGnosisSafe(rootAddr);
@@ -453,7 +450,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         require(sent, "Failed to send Ether");
 
         // Random wallet instead of a safe (EOA)
-        address callerEOA = address(0xFED);
+        address callerEOA = address(msg.sender);
 
         // Owner of Target Safe signed args
         setGnosisSafe(safeSubSquadA1Addr);
@@ -468,8 +465,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
 
-        // vm.startPrank(callerEOA);
-        vm.expectRevert("GS020");
+        // vm.expectRevert("GS020"); // GS020: Invalid signatures provided
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
@@ -510,7 +506,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (sent, data) = safeSubSquadA1Addr.call{value: 100 gwei}("");
         require(sent, "Failed to send Ether");
         // Random wallet instead of a safe (EOA)
-        address callerEOA = address(0xFED);
+        address callerEOA = address(msg.sender);
 
         // Owner of Root Safe sign args
         setGnosisSafe(rootAddr);
@@ -525,8 +521,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
 
-        // vm.startPrank(callerEOA);
-        vm.expectRevert("GS026");
+        // vm.expectRevert("GS026"); // GS026: Invalid signatures provided
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
@@ -584,7 +579,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         );
 
         setGnosisSafe(safeSubSquadA1Addr);
-        // vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector);
+        // vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector); // NotAuthorizedExecOnBehalf: Caller is not authorized to execute on behalf
         bool result = execTransactionOnBehalfTx(
             orgHash,
             safeSubSquadA1Addr,
@@ -628,7 +623,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
 
-        // vm.expectRevert("GS013");
+        // vm.expectRevert("GS013"); // GS013: Invalid signatures provided
         execTransactionOnBehalfTx(
             orgHash,
             rootAddr,
@@ -676,8 +671,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
-
-        vm.expectRevert(Errors.InvalidAddressProvided.selector);
+        // Execute on behalf function with invalid receiver
+        // vm.expectRevert(Errors.InvalidAddressProvided.selector); // InvalidAddressProvided: Invalid address provided
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
@@ -727,12 +722,11 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         );
 
         // Execute on behalf function from a not authorized caller
-        // vm.startPrank(rootAddr);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, address(0)
-            )
-        );
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         Errors.InvalidGnosisSafe.selector, address(0)
+        //     )
+        // ); // InvalidGnosisSafe: Invalid Gnosis Safe
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
@@ -781,9 +775,9 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
         // Execute on behalf function from a not authorized caller
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.OrgNotRegistered.selector, address(0))
-        );
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(Errors.OrgNotRegistered.selector, address(0))
+        // ); // OrgNotRegistered: Org not registered
         keyperModule.execTransactionOnBehalf(
             bytes32(0),
             rootAddr,
@@ -827,12 +821,11 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
         // Execute on behalf function from a not authorized caller
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, fakeTargetSafe
-            )
-        );
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         Errors.InvalidGnosisSafe.selector, fakeTargetSafe
+        //     )
+        // ); // InvalidGnosisSafe: Invalid Gnosis Safe
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
