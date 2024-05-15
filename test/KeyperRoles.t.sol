@@ -3,11 +3,14 @@ pragma solidity ^0.8.15;
 
 import "./helpers/DeployHelper.t.sol";
 
+/// @title KeyperRolesTest
+/// @custom:security-contact general@palmeradao.xyz
 contract KeyperRolesTest is DeployHelper {
     function setUp() public {
         DeployHelper.deployAllContracts(90);
     }
 
+    /// @notice Auxiliary function to deploy KeyperRoles contract
     function testCan_KeyperModule_Setup_RoleContract() public {
         // Check KeyperModule has role capabilites
         assertEq(

@@ -3,6 +3,8 @@ pragma solidity ^0.8.15;
 
 import "./helpers/DeployHelper.t.sol";
 
+/// @title EventsChecker
+/// @custom:security-contact general@palmeradao.xyz
 contract EventsChekers is DeployHelper {
     address[] public owners = new address[](5);
     /// @dev Event Fire when create a new Organization

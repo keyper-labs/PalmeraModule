@@ -16,6 +16,8 @@ import {KeyperGuard} from "../../src/KeyperGuard.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
+/// @title Deploy Helper
+/// @custom:security-contact general@palmeradao.xyz
 contract DeployHelper is Test {
     using SafeMath for uint256;
 

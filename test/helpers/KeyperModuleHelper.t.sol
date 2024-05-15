@@ -9,7 +9,8 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {DeploySafeFactory} from "../../script/DeploySafeFactory.t.sol";
 
-/// Helper contract handling KeyperModule
+/// @notice Helper contract handling KeyperModule
+/// @custom:security-contact general@palmeradao.xyz
 contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     struct KeyperTransaction {
         address org;

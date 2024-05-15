@@ -3,6 +3,8 @@ pragma solidity ^0.8.15;
 
 import "./helpers/DeployHelper.t.sol";
 
+/// @title Hierarchies
+/// @custom:security-contact general@palmeradao.xyz
 contract Hierarchies is DeployHelper {
     /// Function called before each test is run
     function setUp() public {

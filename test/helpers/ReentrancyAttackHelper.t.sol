@@ -10,7 +10,8 @@ import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 
-/// Helper contract handling ReentrancyAttack
+/// @notice Helper contract handling ReentrancyAttack
+/// @custom:security-contact general@palmeradao.xyz
 contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
     KeyperModule public keyper;
     GnosisSafeHelper public gnosisHelper;

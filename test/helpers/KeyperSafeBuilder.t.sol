@@ -5,6 +5,8 @@ import "forge-std/Test.sol";
 import "./GnosisSafeHelper.t.sol";
 import {KeyperModule} from "../../src/KeyperModule.sol";
 
+/// @notice Helper contract handling and create Org and Squad with different levels
+/// @custom:security-contact general@palmeradao.xyz
 contract KeyperSafeBuilder is Test {
     GnosisSafeHelper public gnosisHelper;
     KeyperModule public keyperModule;

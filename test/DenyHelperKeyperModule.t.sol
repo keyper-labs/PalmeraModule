@@ -3,6 +3,9 @@ pragma solidity ^0.8.15;
 
 import "./helpers/DeployHelper.t.sol";
 
+/// @title DenyHelperKeyperModuleTest
+/// @author
+/// @notice
 contract DenyHelperKeyperModuleTest is DeployHelper {
     address org1;
     address squadA;
@@ -23,6 +26,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.label(squadA, "SquadA");
     }
 
+    /// @notice Test if the contract is able to add a list of owners to the allowlist
     function testAddToList() public {
         listOfOwners();
         vm.startPrank(org1);
@@ -34,6 +38,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         }
     }
 
+    /// @notice Test Reverted Expected if the contract any DenyHelper actions with not Safe Wallet
     function testRevertInvalidGnosisSafe() public {
         listOfOwners();
         // EAO Address (Not Safe)
@@ -145,6 +150,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Reverted Expected if the contract any DenyHelper actions when the Caller is not a Root Safe
     function testRevertInvalidGnosisRootSafe() public {
         listOfOwners();
         vm.startPrank(squadA);
@@ -187,6 +193,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Reverted Expected if the contract any DenyHelper actions when the Caller is Another Safe not registered into the Organization
     function testRevertIfCallAnotherSafeNotRegistered() public {
         listOfOwners();
         address anotherWallet = gnosisHelper.setupSeveralSafeEnv(30);
@@ -230,6 +237,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Reverted Expected if the contract any DenyHelper actions when the DenyHelpers are disabled
     function testRevertIfDenyHelpersDisabled() public {
         listOfOwners();
         vm.startPrank(org1);
@@ -241,6 +249,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Reverted Expected if try to drop an owner from the list when the list is Empty, and Enable Allowlist
     function testRevertIfListEmptyForAllowList() public {
         listOfOwners();
         vm.startPrank(org1);
@@ -251,6 +260,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Reverted Expected if try to drop an owner from the list when the list is Empty, and Enable Denylist
     function testRevertIfListEmptyForDenyList() public {
         listOfOwners();
         vm.startPrank(org1);
@@ -261,6 +271,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Reverted Expected if try to drop an owner that not exists on the list, and Enable Allowlist
     function testRevertIfInvalidAddressProvidedForAllowList() public {
         listOfOwners();
         vm.startPrank(org1);
@@ -272,7 +283,20 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Reverted Expected if try to drop an owner that not exists on the list, and Enable Allowlist
     function testRevertIfInvalidAddressProvidedForDenyList() public {
+        listOfOwners();
+        vm.startPrank(org1);
+        keyperModule.enableDenylist();
+        keyperModule.addToList(owners);
+        address dropOwner = address(0xFFF111);
+        vm.expectRevert(Errors.InvalidAddressProvided.selector);
+        keyperModule.dropFromList(dropOwner);
+        vm.stopPrank();
+    }
+
+    /// @notice Test if After Add to List the Length is Correct
+    function testIfAfterAddtoListtheLengthisCorrect() public {
         listOfOwners();
         vm.startPrank(org1);
         keyperModule.enableAllowlist();
@@ -283,6 +307,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         }
     }
 
+    /// @notice Test Reverted Expected if try to add a Zero Address to the list
     function testRevertAddToListZeroAddress() public {
         address[] memory voidOwnersArray = new address[](0);
         vm.startPrank(org1);
@@ -292,6 +317,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Reverted Expected if try to add an Invalid Address to the list
     function testRevertAddToListInvalidAddress() public {
         listOfInvalidOwners();
         vm.startPrank(org1);
@@ -301,6 +327,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Reverted Expected if try to add an Address that already exists on the list
     function testRevertAddToDuplicateAddress() public {
         listOfOwners();
         vm.startPrank(org1);
@@ -315,6 +342,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Several Scenarios to Drop an Owner from the List
     function testDropFromList() public {
         listOfOwners();
         vm.startPrank(org1);
@@ -340,6 +368,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test get Prev User List
     function testGetPrevUserList() public {
         listOfOwners();
         vm.startPrank(org1);
@@ -355,6 +384,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Enable Allowlist
     function testEnableAllowlist() public {
         vm.startPrank(org1);
         keyperModule.enableAllowlist();
@@ -363,6 +393,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Enable Denylist
     function testEnableDenylist() public {
         vm.startPrank(org1);
         keyperModule.enableDenylist();
@@ -371,6 +402,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
+    /// auxiliar function to set a list of owners
     function listOfOwners() internal {
         owners[0] = address(0xAAA);
         owners[1] = address(0xBBB);
@@ -379,7 +411,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         owners[4] = address(0xEEE);
     }
 
-    ///@dev On this function we are able to set an invalid address within some array position
+    ///@notice On this function we are able to set an invalid address within some array position
     ///@dev Tested with the address(0), SENTINEL_WALLETS and address(this) on different positions
     function listOfInvalidOwners() internal {
         owners[0] = address(0xAAA);

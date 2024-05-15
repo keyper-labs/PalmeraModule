@@ -10,7 +10,8 @@ import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 import {Random} from "../../libraries/Random.sol";
 
-/// Helper contract handling deployment Gnosis Safe contracts
+/// @notice Helper contract handling deployment Gnosis Safe contracts
+/// @custom:security-contact general@palmeradao.xyz
 contract GnosisSafeHelper is
     Test,
     SigningUtils,

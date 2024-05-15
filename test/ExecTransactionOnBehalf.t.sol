@@ -8,6 +8,8 @@ import "./helpers/ReentrancyAttackHelper.t.sol";
 import "./helpers/DeployHelper.t.sol";
 import {ECDSA} from "@openzeppelin/utils/cryptography/ECDSA.sol";
 
+/// @title ExecTransactionOnBehalf
+/// @custom:security-contact general@palmeradao.xyz
 contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     using ECDSA for bytes32;
 
