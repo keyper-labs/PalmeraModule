@@ -9,6 +9,7 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {DeploySafeFactory} from "../../script/DeploySafeFactory.t.sol";
 
+/// Helper contract handling KeyperModule
 contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     struct KeyperTransaction {
         address org;
@@ -22,16 +23,29 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     KeyperModule public keyper;
     GnosisSafe public safeHelper;
 
+    /// function to initialize the helper
+    /// @param _keyper instance of KeyperModule
+    /// @param numberOwners number of owners to initialize
     function initHelper(KeyperModule _keyper, uint256 numberOwners) public {
         keyper = _keyper;
         initOnwers(numberOwners);
     }
 
+    /// fucntion to set the Safe instance
+    /// @param safe address of the Safe instance
     function setGnosisSafe(address safe) public {
         safeHelper = GnosisSafe(payable(safe));
     }
 
-    /// @notice Encode signatures for a keypertx
+    /// function Encode signatures for a keypertx
+    /// @param org Organization address
+    /// @param superSafe Super Safe address
+    /// @param targetSafe Target Safe address
+    /// @param to Address to send the transaction
+    /// @param value Value to send
+    /// @param data Data payload
+    /// @param operation Operation type
+    /// @return signatures Packed signatures data (v, r, s)
     function encodeSignaturesKeyperTx(
         bytes32 org,
         address superSafe,
@@ -63,7 +77,15 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         return signatures;
     }
 
-    /// @notice Sign keyperTx with invalid signatures (do not belong to any safe owner)
+    /// function Sign keyperTx with invalid signatures (do not belong to any safe owner)
+    /// @param org Organization address
+    /// @param superSafe Super Safe address
+    /// @param targetSafe Target Safe address
+    /// @param to Address to send the transaction
+    /// @param value Value to send
+    /// @param data Data payload
+    /// @param operation Operation type
+    /// @return signatures Packed signatures data (v, r, s)
     function encodeInvalidSignaturesKeyperTx(
         bytes32 org,
         address superSafe,
@@ -91,6 +113,16 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         return signatures;
     }
 
+    /// function to create a keyperTx hash
+    /// @param org Organization address
+    /// @param superSafe Super Safe address
+    /// @param targetSafe Target Safe address
+    /// @param to Address to send the transaction
+    /// @param value Value to send
+    /// @param data Data payload
+    /// @param operation Operation type
+    /// @param nonce Nonce of the transaction
+    /// @return txHashed Hash of the transaction
     function createKeyperTxHash(
         bytes32 org,
         address superSafe,

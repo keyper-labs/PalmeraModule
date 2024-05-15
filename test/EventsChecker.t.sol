@@ -110,6 +110,7 @@ contract EventsChekers is DeployHelper {
         owners[4] = address(0xEEE);
     }
 
+    /// @notice Test Events when Register Root Organization
     function testEventWhenRegisterRootOrg() public {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
@@ -122,6 +123,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Events when Add Squad
     function testEventWhenAddSquad() public {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
@@ -149,6 +151,7 @@ contract EventsChekers is DeployHelper {
         keyperModule.addSquad(rootId, squadA1Name);
     }
 
+    /// @notice Test Events when Remove Squad
     function testEventWhenRemoveSquad() public {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
@@ -190,6 +193,7 @@ contract EventsChekers is DeployHelper {
         keyperModule.removeSquad(squadId);
     }
 
+    /// @notice Test Events when Register Root Safe
     function testEventWhenRegisterRootSafe() public {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
@@ -216,6 +220,7 @@ contract EventsChekers is DeployHelper {
         keyperModule.createRootSafeSquad(rootSafeAddr, org2Name);
     }
 
+    /// @notice Test Events when Update Super Safe
     function testEventWhenUpdateSuper() public {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
@@ -273,6 +278,7 @@ contract EventsChekers is DeployHelper {
         keyperModule.updateSuper(squadId, rootsafeId);
     }
 
+    /// @notice Test Events when Promote Squad to Root Safe
     function testEventWhenPromoteRootSafe() public {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
@@ -329,6 +335,7 @@ contract EventsChekers is DeployHelper {
         keyperModule.promoteRoot(squadId);
     }
 
+    /// @notice Test Events when Disconnect Safe
     function testEventWhenDisconnectSafe() public {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
@@ -377,6 +384,7 @@ contract EventsChekers is DeployHelper {
         keyperModule.disconnectSafe(squadId);
     }
 
+    /// @notice Test Events when Call Execution on Behalf
     function testEventWhenExecutionOnBehalf() public {
         (uint256 rootId, uint256 safeSquadA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -419,6 +427,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Events when Remove Whole Tree
     function testEventWhenRemoveWholeTree() public {
         (
             uint256 rootId,
@@ -438,6 +447,7 @@ contract EventsChekers is DeployHelper {
         keyperModule.removeWholeTree();
     }
 
+    /// @notice Test Events when Update New Limit
     function testEventWhenUpdateNewLimit() public {
         // Register Org through safe tx
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
@@ -474,6 +484,7 @@ contract EventsChekers is DeployHelper {
         keyperModule.updateDepthTreeLimit(49);
     }
 
+    /// @notice Test Events when Add Address to Enable/Denied Allow List
     function testEventWhenAddToList() public {
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
@@ -484,6 +495,7 @@ contract EventsChekers is DeployHelper {
         keyperModule.addToList(owners);
     }
 
+    /// @notice Test Events when Drop Address to Enable/Denied Allow List
     function testEventWhenDropFromList() public {
         address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);

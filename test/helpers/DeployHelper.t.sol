@@ -53,7 +53,7 @@ contract DeployHelper is Test {
     function deployAllContracts(uint256 initOwners) public {
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
-
+        /// get address of deployed libraries
         (
             address constantsAddr,
             address dataTypesAddr,

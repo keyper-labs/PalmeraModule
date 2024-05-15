@@ -10,6 +10,7 @@ import {KeyperRoles} from "../../src/KeyperRoles.sol";
 import {KeyperGuard} from "../../src/KeyperGuard.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
+/// Script to setup the environment
 contract SkipSetupEnv is Script, SkipGnosisSafeHelper {
     using SafeMath for uint256;
 

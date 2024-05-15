@@ -224,6 +224,10 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
                        USER ROLE (OVERRIDE) ASSIGNMENT LOGIC
     //////////////////////////////////////////////////////////////*/
 
+    /// function to assign a role to a user
+    /// @param user address of the user
+    /// @param role uint8 role to assign
+    /// @param enabled bool enable or disable the role
     function setUserRole(address user, uint8 role, bool enabled)
         public
         virtual

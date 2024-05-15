@@ -4,8 +4,8 @@ pragma solidity ^0.8.15;
 import "./GnosisSafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
 import {KeyperModule} from "../../src/KeyperModule.sol";
-// Helper contract handling deployment Gnosis Safe contracts
 
+// Helper contract handling deployment Gnosis Safe contracts
 contract SkipGnosisSafeHelper is GnosisSafeHelper, KeyperModuleHelper {
     GnosisSafeProxyFactory public proxyFactory;
     GnosisSafe public gnosisSafeContract;
@@ -52,6 +52,7 @@ contract SkipGnosisSafeHelper is GnosisSafeHelper, KeyperModuleHelper {
         return address(gnosisSafe);
     }
 
+    /// @notice Setup the environment for the test
     function start() public {
         proxyFactory =
             GnosisSafeProxyFactory(vm.envAddress("PROXY_FACTORY_ADDRESS"));
@@ -59,11 +60,17 @@ contract SkipGnosisSafeHelper is GnosisSafeHelper, KeyperModuleHelper {
             GnosisSafe(payable(vm.envAddress("MASTER_COPY_ADDRESS")));
     }
 
+    /// function to set the KeyperModule address
+    /// @param keyperModule address of the KeyperModule
     function setKeyperModule(address keyperModule) public override {
         keyperModuleAddr = keyperModule;
         keyper = KeyperModule(keyperModuleAddr);
     }
 
+    /// function to create a new Keyper Safe
+    /// @param numberOwners amount of owners to initialize
+    /// @param threshold amount of signatures required to execute a transaction
+    /// @return address of the new Keyper Safe
     function newKeyperSafe(uint256 numberOwners, uint256 threshold)
         public
         override
@@ -109,6 +116,9 @@ contract SkipGnosisSafeHelper is GnosisSafeHelper, KeyperModuleHelper {
         return address(gnosisSafe);
     }
 
+    /// function to create a new Safe Proxy
+    /// @param initializer bytes data to initialize the Safe
+    /// @return address of the new Safe Proxy
     function newSafeProxy(bytes memory initializer) public returns (address) {
         safeProxy = proxyFactory.createProxyWithNonce(
             address(gnosisSafeContract), initializer, nonce

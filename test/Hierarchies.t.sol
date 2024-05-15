@@ -4,11 +4,12 @@ pragma solidity ^0.8.15;
 import "./helpers/DeployHelper.t.sol";
 
 contract Hierarchies is DeployHelper {
-    // Function called before each test is run
+    /// Function called before each test is run
     function setUp() public {
         DeployHelper.deployAllContracts(90);
     }
 
+    /// @notice Test Register Root Organization
     function testRegisterRootOrg() public {
         bool result = gnosisHelper.registerOrgTx(orgName);
         assertEq(result, true);
@@ -39,6 +40,7 @@ contract Hierarchies is DeployHelper {
         );
     }
 
+    /// @notice Test Add Squad to Root Organization
     function testAddSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -77,12 +79,14 @@ contract Hierarchies is DeployHelper {
         );
     }
 
+    /// @notice Test Expect Invalid Squad Id
     function testExpectInvalidSquadId() public {
         uint256 orgIdNotRegistered = 2;
         vm.expectRevert(Errors.InvalidSquadId.selector);
         keyperModule.addSquad(orgIdNotRegistered, squadA1Name);
     }
 
+    /// @notice Test Expect Squad Not Registered
     function testExpectSquadNotRegistered() public {
         uint256 orgIdNotRegistered = 1;
         vm.expectRevert(
@@ -93,6 +97,7 @@ contract Hierarchies is DeployHelper {
         keyperModule.addSquad(orgIdNotRegistered, squadA1Name);
     }
 
+    /// @notice Test Add SubSquad to Squad
     function testAddSubSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -105,6 +110,7 @@ contract Hierarchies is DeployHelper {
         assertEq(keyperModule.isSuperSafe(squadIdA1, squadIdB), true);
     }
 
+    /// @notice Test an Org with Tree Levels of Tree Member
     function testTreeOrgsTreeMember() public {
         (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1,,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
@@ -120,6 +126,7 @@ contract Hierarchies is DeployHelper {
         assertEq(keyperModule.isTreeMember(rootId, squadIdB), false);
     }
 
+    /// @notice Test if a Squad is Super Safe
     function testIsSuperSafe() public {
         (
             uint256 rootId,
@@ -138,6 +145,7 @@ contract Hierarchies is DeployHelper {
         assertEq(keyperModule.isSuperSafe(subSquadIdA1, squadIdA1), false);
     }
 
+    /// @notice Test Update Super Safe
     function testUpdateSuper() public {
         (
             uint256 rootId,
@@ -195,6 +203,7 @@ contract Hierarchies is DeployHelper {
         );
     }
 
+    /// @notice Test Revert Expected when Update Super Invalid Squad Id
     function testRevertUpdateSuperInvalidSquadId() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -207,6 +216,7 @@ contract Hierarchies is DeployHelper {
         keyperModule.updateSuper(squadIdA1, squadNotRegisteredId);
     }
 
+    /// @notice Test Revert Expected when Update Super if Caller is not Safe
     function testRevertUpdateSuperIfCallerIsNotSafe() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -220,6 +230,7 @@ contract Hierarchies is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Revert Expected when Update Super if Caller is not Part of the Org
     function testRevertUpdateSuperIfCallerNotPartofTheOrg() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -233,6 +244,7 @@ contract Hierarchies is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Create Squad Three Tiers Tree
     function testCreateSquadThreeTiersTree() public {
         (uint256 orgRootId, uint256 safeSquadA1Id, uint256 safeSubSquadA1Id,,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
@@ -273,6 +285,7 @@ contract Hierarchies is DeployHelper {
         assertEq(superSafe, safeSquadA1Id);
     }
 
+    /// @notice Test Create Squad Four Tiers Tree
     function testOrgFourTiersTreeSuperSafeRoles() public {
         (
             uint256 rootId,
@@ -316,6 +329,7 @@ contract Hierarchies is DeployHelper {
         );
     }
 
+    /// @notice Test Revert Expected when Add Squad Already Registered
     function testRevertSafeAlreadyRegisteredAddSquad() public {
         (, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -342,6 +356,7 @@ contract Hierarchies is DeployHelper {
     }
 
     // ! **************** List of Test for Depth Tree Limits *******************************
+    /// @notice Test Reverted Expected if Try to Update Depth Tree Limit with Invalid Value
     function testRevertIfTryInvalidLimit() public {
         (uint256 rootId,) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -356,6 +371,7 @@ contract Hierarchies is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Reverted Expected if Try to Update Depth Tree Limit from Non Root Safe
     function testRevertIfTryNotRootSafe() public {
         (, uint256 squadA1Id) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -383,6 +399,7 @@ contract Hierarchies is DeployHelper {
         vm.stopPrank();
     }
 
+    /// @notice Test Reverted Expected if Try to Update Depth Tree Limit with a Value to Exceed the Max Limit
     function testRevertifExceedMaxDepthTreeLimit() public {
         (
             uint256 rootId,
@@ -436,6 +453,7 @@ contract Hierarchies is DeployHelper {
         }
     }
 
+    /// @notice Test Reverted Expected if Try to Update Depth Tree Limit and Exceed the Max Limit
     function testRevertifUpdateLimitAndExceedMaxDepthTreeLimit() public {
         (
             uint256 rootId,
@@ -517,6 +535,7 @@ contract Hierarchies is DeployHelper {
         }
     }
 
+    /// @notice Test Reverted Expected if Try to Update Depth Tree Limit and Update Super
     function testRevertifExceedMaxDepthTreeLimitAndUpdateSuper() public {
         (
             uint256 rootIdA,
@@ -581,6 +600,7 @@ contract Hierarchies is DeployHelper {
         }
     }
 
+    /// @notice Test Reverted Expected if Try to Update Depth Tree Limit and Exceed the Max Limit and Update Super
     function testRevertifUpdateLimitAndExceedMaxDepthTreeLimitAndUpdateSuper()
         public
     {
@@ -676,6 +696,7 @@ contract Hierarchies is DeployHelper {
         }
     }
 
+    /// @notice Test Reverted Expected if Try to Update Depth Tree Limit and Update Super to Another Org
     function testRevertifUpdateSuperToAnotherOrg() public {
         (
             uint256 rootId,
@@ -733,6 +754,7 @@ contract Hierarchies is DeployHelper {
         }
     }
 
+    /// @notice Test Reverted Expected if Try to Update Depth Tree Limit and Exceed the Max Limit and Update Super to Another Org
     function testRevertifUpdateDepthTreeLimitAndUpdateSuperToAnotherOrg()
         public
     {
