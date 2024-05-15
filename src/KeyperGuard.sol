@@ -72,19 +72,6 @@ contract KeyperGuard is BaseGuard, Context {
                     revert Errors.NotAuthorizedAsNotSafeLead();
                 }
             }
-            // Permit to enable guard and module on the same tx
-            // if (
-            //     (
-            //         abi.decode(
-            //             StorageAccessible(caller).getStorageAt(
-            //                 uint256(Constants.GUARD_STORAGE_SLOT), 2
-            //             ),
-            //             (address)
-            //         ) == address(this)
-            //     ) && IGnosisSafe(caller).isModuleEnabled(address(keyperModule))
-            // ) {
-            //     revert Errors.SafeNotRegistered(caller);
-            // }
         }
     }
 }

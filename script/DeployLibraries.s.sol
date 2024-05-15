@@ -8,6 +8,8 @@ import {DataTypes} from "../libraries/DataTypes.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {Events} from "../libraries/Events.sol";
 
+/// @title Deploy Libraries
+/// @custom:security-contact general@palmeradao.xyz
 contract DeployLibraries is Script {
     function run() public {
         vm.startBroadcast();
