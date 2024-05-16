@@ -16,11 +16,10 @@ import {
     ISafe,
     ISafeProxy
 } from "./Helpers.sol";
-import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
 /// @title Palmera Module
 /// @custom:security-contact general@palmeradao.xyz
-contract PalmeraModule is Auth, ReentrancyGuard, Helpers {
+contract PalmeraModule is Auth, Helpers {
     using GnosisSafeMath for uint256;
     using Address for address;
 

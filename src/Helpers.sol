@@ -15,10 +15,11 @@ import {
     Events
 } from "./DenyHelper.sol";
 import {SignatureDecoder} from "@safe-contracts/common/SignatureDecoder.sol";
+import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
 /// @title Helpers
 /// @custom:security-contact general@palmeradao.xyz
-abstract contract Helpers is DenyHelper, SignatureDecoder {
+abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
     using GnosisSafeMath for uint256;
     using Address for address;
 
@@ -198,6 +199,7 @@ abstract contract Helpers is DenyHelper, SignatureDecoder {
     /// @param data Data to execute Tx
     function _executeModuleTransaction(address safe, bytes memory data)
         internal
+        nonReentrant
     {
         ISafe targetSafe = ISafe(safe);
         bool result = targetSafe.execTransactionFromModule(
