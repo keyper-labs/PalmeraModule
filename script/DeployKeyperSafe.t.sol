@@ -2,7 +2,7 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
-import {KeyperModule} from "../src/KeyperModule.sol";
+import {PalmeraModule} from "../src/PalmeraModule.sol";
 import "@solenv/Solenv.sol";
 
 /// @title Deploy KeyperSafe
@@ -17,7 +17,7 @@ contract DeployKeyperSafe is Script {
         uint256 threshold = vm.envUint("THRESHOLD");
 
         vm.startBroadcast();
-        KeyperModule keyper = KeyperModule(keyperModuleAddress);
+        PalmeraModule keyper = PalmeraModule(keyperModuleAddress);
         vm.stopBroadcast();
     }
 }

@@ -10,9 +10,9 @@ contract KeyperRolesTest is DeployHelper {
         DeployHelper.deployAllContracts(90);
     }
 
-    /// @notice Auxiliary function to deploy KeyperRoles contract
+    /// @notice Auxiliary function to deploy PalmeraRoles contract
     function testCan_KeyperModule_Setup_RoleContract() public {
-        // Check KeyperModule has role capabilites
+        // Check PalmeraModule has role capabilites
         assertEq(
             keyperRolesContract.doesRoleHaveCapability(
                 uint8(DataTypes.Role.SAFE_LEAD),

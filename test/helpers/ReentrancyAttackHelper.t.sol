@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import "./SafeHelper.t.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
 import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
@@ -13,19 +13,19 @@ import {DataTypes} from "../../libraries/DataTypes.sol";
 /// @notice Helper contract handling ReentrancyAttack
 /// @custom:security-contact general@palmeradao.xyz
 contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
-    KeyperModule public keyper;
+    PalmeraModule public keyper;
     SafeHelper public safeHelper;
     Attacker public attacker;
 
     mapping(string => address) public keyperSafes;
 
     /// function to initialize the helper
-    /// @param keyperArg instance of KeyperModule
+    /// @param keyperArg instance of PalmeraModule
     /// @param attackerArg instance of Attacker
     /// @param safeHelperArg instance of SafeHelper
     /// @param numberOwners number of owners to initialize
     function initHelper(
-        KeyperModule keyperArg,
+        PalmeraModule keyperArg,
         Attacker attackerArg,
         SafeHelper safeHelperArg,
         uint256 numberOwners

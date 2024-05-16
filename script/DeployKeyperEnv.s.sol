@@ -3,20 +3,20 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
 import "@solenv/Solenv.sol";
-import "../src/KeyperRoles.sol";
-import "../src/KeyperModule.sol";
-import {KeyperGuard} from "../src/KeyperGuard.sol";
+import "../src/PalmeraRoles.sol";
+import "../src/PalmeraModule.sol";
+import {PalmeraGuard} from "../src/PalmeraGuard.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {GnosisSafeProxyFactory} from
     "@safe-contracts/proxies/GnosisSafeProxyFactory.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
-/// Deployement of Safe contracts, KeyperRoles and KeyperModule
+/// Deployement of Safe contracts, PalmeraRoles and PalmeraModule
 /// @custom:security-contact general@palmeradao.xyz
 contract DeployKeyperEnv is Script {
     function run() public {
         vm.startBroadcast();
-        // Using CREATE3Factory to be able to predic deployment address for KeyperModule
+        // Using CREATE3Factory to be able to predic deployment address for PalmeraModule
         // More info https://github.com/lifinance/create3-factory
         // The address https://sepolia.etherscan.io/address/0x93FEC2C00BfE902F733B57c5a6CeeD7CD1384AE1#code, is the address of the CREATE3Factory in Sepolia
         CREATE3Factory factory =
@@ -31,10 +31,10 @@ contract DeployKeyperEnv is Script {
         address proxyFactory = vm.envAddress("PROXY_FACTORY_ADDRESS");
         uint256 maxTreeDepth = 50;
 
-        // Deploy KeyperRoles: KeyperModule is set as owner of KeyperRoles authority
+        // Deploy PalmeraRoles: PalmeraModule is set as owner of PalmeraRoles authority
         console.log("KeyperModulePredicted: ", keyperModulePredicted);
-        KeyperRoles keyperRoles = new KeyperRoles(keyperModulePredicted);
-        console.log("KeyperRoles deployed at: ", address(keyperRoles));
+        PalmeraRoles keyperRoles = new PalmeraRoles(keyperModulePredicted);
+        console.log("PalmeraRoles deployed at: ", address(keyperRoles));
 
         bytes memory args = abi.encode(
             address(masterCopy),
@@ -43,15 +43,16 @@ contract DeployKeyperEnv is Script {
             maxTreeDepth
         );
 
-        bytes memory bytecode =
-            abi.encodePacked(vm.getCode("KeyperModule.sol:KeyperModule"), args);
+        bytes memory bytecode = abi.encodePacked(
+            vm.getCode("PalmeraModule.sol:PalmeraModule"), args
+        );
 
         address keyperModuleAddr = factory.deploy(salt, bytecode);
-        console.log("KeyperModule deployed at: ", keyperModuleAddr);
+        console.log("PalmeraModule deployed at: ", keyperModuleAddr);
 
         /// Deploy Guard Contract
-        KeyperGuard keyperGuard = new KeyperGuard(keyperModuleAddr);
-        console.log("KeyperGuard deployed at: ", address(keyperGuard));
+        PalmeraGuard keyperGuard = new PalmeraGuard(keyperModuleAddr);
+        console.log("PalmeraGuard deployed at: ", address(keyperGuard));
 
         vm.stopBroadcast();
     }

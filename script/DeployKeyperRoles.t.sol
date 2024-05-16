@@ -3,9 +3,9 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
-import "../src/KeyperRoles.sol";
+import "../src/PalmeraRoles.sol";
 
-/// @title Deploy KeyperRoles
+/// @title Deploy PalmeraRoles
 /// @custom:security-contact general@palmeradao.xyz
 contract DeployKeyperRoles is Script {
     function run() public {
@@ -16,7 +16,7 @@ contract DeployKeyperRoles is Script {
 
     function deploy(address keyperModule) internal {
         vm.startBroadcast();
-        KeyperRoles roles = new KeyperRoles(keyperModule);
+        PalmeraRoles roles = new PalmeraRoles(keyperModule);
         vm.stopBroadcast();
     }
 }

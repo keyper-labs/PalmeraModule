@@ -4,12 +4,12 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {DeploySafeFactory} from "../../script/DeploySafeFactory.t.sol";
 
-/// @notice Helper contract handling KeyperModule
+/// @notice Helper contract handling PalmeraModule
 /// @custom:security-contact general@palmeradao.xyz
 contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     struct KeyperTransaction {
@@ -21,13 +21,13 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         Enum.Operation operation;
     }
 
-    KeyperModule public keyper;
+    PalmeraModule public keyper;
     GnosisSafe public safeHelper;
 
     /// function to initialize the helper
-    /// @param _keyper instance of KeyperModule
+    /// @param _keyper instance of PalmeraModule
     /// @param numberOwners number of owners to initialize
-    function initHelper(KeyperModule _keyper, uint256 numberOwners) public {
+    function initHelper(PalmeraModule _keyper, uint256 numberOwners) public {
         keyper = _keyper;
         initOnwers(numberOwners);
     }

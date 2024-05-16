@@ -10,9 +10,9 @@ import {Constants} from "../../libraries/Constants.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 import {Errors} from "../../libraries/Errors.sol";
 import {Events} from "../../libraries/Events.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
-import {KeyperRoles} from "../../src/KeyperRoles.sol";
-import {KeyperGuard} from "../../src/KeyperGuard.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
+import {PalmeraRoles} from "../../src/PalmeraRoles.sol";
+import {PalmeraGuard} from "../../src/PalmeraGuard.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
@@ -21,11 +21,11 @@ import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 contract DeployHelper is Test {
     using SafeMath for uint256;
 
-    KeyperModule keyperModule;
-    KeyperGuard keyperGuard;
+    PalmeraModule keyperModule;
+    PalmeraGuard keyperGuard;
     SafeHelper safeHelper;
     KeyperModuleHelper keyperHelper;
-    KeyperRoles keyperRolesContract;
+    PalmeraRoles keyperRolesContract;
     KeyperSafeBuilder keyperSafeBuilder;
 
     address safeAddr;
@@ -73,17 +73,17 @@ contract DeployHelper is Test {
         // setting keyperRoles Address
         safeHelper.setKeyperRoles(keyperRolesDeployed);
 
-        // Init KeyperModule
+        // Init PalmeraModule
         address masterCopy = safeHelper.safeMasterCopy();
         address safeFactory = address(safeHelper.safeFactory());
         uint256 maxTreeDepth = 50;
 
-        keyperModule = new KeyperModule(
+        keyperModule = new PalmeraModule(
             masterCopy, safeFactory, address(keyperRolesDeployed), maxTreeDepth
         );
         keyperModuleAddr = address(keyperModule);
         // Deploy Guard Contract
-        keyperGuard = new KeyperGuard(keyperModuleAddr);
+        keyperGuard = new PalmeraGuard(keyperModuleAddr);
         keyperGuardAddr = address(keyperGuard);
 
         // Init keyperModuleHelper
@@ -103,13 +103,13 @@ contract DeployHelper is Test {
         bytes memory args = abi.encode(address(keyperModuleAddr));
 
         bytes memory bytecode =
-            abi.encodePacked(vm.getCode("KeyperRoles.sol:KeyperRoles"), args);
+            abi.encodePacked(vm.getCode("PalmeraRoles.sol:PalmeraRoles"), args);
 
-        keyperRolesContract = KeyperRoles(factory.deploy(salt, bytecode));
+        keyperRolesContract = PalmeraRoles(factory.deploy(salt, bytecode));
 
         keyperSafeBuilder = new KeyperSafeBuilder();
         keyperSafeBuilder.setUpParams(
-            KeyperModule(keyperModule), SafeHelper(safeHelper)
+            PalmeraModule(keyperModule), SafeHelper(safeHelper)
         );
     }
 

@@ -3,15 +3,15 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 import "./helpers/SafeHelper.t.sol";
-import {KeyperModule, Errors, Constants} from "../src/KeyperModule.sol";
-import {KeyperGuard} from "../src/KeyperGuard.sol";
+import {PalmeraModule, Errors, Constants} from "../src/PalmeraModule.sol";
+import {PalmeraGuard} from "../src/PalmeraGuard.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 
 /// @title TestEnableModule
 /// @custom:security-contact general@palmeradao.xyz
 contract TestEnableGuard is Test {
-    KeyperModule keyperModule;
-    KeyperGuard keyperGuard;
+    PalmeraModule keyperModule;
+    PalmeraGuard keyperGuard;
     SafeHelper safeHelper;
     address safeAddr;
 
@@ -20,20 +20,20 @@ contract TestEnableGuard is Test {
         // Init new safe
         safeHelper = new SafeHelper();
         safeAddr = safeHelper.setupSafeEnv();
-        // Init KeyperModule
+        // Init PalmeraModule
         address masterCopy = safeHelper.safeMasterCopy();
         address safeFactory = address(safeHelper.safeFactory());
         address rolesAuthority = address(0xBEEF);
         uint256 maxTreeDepth = 50;
-        keyperModule = new KeyperModule(
+        keyperModule = new PalmeraModule(
             masterCopy, safeFactory, rolesAuthority, maxTreeDepth
         );
-        keyperGuard = new KeyperGuard(address(keyperModule));
+        keyperGuard = new PalmeraGuard(address(keyperModule));
         safeHelper.setKeyperModule(address(keyperModule));
         safeHelper.setKeyperGuard(address(keyperGuard));
     }
 
-    /// @notice Test enabling the KeyperModule
+    /// @notice Test enabling the PalmeraModule
     function testEnableKeyperModule() public {
         bool result = safeHelper.enableModuleTx(safeAddr);
         assertEq(result, true);
@@ -43,7 +43,7 @@ contract TestEnableGuard is Test {
         assertEq(isKeyperModuleEnabled, true);
     }
 
-    /// @notice Test enabling the KeyperGuard
+    /// @notice Test enabling the PalmeraGuard
     function testEnableKeyperGuard() public {
         bool result = safeHelper.enableGuardTx(safeAddr);
         assertEq(result, true);

@@ -10,8 +10,8 @@ import {Events} from "../libraries/Events.sol";
 
 /// @title Keyper Roles
 /// @custom:security-contact general@palmeradao.xyz
-contract KeyperRoles is RolesAuthority, ValidAddress {
-    string public constant NAME = "Keyper Roles";
+contract PalmeraRoles is RolesAuthority, ValidAddress {
+    string public constant NAME = "Palmera Roles";
     string public constant VERSION = "0.2.0";
 
     constructor(address keyperModule)
@@ -27,7 +27,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
     {
         /// Define Role 0 - SAFE_LEAD
 
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function addOwnerWithThreshold
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD),
@@ -35,7 +35,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.ADD_OWNER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function removeOwner
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD),
@@ -43,7 +43,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.REMOVE_OWNER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function execTransactionOnBehalf
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD),
@@ -53,7 +53,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
         );
 
         /// Define Role 1 - SAFE_LEAD_EXEC_ON_BEHALF_ONLY
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function execTransactionOnBehalf
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY),
@@ -63,7 +63,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
         );
 
         /// Define Role 2 - SAFE_LEAD_MODIFY_OWNERS_ONLY
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function addOwnerWithThreshold
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
@@ -71,7 +71,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.ADD_OWNER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function removeOwner
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
@@ -81,7 +81,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
         );
 
         /// Define Role 3 - SUPER_SAFE
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function addOwnerWithThreshold
         setRoleCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
@@ -89,7 +89,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.ADD_OWNER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function removeOwner
         setRoleCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
@@ -97,7 +97,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.REMOVE_OWNER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function execTransactionOnBehalf
         setRoleCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
@@ -105,7 +105,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.EXEC_ON_BEHALF,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function removeSquad
         setRoleCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
@@ -115,7 +115,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
         );
 
         /// Define Role 4 - ROOT_SAFE
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function setRole
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
@@ -123,7 +123,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.ROLE_ASSIGMENT,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function enable Allow List
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
@@ -131,7 +131,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.ENABLE_ALLOWLIST,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function enable Deny List
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
@@ -139,7 +139,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.ENABLE_DENYLIST,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function Disable Deny Helper
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
@@ -147,7 +147,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.DISABLE_DENY_HELPER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function Add to The List
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
@@ -155,7 +155,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.ADD_TO_LIST,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function Remove from List
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
@@ -163,7 +163,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.DROP_FROM_LIST,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function updateSuper
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
@@ -171,7 +171,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.UPDATE_SUPER_SAFE,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function createRootSafeSquad
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
@@ -179,7 +179,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             Constants.CREATE_ROOT_SAFE,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function updateDepthTreeLimit
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
@@ -188,7 +188,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             true
         );
 
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function disconnectedSafe
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
@@ -197,7 +197,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             true
         );
 
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function promoteRoot
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
@@ -206,7 +206,7 @@ contract KeyperRoles is RolesAuthority, ValidAddress {
             true
         );
 
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function promoteRoot
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),

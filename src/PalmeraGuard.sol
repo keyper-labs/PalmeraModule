@@ -4,26 +4,26 @@ pragma solidity ^0.8.15;
 import {Guard, BaseGuard} from "@safe-contracts/base/GuardManager.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 import {
-    KeyperModule,
+    PalmeraModule,
     Context,
     Errors,
     Constants,
     ISafe,
     ISafeProxy,
     Enum
-} from "./KeyperModule.sol";
+} from "./PalmeraModule.sol";
 
 /// @title Keyper Guard
 /// @custom:security-contact general@palmeradao.xyz
-contract KeyperGuard is BaseGuard, Context {
-    KeyperModule keyperModule;
+contract PalmeraGuard is BaseGuard, Context {
+    PalmeraModule keyperModule;
 
-    string public constant NAME = "Keyper Guard";
+    string public constant NAME = "Palmera Guard";
     string public constant VERSION = "0.2.0";
 
     constructor(address keyperModuleAddr) {
         if (keyperModuleAddr == address(0)) revert Errors.ZeroAddressProvided();
-        keyperModule = KeyperModule(keyperModuleAddr);
+        keyperModule = PalmeraModule(keyperModuleAddr);
     }
 
     function checkTransaction(

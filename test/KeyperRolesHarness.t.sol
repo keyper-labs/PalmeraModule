@@ -2,12 +2,12 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
-import {KeyperRoles} from "../src/KeyperRoles.sol";
+import {PalmeraRoles} from "../src/PalmeraRoles.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 
-// Helper contract to test internal method of KeyperRoles
-contract KeyperRolesHarness is KeyperRoles(address(0xAAAA)) {
+// Helper contract to test internal method of PalmeraRoles
+contract KeyperRolesHarness is PalmeraRoles(address(0xAAAA)) {
     function exposed_setupRoles(address keyperModule) external {
         setupRoles(keyperModule);
     }

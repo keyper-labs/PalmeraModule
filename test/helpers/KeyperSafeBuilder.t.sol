@@ -3,13 +3,13 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 import "./SafeHelper.t.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
 
 /// @notice Helper contract handling and create Org and Squad with different levels
 /// @custom:security-contact general@palmeradao.xyz
 contract KeyperSafeBuilder is Test {
     SafeHelper public safeHelper;
-    KeyperModule public keyperModule;
+    PalmeraModule public keyperModule;
 
     // fixed array of 4 owners
     uint256[] ownersRootPK = new uint256[](4);
@@ -17,9 +17,10 @@ contract KeyperSafeBuilder is Test {
 
     mapping(string => address) public keyperSafes;
 
-    function setUpParams(KeyperModule keyperModuleArg, SafeHelper safeHelperArg)
-        public
-    {
+    function setUpParams(
+        PalmeraModule keyperModuleArg,
+        SafeHelper safeHelperArg
+    ) public {
         keyperModule = keyperModuleArg;
         safeHelper = safeHelperArg;
     }

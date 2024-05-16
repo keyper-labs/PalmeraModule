@@ -3,7 +3,7 @@ pragma solidity ^0.8.15;
 
 import "./SafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
 
 /// @notice Helper contract handling deployment Safe contracts
 /// @custom:security-contact general@palmeradao.xyz
@@ -60,11 +60,11 @@ contract SkipSafeHelper is SafeHelper, KeyperModuleHelper {
         safeContract = GnosisSafe(payable(vm.envAddress("MASTER_COPY_ADDRESS")));
     }
 
-    /// function to set the KeyperModule address
-    /// @param keyperModule address of the KeyperModule
+    /// function to set the PalmeraModule address
+    /// @param keyperModule address of the PalmeraModule
     function setKeyperModule(address keyperModule) public override {
         keyperModuleAddr = keyperModule;
-        keyper = KeyperModule(keyperModuleAddr);
+        keyper = PalmeraModule(keyperModuleAddr);
     }
 
     /// function to create a new Keyper Safe

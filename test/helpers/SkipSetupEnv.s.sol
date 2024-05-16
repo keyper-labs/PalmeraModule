@@ -5,9 +5,9 @@ import "forge-std/Script.sol";
 import "../../src/SigningUtils.sol";
 import "./SkipSafeHelper.t.sol";
 import "@solenv/Solenv.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
-import {KeyperRoles} from "../../src/KeyperRoles.sol";
-import {KeyperGuard} from "../../src/KeyperGuard.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
+import {PalmeraRoles} from "../../src/PalmeraRoles.sol";
+import {PalmeraGuard} from "../../src/PalmeraGuard.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
 /// @notice Script to setup the environment
@@ -15,9 +15,9 @@ import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 contract SkipSetupEnv is Script, SkipSafeHelper {
     using SafeMath for uint256;
 
-    KeyperModule keyperModule;
-    KeyperGuard keyperGuard;
-    KeyperRoles keyperRolesContract;
+    PalmeraModule keyperModule;
+    PalmeraGuard keyperGuard;
+    PalmeraRoles keyperRolesContract;
 
     address safeAddr;
     address keyperRolesDeployed;
@@ -42,9 +42,10 @@ contract SkipSetupEnv is Script, SkipSafeHelper {
     function run() public {
         Solenv.config();
         vm.startBroadcast();
-        keyperRolesContract = KeyperRoles(vm.envAddress("KEYPER_ROLES_ADDRESS"));
-        keyperModule = KeyperModule(vm.envAddress("KEYPER_MODULE_ADDRESS"));
-        keyperGuard = KeyperGuard(vm.envAddress("KEYPER_GUARD_ADDRESS"));
+        keyperRolesContract =
+            PalmeraRoles(vm.envAddress("KEYPER_ROLES_ADDRESS"));
+        keyperModule = PalmeraModule(vm.envAddress("KEYPER_MODULE_ADDRESS"));
+        keyperGuard = PalmeraGuard(vm.envAddress("KEYPER_GUARD_ADDRESS"));
         receiver = vm.envAddress("RECEIVER_ADDRESS");
         // Init a new safe as main organization (3 owners, 1 threshold)
         safeAddr = setupSeveralSafeEnv(30);

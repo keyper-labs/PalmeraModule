@@ -1,4 +1,4 @@
-# KeyperModule - Safe module for Palmera
+# PalmeraModule - Safe module for Palmera
 
 This contract is a registry of keyper organization/squads setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
 

@@ -20,12 +20,12 @@ import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
 /// @title Keyper Module
 /// @custom:security-contact general@palmeradao.xyz
-contract KeyperModule is Auth, ReentrancyGuard, Helpers {
+contract PalmeraModule is Auth, ReentrancyGuard, Helpers {
     using GnosisSafeMath for uint256;
     using Address for address;
 
     /// @dev Definition of Safe module
-    string public constant NAME = "Keyper Module";
+    string public constant NAME = "Palmera Module";
     string public constant VERSION = "0.2.0";
     /// @dev Control Nonce of the module
     uint256 public nonce;
