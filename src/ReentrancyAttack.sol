@@ -18,16 +18,16 @@ contract Attacker {
 
     address[] public owners = new address[](2);
 
-    PalmeraModule public keyperModule;
+    PalmeraModule public palmeraModule;
 
     constructor(address _contractToAttackAddress) {
-        keyperModule = PalmeraModule(_contractToAttackAddress);
+        palmeraModule = PalmeraModule(_contractToAttackAddress);
     }
 
     //this is called when Attackee sends Ether to this contract (Attacker)
     receive() external payable {
         if (address(targetSafeFromAttacker).balance > 0 gwei) {
-            keyperModule.execTransactionOnBehalf(
+            palmeraModule.execTransactionOnBehalf(
                 orgFromAttacker,
                 superSafeFromAttacker,
                 targetSafeFromAttacker,
@@ -61,7 +61,7 @@ contract Attacker {
         bytes memory signatures
     ) external returns (bool result) {
         setParamsForAttack(org, superSafe, targetSafe, data, signatures);
-        result = keyperModule.execTransactionOnBehalf(
+        result = palmeraModule.execTransactionOnBehalf(
             org, superSafe, targetSafe, to, value, data, operation, signatures
         );
         return true;

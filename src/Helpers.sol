@@ -34,7 +34,7 @@ abstract contract Helpers is DenyHelper, SignatureDecoder {
         _;
     }
 
-    /// @dev Method to get the domain separator for Keyper Module
+    /// @dev Method to get the domain separator for Palmera Module
     /// @return Hash of the domain separator
     function domainSeparator() public view returns (bytes32) {
         return keccak256(
@@ -53,7 +53,7 @@ abstract contract Helpers is DenyHelper, SignatureDecoder {
         return id;
     }
 
-    /// @dev Method to get the Encoded Packed Data for Keyper Transaction
+    /// @dev Method to get the Encoded Packed Data for Palmera Transaction
     /// @param org Hash(DAO's name)
     /// @param superSafe address of the caller
     /// @param targetSafe address of the Safe
@@ -73,9 +73,9 @@ abstract contract Helpers is DenyHelper, SignatureDecoder {
         Enum.Operation operation,
         uint256 _nonce
     ) public view returns (bytes memory) {
-        bytes32 keyperTxHash = keccak256(
+        bytes32 palmeraTxHash = keccak256(
             abi.encode(
-                Constants.KEYPER_TX_TYPEHASH,
+                Constants.PALMERA_TX_TYPEHASH,
                 org,
                 superSafe,
                 targetSafe,
@@ -87,11 +87,11 @@ abstract contract Helpers is DenyHelper, SignatureDecoder {
             )
         );
         return abi.encodePacked(
-            bytes1(0x19), bytes1(0x01), domainSeparator(), keyperTxHash
+            bytes1(0x19), bytes1(0x01), domainSeparator(), palmeraTxHash
         );
     }
 
-    /// @dev Method to get the Hash Encoded Packed Data for Keyper Transaction
+    /// @dev Method to get the Hash Encoded Packed Data for Palmera Transaction
     /// @param org Hash(DAO's name)
     /// @param superSafe address of the caller
     /// @param targetSafe address of the Safe
@@ -193,7 +193,7 @@ abstract contract Helpers is DenyHelper, SignatureDecoder {
         }
     }
 
-    /// @dev refactoring of execution of Tx with the privilege of the Module Keyper Labs, and avoid repeat code
+    /// @dev refactoring of execution of Tx with the privilege of the Module Palmera Labs, and avoid repeat code
     /// @param safe Safe Address to execute Tx
     /// @param data Data to execute Tx
     function _executeModuleTransaction(address safe, bytes memory data)

@@ -4,19 +4,19 @@ pragma solidity ^0.8.15;
 import "../src/SigningUtils.sol";
 import "./helpers/DeployHelper.t.sol";
 
-/// @title TestKeyperSafe
+/// @title TestPalmeraSafe
 /// @custom:security-contact general@palmeradao.xyz
-contract TestKeyperSafe is SigningUtils, DeployHelper {
+contract TestPalmeraSafe is SigningUtils, DeployHelper {
     function setUp() public {
         DeployHelper.deployAllContracts(90);
     }
 
     // ! ********************** authority Test **********************************
 
-    // Checks if authority == keyperRoles
+    // Checks if authority == palmeraRoles
     function testAuthorityAddress() public {
         assertEq(
-            address(keyperModule.authority()), address(keyperRolesDeployed)
+            address(palmeraModule.authority()), address(palmeraRolesDeployed)
         );
     }
 
@@ -27,13 +27,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> NOT_ALLOW_LIST
     function testRevertSuperSafeExecOnBehalfIsNotAllowList() public {
         (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
-        address subSquadA1Addr = keyperModule.getSquadSafeAddress(subSquadA1Id);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address subSquadA1Addr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
 
         // Send ETH to squad&subsquad
         vm.deal(squadA1Addr, 100 gwei);
@@ -41,13 +41,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         /// Enable allowlist
         vm.startPrank(rootAddr);
-        keyperModule.enableAllowlist();
+        palmeraModule.enableAllowlist();
         vm.stopPrank();
 
-        // Set keyperhelper safe to safeSquadA1
-        keyperHelper.setSafe(squadA1Addr);
+        // Set palmerahelper safe to safeSquadA1
+        palmeraHelper.setSafe(squadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             squadA1Addr,
             subSquadA1Addr,
@@ -60,7 +60,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         // Execute on behalf function
         vm.startPrank(squadA1Addr);
         vm.expectRevert(Errors.AddresNotAllowed.selector);
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             squadA1Addr,
             subSquadA1Addr,
@@ -77,13 +77,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> DENY_LIST
     function testRevertSuperSafeExecOnBehalfIsDenyList() public {
         (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
-        address subSquadA1Addr = keyperModule.getSquadSafeAddress(subSquadA1Id);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address subSquadA1Addr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
 
         // Send ETH to squad&subsquad
         vm.deal(squadA1Addr, 100 gwei);
@@ -93,14 +93,14 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         /// Enalbe allowlist
         vm.startPrank(rootAddr);
-        keyperModule.enableDenylist();
-        keyperModule.addToList(receiverList);
+        palmeraModule.enableDenylist();
+        palmeraModule.addToList(receiverList);
         vm.stopPrank();
 
-        // Set keyperhelper safe to safeSquadA1
-        keyperHelper.setSafe(squadA1Addr);
+        // Set palmerahelper safe to safeSquadA1
+        palmeraHelper.setSafe(squadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             squadA1Addr,
             subSquadA1Addr,
@@ -113,7 +113,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         // Execute on behalf function
         vm.startPrank(squadA1Addr);
         vm.expectRevert(Errors.AddressDenied.selector);
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             squadA1Addr,
             subSquadA1Addr,
@@ -130,13 +130,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> DENY_LIST
     function testDisableDenyHelperList() public {
         (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
-        address subSquadA1Addr = keyperModule.getSquadSafeAddress(subSquadA1Id);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address subSquadA1Addr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
 
         // Send ETH to squad&subsquad
         vm.deal(squadA1Addr, 100 gwei);
@@ -146,16 +146,16 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         /// Enable allowlist
         vm.startPrank(rootAddr);
-        keyperModule.enableDenylist();
-        keyperModule.addToList(receiverList);
+        palmeraModule.enableDenylist();
+        palmeraModule.addToList(receiverList);
         /// Disable allowlist
-        keyperModule.disableDenyHelper();
+        palmeraModule.disableDenyHelper();
         vm.stopPrank();
 
-        // Set keyperhelper safe to safeSquadA1
-        keyperHelper.setSafe(squadA1Addr);
+        // Set palmerahelper safe to safeSquadA1
+        palmeraHelper.setSafe(squadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             squadA1Addr,
             subSquadA1Addr,
@@ -167,7 +167,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         // Execute on behalf function
         vm.startPrank(squadA1Addr);
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             squadA1Addr,
             subSquadA1Addr,
@@ -185,7 +185,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testRevertAuthForRegisterOrgTx() public {
         address caller = address(0x1);
         vm.expectRevert(bytes("UNAUTHORIZED"));
-        keyperRolesContract.setRoleCapability(
+        palmeraRolesContract.setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD), caller, Constants.ADD_OWNER, true
         );
     }
@@ -202,29 +202,29 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
             uint256 squadA1Id,
             uint256 subSquadA1Id,
             uint256 subSubsquadA1Id
-        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+        ) = palmeraSafeBuilder.setupOrgFourTiersTree(
             orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
         );
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
 
         safeHelper.updateSafeInterface(rootAddr);
         bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
         assertEq(result, true);
-        assertEq(keyperModule.isSuperSafe(rootId, subSquadA1Id), false);
+        assertEq(palmeraModule.isSuperSafe(rootId, subSquadA1Id), false);
 
         // Check safeSubSquadA1 is now a child of org
-        assertEq(keyperModule.isTreeMember(rootId, subSubsquadA1Id), true);
+        assertEq(palmeraModule.isTreeMember(rootId, subSubsquadA1Id), true);
         // Check org is parent of safeSubSquadA1
-        assertEq(keyperModule.isSuperSafe(squadA1Id, subSubsquadA1Id), true);
+        assertEq(palmeraModule.isSuperSafe(squadA1Id, subSubsquadA1Id), true);
 
         // Check removed squad parent has subSafeSquad A as child an not safeSquadA1
         uint256[] memory child;
-        (,,,, child,) = keyperModule.getSquadInfo(squadA1Id);
+        (,,,, child,) = palmeraModule.getSquadInfo(squadA1Id);
         assertEq(child.length, 1);
         assertEq(child[0] == subSquadA1Id, false);
         assertEq(child[0] == subSubsquadA1Id, true);
-        assertEq(keyperModule.isTreeMember(rootId, subSquadA1Id), false);
+        assertEq(palmeraModule.isTreeMember(rootId, subSquadA1Id), false);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
@@ -232,20 +232,20 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCannot_RemoveSquad_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentTree(
     ) public {
         (uint256 rootIdA, uint256 squadAId, uint256 rootIdB, uint256 squadBId) =
-        keyperSafeBuilder.setupTwoRootOrgWithOneSquadEach(
+        palmeraSafeBuilder.setupTwoRootOrgWithOneSquadEach(
             orgName, squadA1Name, root2Name, squadBName
         );
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootIdA);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootIdA);
         vm.startPrank(rootAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        keyperModule.removeSquad(squadBId);
+        palmeraModule.removeSquad(squadBId);
         vm.stopPrank();
 
-        address rootBAddr = keyperModule.getSquadSafeAddress(rootIdB);
+        address rootBAddr = palmeraModule.getSquadSafeAddress(rootIdB);
         vm.startPrank(rootBAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        keyperModule.removeSquad(squadAId);
+        palmeraModule.removeSquad(squadAId);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
@@ -253,7 +253,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCannot_RemoveSquad_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentOrg(
     ) public {
         (uint256 rootIdA, uint256 squadAId, uint256 rootIdB, uint256 squadBId,,)
-        = keyperSafeBuilder.setupTwoOrgWithOneRootOneSquadAndOneChildEach(
+        = palmeraSafeBuilder.setupTwoOrgWithOneRootOneSquadAndOneChildEach(
             orgName,
             squadA1Name,
             root2Name,
@@ -262,16 +262,16 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
             subSubSquadA1Name
         );
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootIdA);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootIdA);
         vm.startPrank(rootAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        keyperModule.removeSquad(squadBId);
+        palmeraModule.removeSquad(squadBId);
         vm.stopPrank();
 
-        address rootBAddr = keyperModule.getSquadSafeAddress(rootIdB);
+        address rootBAddr = palmeraModule.getSquadSafeAddress(rootIdB);
         vm.startPrank(rootBAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        keyperModule.removeSquad(squadAId);
+        palmeraModule.removeSquad(squadAId);
     }
 
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> squadA
@@ -280,21 +280,21 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         public
     {
         (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
-        address squadAAddr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address squadAAddr = palmeraModule.getSquadSafeAddress(squadA1Id);
 
         safeHelper.updateSafeInterface(squadAAddr);
         bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
         assertEq(result, true);
-        assertEq(keyperModule.isSuperSafe(squadA1Id, subSquadA1Id), false);
-        assertEq(keyperModule.isSuperSafe(rootId, subSquadA1Id), false);
-        assertEq(keyperModule.isTreeMember(rootId, subSquadA1Id), false);
+        assertEq(palmeraModule.isSuperSafe(squadA1Id, subSquadA1Id), false);
+        assertEq(palmeraModule.isSuperSafe(rootId, subSquadA1Id), false);
+        assertEq(palmeraModule.isTreeMember(rootId, subSquadA1Id), false);
 
         // Check supersafe has not any children
-        (,,,, uint256[] memory child,) = keyperModule.getSquadInfo(squadA1Id);
+        (,,,, uint256[] memory child,) = palmeraModule.getSquadInfo(squadA1Id);
         assertEq(child.length, 0);
     }
 
@@ -302,7 +302,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Target Info: Type-> SAFE, Name -> squadB, Hierarchy related to caller -> DIFFERENT_TREE,NOT_DIRECT_CHILDREN
     function testCannot_RemoveSquad_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_DifferentTree(
     ) public {
-        (, uint256 squadAId,, uint256 squadBId,,) = keyperSafeBuilder
+        (, uint256 squadAId,, uint256 squadBId,,) = palmeraSafeBuilder
             .setupTwoOrgWithOneRootOneSquadAndOneChildEach(
             orgName,
             squadA1Name,
@@ -312,31 +312,31 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
             subSquadB1Name
         );
 
-        address squadAAddr = keyperModule.getSquadSafeAddress(squadAId);
+        address squadAAddr = palmeraModule.getSquadSafeAddress(squadAId);
         vm.startPrank(squadAAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        keyperModule.removeSquad(squadBId);
+        palmeraModule.removeSquad(squadBId);
         vm.stopPrank();
 
-        address squadBAddr = keyperModule.getSquadSafeAddress(squadBId);
+        address squadBAddr = palmeraModule.getSquadSafeAddress(squadBId);
         vm.startPrank(squadBAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        keyperModule.removeSquad(squadAId);
+        palmeraModule.removeSquad(squadAId);
     }
 
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> squadA
     // Target Info: Type-> SAFE, Name -> subsubSquadA, Hierarchy related to caller -> SAME_TREE,NOT_DIRECT_CHILDREN
     function testCannot_RemoveSquad_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_SameTree(
     ) public {
-        (, uint256 squadAId,, uint256 subSubSquadA1) = keyperSafeBuilder
+        (, uint256 squadAId,, uint256 subSubSquadA1) = palmeraSafeBuilder
             .setupOrgFourTiersTree(
             orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
         );
 
-        address squadAAddr = keyperModule.getSquadSafeAddress(squadAId);
+        address squadAAddr = palmeraModule.getSquadSafeAddress(squadAId);
         vm.startPrank(squadAAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        keyperModule.removeSquad(subSubSquadA1);
+        palmeraModule.removeSquad(subSubSquadA1);
         vm.stopPrank();
     }
 
@@ -344,33 +344,33 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Target Info: Type-> SAFE, Name -> squadA, Hierarchy related to caller -> SAME_TREE, CHILDREN
     function testRemoveSquadAndCheckDisables() public {
         (uint256 rootId, uint256 squadA1Id) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
 
-        (,,,,, uint256 superSafe) = keyperModule.getSquadInfo(squadA1Id);
-        (,, address superSafeAddr,,) = keyperModule.squads(orgHash, superSafe);
+        (,,,,, uint256 superSafe) = palmeraModule.getSquadInfo(squadA1Id);
+        (,, address superSafeAddr,,) = palmeraModule.squads(orgHash, superSafe);
 
         safeHelper.updateSafeInterface(rootAddr);
         bool result = safeHelper.createRemoveSquadTx(squadA1Id);
         assertEq(result, true);
 
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 squadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 superSafeAddr,
                 uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
             ),
             false
         );
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 superSafeAddr,
                 uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
             ),
@@ -382,12 +382,12 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Target Info: Type-> SUPER_SAFE, Name -> squadA, Hierarchy related to caller -> SAME_TREE
     function testCan_hasNotPermissionOverTarget_is_root_of_target() public {
         (uint256 rootId, uint256 squadA1Id) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address squadAddr = palmeraModule.getSquadSafeAddress(squadA1Id);
 
-        bool result = keyperModule.hasNotPermissionOverTarget(
+        bool result = palmeraModule.hasNotPermissionOverTarget(
             rootAddr, orgHash, squadAddr
         );
         assertFalse(result);
@@ -399,12 +399,12 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         public
     {
         (uint256 rootId, uint256 squadA1Id) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address squadAddr = palmeraModule.getSquadSafeAddress(squadA1Id);
 
-        bool result = keyperModule.hasNotPermissionOverTarget(
+        bool result = palmeraModule.hasNotPermissionOverTarget(
             squadAddr, orgHash, rootAddr
         );
         assertTrue(result);
@@ -415,13 +415,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_hasNotPermissionOverTarget_is_super_safe_of_target()
         public
     {
-        (, uint256 squadA1Id, uint256 subSquadA1Id,,) = keyperSafeBuilder
+        (, uint256 squadA1Id, uint256 subSquadA1Id,,) = palmeraSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);
-        address subSquadAddr = keyperModule.getSquadSafeAddress(subSquadA1Id);
+        address squadAddr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address subSquadAddr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
 
-        bool result = keyperModule.hasNotPermissionOverTarget(
+        bool result = palmeraModule.hasNotPermissionOverTarget(
             squadAddr, orgHash, subSquadAddr
         );
         assertFalse(result);
@@ -432,13 +432,13 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_hasNotPermissionOverTarget_is_not_super_safe_of_target()
         public
     {
-        (, uint256 squadA1Id, uint256 subSquadA1Id,,) = keyperSafeBuilder
+        (, uint256 squadA1Id, uint256 subSquadA1Id,,) = palmeraSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);
-        address subSquadAddr = keyperModule.getSquadSafeAddress(subSquadA1Id);
+        address squadAddr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address subSquadAddr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
 
-        bool result = keyperModule.hasNotPermissionOverTarget(
+        bool result = palmeraModule.hasNotPermissionOverTarget(
             subSquadAddr, orgHash, squadAddr
         );
         assertTrue(result);

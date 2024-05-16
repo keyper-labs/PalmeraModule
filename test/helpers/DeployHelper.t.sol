@@ -4,8 +4,8 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import "../../src/SigningUtils.sol";
 import "./SafeHelper.t.sol";
-import "./KeyperModuleHelper.t.sol";
-import "./KeyperSafeBuilder.t.sol";
+import "./PalmeraModuleHelper.t.sol";
+import "./PalmeraSafeBuilder.t.sol";
 import {Constants} from "../../libraries/Constants.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 import {Errors} from "../../libraries/Errors.sol";
@@ -21,17 +21,17 @@ import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 contract DeployHelper is Test {
     using SafeMath for uint256;
 
-    PalmeraModule keyperModule;
-    PalmeraGuard keyperGuard;
+    PalmeraModule palmeraModule;
+    PalmeraGuard palmeraGuard;
     SafeHelper safeHelper;
-    KeyperModuleHelper keyperHelper;
-    PalmeraRoles keyperRolesContract;
-    KeyperSafeBuilder keyperSafeBuilder;
+    PalmeraModuleHelper palmeraHelper;
+    PalmeraRoles palmeraRolesContract;
+    PalmeraSafeBuilder palmeraSafeBuilder;
 
     address safeAddr;
-    address keyperModuleAddr;
-    address keyperGuardAddr;
-    address keyperRolesDeployed;
+    address palmeraModuleAddr;
+    address palmeraGuardAddr;
+    address palmeraRolesDeployed;
     address receiver = address(0xABC);
     address zeroAddress = address(0x0);
     address sentinel = address(0x1);
@@ -50,7 +50,7 @@ contract DeployHelper is Test {
     bytes32 orgHash;
 
     // Helper mapping to keep track safes associated with a role
-    mapping(string => address) keyperSafes;
+    mapping(string => address) palmeraSafes;
 
     function deployAllContracts(uint256 initOwners) public {
         CREATE3Factory factory = new CREATE3Factory();
@@ -63,53 +63,53 @@ contract DeployHelper is Test {
             address eventsAddr
         ) = deployLibraries();
 
-        // Predict the future address of keyper roles
-        keyperRolesDeployed = factory.getDeployed(address(this), salt);
+        // Predict the future address of palmera roles
+        palmeraRolesDeployed = factory.getDeployed(address(this), salt);
 
         // Init a new safe as main organization (3 owners, 1 threshold)
         safeHelper = new SafeHelper();
         safeAddr = safeHelper.setupSeveralSafeEnv(initOwners);
 
-        // setting keyperRoles Address
-        safeHelper.setKeyperRoles(keyperRolesDeployed);
+        // setting palmeraRoles Address
+        safeHelper.setPalmeraRoles(palmeraRolesDeployed);
 
         // Init PalmeraModule
         address masterCopy = safeHelper.safeMasterCopy();
         address safeFactory = address(safeHelper.safeFactory());
         uint256 maxTreeDepth = 50;
 
-        keyperModule = new PalmeraModule(
-            masterCopy, safeFactory, address(keyperRolesDeployed), maxTreeDepth
+        palmeraModule = new PalmeraModule(
+            masterCopy, safeFactory, address(palmeraRolesDeployed), maxTreeDepth
         );
-        keyperModuleAddr = address(keyperModule);
+        palmeraModuleAddr = address(palmeraModule);
         // Deploy Guard Contract
-        keyperGuard = new PalmeraGuard(keyperModuleAddr);
-        keyperGuardAddr = address(keyperGuard);
+        palmeraGuard = new PalmeraGuard(palmeraModuleAddr);
+        palmeraGuardAddr = address(palmeraGuard);
 
-        // Init keyperModuleHelper
-        keyperHelper = new KeyperModuleHelper();
-        keyperHelper.initHelper(keyperModule, initOwners.div(3));
+        // Init palmeraModuleHelper
+        palmeraHelper = new PalmeraModuleHelper();
+        palmeraHelper.initHelper(palmeraModule, initOwners.div(3));
         // Update safeHelper
-        safeHelper.setKeyperModule(keyperModuleAddr);
+        safeHelper.setPalmeraModule(palmeraModuleAddr);
         // Update safeHelper
-        safeHelper.setKeyperGuard(keyperGuardAddr);
-        // Enable keyper module
+        safeHelper.setPalmeraGuard(palmeraGuardAddr);
+        // Enable palmera module
         safeHelper.enableModuleTx(safeAddr);
-        // Enable keyper Guard
+        // Enable palmera Guard
         safeHelper.enableGuardTx(safeAddr);
 
         orgHash = keccak256(abi.encodePacked(orgName));
 
-        bytes memory args = abi.encode(address(keyperModuleAddr));
+        bytes memory args = abi.encode(address(palmeraModuleAddr));
 
         bytes memory bytecode =
             abi.encodePacked(vm.getCode("PalmeraRoles.sol:PalmeraRoles"), args);
 
-        keyperRolesContract = PalmeraRoles(factory.deploy(salt, bytecode));
+        palmeraRolesContract = PalmeraRoles(factory.deploy(salt, bytecode));
 
-        keyperSafeBuilder = new KeyperSafeBuilder();
-        keyperSafeBuilder.setUpParams(
-            PalmeraModule(keyperModule), SafeHelper(safeHelper)
+        palmeraSafeBuilder = new PalmeraSafeBuilder();
+        palmeraSafeBuilder.setUpParams(
+            PalmeraModule(palmeraModule), SafeHelper(safeHelper)
         );
     }
 

@@ -13,7 +13,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
     function setUp() public {
         // Set up env
         run();
-        testRevertInvalidSignatureExecOnBehalf();
+        testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(
+        );
         // These are different chain test scenarios, specifically for the execTransactionOnBehalf function in Polygon and Sepolia.
         // We test each scenario independently manually and get the results on the Live Mainnet on Polygon and Sepolia.
         // testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(); // ✅
@@ -38,9 +39,9 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             setupRootOrgAndOneSquad(orgName, squadA1Name);
 
         address payable rootAddr =
-            payable(keyperModule.getSquadSafeAddress(rootId));
+            payable(palmeraModule.getSquadSafeAddress(rootId));
         address payable safeSquadA1Addr =
-            payable(keyperModule.getSquadSafeAddress(safeSquadA1));
+            payable(palmeraModule.getSquadSafeAddress(safeSquadA1));
         address payable receiverAddr = payable(receiver);
         console.log("Root address Test Execution On Behalf: ", rootAddr);
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
@@ -51,10 +52,10 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (sent, data) = receiverAddr.call{value: 1e5 gwei}("");
         require(sent, "Failed to send Ether");
 
-        // Set keyperhelper safe to org
+        // Set palmerahelper safe to org
         setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -90,17 +91,17 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             setupRootOrgAndOneSquad(org2Name, squadA2Name);
 
         address payable rootAddr =
-            payable(keyperModule.getSquadSafeAddress(rootId));
+            payable(palmeraModule.getSquadSafeAddress(rootId));
         address payable safeSquadA1Addr =
-            payable(keyperModule.getSquadSafeAddress(safeSquadA1));
-        address childSquadA1Addr = newKeyperSafe(4, 2);
+            payable(palmeraModule.getSquadSafeAddress(safeSquadA1));
+        address childSquadA1Addr = newPalmeraSafe(4, 2);
         setSafe(safeSquadA1Addr);
         bool result = createAddSquadTx(safeSquadA1, "ChildSquadA1");
         assertEq(result, true);
         // Create a child safe for squad A2
         // result = createAddSquadTx(safeSquadA1, "ChildSquadA2");
         // assertEq(result, true);
-        orgHash = keyperModule.getOrgBySquad(rootId);
+        orgHash = palmeraModule.getOrgBySquad(rootId);
 
         // tx ETH from msg.sender to rootAddr
         (bool sent, bytes memory data) = safeSquadA1Addr.call{value: 2 gwei}("");
@@ -112,12 +113,12 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
 
         console.log("Child Squad A1 address: ", childSquadA1Addr);
 
-        address fakeCaller = newKeyperSafe(4, 2);
+        address fakeCaller = newPalmeraSafe(4, 2);
 
-        // Set keyperhelper safe to Super Safe Squad A1
+        // Set palmerahelper safe to Super Safe Squad A1
         setSafe(safeSquadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             orgHash,
             safeSquadA1Addr,
             childSquadA1Addr,
@@ -126,9 +127,9 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
-        // Set keyperhelper safe to Faker Caller
+        // Set palmerahelper safe to Faker Caller
         setSafe(fakeCaller);
-        bytes memory signatures2 = encodeSignaturesKeyperTx(
+        bytes memory signatures2 = encodeSignaturesPalmeraTx(
             orgHash,
             fakeCaller,
             rootAddr,
@@ -137,7 +138,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
-        /// Wrapper of Execution On Behalf, for  try to avoid the verification in the Safe / Keyper Module
+        /// Wrapper of Execution On Behalf, for  try to avoid the verification in the Safe / Palmera Module
         bytes memory internalData = abi.encodeWithSignature(
             "execTransactionOnBehalf(bytes32,address,address,address,uint256,bytes,uint8,bytes)",
             orgHash,
@@ -176,13 +177,13 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             setupRootOrgAndOneSquad("org5Name", "squadA1Name");
 
         address payable rootAddr =
-            payable(keyperModule.getSquadSafeAddress(rootId));
-        address childSquadA1Addr = newKeyperSafe(4, 2);
+            payable(palmeraModule.getSquadSafeAddress(rootId));
+        address childSquadA1Addr = newPalmeraSafe(4, 2);
         bool result = createAddSquadTx(safeSquadA1, "ChildSquadA1");
         assertEq(result, true);
-        orgHash = keyperModule.getOrgBySquad(rootId);
+        orgHash = palmeraModule.getOrgBySquad(rootId);
         uint256 childSquadA1 =
-            keyperModule.getSquadIdBySafe(orgHash, childSquadA1Addr);
+            palmeraModule.getSquadIdBySafe(orgHash, childSquadA1Addr);
 
         // Create a fakeCaller with Ramdom EOA
         address fakeCaller = address(msg.sender);
@@ -201,16 +202,16 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             true
         );
         assertEq(result, true);
-        assertEq(keyperModule.isSafeLead(childSquadA1, fakeCaller), true);
+        assertEq(palmeraModule.isSafeLead(childSquadA1, fakeCaller), true);
 
         // Value to be sent to the receiver with rightCaller
         bytes memory emptyData;
         bytes memory signatures;
 
-        // Set keyperhelper safe to rootAddr
+        // Set palmerahelper safe to rootAddr
         setSafe(childSquadA1Addr);
         // Try to execute on behalf function from a not authorized caller child Squad A1 over Root Safe
-        bytes memory signatures2 = encodeSignaturesKeyperTx(
+        bytes memory signatures2 = encodeSignaturesPalmeraTx(
             orgHash,
             childSquadA1Addr,
             rootAddr,
@@ -234,7 +235,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         );
 
         // Execute on behalf function from a not authorized caller (Root Safe of Another Tree) over Super Safe and Squad Safe in another Three
-        result = keyperModule.execTransactionOnBehalf(
+        result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             childSquadA1Addr,
             rootAddr,
@@ -257,8 +258,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (uint256 rootId, uint256 safeSquadA1) =
             setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
         console.log("Receiver address Test Execution On Behalf: ", receiver);
         console.log("Root address Test Execution On Behalf: ", rootAddr);
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
@@ -267,10 +268,10 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (bool sent, bytes memory data) = safeSquadA1Addr.call{value: 2 gwei}("");
         require(sent, "Failed to send Ether");
 
-        // Set keyperhelper safe to org
+        // Set palmerahelper safe to org
         setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -312,9 +313,9 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (uint256 rootId,, uint256 safeSubSquadA1Id) =
             setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         // tx ETH from msg.sender to rootAddr
         (bool sent, bytes memory data) = rootAddr.call{value: 100 gwei}("");
@@ -328,7 +329,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         // Owner of Root Safe sign args
         setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -338,7 +339,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
 
-        bool result = keyperModule.execTransactionOnBehalf(
+        bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -373,9 +374,9 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address safeSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSquadA1Id);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         // tx ETH from msg.sender to rootAddr
         (bool sent, bytes memory data) =
@@ -384,10 +385,10 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (sent, data) = safeSubSquadA1Addr.call{value: 100 gwei}("");
         require(sent, "Failed to send Ether");
 
-        // Set keyperhelper safe to safeSquadA1
+        // Set palmerahelper safe to safeSquadA1
         setSafe(safeSquadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             orgHash,
             safeSquadA1Addr,
             safeSubSquadA1Addr,
@@ -399,7 +400,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
 
         /// Verify if the safeSquadA1Addr have the role to execute, executionTransactionOnBehalf
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 safeSquadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
@@ -441,9 +442,9 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (uint256 rootId,, uint256 safeSubSquadA1Id) =
             setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         // tx ETH from msg.sender to rootAddr
         (bool sent, bytes memory data) = rootAddr.call{value: 100 gwei}("");
@@ -457,7 +458,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         // Owner of Target Safe signed args
         setSafe(safeSubSquadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -468,7 +469,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         );
 
         // vm.expectRevert("GS020"); // GS020: Signatures data too short
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -498,9 +499,9 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (uint256 rootId,, uint256 safeSubSquadA1Id) =
             setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         // tx ETH from msg.sender to rootAddr
         (bool sent, bytes memory data) = rootAddr.call{value: 100 gwei}("");
@@ -513,7 +514,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         // Owner of Root Safe sign args
         setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = encodeInvalidSignaturesKeyperTx(
+        bytes memory signatures = encodeInvalidSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -524,7 +525,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         );
 
         // vm.expectRevert("GS026"); // GS026: Invalid owner provided
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -555,10 +556,10 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1) =
             setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(subSquadIdA1);
+            palmeraModule.getSquadSafeAddress(subSquadIdA1);
 
         // Send ETH to org&subsquad
         // tx ETH from msg.sender to rootAddr
@@ -567,10 +568,10 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (sent, data) = safeSquadA1Addr.call{value: 100 gwei}("");
         require(sent, "Failed to send Ether");
 
-        // Set keyperhelper safe to safeSubSquadA1
+        // Set palmerahelper safe to safeSubSquadA1
         setSafe(safeSubSquadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             orgHash,
             safeSubSquadA1Addr,
             safeSquadA1Addr,
@@ -607,15 +608,15 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (uint256 rootId, uint256 safeSquadA1) =
             setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
         console.log("Root address Test Execution On Behalf: ", rootAddr);
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
 
         // Try onbehalf with incorrect signers
         setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = encodeInvalidSignaturesKeyperTx(
+        bytes memory signatures = encodeInvalidSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -655,16 +656,16 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (uint256 rootId, uint256 safeSquadA1) =
             setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
         console.log("Root address Test Execution On Behalf: ", rootAddr);
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
         address fakeReceiver = address(0);
 
-        // Set keyperhelper safe to org
+        // Set palmerahelper safe to org
         setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -675,7 +676,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         );
         // Execute on behalf function with invalid receiver
         // vm.expectRevert(Errors.InvalidAddressProvided.selector); // InvalidAddressProvided: Invalid address provided
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -705,15 +706,15 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (uint256 rootId, uint256 safeSquadA1) =
             setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
         console.log("Root address Test Execution On Behalf: ", rootAddr);
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
 
-        // Set keyperhelper safe to org
+        // Set palmerahelper safe to org
         setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -729,7 +730,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         //         Errors.InvalidSafe.selector, address(0)
         //     )
         // ); // InvalidSafe: Invalid Safe
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             address(0),
@@ -759,15 +760,15 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (uint256 rootId, uint256 safeSquadA1) =
             setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
         console.log("Root address Test Execution On Behalf: ", rootAddr);
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
 
-        // Set keyperhelper safe to org
+        // Set palmerahelper safe to org
         setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -780,7 +781,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         // vm.expectRevert(
         //     abi.encodeWithSelector(Errors.OrgNotRegistered.selector, address(0))
         // ); // OrgNotRegistered: Org not registered
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             bytes32(0),
             rootAddr,
             safeSquadA1Addr,
@@ -804,16 +805,16 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (uint256 rootId, uint256 safeSquadA1) =
             setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
         console.log("Root address Test Execution On Behalf: ", rootAddr);
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
         address fakeTargetSafe = address(0xFFE);
 
-        // Set keyperhelper safe to org
+        // Set palmerahelper safe to org
         setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = encodeSignaturesKeyperTx(
+        bytes memory signatures = encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -828,7 +829,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         //         Errors.InvalidSafe.selector, fakeTargetSafe
         //     )
         // ); // InvalidSafe: Invalid Safe
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             fakeTargetSafe,

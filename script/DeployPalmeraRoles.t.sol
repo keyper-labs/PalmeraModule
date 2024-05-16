@@ -7,16 +7,16 @@ import "../src/PalmeraRoles.sol";
 
 /// @title Deploy PalmeraRoles
 /// @custom:security-contact general@palmeradao.xyz
-contract DeployKeyperRoles is Script {
+contract DeployPalmeraRoles is Script {
     function run() public {
         // Solenv.config();
-        address keyperModuleMock = address(0xBEEF);
-        deploy(keyperModuleMock);
+        address palmeraModuleMock = address(0xBEEF);
+        deploy(palmeraModuleMock);
     }
 
-    function deploy(address keyperModule) internal {
+    function deploy(address palmeraModule) internal {
         vm.startBroadcast();
-        PalmeraRoles roles = new PalmeraRoles(keyperModule);
+        PalmeraRoles roles = new PalmeraRoles(palmeraModule);
         vm.stopBroadcast();
     }
 }

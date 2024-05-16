@@ -15,12 +15,12 @@ import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 contract SkipSetupEnv is Script, SkipSafeHelper {
     using SafeMath for uint256;
 
-    PalmeraModule keyperModule;
-    PalmeraGuard keyperGuard;
-    PalmeraRoles keyperRolesContract;
+    PalmeraModule palmeraModule;
+    PalmeraGuard palmeraGuard;
+    PalmeraRoles palmeraRolesContract;
 
     address safeAddr;
-    address keyperRolesDeployed;
+    address palmeraRolesDeployed;
     address receiver = address(0xABC123);
     address zeroAddress = address(0x0);
     address sentinel = address(0x1);
@@ -42,22 +42,22 @@ contract SkipSetupEnv is Script, SkipSafeHelper {
     function run() public {
         Solenv.config();
         vm.startBroadcast();
-        keyperRolesContract =
-            PalmeraRoles(vm.envAddress("KEYPER_ROLES_ADDRESS"));
-        keyperModule = PalmeraModule(vm.envAddress("KEYPER_MODULE_ADDRESS"));
-        keyperGuard = PalmeraGuard(vm.envAddress("KEYPER_GUARD_ADDRESS"));
+        palmeraRolesContract =
+            PalmeraRoles(vm.envAddress("PALMERA_ROLES_ADDRESS"));
+        palmeraModule = PalmeraModule(vm.envAddress("PALMERA_MODULE_ADDRESS"));
+        palmeraGuard = PalmeraGuard(vm.envAddress("PALMERA_GUARD_ADDRESS"));
         receiver = vm.envAddress("RECEIVER_ADDRESS");
         // Init a new safe as main organization (3 owners, 1 threshold)
         safeAddr = setupSeveralSafeEnv(30);
-        // setting keyperRoles Address
-        setKeyperRoles(address(keyperRolesContract));
+        // setting palmeraRoles Address
+        setPalmeraRoles(address(palmeraRolesContract));
         // Update safeHelper
-        setKeyperModule(address(keyperModule));
+        setPalmeraModule(address(palmeraModule));
         // Update safeHelper
-        setKeyperGuard(address(keyperGuard));
-        // Enable keyper module
+        setPalmeraGuard(address(palmeraGuard));
+        // Enable palmera module
         enableModuleTx(safeAddr);
-        // Enable keyper Guard
+        // Enable palmera Guard
         enableGuardTx(safeAddr);
         console.log("Finalize Config Environment... ");
         vm.stopBroadcast();
@@ -72,23 +72,23 @@ contract SkipSetupEnv is Script, SkipSafeHelper {
         string memory squadA1NameArg
     ) public returns (uint256 rootId, uint256 squadIdA1) {
         // Register Org through safe tx
-        address rootAddr = newKeyperSafe(4, 2);
+        address rootAddr = newPalmeraSafe(4, 2);
         console.log("Root address: ", rootAddr);
         bool result = registerOrgTx(orgNameArg);
         // Get org Id
-        orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        rootId = keyperModule.getSquadIdBySafe(orgHash, rootAddr);
+        orgHash = palmeraModule.getOrgHashBySafe(rootAddr);
+        rootId = palmeraModule.getSquadIdBySafe(orgHash, rootAddr);
 
-        address squadSafe = newKeyperSafe(4, 2);
+        address squadSafe = newPalmeraSafe(4, 2);
         console.log("Squad A1 address: ", squadSafe);
         // Create squad through safe tx
         result = createAddSquadTx(rootId, squadA1NameArg);
-        squadIdA1 = keyperModule.getSquadIdBySafe(orgHash, squadSafe);
+        squadIdA1 = palmeraModule.getSquadIdBySafe(orgHash, squadSafe);
 
         return (rootId, squadIdA1);
     }
 
-    // Deploy 3 keyperSafes : following structure
+    // Deploy 3 palmeraSafes : following structure
     //           RootOrg
     //              |
     //         safeSquadA1
@@ -105,13 +105,13 @@ contract SkipSetupEnv is Script, SkipSafeHelper {
         // Create root & squadA1
         (rootId, squadIdA1) =
             setupRootOrgAndOneSquad(orgNameArg, squadA1NameArg);
-        address safeSubSquadA1 = newKeyperSafe(2, 1);
+        address safeSubSquadA1 = newPalmeraSafe(2, 1);
 
         // Create subsquadA1
         bool result = createAddSquadTx(squadIdA1, subSquadA1NameArg);
-        orgHash = keyperModule.getOrgBySquad(squadIdA1);
+        orgHash = palmeraModule.getOrgBySquad(squadIdA1);
         // Get subsquadA1 Id
-        subSquadIdA1 = keyperModule.getSquadIdBySafe(orgHash, safeSubSquadA1);
+        subSquadIdA1 = palmeraModule.getSquadIdBySafe(orgHash, safeSubSquadA1);
         return (rootId, squadIdA1, subSquadIdA1);
     }
 }

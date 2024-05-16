@@ -18,7 +18,7 @@ import {
 } from "./Helpers.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
-/// @title Keyper Module
+/// @title Palmera Module
 /// @custom:security-contact general@palmeradao.xyz
 contract PalmeraModule is Auth, ReentrancyGuard, Helpers {
     using GnosisSafeMath for uint256;
@@ -149,8 +149,8 @@ contract PalmeraModule is Auth, ReentrancyGuard, Helpers {
                 revert Errors.NotAuthorizedExecOnBehalf();
             }
             // Caller is a safe then check caller's safe signatures.
-            bytes memory keyperTxHashData = encodeTransactionData(
-                /// Keyper Info
+            bytes memory palmeraTxHashData = encodeTransactionData(
+                /// Palmera Info
                 org,
                 superSafe,
                 targetSafe,
@@ -166,10 +166,12 @@ contract PalmeraModule is Auth, ReentrancyGuard, Helpers {
 
             ISafe leadSafe = ISafe(superSafe);
             bytes memory sortedSignatures = processAndSortSignatures(
-                signatures, keccak256(keyperTxHashData), leadSafe.getOwners()
+                signatures, keccak256(palmeraTxHashData), leadSafe.getOwners()
             );
             leadSafe.checkSignatures(
-                keccak256(keyperTxHashData), keyperTxHashData, sortedSignatures
+                keccak256(palmeraTxHashData),
+                palmeraTxHashData,
+                sortedSignatures
             );
         }
         /// Increase nonce and execute transaction.

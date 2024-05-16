@@ -7,21 +7,21 @@ import {PalmeraModule} from "../../src/PalmeraModule.sol";
 
 /// @notice Helper contract handling and create Org and Squad with different levels
 /// @custom:security-contact general@palmeradao.xyz
-contract KeyperSafeBuilder is Test {
+contract PalmeraSafeBuilder is Test {
     SafeHelper public safeHelper;
-    PalmeraModule public keyperModule;
+    PalmeraModule public palmeraModule;
 
     // fixed array of 4 owners
     uint256[] ownersRootPK = new uint256[](4);
     uint256[] ownersSuperPK = new uint256[](4);
 
-    mapping(string => address) public keyperSafes;
+    mapping(string => address) public palmeraSafes;
 
     function setUpParams(
-        PalmeraModule keyperModuleArg,
+        PalmeraModule palmeraModuleArg,
         SafeHelper safeHelperArg
     ) public {
-        keyperModule = keyperModuleArg;
+        palmeraModule = palmeraModuleArg;
         safeHelper = safeHelperArg;
     }
 
@@ -35,19 +35,19 @@ contract KeyperSafeBuilder is Test {
     ) public returns (uint256 rootId, uint256 squadIdA1) {
         // Register Org through safe tx
         address rootAddr;
-        (rootAddr, ownersRootPK) = safeHelper.newKeyperSafeWithPKOwners(4, 2);
+        (rootAddr, ownersRootPK) = safeHelper.newPalmeraSafeWithPKOwners(4, 2);
         bool result = safeHelper.registerOrgTx(orgNameArg);
         // Get org Id
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        rootId = keyperModule.getSquadIdBySafe(orgHash, rootAddr);
+        bytes32 orgHash = palmeraModule.getOrgHashBySafe(rootAddr);
+        rootId = palmeraModule.getSquadIdBySafe(orgHash, rootAddr);
 
         address squadSafeAddr;
         (squadSafeAddr, ownersSuperPK) =
-            safeHelper.newKeyperSafeWithPKOwners(4, 2);
+            safeHelper.newPalmeraSafeWithPKOwners(4, 2);
 
         // Create squad through safe tx
         result = safeHelper.createAddSquadTx(rootId, squadA1NameArg);
-        squadIdA1 = keyperModule.getSquadIdBySafe(orgHash, squadSafeAddr);
+        squadIdA1 = palmeraModule.getSquadIdBySafe(orgHash, squadSafeAddr);
 
         vm.deal(rootAddr, 100 gwei);
         vm.deal(squadSafeAddr, 100 gwei);
@@ -66,15 +66,15 @@ contract KeyperSafeBuilder is Test {
     ) public returns (uint256 rootIdA, uint256 squadIdA1, uint256 squadIdA2) {
         (rootIdA, squadIdA1) =
             setupRootOrgAndOneSquad(orgNameArg, squadA1NameArg);
-        (,,, address rootAddr,,) = keyperModule.getSquadInfo(rootIdA);
+        (,,, address rootAddr,,) = palmeraModule.getSquadInfo(rootIdA);
 
         // Create squadA2
-        address squadA2 = safeHelper.newKeyperSafe(4, 2);
+        address squadA2 = safeHelper.newPalmeraSafe(4, 2);
 
         // Create squad through safe tx
         safeHelper.createAddSquadTx(rootIdA, squadA2NameArg);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        squadIdA2 = keyperModule.getSquadIdBySafe(orgHash, squadA2);
+        bytes32 orgHash = palmeraModule.getOrgHashBySafe(rootAddr);
+        squadIdA2 = palmeraModule.getSquadIdBySafe(orgHash, squadA2);
         vm.deal(squadA2, 100 gwei);
 
         return (rootIdA, squadIdA1, squadIdA2);
@@ -100,24 +100,24 @@ contract KeyperSafeBuilder is Test {
     {
         (rootIdA, squadIdA1) =
             setupRootOrgAndOneSquad(orgNameArg, squadA1NameArg);
-        (,,, address rootAddr,,) = keyperModule.getSquadInfo(rootIdA);
+        (,,, address rootAddr,,) = palmeraModule.getSquadInfo(rootIdA);
 
         // Create Another Safe like Root Safe
-        address rootBAddr = safeHelper.newKeyperSafe(3, 2);
+        address rootBAddr = safeHelper.newPalmeraSafe(3, 2);
         // update safe of gonsis helper
         safeHelper.updateSafeInterface(rootAddr);
         // Create Root Safe Squad
         bool result = safeHelper.createRootSafeTx(rootBAddr, rootBNameArg);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
-        rootIdB = keyperModule.getSquadIdBySafe(orgHash, rootBAddr);
+        bytes32 orgHash = palmeraModule.getOrgHashBySafe(rootAddr);
+        rootIdB = palmeraModule.getSquadIdBySafe(orgHash, rootBAddr);
         vm.deal(rootBAddr, 100 gwei);
 
         // Create squadB for rootB
-        address squadSafeB = safeHelper.newKeyperSafe(4, 2);
+        address squadSafeB = safeHelper.newPalmeraSafe(4, 2);
 
         // Create squad through safe tx
         result = safeHelper.createAddSquadTx(rootIdB, squadB1NameArg);
-        squadIdB1 = keyperModule.getSquadIdBySafe(orgHash, squadSafeB);
+        squadIdB1 = palmeraModule.getSquadIdBySafe(orgHash, squadSafeB);
         vm.deal(squadSafeB, 100 gwei);
 
         return (rootIdA, squadIdA1, rootIdB, squadIdB1);
@@ -151,18 +151,18 @@ contract KeyperSafeBuilder is Test {
         setupTwoRootOrgWithOneSquadEach(
             orgNameArg, squadA1NameArg, rootBNameArg, squadB1NameArg
         );
-        (,,, address rootAddr,,) = keyperModule.getSquadInfo(rootIdA);
-        bytes32 orgHash = keyperModule.getOrgHashBySafe(rootAddr);
+        (,,, address rootAddr,,) = palmeraModule.getSquadInfo(rootIdA);
+        bytes32 orgHash = palmeraModule.getOrgHashBySafe(rootAddr);
         // Create childSquadA1
-        address childSquadA1 = safeHelper.newKeyperSafe(4, 2);
+        address childSquadA1 = safeHelper.newPalmeraSafe(4, 2);
         safeHelper.createAddSquadTx(squadIdA1, childSquadA1NameArg);
-        childSquadIdA1 = keyperModule.getSquadIdBySafe(orgHash, childSquadA1);
+        childSquadIdA1 = palmeraModule.getSquadIdBySafe(orgHash, childSquadA1);
         vm.deal(childSquadA1, 100 gwei);
 
         // Create childSquadB1
-        address childSquadB1 = safeHelper.newKeyperSafe(4, 2);
+        address childSquadB1 = safeHelper.newPalmeraSafe(4, 2);
         safeHelper.createAddSquadTx(squadIdB1, childSquadB1NameArg);
-        childSquadIdB1 = keyperModule.getSquadIdBySafe(orgHash, childSquadB1);
+        childSquadIdB1 = palmeraModule.getSquadIdBySafe(orgHash, childSquadB1);
         vm.deal(childSquadB1, 100 gwei);
 
         return (
@@ -203,19 +203,19 @@ contract KeyperSafeBuilder is Test {
             setupRootOrgAndOneSquad(orgNameArg, squadA1NameArg);
         (rootIdB, squadIdB1) =
             setupRootOrgAndOneSquad(rootBNameArg, squadB1NameArg);
-        bytes32 orgHash1 = keyperModule.getOrgBySquad(rootIdA);
-        bytes32 orgHash2 = keyperModule.getOrgBySquad(rootIdB);
+        bytes32 orgHash1 = palmeraModule.getOrgBySquad(rootIdA);
+        bytes32 orgHash2 = palmeraModule.getOrgBySquad(rootIdB);
 
         // Create childSquadA1
-        address childSquadA1 = safeHelper.newKeyperSafe(4, 2);
+        address childSquadA1 = safeHelper.newPalmeraSafe(4, 2);
         safeHelper.createAddSquadTx(squadIdA1, childSquadA1NameArg);
-        childSquadIdA1 = keyperModule.getSquadIdBySafe(orgHash1, childSquadA1);
+        childSquadIdA1 = palmeraModule.getSquadIdBySafe(orgHash1, childSquadA1);
         vm.deal(childSquadA1, 100 gwei);
 
         // Create childSquadB1
-        address childSquadB1 = safeHelper.newKeyperSafe(4, 2);
+        address childSquadB1 = safeHelper.newPalmeraSafe(4, 2);
         safeHelper.createAddSquadTx(squadIdB1, childSquadB1NameArg);
-        childSquadIdB1 = keyperModule.getSquadIdBySafe(orgHash2, childSquadB1);
+        childSquadIdB1 = palmeraModule.getSquadIdBySafe(orgHash2, childSquadB1);
         vm.deal(childSquadB1, 100 gwei);
 
         return (
@@ -228,7 +228,7 @@ contract KeyperSafeBuilder is Test {
         );
     }
 
-    // Deploy 3 keyperSafes : following structure
+    // Deploy 3 palmeraSafes : following structure
     //           RootOrg
     //              |
     //         safeSquadA1
@@ -251,17 +251,17 @@ contract KeyperSafeBuilder is Test {
         // Create root & squadA1
         (rootId, squadIdA1) =
             setupRootOrgAndOneSquad(orgNameArg, squadA1NameArg);
-        address safeSubSquadA1 = safeHelper.newKeyperSafe(2, 1);
+        address safeSubSquadA1 = safeHelper.newPalmeraSafe(2, 1);
 
         // Create subsquadA1
         safeHelper.createAddSquadTx(squadIdA1, subSquadA1NameArg);
-        bytes32 orgHash = keyperModule.getOrgBySquad(squadIdA1);
+        bytes32 orgHash = palmeraModule.getOrgBySquad(squadIdA1);
         // Get subsquadA1 Id
-        subSquadIdA1 = keyperModule.getSquadIdBySafe(orgHash, safeSubSquadA1);
+        subSquadIdA1 = palmeraModule.getSquadIdBySafe(orgHash, safeSubSquadA1);
         return (rootId, squadIdA1, subSquadIdA1, ownersRootPK, ownersSuperPK);
     }
 
-    // Deploy 4 keyperSafes : following structure
+    // Deploy 4 palmeraSafes : following structure
     //           RootOrg
     //              |
     //         safeSquadA1
@@ -287,18 +287,18 @@ contract KeyperSafeBuilder is Test {
             orgNameArg, squadA1NameArg, subSquadA1NameArg
         );
 
-        address safeSubSubSquadA1 = safeHelper.newKeyperSafe(2, 1);
+        address safeSubSubSquadA1 = safeHelper.newPalmeraSafe(2, 1);
 
         safeHelper.createAddSquadTx(subSquadIdA1, subSubSquadA1NameArg);
-        bytes32 orgHash = keyperModule.getOrgBySquad(squadIdA1);
+        bytes32 orgHash = palmeraModule.getOrgBySquad(squadIdA1);
         // Get subsquadA1 Id
         subSubSquadIdA1 =
-            keyperModule.getSquadIdBySafe(orgHash, safeSubSubSquadA1);
+            palmeraModule.getSquadIdBySafe(orgHash, safeSubSubSquadA1);
 
         return (rootId, squadIdA1, subSquadIdA1, subSubSquadIdA1);
     }
 
-    // Deploy 4 keyperSafes : following structure
+    // Deploy 4 palmeraSafes : following structure
     //           RootOrg
     //          |      |
     //      squadA1   SquadB
@@ -327,11 +327,11 @@ contract KeyperSafeBuilder is Test {
             orgNameArg, squadA1NameArg, subSquadA1NameArg, subSubSquadA1NameArg
         );
 
-        address safeSquadB = safeHelper.newKeyperSafe(2, 1);
+        address safeSquadB = safeHelper.newPalmeraSafe(2, 1);
         safeHelper.createAddSquadTx(rootId, squadBNameArg);
-        bytes32 orgHash = keyperModule.getOrgBySquad(squadIdA1);
+        bytes32 orgHash = palmeraModule.getOrgBySquad(squadIdA1);
         // Get squadIdB Id
-        squadIdB = keyperModule.getSquadIdBySafe(orgHash, safeSquadB);
+        squadIdB = palmeraModule.getSquadIdBySafe(orgHash, safeSquadB);
 
         return (rootId, squadIdA1, squadIdB, subSquadIdA1, subSubSquadIdA1);
     }

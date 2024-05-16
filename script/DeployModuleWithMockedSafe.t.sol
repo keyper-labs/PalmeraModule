@@ -19,7 +19,7 @@ contract DeployModuleWithMockedSafe is Script {
         vm.startBroadcast();
         MockedContract masterCopyMocked = new MockedContract();
         MockedContract proxyFactoryMocked = new MockedContract();
-        PalmeraModule keyperModule = new PalmeraModule(
+        PalmeraModule palmeraModule = new PalmeraModule(
             address(masterCopyMocked),
             address(proxyFactoryMocked),
             rolesAuthority,

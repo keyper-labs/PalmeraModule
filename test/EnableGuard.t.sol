@@ -10,8 +10,8 @@ import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 /// @title TestEnableModule
 /// @custom:security-contact general@palmeradao.xyz
 contract TestEnableGuard is Test {
-    PalmeraModule keyperModule;
-    PalmeraGuard keyperGuard;
+    PalmeraModule palmeraModule;
+    PalmeraGuard palmeraGuard;
     SafeHelper safeHelper;
     address safeAddr;
 
@@ -25,26 +25,26 @@ contract TestEnableGuard is Test {
         address safeFactory = address(safeHelper.safeFactory());
         address rolesAuthority = address(0xBEEF);
         uint256 maxTreeDepth = 50;
-        keyperModule = new PalmeraModule(
+        palmeraModule = new PalmeraModule(
             masterCopy, safeFactory, rolesAuthority, maxTreeDepth
         );
-        keyperGuard = new PalmeraGuard(address(keyperModule));
-        safeHelper.setKeyperModule(address(keyperModule));
-        safeHelper.setKeyperGuard(address(keyperGuard));
+        palmeraGuard = new PalmeraGuard(address(palmeraModule));
+        safeHelper.setPalmeraModule(address(palmeraModule));
+        safeHelper.setPalmeraGuard(address(palmeraGuard));
     }
 
     /// @notice Test enabling the PalmeraModule
-    function testEnableKeyperModule() public {
+    function testEnablePalmeraModule() public {
         bool result = safeHelper.enableModuleTx(safeAddr);
         assertEq(result, true);
         // Verify module has been enabled
-        bool isKeyperModuleEnabled =
-            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
-        assertEq(isKeyperModuleEnabled, true);
+        bool isPalmeraModuleEnabled =
+            safeHelper.safeWallet().isModuleEnabled(address(palmeraModule));
+        assertEq(isPalmeraModuleEnabled, true);
     }
 
     /// @notice Test enabling the PalmeraGuard
-    function testEnableKeyperGuard() public {
+    function testEnablePalmeraGuard() public {
         bool result = safeHelper.enableGuardTx(safeAddr);
         assertEq(result, true);
         // Verify guard has been enabled
@@ -54,6 +54,6 @@ contract TestEnableGuard is Test {
             ),
             (address)
         );
-        assertEq(guardAddress, address(keyperGuard));
+        assertEq(guardAddress, address(palmeraGuard));
     }
 }
