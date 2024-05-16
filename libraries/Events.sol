@@ -4,10 +4,10 @@ pragma solidity ^0.8.15;
 /// @title Library Events
 /// @custom:security-contact general@palmeradao.xyz
 library Events {
-	/// @dev Event Fire when create a new Organization
-	/// @param creator Address of the creator
-	/// @param org Hash(DAO's name)
-	/// @param name String name of the organization
+    /// @dev Event Fire when create a new Organization
+    /// @param creator Address of the creator
+    /// @param org Hash(DAO's name)
+    /// @param name String name of the organization
     event OrganizationCreated(
         address indexed creator,
         bytes32 indexed org,
@@ -75,7 +75,7 @@ library Events {
         bool result
     );
 
-    /// @dev Event Fire when any Gnosis Safe enable the Keyper Module
+    /// @dev Event Fire when any Safe enable the Keyper Module
     event ModuleEnabled(address indexed safe, address indexed module);
 
     /// @dev Event Fire when any Root Safe create a new Root Safe

@@ -3,7 +3,7 @@ pragma solidity ^0.8.15;
 
 import {Enum} from "@safe-contracts/common/Enum.sol";
 
-interface IGnosisSafe {
+interface ISafe {
     function execTransactionFromModule(
         address to,
         uint256 value,
@@ -54,7 +54,7 @@ interface IGnosisSafe {
     ) external view;
 }
 
-interface IGnosisSafeProxy {
+interface ISafeProxy {
     /// @dev Allows to create new proxy contact and execute a message call to the new proxy within one transaction.
     /// @param singleton Address of singleton contract.
     /// @param data Payload for message call sent to new proxy contract.

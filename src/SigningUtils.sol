@@ -47,16 +47,16 @@ abstract contract SigningUtils {
 
     /**
      * @dev Given a transaction, it creates a hash of the transaction that can be signed
-     * @param domainSeparatorGnosis Hash of the Gnosis Safe domain separator
-     * @param safeTx Gnosis Safe transaction
+     * @param domainSeparatorSafe Hash of the Safe domain separator
+     * @param safeTx Safe transaction
      * @return Hash of the transaction
      */
     function createDigestExecTx(
-        bytes32 domainSeparatorGnosis,
+        bytes32 domainSeparatorSafe,
         Transaction memory safeTx
     ) public view returns (bytes32) {
         bytes32 digest = _hashTypedDataV4(
-            domainSeparatorGnosis,
+            domainSeparatorSafe,
             keccak256(
                 abi.encode(
                     keccak256(

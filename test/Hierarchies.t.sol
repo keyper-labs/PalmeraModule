@@ -13,11 +13,11 @@ contract Hierarchies is DeployHelper {
 
     /// @notice Test Register Root Organization
     function testRegisterRootOrg() public {
-        bool result = gnosisHelper.registerOrgTx(orgName);
+        bool result = safeHelper.registerOrgTx(orgName);
         assertEq(result, true);
         assertEq(orgHash, keccak256(abi.encodePacked(orgName)));
         uint256 rootId = keyperModule.getSquadIdBySafe(
-            orgHash, address(gnosisHelper.gnosisSafe())
+            orgHash, address(safeHelper.safeWallet())
         );
         (
             DataTypes.Tier tier,
@@ -30,7 +30,7 @@ contract Hierarchies is DeployHelper {
         assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
         assertEq(name, orgName);
         assertEq(lead, address(0));
-        assertEq(safe, address(gnosisHelper.gnosisSafe()));
+        assertEq(safe, address(safeHelper.safeWallet()));
         assertEq(superSafe, 0);
         assertEq(child.length, 0);
         assertEq(keyperModule.isOrgRegistered(orgHash), true);
@@ -58,7 +58,7 @@ contract Hierarchies is DeployHelper {
         assertEq(uint256(tier), uint256(DataTypes.Tier.SQUAD));
         assertEq(squadName, squadA1Name);
         assertEq(lead, address(0));
-        assertEq(safe, address(gnosisHelper.gnosisSafe()));
+        assertEq(safe, address(safeHelper.safeWallet()));
         assertEq(child.length, 0);
         assertEq(superSafe, rootId);
 
@@ -103,7 +103,7 @@ contract Hierarchies is DeployHelper {
     function testAddSubSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
-        address squadBaddr = gnosisHelper.newKeyperSafe(4, 2);
+        address squadBaddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(squadBaddr);
         uint256 squadIdB = keyperModule.addSquad(squadIdA1, squadBName);
         assertEq(keyperModule.isTreeMember(rootId, squadIdA1), true);
@@ -224,9 +224,7 @@ contract Hierarchies is DeployHelper {
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         vm.startPrank(address(0xDDD));
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, address(0xDDD)
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, address(0xDDD))
         );
         keyperModule.updateSuper(squadIdA1, rootId);
         vm.stopPrank();
@@ -336,10 +334,10 @@ contract Hierarchies is DeployHelper {
         (, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address safeSubSquadA1 = gnosisHelper.newKeyperSafe(2, 1);
-        gnosisHelper.updateSafeInterface(safeSubSquadA1);
+        address safeSubSquadA1 = safeHelper.newKeyperSafe(2, 1);
+        safeHelper.updateSafeInterface(safeSubSquadA1);
 
-        bool result = gnosisHelper.createAddSquadTx(squadIdA1, subSquadA1Name);
+        bool result = safeHelper.createAddSquadTx(squadIdA1, subSquadA1Name);
         assertEq(result, true);
 
         vm.startPrank(safeSubSquadA1);
@@ -351,10 +349,10 @@ contract Hierarchies is DeployHelper {
         keyperModule.addSquad(squadIdA1, subSquadA1Name);
 
         vm.deal(safeSubSquadA1, 1 ether);
-        gnosisHelper.updateSafeInterface(safeSubSquadA1);
+        safeHelper.updateSafeInterface(safeSubSquadA1);
 
         vm.expectRevert();
-        result = gnosisHelper.createAddSquadTx(squadIdA1, subSquadA1Name);
+        result = safeHelper.createAddSquadTx(squadIdA1, subSquadA1Name);
     }
 
     // ! **************** List of Test for Depth Tree Limits *******************************
@@ -380,9 +378,7 @@ contract Hierarchies is DeployHelper {
         address squadA = keyperModule.getSquadSafeAddress(squadA1Id);
         vm.startPrank(squadA);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadA
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
         keyperModule.updateDepthTreeLimit(10);
         vm.stopPrank();
@@ -394,7 +390,7 @@ contract Hierarchies is DeployHelper {
         vm.startPrank(LastSubSquad);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, LastSubSquad
+                Errors.InvalidRootSafe.selector, LastSubSquad
             )
         );
         keyperModule.updateDepthTreeLimit(10);
@@ -433,7 +429,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
             // Start Prank
             vm.startPrank(subSquadAaddr[i]);
             // Add the new Safe as a subSquad
@@ -487,7 +483,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
             // Start Prank
             vm.startPrank(subSquadAaddr[i]);
             // Add the new Safe as a subSquad
@@ -515,7 +511,7 @@ contract Hierarchies is DeployHelper {
         depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subSquadAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[j] = safeHelper.newKeyperSafe(3, 1);
             // Start Prank
             vm.startPrank(subSquadAaddr[j]);
             // Add the new Safe as a subSquad
@@ -578,7 +574,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 3; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
@@ -644,7 +640,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 3; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
@@ -674,7 +670,7 @@ contract Hierarchies is DeployHelper {
         depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subSquadAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[j] = safeHelper.newKeyperSafe(3, 1);
             // Add the new Safe as a subSquad
             if (j != 15) {
                 // Start Prank
@@ -734,7 +730,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
@@ -794,7 +790,7 @@ contract Hierarchies is DeployHelper {
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
@@ -823,7 +819,7 @@ contract Hierarchies is DeployHelper {
         depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subSquadAaddr[j] = gnosisHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[j] = safeHelper.newKeyperSafe(3, 1);
             // Add the new Safe as a subSquad
             if (j != 15) {
                 // Start Prank

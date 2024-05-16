@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
-import {IGnosisSafe, IGnosisSafeProxy} from "./GnosisSafeInterfaces.sol";
+import {ISafe, ISafeProxy} from "./SafeInterfaces.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {
@@ -22,14 +22,14 @@ abstract contract Helpers is DenyHelper, SignatureDecoder {
     using GnosisSafeMath for uint256;
     using Address for address;
 
-    /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet
-    /// @param safe Address of the Gnosis Safe Multisig Wallet
-    modifier IsGnosisSafe(address safe) {
+    /// @dev Modifier for Validate if the address is a Safe Multisig Wallet
+    /// @param safe Address of the Safe Multisig Wallet
+    modifier IsSafe(address safe) {
         if (
             safe == address(0) || safe == Constants.SENTINEL_ADDRESS
                 || !isSafe(safe)
         ) {
-            revert Errors.InvalidGnosisSafe(safe);
+            revert Errors.InvalidSafe(safe);
         }
         _;
     }
@@ -118,18 +118,18 @@ abstract contract Helpers is DenyHelper, SignatureDecoder {
         );
     }
 
-    /// @notice Method to Validate if address is a Gnosis Safe Multisig Wallet
-    /// @dev This method is used to validate if the address is a Gnosis Safe Multisig Wallet
+    /// @notice Method to Validate if address is a Safe Multisig Wallet
+    /// @dev This method is used to validate if the address is a Safe Multisig Wallet
     /// @param safe Address to validate
     /// @return bool
     function isSafe(address safe) public view returns (bool) {
-        /// Check if the address is a Gnosis Safe Multisig Wallet
+        /// Check if the address is a Safe Multisig Wallet
         if (safe.isContract()) {
-            /// Check if the address is a Gnosis Safe Multisig Wallet
+            /// Check if the address is a Safe Multisig Wallet
             bytes memory payload = abi.encodeWithSignature("getThreshold()");
             (bool success, bytes memory returnData) = safe.staticcall(payload);
             if (!success) return false;
-            /// Check if the address is a Gnosis Safe Multisig Wallet
+            /// Check if the address is a Safe Multisig Wallet
             uint256 threshold = abi.decode(returnData, (uint256));
             if (threshold == 0) return false;
             return true;
@@ -176,11 +176,11 @@ abstract contract Helpers is DenyHelper, SignatureDecoder {
     /// @param safe address of the Safe
     /// @return address of the Preview Module
     function getPreviewModule(address safe) internal view returns (address) {
-        // create Instance of the Gnosis Safe
-        IGnosisSafe gnosisSafe = IGnosisSafe(safe);
+        // create Instance of the Safe
+        ISafe safeInstance = ISafe(safe);
         // get the modules of the Safe
         (address[] memory modules, address nextModule) =
-            gnosisSafe.getModulesPaginated(address(this), 25);
+            safeInstance.getModulesPaginated(address(this), 25);
         if ((modules.length == 0) && (nextModule == Constants.SENTINEL_ADDRESS))
         {
             return Constants.SENTINEL_ADDRESS;
@@ -199,8 +199,8 @@ abstract contract Helpers is DenyHelper, SignatureDecoder {
     function _executeModuleTransaction(address safe, bytes memory data)
         internal
     {
-        IGnosisSafe gnosisTargetSafe = IGnosisSafe(safe);
-        bool result = gnosisTargetSafe.execTransactionFromModule(
+        ISafe targetSafe = ISafe(safe);
+        bool result = targetSafe.execTransactionFromModule(
             safe, uint256(0), data, Enum.Operation.Call
         );
         if (!result) revert Errors.TxExecutionModuleFailed();

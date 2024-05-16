@@ -13,8 +13,8 @@ import {
     Address,
     GnosisSafeMath,
     Enum,
-    IGnosisSafe,
-    IGnosisSafeProxy
+    ISafe,
+    ISafeProxy
 } from "./Helpers.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
@@ -66,21 +66,21 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
                 || !isSafe(safe)
         ) {
-            revert Errors.InvalidGnosisSafe(safe);
+            revert Errors.InvalidSafe(safe);
         } else if (!isSafeRegistered(safe)) {
             revert Errors.SafeNotRegistered(safe);
         }
         _;
     }
 
-    /// @dev Modifier for Validate if the address is a Gnosis Safe Multisig Wallet and Root Safe
-    /// @param safe Address of the Gnosis Safe Multisig Wallet
+    /// @dev Modifier for Validate if the address is a Safe Multisig Wallet and Root Safe
+    /// @param safe Address of the Safe Multisig Wallet
     modifier IsRootSafe(address safe) {
         if (
             (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
                 || !isSafe(safe)
         ) {
-            revert Errors.InvalidGnosisSafe(safe);
+            revert Errors.InvalidSafe(safe);
         } else if (!isSafeRegistered(safe)) {
             revert Errors.SafeNotRegistered(safe);
         } else if (
@@ -88,7 +88,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
                 getOrgHashBySafe(safe), safe
             )].tier != DataTypes.Tier.ROOT
         ) {
-            revert Errors.InvalidGnosisRootSafe(safe);
+            revert Errors.InvalidRootSafe(safe);
         }
         _;
     }
@@ -164,23 +164,20 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             );
             /// Verify Collision of Nonce with multiple txs in the same range of time, study to use a nonce per org
 
-            IGnosisSafe gnosisLeadSafe = IGnosisSafe(superSafe);
+            ISafe leadSafe = ISafe(superSafe);
             bytes memory sortedSignatures = processAndSortSignatures(
-                signatures,
-                keccak256(keyperTxHashData),
-                gnosisLeadSafe.getOwners()
+                signatures, keccak256(keyperTxHashData), leadSafe.getOwners()
             );
-            gnosisLeadSafe.checkSignatures(
+            leadSafe.checkSignatures(
                 keccak256(keyperTxHashData), keyperTxHashData, sortedSignatures
             );
         }
         /// Increase nonce and execute transaction.
         nonce++;
         /// Execute transaction from target safe
-        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
-        result = gnosisTargetSafe.execTransactionFromModule(
-            to, value, data, operation
-        );
+        ISafe safeTarget = ISafe(targetSafe);
+        result =
+            safeTarget.execTransactionFromModule(to, value, data, operation);
 
         if (!result) revert Errors.TxOnBehalfExecutedFailed();
         emit Events.TxOnBehalfExecuted(
@@ -192,8 +189,8 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @notice to to add owner and set a threshold without passing by normal multisig check
     /// @dev For instance addOwnerWithThreshold can be called by Safe Lead & Safe Lead modify only roles
     /// @param ownerAdded Address of the owner to be added
-    /// @param threshold Threshold of the Gnosis Safe Multisig Wallet
-    /// @param targetSafe Address of the Gnosis Safe Multisig Wallet
+    /// @param threshold Threshold of the Safe Multisig Wallet
+    /// @param targetSafe Address of the Safe Multisig Wallet
     /// @param org Hash(DAO's name)
     function addOwnerWithThreshold(
         address ownerAdded,
@@ -211,25 +208,25 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             revert Errors.NotAuthorizedAddOwnerWithThreshold();
         }
 
-        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
+        ISafe safeTarget = ISafe(targetSafe);
         /// If the owner is already an owner
-        if (gnosisTargetSafe.isOwner(ownerAdded)) {
+        if (safeTarget.isOwner(ownerAdded)) {
             revert Errors.OwnerAlreadyExists();
         }
 
         bytes memory data = abi.encodeWithSelector(
-            IGnosisSafe.addOwnerWithThreshold.selector, ownerAdded, threshold
+            ISafe.addOwnerWithThreshold.selector, ownerAdded, threshold
         );
         /// Execute transaction from target safe
         _executeModuleTransaction(targetSafe, data);
     }
 
     /// @notice This function will allow User Lead/Super/Root to remove an owner
-    /// @dev For instance of Remove Owner of Gnosis Safe, the user lead/super/root can remove an owner without passing by normal multisig check signature
+    /// @dev For instance of Remove Owner of Safe, the user lead/super/root can remove an owner without passing by normal multisig check signature
     /// @param prevOwner Address of the previous owner
     /// @param ownerRemoved Address of the owner to be removed
-    /// @param threshold Threshold of the Gnosis Safe Multisig Wallet
-    /// @param targetSafe Address of the Gnosis Safe Multisig Wallet
+    /// @param threshold Threshold of the Safe Multisig Wallet
+    /// @param targetSafe Address of the Safe Multisig Wallet
     /// @param org Hash(DAO's name)
     function removeOwner(
         address prevOwner,
@@ -250,14 +247,14 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         if (hasNotPermissionOverTarget(caller, org, targetSafe)) {
             revert Errors.NotAuthorizedRemoveOwner();
         }
-        IGnosisSafe gnosisTargetSafe = IGnosisSafe(targetSafe);
+        ISafe safeTarget = ISafe(targetSafe);
         /// if Owner Not found
-        if (!gnosisTargetSafe.isOwner(ownerRemoved)) {
+        if (!safeTarget.isOwner(ownerRemoved)) {
             revert Errors.OwnerNotFound();
         }
 
         bytes memory data = abi.encodeWithSelector(
-            IGnosisSafe.removeOwner.selector, prevOwner, ownerRemoved, threshold
+            ISafe.removeOwner.selector, prevOwner, ownerRemoved, threshold
         );
 
         /// Execute transaction from target safe
@@ -306,7 +303,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @param daoName String with of the org (This name will be hashed into smart contract)
     function registerOrg(string calldata daoName)
         external
-        IsGnosisSafe(_msgSender())
+        IsSafe(_msgSender())
         returns (uint256 squadId)
     {
         bytes32 name = keccak256(abi.encodePacked(daoName));
@@ -325,7 +322,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @param name string name of the squad
     function createRootSafeSquad(address newRootSafe, string calldata name)
         external
-        IsGnosisSafe(newRootSafe)
+        IsSafe(newRootSafe)
         IsRootSafe(_msgSender())
         requiresAuth
         returns (uint256 squadId)
@@ -349,7 +346,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     function addSquad(uint256 superSafe, string memory name)
         external
         SquadRegistered(superSafe)
-        IsGnosisSafe(_msgSender())
+        IsSafe(_msgSender())
         returns (uint256 squadId)
     {
         // check the name of squad is not empty
@@ -778,7 +775,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @notice This function checks that caller has permission (as Root/Super/Lead safe) of the target safe
     /// @param caller Caller's address
     /// @param org Hash(DAO's name)
-    /// @param targetSafe Address of the target Gnosis Safe Multisig Wallet
+    /// @param targetSafe Address of the target Safe Multisig Wallet
     function hasNotPermissionOverTarget(
         address caller,
         bytes32 org,
@@ -1046,13 +1043,13 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         bytes32 org = getOrgBySquad(squad);
         address _squad = squads[org][squad].safe;
         address caller = _msgSender();
-        IGnosisSafe gnosisTargetSafe = IGnosisSafe(_squad);
+        ISafe safeTarget = ISafe(_squad);
         removeIndexSquad(org, squad);
         delete squads[org][squad];
 
         /// Disable Guard
         bytes memory data =
-            abi.encodeWithSelector(IGnosisSafe.setGuard.selector, address(0));
+            abi.encodeWithSelector(ISafe.setGuard.selector, address(0));
         /// Execute transaction from target safe
         _executeModuleTransaction(_squad, data);
 
@@ -1062,14 +1059,12 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             revert Errors.PreviewModuleNotFound(_squad);
         }
         data = abi.encodeWithSelector(
-            IGnosisSafe.disableModule.selector, prevModule, address(this)
+            ISafe.disableModule.selector, prevModule, address(this)
         );
         /// Execute transaction from target safe
         _executeModuleTransaction(_squad, data);
 
-        emit Events.SafeDisconnected(
-            org, squad, address(gnosisTargetSafe), caller
-        );
+        emit Events.SafeDisconnected(org, squad, address(safeTarget), caller);
     }
 
     /// @notice disable safe lead roles

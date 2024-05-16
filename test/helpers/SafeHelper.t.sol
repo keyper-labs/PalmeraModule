@@ -10,25 +10,20 @@ import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 import {Random} from "../../libraries/Random.sol";
 
-/// @notice Helper contract handling deployment Gnosis Safe contracts
+/// @notice Helper contract handling deployment Safe contracts
 /// @custom:security-contact general@palmeradao.xyz
-contract GnosisSafeHelper is
-    Test,
-    SigningUtils,
-    SignDigestHelper,
-    SignersHelper
-{
-    GnosisSafe public gnosisSafe;
+contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
+    GnosisSafe public safeWallet;
     DeploySafeFactory public safeFactory;
 
     address public keyperRolesAddr;
     address public keyperModuleAddr;
     address public keyperGuardAddr;
-    address public gnosisMasterCopy;
+    address public safeMasterCopy;
 
     uint256 public salt;
 
-    /// Create new gnosis safe test environment
+    /// Create new safe test environment
     /// Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
     /// Init signers
     /// Deploy a new safe proxy
@@ -36,13 +31,13 @@ contract GnosisSafeHelper is
     function setupSafeEnv() public returns (address) {
         safeFactory = new DeploySafeFactory();
         safeFactory.run();
-        gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
+        safeMasterCopy = address(safeFactory.safeContract());
         bytes memory emptyData;
-        address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
-        gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
+        address safeWalletProxy = safeFactory.newSafeProxy(emptyData);
+        safeWallet = GnosisSafe(payable(safeWalletProxy));
         initOnwers(30);
 
-        /// Setup gnosis safe with 3 owners, 1 threshold
+        /// Setup safe with 3 owners, 1 threshold
         address[] memory owners = new address[](3);
         owners[0] = vm.addr(privateKeyOwners[0]);
         owners[1] = vm.addr(privateKeyOwners[1]);
@@ -50,7 +45,7 @@ contract GnosisSafeHelper is
         /// Update privateKeyOwners used
         updateCount(3);
 
-        gnosisSafe.setup(
+        safeWallet.setup(
             owners,
             uint256(1),
             address(0x0),
@@ -61,10 +56,10 @@ contract GnosisSafeHelper is
             payable(address(0x0))
         );
 
-        return address(gnosisSafe);
+        return address(safeWallet);
     }
 
-    /// Create new gnosis safe test environment
+    /// Create new safe test environment
     /// Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
     /// Init signers
     /// Permit create a specific numbers of owners
@@ -78,14 +73,14 @@ contract GnosisSafeHelper is
     {
         safeFactory = new DeploySafeFactory();
         safeFactory.run();
-        gnosisMasterCopy = address(safeFactory.gnosisSafeContract());
+        safeMasterCopy = address(safeFactory.safeContract());
         salt++;
         bytes memory emptyData = abi.encodePacked(salt);
-        address gnosisSafeProxy = safeFactory.newSafeProxy(emptyData);
-        gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
+        address safeWalletProxy = safeFactory.newSafeProxy(emptyData);
+        safeWallet = GnosisSafe(payable(safeWalletProxy));
         initOnwers(initOwners);
 
-        /// Setup gnosis safe with 3 owners, 1 threshold
+        /// Setup safe with 3 owners, 1 threshold
         address[] memory owners = new address[](3);
         owners[0] = vm.addr(privateKeyOwners[0]);
         owners[1] = vm.addr(privateKeyOwners[1]);
@@ -93,7 +88,7 @@ contract GnosisSafeHelper is
         /// Update privateKeyOwners used
         updateCount(3);
 
-        gnosisSafe.setup(
+        safeWallet.setup(
             owners,
             uint256(1),
             address(0x0),
@@ -104,7 +99,7 @@ contract GnosisSafeHelper is
             payable(address(0x0))
         );
 
-        return address(gnosisSafe);
+        return address(safeWallet);
     }
 
     /// function to set keyperRoles address
@@ -161,17 +156,17 @@ contract GnosisSafeHelper is
             payable(address(0x0))
         );
 
-        address gnosisSafeProxy = safeFactory.newSafeProxy(initializer);
-        gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
+        address safeWalletProxy = safeFactory.newSafeProxy(initializer);
+        safeWallet = GnosisSafe(payable(address(safeWalletProxy)));
 
         /// Enable module
-        bool result = enableModuleTx(address(gnosisSafe));
+        bool result = enableModuleTx(address(safeWallet));
         require(result == true, "failed enable module");
 
         /// Enable Guard
-        result = enableGuardTx(address(gnosisSafe));
+        result = enableGuardTx(address(safeWallet));
         require(result == true, "failed enable guard");
-        return address(gnosisSafe);
+        return address(safeWallet);
     }
 
     /// fucntion to create Safe with Keyper and send module enabled tx
@@ -212,23 +207,23 @@ contract GnosisSafeHelper is
             payable(address(0x0))
         );
 
-        address gnosisSafeProxy = safeFactory.newSafeProxy(initializer);
-        gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
+        address safeWalletProxy = safeFactory.newSafeProxy(initializer);
+        safeWallet = GnosisSafe(payable(address(safeWalletProxy)));
 
         /// Enable module
-        bool result = enableModuleTx(address(gnosisSafe));
+        bool result = enableModuleTx(address(safeWallet));
         require(result == true, "failed enable module");
 
         /// Enable Guard
-        result = enableGuardTx(address(gnosisSafe));
+        result = enableGuardTx(address(safeWallet));
         require(result == true, "failed enable guard");
-        return (address(gnosisSafe), ownersPK);
+        return (address(safeWallet), ownersPK);
     }
 
     /// function to update Safe Interface
     /// @param safe address of the Safe
     function updateSafeInterface(address safe) public {
-        gnosisSafe = GnosisSafe(payable(address(safe)));
+        safeWallet = GnosisSafe(payable(address(safe)));
     }
 
     /// function to get transaction hash of a Safe transaction
@@ -240,7 +235,7 @@ contract GnosisSafeHelper is
         view
         returns (bytes32)
     {
-        bytes32 txHashed = gnosisSafe.getTransactionHash(
+        bytes32 txHashed = safeWallet.getTransactionHash(
             safeTx.to,
             safeTx.value,
             safeTx.data,
@@ -354,7 +349,7 @@ contract GnosisSafeHelper is
         internal
         returns (bool)
     {
-        bool result = gnosisSafe.execTransaction(
+        bool result = safeWallet.execTransaction(
             mockTx.to,
             mockTx.value,
             mockTx.data,
@@ -607,13 +602,13 @@ contract GnosisSafeHelper is
         returns (bytes memory)
     {
         /// Create encoded tx to be signed
-        uint256 nonce = gnosisSafe.nonce();
+        uint256 nonce = safeWallet.nonce();
         bytes32 enableModuleSafeTx = createSafeTxHash(mockTx, nonce);
 
-        address[] memory owners = gnosisSafe.getOwners();
+        address[] memory owners = safeWallet.getOwners();
         /// Order owners
         address[] memory sortedOwners = sortAddresses(owners);
-        uint256 threshold = gnosisSafe.getThreshold();
+        uint256 threshold = safeWallet.getThreshold();
 
         /// Get pk for the signing threshold
         uint256[] memory privateKeySafeOwners = new uint256[](threshold);

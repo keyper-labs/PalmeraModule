@@ -115,7 +115,7 @@ contract EventsChekers is DeployHelper {
     /// @notice Test Events when Register Root Organization
     function testEventWhenRegisterRootOrg() public {
         // Register Org through safe tx
-        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootAddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
@@ -128,7 +128,7 @@ contract EventsChekers is DeployHelper {
     /// @notice Test Events when Add Squad
     function testEventWhenAddSquad() public {
         // Register Org through safe tx
-        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootAddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
@@ -138,7 +138,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
 
         // Add Squad through safe tx
-        address squadAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address squadAddr = safeHelper.newKeyperSafe(4, 2);
         uint256 squadId = 2;
         vm.startPrank(squadAddr);
         vm.expectEmit(true, true, true, true);
@@ -156,7 +156,7 @@ contract EventsChekers is DeployHelper {
     /// @notice Test Events when Remove Squad
     function testEventWhenRemoveSquad() public {
         // Register Org through safe tx
-        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootAddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
@@ -166,7 +166,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
 
         // Add Squad through safe tx
-        address squadAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address squadAddr = safeHelper.newKeyperSafe(4, 2);
         uint256 squadId = 2;
         vm.startPrank(squadAddr);
         vm.expectEmit(true, true, true, true);
@@ -198,7 +198,7 @@ contract EventsChekers is DeployHelper {
     /// @notice Test Events when Register Root Safe
     function testEventWhenRegisterRootSafe() public {
         // Register Org through safe tx
-        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootAddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
@@ -208,7 +208,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
 
         // Register Root Safe through safe tx
-        address rootSafeAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootSafeAddr = safeHelper.newKeyperSafe(4, 2);
         uint256 squadId = 2;
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
@@ -225,7 +225,7 @@ contract EventsChekers is DeployHelper {
     /// @notice Test Events when Update Super Safe
     function testEventWhenUpdateSuper() public {
         // Register Org through safe tx
-        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootAddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
@@ -235,7 +235,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
 
         // Register Root Safe through safe tx
-        address rootSafeAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootSafeAddr = safeHelper.newKeyperSafe(4, 2);
         uint256 rootsafeId = 2;
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
@@ -250,7 +250,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
 
         // Add Squad through safe tx
-        address squadAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address squadAddr = safeHelper.newKeyperSafe(4, 2);
         uint256 squadId = 3;
         vm.startPrank(squadAddr);
         vm.expectEmit(true, true, true, true);
@@ -266,7 +266,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
 
         // Update Super through safe tx
-        address newRootSafeAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address newRootSafeAddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
         emit SquadSuperUpdated(
@@ -283,7 +283,7 @@ contract EventsChekers is DeployHelper {
     /// @notice Test Events when Promote Squad to Root Safe
     function testEventWhenPromoteRootSafe() public {
         // Register Org through safe tx
-        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootAddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
@@ -293,7 +293,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
 
         // Add Squad through safe tx
-        address squadAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address squadAddr = safeHelper.newKeyperSafe(4, 2);
         uint256 squadId = 2;
         vm.startPrank(squadAddr);
         vm.expectEmit(true, true, true, true);
@@ -309,7 +309,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
 
         // Add Squad through safe tx
-        address childSquadAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address childSquadAddr = safeHelper.newKeyperSafe(4, 2);
         uint256 childSquadId = 3;
         vm.startPrank(childSquadAddr);
         vm.expectEmit(true, true, true, true);
@@ -340,7 +340,7 @@ contract EventsChekers is DeployHelper {
     /// @notice Test Events when Disconnect Safe
     function testEventWhenDisconnectSafe() public {
         // Register Org through safe tx
-        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootAddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
@@ -350,7 +350,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
 
         // Add Squad through safe tx
-        address squadAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address squadAddr = safeHelper.newKeyperSafe(4, 2);
         uint256 squadId = 2;
         vm.startPrank(squadAddr);
         vm.expectEmit(true, true, true, true);
@@ -394,8 +394,8 @@ contract EventsChekers is DeployHelper {
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
 
-        // Set keyperhelper gnosis safe to org
-        keyperHelper.setGnosisSafe(rootAddr);
+        // Set keyperhelper safe to org
+        keyperHelper.setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             orgHash,
@@ -452,7 +452,7 @@ contract EventsChekers is DeployHelper {
     /// @notice Test Events when Update New Limit
     function testEventWhenUpdateNewLimit() public {
         // Register Org through safe tx
-        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootAddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
@@ -462,7 +462,7 @@ contract EventsChekers is DeployHelper {
         vm.stopPrank();
 
         // Add Squad through safe tx
-        address squadAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address squadAddr = safeHelper.newKeyperSafe(4, 2);
         uint256 squadId = 2;
         vm.startPrank(squadAddr);
         vm.expectEmit(true, true, true, true);
@@ -488,7 +488,7 @@ contract EventsChekers is DeployHelper {
 
     /// @notice Test Events when Add Address to Enable/Denied Allow List
     function testEventWhenAddToList() public {
-        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootAddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         uint256 rootId = keyperModule.registerOrg(orgName);
         keyperModule.enableAllowlist();
@@ -499,7 +499,7 @@ contract EventsChekers is DeployHelper {
 
     /// @notice Test Events when Drop Address to Enable/Denied Allow List
     function testEventWhenDropFromList() public {
-        address rootAddr = gnosisHelper.newKeyperSafe(4, 2);
+        address rootAddr = safeHelper.newKeyperSafe(4, 2);
         vm.startPrank(rootAddr);
         uint256 rootId = keyperModule.registerOrg(orgName);
         keyperModule.enableAllowlist();

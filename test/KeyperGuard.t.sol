@@ -16,15 +16,14 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
     /// @notice Test to check if the guard is disabled
     function testDisableKeyperGuard() public {
         // Check guard is disabled
-        bool result = gnosisHelper.disableGuardTx(gnosisSafeAddr);
+        bool result = safeHelper.disableGuardTx(safeAddr);
         assertEq(result, true);
-        result = gnosisHelper.disableModuleTx(
-            Constants.SENTINEL_ADDRESS, gnosisSafeAddr
-        );
+        result =
+            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, safeAddr);
         assertEq(result, true);
         // Verify guard has been enabled
         address ZeroAddress = abi.decode(
-            StorageAccessible(gnosisSafeAddr).getStorageAt(
+            StorageAccessible(safeAddr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -35,16 +34,15 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
     /// @notice Test to check if the module is disabled
     function testDisableKeyperModule() public {
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         // Check guard is disabled
-        bool result = gnosisHelper.disableModuleTx(
-            Constants.SENTINEL_ADDRESS, gnosisSafeAddr
-        );
+        bool result =
+            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, safeAddr);
         assertEq(result, true);
         // Verify module has been disabled
         isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
     }
 
@@ -56,8 +54,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
 
         /// Remove Squad A1
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveSquadTx(squadA1Id);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createRemoveSquadTx(squadA1Id);
         assertEq(result, true);
         // Replay attack
         vm.startPrank(rootAddr);
@@ -74,8 +72,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
 
         /// Remove Squad A1
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectSafeTx(squadA1Id);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createDisconnectSafeTx(squadA1Id);
         assertEq(result, true);
         // Replay attack
         vm.startPrank(rootAddr);
@@ -100,15 +98,15 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address squadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
 
         // Remove Squad A1
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectSafeTx(squadIdA1);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createDisconnectSafeTx(squadIdA1);
         assertEq(result, true);
 
         // Verify Safe is disconnected
         // Verify module has been disabled
-        gnosisHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(squadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         // Verify guard has been enabled
         address ZeroAddress = abi.decode(
@@ -132,15 +130,15 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address subSquadA1Addr = keyperModule.getSquadSafeAddress(subSquadA1Id);
 
         // Disconnect Safe
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectSafeTx(subSquadA1Id);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createDisconnectSafeTx(subSquadA1Id);
         assertEq(result, true);
 
         // Verify Safe is disconnected
         // Verify module has been disabled
-        gnosisHelper.updateSafeInterface(subSquadA1Addr);
+        safeHelper.updateSafeInterface(subSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         // Verify guard has been enabled
         address ZeroAddress = abi.decode(
@@ -160,7 +158,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        gnosisHelper.updateSafeInterface(rootAddr);
+        safeHelper.updateSafeInterface(rootAddr);
 
         /// Disconnect Safe
         vm.startPrank(rootAddr);
@@ -175,7 +173,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         /// Verify Safe still enabled
         /// Verify module still enabled
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         /// Verify guard still enabled
         address guardAddress = abi.decode(
@@ -198,21 +196,21 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
 
         /// Remove Squad A1
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveSquadTx(squadA1Id);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createRemoveSquadTx(squadA1Id);
         assertEq(result, true);
 
-        gnosisHelper.createRemoveSquadTx(rootId);
+        safeHelper.createRemoveSquadTx(rootId);
         assertEq(result, true);
 
         /// Disconnect Safe
-        result = gnosisHelper.createDisconnectSafeTx(rootId);
+        result = safeHelper.createDisconnectSafeTx(rootId);
         assertEq(result, true);
 
         /// Verify Safe has been removed
         /// Verify module has been removed
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         /// Verify guard has been removed
         address ZeroAddress = abi.decode(
@@ -234,24 +232,22 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address subSquadA1Addr = keyperModule.getSquadSafeAddress(subSquadA1Id);
 
         // Remove Squad A1
-        gnosisHelper.updateSafeInterface(squadA1Addr);
-        bool result = gnosisHelper.createRemoveSquadTx(subSquadA1Id);
+        safeHelper.updateSafeInterface(squadA1Addr);
+        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
         assertEq(result, true);
 
         // Try to Disconnect Safe
         vm.startPrank(squadA1Addr);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadA1Addr
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA1Addr)
         );
         keyperModule.disconnectSafe(subSquadA1Id);
         vm.stopPrank();
 
         // Verify module still enabled
-        gnosisHelper.updateSafeInterface(subSquadA1Addr);
+        safeHelper.updateSafeInterface(subSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
@@ -281,24 +277,22 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address squadB1Addr = keyperModule.getSquadSafeAddress(squadIdB1);
 
         // Remove Squad A1
-        gnosisHelper.updateSafeInterface(squadA1Addr);
-        bool result = gnosisHelper.createRemoveSquadTx(subSquadA1Id);
+        safeHelper.updateSafeInterface(squadA1Addr);
+        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
         assertEq(result, true);
 
         // Try to Disconnect Safe
         vm.startPrank(squadB1Addr);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadB1Addr
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadB1Addr)
         );
         keyperModule.disconnectSafe(subSquadA1Id);
         vm.stopPrank();
 
         // Verify module still enabled
-        gnosisHelper.updateSafeInterface(subSquadA1Addr);
+        safeHelper.updateSafeInterface(subSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
@@ -328,8 +322,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address rootAddrB = keyperModule.getSquadSafeAddress(rootIdB);
 
         // Remove Squad A1
-        gnosisHelper.updateSafeInterface(rootAddrA);
-        bool result = gnosisHelper.createRemoveSquadTx(subSquadA1Id);
+        safeHelper.updateSafeInterface(rootAddrA);
+        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
         assertEq(result, true);
 
         // Try to Disconnect Safe
@@ -339,9 +333,9 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.stopPrank();
 
         // Verify module still enabled
-        gnosisHelper.updateSafeInterface(subSquadA1Addr);
+        safeHelper.updateSafeInterface(subSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
@@ -363,14 +357,14 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address squadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
 
         // Disconnect Safe before to remove squad
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectSafeTx(squadIdA1);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createDisconnectSafeTx(squadIdA1);
         assertEq(result, true);
 
         // Verify module has been disabled
-        gnosisHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(squadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         // Verify guard has been disabled
         address ZeroAddress = abi.decode(
@@ -395,14 +389,14 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
         // Try to Disconnect Safe before to remove squad
         // Disconnect Safe before to remove squad
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createDisconnectSafeTx(subSquadIdA1);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createDisconnectSafeTx(subSquadIdA1);
         assertEq(result, true);
 
         // Verify module has been disabled
-        gnosisHelper.updateSafeInterface(subSquadA1Addr);
+        safeHelper.updateSafeInterface(subSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         // Verify guard has been disabled
         address ZeroAddress = abi.decode(
@@ -445,9 +439,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         // Try to Disconnect Safe before to remove squad
         vm.startPrank(fakerCaller);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, fakerCaller
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, fakerCaller)
         );
         keyperModule.disconnectSafe(childSquadA1);
         vm.stopPrank();
@@ -468,7 +460,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.deal(childSquadA1Addr, 100 gwei);
 
         // Create a a Ramdom Right EOA Caller
-        address fakerCaller = gnosisHelper.newKeyperSafe(3, 1);
+        address fakerCaller = safeHelper.newKeyperSafe(3, 1);
 
         // Set Safe Role in Safe Squad A1 over Child Squad A1
         vm.startPrank(rootAddr);
@@ -502,36 +494,35 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address squadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
 
         // Try to disable Module from root
-        gnosisHelper.updateSafeInterface(rootAddr);
+        safeHelper.updateSafeInterface(rootAddr);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisableKeyperModule.selector, address(keyperModule)
             )
         );
         bool result =
-            gnosisHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, rootAddr);
+            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, rootAddr);
         assertEq(result, false);
 
         // Verify module is still enabled
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
 
         // Try to disable Module from squad
-        gnosisHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(squadA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisableKeyperModule.selector, address(keyperModule)
             )
         );
-        result = gnosisHelper.disableModuleTx(
-            Constants.SENTINEL_ADDRESS, squadA1Addr
-        );
+        result =
+            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, squadA1Addr);
         assertEq(result, false);
 
         // Verify module is still enabled
         isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
     }
 
@@ -545,25 +536,24 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address squadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
 
         // Remove Squad A1
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveSquadTx(squadIdA1);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createRemoveSquadTx(squadIdA1);
         assertEq(result, true);
 
         // Try to disable Guard from Squad Removed
-        gnosisHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(squadA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisableKeyperModule.selector, address(keyperModule)
             )
         );
-        result = gnosisHelper.disableModuleTx(
-            Constants.SENTINEL_ADDRESS, squadA1Addr
-        );
+        result =
+            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, squadA1Addr);
         assertEq(result, false);
 
         // Verify module still enabled
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
     }
 
@@ -577,18 +567,18 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address squadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
 
         // Try to disable Guard from root
-        gnosisHelper.updateSafeInterface(rootAddr);
+        safeHelper.updateSafeInterface(rootAddr);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisableKeyperGuard.selector, address(keyperGuard)
             )
         );
-        bool result = gnosisHelper.disableGuardTx(rootAddr);
+        bool result = safeHelper.disableGuardTx(rootAddr);
         assertEq(result, false);
 
         // Verify Guard is still enabled
         address keyperGuardAddrTest = abi.decode(
-            StorageAccessible(address(gnosisHelper.gnosisSafe())).getStorageAt(
+            StorageAccessible(address(safeHelper.safeWallet())).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -596,18 +586,18 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(keyperGuardAddrTest, keyperGuardAddr);
 
         // Try to disable Guard from squad
-        gnosisHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(squadA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisableKeyperGuard.selector, address(keyperGuard)
             )
         );
-        result = gnosisHelper.disableGuardTx(squadA1Addr);
+        result = safeHelper.disableGuardTx(squadA1Addr);
         assertEq(result, false);
 
         // Verify Guard is still enabled
         keyperGuardAddrTest = abi.decode(
-            StorageAccessible(address(gnosisHelper.gnosisSafe())).getStorageAt(
+            StorageAccessible(address(safeHelper.safeWallet())).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -624,32 +614,31 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
         address squadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
         // Remove Squad A1
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveSquadTx(squadIdA1);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createRemoveSquadTx(squadIdA1);
         assertEq(result, true);
 
         // Try to disable Guard from Squad Removed
-        gnosisHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(squadA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisableKeyperModule.selector, address(keyperModule)
             )
         );
-        result = gnosisHelper.disableModuleTx(
-            Constants.SENTINEL_ADDRESS, squadA1Addr
-        );
+        result =
+            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, squadA1Addr);
         assertEq(result, false);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisableKeyperGuard.selector, address(keyperGuard)
             )
         );
-        result = gnosisHelper.disableGuardTx(squadA1Addr);
+        result = safeHelper.disableGuardTx(squadA1Addr);
         assertEq(result, false);
 
         // Verify Guard still enabled
         address GuardAddress = abi.decode(
-            StorageAccessible(address(gnosisHelper.gnosisSafe())).getStorageAt(
+            StorageAccessible(address(safeHelper.safeWallet())).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -671,20 +660,20 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
             keyperModule.getSquadSafeAddress(childSquadA1);
 
         /// Remove Squad A1
-        gnosisHelper.updateSafeInterface(squadA1Addr);
-        bool result = gnosisHelper.createRemoveSquadTx(childSquadA1);
+        safeHelper.updateSafeInterface(squadA1Addr);
+        bool result = safeHelper.createRemoveSquadTx(childSquadA1);
         assertEq(result, true);
 
         /// Disconnect Safe
-        gnosisHelper.updateSafeInterface(rootAddr);
-        result = gnosisHelper.createDisconnectSafeTx(childSquadA1);
+        safeHelper.updateSafeInterface(rootAddr);
+        result = safeHelper.createDisconnectSafeTx(childSquadA1);
         assertEq(result, true);
 
         /// Verify Safe has been removed
         /// Verify module has been removed
-        gnosisHelper.updateSafeInterface(childSquadA1Addr);
+        safeHelper.updateSafeInterface(childSquadA1Addr);
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, false);
         /// Verify guard has been removed
         address ZeroAddress = abi.decode(
@@ -741,8 +730,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         address squadA1Addr = keyperModule.getSquadSafeAddress(squadA1Id);
 
         /// Promote to Root
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createPromoteToRootTx(squadA1Id);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createPromoteToRootTx(squadA1Id);
         assertEq(result, true);
 
         /// Verify Safe has been promoted to Root
@@ -890,8 +879,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
             keyperModule.getSquadSafeAddress(childSquadB1);
 
         /// Remove Whole Tree A
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createRemoveWholeTreeTx();
         assertTrue(result);
 
         /// Verify Whole Tree A is removed
@@ -903,8 +892,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertTrue(keyperModule.isSafeRegistered(childSquadB1Addr));
 
         /// Remove Whole Tree B
-        gnosisHelper.updateSafeInterface(rootAddr2);
-        result = gnosisHelper.createRemoveWholeTreeTx();
+        safeHelper.updateSafeInterface(rootAddr2);
+        result = safeHelper.createRemoveWholeTreeTx();
         assertTrue(result);
 
         /// Verify Tree is removed
@@ -935,8 +924,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
             keyperModule.getSquadSafeAddress(subChildSquadA1);
 
         /// Remove Whole Tree A
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createRemoveWholeTreeTx();
         assertTrue(result);
 
         /// Verify Whole Tree A is removed
@@ -986,8 +975,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
             keyperModule.getSquadSafeAddress(subChildSquadA1);
 
         /// Remove Whole Tree A
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveWholeTreeTx();
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createRemoveWholeTreeTx();
         assertTrue(result);
 
         // Try Replay Attack

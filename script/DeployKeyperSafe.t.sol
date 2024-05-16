@@ -18,7 +18,6 @@ contract DeployKeyperSafe is Script {
 
         vm.startBroadcast();
         KeyperModule keyper = KeyperModule(keyperModuleAddress);
-        // keyper.createSafeProxy(owners, threshold);
         vm.stopBroadcast();
     }
 }

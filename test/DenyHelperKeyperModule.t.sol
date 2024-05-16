@@ -39,32 +39,32 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
     }
 
     /// @notice Test Reverted Expected if the contract any DenyHelper actions with not Safe Wallet
-    function testRevertInvalidGnosisSafe() public {
+    function testRevertInvalidSafe() public {
         listOfOwners();
         // EAO Address (Not Safe)
         vm.startPrank(owners[0]);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidGnosisSafe.selector, owners[0])
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
         keyperModule.enableAllowlist();
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidGnosisSafe.selector, owners[0])
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
         keyperModule.enableDenylist();
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidGnosisSafe.selector, owners[0])
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
         keyperModule.addToList(owners);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidGnosisSafe.selector, owners[0])
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
         keyperModule.addToList(owners);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidGnosisSafe.selector, owners[0])
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
         keyperModule.dropFromList(owners[2]);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidGnosisSafe.selector, owners[0])
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
         keyperModule.dropFromList(owners[2]);
         vm.stopPrank();
@@ -72,39 +72,27 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         address ZeroAddress = address(0);
         vm.startPrank(ZeroAddress);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, ZeroAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
         keyperModule.enableAllowlist();
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, ZeroAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
         keyperModule.enableDenylist();
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, ZeroAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
         keyperModule.addToList(owners);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, ZeroAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
         keyperModule.addToList(owners);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, ZeroAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
         keyperModule.dropFromList(owners[2]);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, ZeroAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
         keyperModule.dropFromList(owners[2]);
         vm.stopPrank();
@@ -112,82 +100,58 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         address SentinalAddress = address(0x1);
         vm.startPrank(SentinalAddress);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, SentinalAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
         keyperModule.enableAllowlist();
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, SentinalAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
         keyperModule.enableDenylist();
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, SentinalAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
         keyperModule.addToList(owners);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, SentinalAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
         keyperModule.addToList(owners);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, SentinalAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
         keyperModule.dropFromList(owners[2]);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisSafe.selector, SentinalAddress
-            )
+            abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
         keyperModule.dropFromList(owners[2]);
         vm.stopPrank();
     }
 
     /// @notice Test Reverted Expected if the contract any DenyHelper actions when the Caller is not a Root Safe
-    function testRevertInvalidGnosisRootSafe() public {
+    function testRevertInvalidRootSafe() public {
         listOfOwners();
         vm.startPrank(squadA);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadA
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
         keyperModule.enableAllowlist();
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadA
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
         keyperModule.enableDenylist();
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadA
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
         keyperModule.addToList(owners);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadA
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
         keyperModule.addToList(owners);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadA
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
         keyperModule.dropFromList(owners[2]);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.InvalidGnosisRootSafe.selector, squadA
-            )
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
         keyperModule.dropFromList(owners[2]);
         vm.stopPrank();
@@ -196,7 +160,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
     /// @notice Test Reverted Expected if the contract any DenyHelper actions when the Caller is Another Safe not registered into the Organization
     function testRevertIfCallAnotherSafeNotRegistered() public {
         listOfOwners();
-        address anotherWallet = gnosisHelper.setupSeveralSafeEnv(30);
+        address anotherWallet = safeHelper.setupSeveralSafeEnv(30);
         vm.startPrank(anotherWallet);
         vm.expectRevert(
             abi.encodeWithSelector(

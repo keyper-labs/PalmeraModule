@@ -7,7 +7,7 @@ import "test/mocks/MockedContract.t.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import "@solenv/Solenv.sol";
 
-/// Deployement of Gnosis Safe contracts, KeyperRoles and KeyperModule
+/// Deployement of Safe contracts, KeyperRoles and KeyperModule
 /// @custom:security-contact general@palmeradao.xyz
 contract DeployModuleWithMockedSafe is Script {
     function run() public {

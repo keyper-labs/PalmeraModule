@@ -51,8 +51,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (sent, data) = receiverAddr.call{value: 1e5 gwei}("");
         require(sent, "Failed to send Ether");
 
-        // Set keyperhelper gnosis safe to org
-        setGnosisSafe(rootAddr);
+        // Set keyperhelper safe to org
+        setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = encodeSignaturesKeyperTx(
             orgHash,
@@ -94,7 +94,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         address payable safeSquadA1Addr =
             payable(keyperModule.getSquadSafeAddress(safeSquadA1));
         address childSquadA1Addr = newKeyperSafe(4, 2);
-        setGnosisSafe(safeSquadA1Addr);
+        setSafe(safeSquadA1Addr);
         bool result = createAddSquadTx(safeSquadA1, "ChildSquadA1");
         assertEq(result, true);
         // Create a child safe for squad A2
@@ -114,8 +114,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
 
         address fakeCaller = newKeyperSafe(4, 2);
 
-        // Set keyperhelper gnosis safe to Super Safe Squad A1
-        setGnosisSafe(safeSquadA1Addr);
+        // Set keyperhelper safe to Super Safe Squad A1
+        setSafe(safeSquadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = encodeSignaturesKeyperTx(
             orgHash,
@@ -126,8 +126,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
-        // Set keyperhelper gnosis safe to Faker Caller
-        setGnosisSafe(fakeCaller);
+        // Set keyperhelper safe to Faker Caller
+        setSafe(fakeCaller);
         bytes memory signatures2 = encodeSignaturesKeyperTx(
             orgHash,
             fakeCaller,
@@ -137,7 +137,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
-        /// Wrapper of Execution On Behalf, for  try to avoid the verification in the Gnosis Safe / Keyper Module
+        /// Wrapper of Execution On Behalf, for  try to avoid the verification in the Safe / Keyper Module
         bytes memory internalData = abi.encodeWithSignature(
             "execTransactionOnBehalf(bytes32,address,address,address,uint256,bytes,uint8,bytes)",
             orgHash,
@@ -151,7 +151,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         );
 
         // Execute on behalf function from a authorized caller (Super Safe of These Tree) over child Squads but internal a Wrapper executeOnBehalf over Root Safe
-        setGnosisSafe(safeSquadA1Addr);
+        setSafe(safeSquadA1Addr);
         result = execTransactionOnBehalfTx(
             orgHash,
             childSquadA1Addr,
@@ -193,7 +193,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         require(sent, "Failed to send Ether");
 
         // Set Safe Role in FakeCaller (msg.sender) over Child Squad A1
-        setGnosisSafe(rootAddr);
+        setSafe(rootAddr);
         result = createSetRoleTx(
             uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY),
             fakeCaller,
@@ -207,8 +207,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         bytes memory emptyData;
         bytes memory signatures;
 
-        // Set keyperhelper gnosis safe to rootAddr
-        setGnosisSafe(childSquadA1Addr);
+        // Set keyperhelper safe to rootAddr
+        setSafe(childSquadA1Addr);
         // Try to execute on behalf function from a not authorized caller child Squad A1 over Root Safe
         bytes memory signatures2 = encodeSignaturesKeyperTx(
             orgHash,
@@ -267,8 +267,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (bool sent, bytes memory data) = safeSquadA1Addr.call{value: 2 gwei}("");
         require(sent, "Failed to send Ether");
 
-        // Set keyperhelper gnosis safe to org
-        setGnosisSafe(rootAddr);
+        // Set keyperhelper safe to org
+        setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = encodeSignaturesKeyperTx(
             orgHash,
@@ -326,7 +326,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         address callerEOA = address(msg.sender);
 
         // Owner of Root Safe sign args
-        setGnosisSafe(rootAddr);
+        setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = encodeSignaturesKeyperTx(
             orgHash,
@@ -384,8 +384,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (sent, data) = safeSubSquadA1Addr.call{value: 100 gwei}("");
         require(sent, "Failed to send Ether");
 
-        // Set keyperhelper gnosis safe to safeSquadA1
-        setGnosisSafe(safeSquadA1Addr);
+        // Set keyperhelper safe to safeSquadA1
+        setSafe(safeSquadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = encodeSignaturesKeyperTx(
             orgHash,
@@ -406,7 +406,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         );
 
         // Execute on safe tx
-        setGnosisSafe(safeSquadA1Addr);
+        setSafe(safeSquadA1Addr);
         bool result = execTransactionOnBehalfTx(
             orgHash,
             safeSquadA1Addr,
@@ -455,7 +455,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         address callerEOA = address(msg.sender);
 
         // Owner of Target Safe signed args
-        setGnosisSafe(safeSubSquadA1Addr);
+        setSafe(safeSubSquadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = encodeSignaturesKeyperTx(
             orgHash,
@@ -511,7 +511,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         address callerEOA = address(msg.sender);
 
         // Owner of Root Safe sign args
-        setGnosisSafe(rootAddr);
+        setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = encodeInvalidSignaturesKeyperTx(
             orgHash,
@@ -567,8 +567,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         (sent, data) = safeSquadA1Addr.call{value: 100 gwei}("");
         require(sent, "Failed to send Ether");
 
-        // Set keyperhelper gnosis safe to safeSubSquadA1
-        setGnosisSafe(safeSubSquadA1Addr);
+        // Set keyperhelper safe to safeSubSquadA1
+        setSafe(safeSubSquadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = encodeSignaturesKeyperTx(
             orgHash,
@@ -580,7 +580,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
 
-        setGnosisSafe(safeSubSquadA1Addr);
+        setSafe(safeSubSquadA1Addr);
         // vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector); // NotAuthorizedExecOnBehalf: Caller is not authorized to execute on behalf
         bool result = execTransactionOnBehalfTx(
             orgHash,
@@ -613,7 +613,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
 
         // Try onbehalf with incorrect signers
-        setGnosisSafe(rootAddr);
+        setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = encodeInvalidSignaturesKeyperTx(
             orgHash,
@@ -661,8 +661,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
         address fakeReceiver = address(0);
 
-        // Set keyperhelper gnosis safe to org
-        setGnosisSafe(rootAddr);
+        // Set keyperhelper safe to org
+        setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = encodeSignaturesKeyperTx(
             orgHash,
@@ -710,8 +710,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         console.log("Root address Test Execution On Behalf: ", rootAddr);
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
 
-        // Set keyperhelper gnosis safe to org
-        setGnosisSafe(rootAddr);
+        // Set keyperhelper safe to org
+        setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = encodeSignaturesKeyperTx(
             orgHash,
@@ -726,9 +726,9 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         // Execute on behalf function from a not authorized caller
         // vm.expectRevert(
         //     abi.encodeWithSelector(
-        //         Errors.InvalidGnosisSafe.selector, address(0)
+        //         Errors.InvalidSafe.selector, address(0)
         //     )
-        // ); // InvalidGnosisSafe: Invalid Gnosis Safe
+        // ); // InvalidSafe: Invalid Safe
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
@@ -764,8 +764,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         console.log("Root address Test Execution On Behalf: ", rootAddr);
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
 
-        // Set keyperhelper gnosis safe to org
-        setGnosisSafe(rootAddr);
+        // Set keyperhelper safe to org
+        setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = encodeSignaturesKeyperTx(
             orgHash,
@@ -793,13 +793,13 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         vm.stopBroadcast();
     }
 
-    // // Revert InvalidGnosisSafe() execTransactionOnBehalf : when param "targetSafe" is not a safe
+    // // Revert InvalidSafe() execTransactionOnBehalf : when param "targetSafe" is not a safe
     // // Caller: rootAddr (org)
     // // Caller Type: rootSafe
     // // Caller Role: ROOT_SAFE, SAFE_LEAD
     // // TargerSafe: fakeTargetSafe
     // // TargetSafe Type: EOA
-    function testRevertInvalidGnosisSafeExecTransactionOnBehalf() public {
+    function testRevertInvalidSafeExecTransactionOnBehalf() public {
         vm.startBroadcast();
         (uint256 rootId, uint256 safeSquadA1) =
             setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -810,8 +810,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         console.log("Safe Squad A1 Test Execution On Behalf: ", safeSquadA1Addr);
         address fakeTargetSafe = address(0xFFE);
 
-        // Set keyperhelper gnosis safe to org
-        setGnosisSafe(rootAddr);
+        // Set keyperhelper safe to org
+        setSafe(rootAddr);
         bytes memory emptyData;
         bytes memory signatures = encodeSignaturesKeyperTx(
             orgHash,
@@ -825,9 +825,9 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         // Execute on behalf function from a not authorized caller
         // vm.expectRevert(
         //     abi.encodeWithSelector(
-        //         Errors.InvalidGnosisSafe.selector, fakeTargetSafe
+        //         Errors.InvalidSafe.selector, fakeTargetSafe
         //     )
-        // ); // InvalidGnosisSafe: Invalid Gnosis Safe
+        // ); // InvalidSafe: Invalid Safe
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,

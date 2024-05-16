@@ -14,21 +14,21 @@ import {IProxyCreationCallback} from
 /// @custom:security-contact general@palmeradao.xyz
 contract DeploySafeFactory is Script {
     GnosisSafeProxyFactory public proxyFactory;
-    GnosisSafe public gnosisSafeContract;
+    GnosisSafe public safeContract;
     GnosisSafeProxy safeProxy;
 
     // Deploys a GnosisSafeProxyFactory & GnosisSafe contract
     function run() public {
         vm.startBroadcast();
         proxyFactory = new GnosisSafeProxyFactory();
-        gnosisSafeContract = new GnosisSafe();
+        safeContract = new GnosisSafe();
         vm.stopBroadcast();
     }
 
     function newSafeProxy(bytes memory initializer) public returns (address) {
         uint256 nonce = uint256(keccak256(initializer));
         safeProxy = proxyFactory.createProxyWithNonce(
-            address(gnosisSafeContract), initializer, nonce
+            address(safeContract), initializer, nonce
         );
         return address(safeProxy);
     }

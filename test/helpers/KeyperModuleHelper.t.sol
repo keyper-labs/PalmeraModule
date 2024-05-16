@@ -34,7 +34,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
 
     /// fucntion to set the Safe instance
     /// @param safe address of the Safe instance
-    function setGnosisSafe(address safe) public {
+    function setSafe(address safe) public {
         safeHelper = GnosisSafe(payable(safe));
     }
 
