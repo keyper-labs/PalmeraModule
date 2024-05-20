@@ -1066,7 +1066,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         );
     }
 
-    // // Revert ZeroAddressProvided() execTransactionOnBehalf when param "org" is address(0)
+    // // Revert ZeroAddressProvided() execTransactionOnBehalf when param "org" is bytes32(0)
     // // Scenario 3
     // // Caller: rootAddr (org)
     // // Caller Type: rootSafe
