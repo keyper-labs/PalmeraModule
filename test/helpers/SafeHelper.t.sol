@@ -365,8 +365,8 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         return result;
     }
 
-    /// function to register organization
-    /// @param orgName name of the organization
+    /// function to register organisation
+    /// @param orgName name of the organisation
     /// @return bool
     function registerOrgTx(string memory orgName) public returns (bool) {
         /// Create enableModule calldata
@@ -384,7 +384,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
 
     /// function to create a new squad
     /// @param superSafe super safe
-    /// @param name name of the Organization
+    /// @param name name of the Organisation
     /// @return bool
     function createAddSquadTx(uint256 superSafe, string memory name)
         public
@@ -402,7 +402,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
 
     /// function to create a new Root Safe
     /// @param newRootSafe address of the new Root Safe
-    /// @param name name of the Organization
+    /// @param name name of the Organisation
     /// @return bool
     function createRootSafeTx(address newRootSafe, string memory name)
         public
@@ -496,8 +496,8 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         return result;
     }
 
-    /// function to execute a transaction on behalf another safe in the organization, child from the super safe
-    /// @param org organization
+    /// function to execute a transaction on behalf another safe in the organisation, child from the super safe
+    /// @param org organisation
     /// @param superSafe super safe
     /// @param targetSafe target safe
     /// @param to receiver
@@ -541,7 +541,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     /// @param ownerRemoved owner to remove
     /// @param threshold threshold
     /// @param targetSafe target safe
-    /// @param org organization
+    /// @param org organisation
     /// @return bool
     function removeOwnerTx(
         address prevOwner,
@@ -570,7 +570,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     /// @param ownerAdded owner to add
     /// @param threshold threshold
     /// @param targetSafe target safe
-    /// @param org organization
+    /// @param org organisation
     /// @return bool
     function addOwnerWithThresholdTx(
         address ownerAdded,

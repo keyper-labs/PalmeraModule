@@ -8,7 +8,7 @@ import {DataTypes} from "./DataTypes.sol";
 library Errors {
     /// @notice Error codes for the Keyper module
     /// @dev Errors Keyper Modules
-    /// @dev Error messages when the Org Hash (Dao's name) is not Registered
+    /// @dev Error messages when the Org Hash (On-chain Organisation) is not Registered
     error OrgNotRegistered(bytes32 org);
     /// @dev Error messages when the Squad(`squad`) is not Registered
     error SquadNotRegistered(uint256 squad);

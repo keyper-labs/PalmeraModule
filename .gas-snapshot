@@ -135,7 +135,7 @@ ModifySafeOwners:testRevertSafeNotRegisteredRemoveOwner_EOA_Caller() (gas: 50460
 ModifySafeOwners:testRevertSafeNotRegisteredRemoveOwner_SAFE_Caller() (gas: 508830)
 ModifySafeOwners:testRevertZeroAddressAddOwnerWithThreshold() (gas: 1671786)
 ModifySafeOwners:testRevertZeroAddressProvidedRemoveOwner() (gas: 3078277)
-TestDeploy:testDeploy() (gas: 6283203)
+TestDeploy:testDeploy() (gas: 6285029)
 TestDeploySafe:testTransferFundsSafe() (gas: 109254)
 TestEnableGuard:testEnableKeyperGuard() (gas: 120801)
 TestEnableGuard:testEnableKeyperModule() (gas: 122062)

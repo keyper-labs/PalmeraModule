@@ -7,12 +7,12 @@ import "./helpers/DeployHelper.t.sol";
 /// @custom:security-contact general@palmeradao.xyz
 contract EventsChekers is DeployHelper {
     address[] public owners = new address[](5);
-    /// @dev Event Fire when create a new Organization
+    /// @dev Event Fire when create a new Organisation
 
     event OrganizationCreated(
         address indexed creator, bytes32 indexed org, string name
     );
-    /// @dev Event Fire when create a New Squad (Tier 0) into the organization
+    /// @dev Event Fire when create a New Squad (Tier 0) into the organisation
     event SquadCreated(
         bytes32 indexed org,
         uint256 indexed squadCreated,
@@ -21,7 +21,7 @@ contract EventsChekers is DeployHelper {
         uint256 superSafe,
         string name
     );
-    /// @dev Event Fire when remove a Squad (Tier 0) from the organization
+    /// @dev Event Fire when remove a Squad (Tier 0) from the organisation
     event SquadRemoved(
         bytes32 indexed org,
         uint256 indexed squadRemoved,
@@ -31,7 +31,7 @@ contract EventsChekers is DeployHelper {
         string name
     );
 
-    /// @dev Event Fire when update SuperSafe of a Squad (Tier 0) from the organization
+    /// @dev Event Fire when update SuperSafe of a Squad (Tier 0) from the organisation
     event SquadSuperUpdated(
         bytes32 indexed org,
         uint256 indexed squadUpdated,
@@ -85,7 +85,7 @@ contract EventsChekers is DeployHelper {
         uint256 newLimit
     );
 
-    /// @dev Event Fire when remove a Squad (Tier 0) from the organization
+    /// @dev Event Fire when remove a Squad (Tier 0) from the organisation
     event SafeDisconnected(
         bytes32 indexed org,
         uint256 indexed squad,
@@ -112,7 +112,7 @@ contract EventsChekers is DeployHelper {
         owners[4] = address(0xEEE);
     }
 
-    /// @notice Test Events when Register Root Organization
+    /// @notice Test Events when Register Root Organisation
     function testEventWhenRegisterRootOrg() public {
         // Register Org through safe tx
         address rootAddr = safeHelper.newKeyperSafe(4, 2);

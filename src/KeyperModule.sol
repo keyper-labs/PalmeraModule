@@ -38,16 +38,16 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     address public immutable proxyFactory;
     /// @dev RoleAuthority
     address public rolesAuthority;
-    /// @dev Array of Orgs (based on Hash(DAO's name) of the Org)
+    /// @dev Array of Orgs (based on Hash(on-chain Organisation) of the Org)
     bytes32[] private orgHash;
     /// @dev Index of Squad
-    /// bytes32: Hash(DAO's name) -> uint256: ID's Squads
+    /// bytes32: Hash(on-chain Organisation) -> uint256: ID's Squads
     mapping(bytes32 => uint256[]) public indexSquad;
     /// @dev Depth Tree Limit
-    /// bytes32: Hash(DAO's name) -> uint256: Depth Tree Limit
+    /// bytes32: Hash(on-chain Organisation) -> uint256: Depth Tree Limit
     mapping(bytes32 => uint256) public depthTreeLimit;
-    /// @dev Hash(DAO's name) -> Squads
-    /// bytes32: Hash(DAO's name).   uint256:SquadId.   Squad: Squad Info
+    /// @dev Hash(on-chain Organisation) -> Squads
+    /// bytes32: Hash(on-chain Organisation).   uint256:SquadId.   Squad: Squad Info
     mapping(bytes32 => mapping(uint256 => DataTypes.Squad)) public squads;
 
     /// @dev Modifier for Validate if Org/Squad Exist or SuperSafeNotRegistered Not
@@ -73,8 +73,8 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         _;
     }
 
-    /// @dev Modifier for Validate if the address is a Safe Multisig Wallet and Root Safe
-    /// @param safe Address of the Safe Multisig Wallet
+    /// @dev Modifier for Validate if the address is a Safe Smart Account Wallet and Root Safe
+    /// @param safe Address of the Safe Smart Account Wallet
     modifier IsRootSafe(address safe) {
         if (
             (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
@@ -113,7 +113,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     }
 
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
-    /// @param org ID's Organization
+    /// @param org ID's Organisation
     /// @param superSafe Safe super address
     /// @param targetSafe Safe target address
     /// @param to Address to which the transaction is being sent
@@ -189,9 +189,9 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @notice to to add owner and set a threshold without passing by normal multisig check
     /// @dev For instance addOwnerWithThreshold can be called by Safe Lead & Safe Lead modify only roles
     /// @param ownerAdded Address of the owner to be added
-    /// @param threshold Threshold of the Safe Multisig Wallet
-    /// @param targetSafe Address of the Safe Multisig Wallet
-    /// @param org Hash(DAO's name)
+    /// @param threshold Threshold of the Safe Smart Account Wallet
+    /// @param targetSafe Address of the Safe Smart Account Wallet
+    /// @param org Hash(on-chain Organisation)
     function addOwnerWithThreshold(
         address ownerAdded,
         uint256 threshold,
@@ -225,9 +225,9 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @dev For instance of Remove Owner of Safe, the user lead/super/root can remove an owner without passing by normal multisig check signature
     /// @param prevOwner Address of the previous owner
     /// @param ownerRemoved Address of the owner to be removed
-    /// @param threshold Threshold of the Safe Multisig Wallet
-    /// @param targetSafe Address of the Safe Multisig Wallet
-    /// @param org Hash(DAO's name)
+    /// @param threshold Threshold of the Safe Smart Account Wallet
+    /// @param targetSafe Address of the Safe Smart Account Wallet
+    /// @param org Hash(on-chain Organisation)
     function removeOwner(
         address prevOwner,
         address ownerRemoved,
@@ -298,7 +298,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         _authority.setUserRole(user, uint8(role), enabled);
     }
 
-    /// @notice Register an organization
+    /// @notice Register an organisation
     /// @dev Call has to be done from a safe transaction
     /// @param daoName String with of the org (This name will be hashed into smart contract)
     function registerOrg(string calldata daoName)
@@ -316,7 +316,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         emit Events.OrganizationCreated(caller, name, daoName);
     }
 
-    /// @notice Call has to be done from another root safe to the organization
+    /// @notice Call has to be done from another root safe to the organisation
     /// @dev Call has to be done from a safe transaction
     /// @param newRootSafe Address of new Root Safe
     /// @param name string name of the squad
@@ -339,7 +339,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         );
     }
 
-    /// @notice Add a squad to an organization/squad
+    /// @notice Add a squad to an organisation/squad
     /// @dev Call coming from the squad safe
     /// @param superSafe address of the superSafe
     /// @param name string name of the squad
@@ -608,7 +608,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
             }
         }
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        /// Revoke SuperSafe and SafeLead if don't have any child, and is not organization
+        /// Revoke SuperSafe and SafeLead if don't have any child, and is not organisation
         if (oldSuper.child.length == 0) {
             _authority.setUserRole(
                 oldSuper.safe, uint8(DataTypes.Role.SUPER_SAFE), false
@@ -774,8 +774,8 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
 
     /// @notice This function checks that caller has permission (as Root/Super/Lead safe) of the target safe
     /// @param caller Caller's address
-    /// @param org Hash(DAO's name)
-    /// @param targetSafe Address of the target Safe Multisig Wallet
+    /// @param org Hash(on-chain Organisation)
+    /// @param targetSafe Address of the target Safe Smart Account Wallet
     function hasNotPermissionOverTarget(
         address caller,
         bytes32 org,
@@ -788,7 +788,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         return hasPermission;
     }
 
-    /// @notice check if the organisation is registered
+    /// @notice check if the Organisation is registered
     /// @param org address
     /// @return bool
     function isOrgRegistered(bytes32 org) public view returns (bool) {
@@ -796,7 +796,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
         return true;
     }
 
-    /// @notice Check if the address, is a rootSafe of the squad within an organization
+    /// @notice Check if the address, is a rootSafe of the squad within an organisation
     /// @param squad ID's of the child squad/safe
     /// @param root address of Root Safe of the squad
     /// @return bool
@@ -937,7 +937,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     }
 
     /// @dev Method to get Squad ID by safe address
-    /// @param org bytes32 hashed name of the Organization
+    /// @param org bytes32 hashed name of the Organisation
     /// @param safe Safe address
     /// @return Squad ID
     function getSquadIdBySafe(bytes32 org, address safe)
@@ -960,7 +960,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     /// @notice call to get the orgHash based on squad id
     /// @dev Method to get the hashed orgHash based on squad id
     /// @param squad uint256 of the squad
-    /// @return orgSquad Hash (Dao's Name)
+    /// @return orgSquad Hash (On-chain Organisation)
     function getOrgBySquad(uint256 squad)
         public
         view
@@ -995,7 +995,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
 
     /// @notice Refactoring method for Create Org or RootSafe
     /// @dev Method Private for Create Org or RootSafe
-    /// @param name String Name of the Organization
+    /// @param name String Name of the Organisation
     /// @param caller Safe Caller to Create Org or RootSafe
     /// @param newRootSafe Safe Address to Create Org or RootSafe
     function _createOrgOrRoot(
@@ -1038,7 +1038,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     }
 
     /// @dev Function for refactoring DisconnectSafe Method, and RemoveWholeTree in one Method
-    /// @param squad ID's of the organization
+    /// @param squad ID's of the organisation
     function _exitSafe(uint256 squad) private {
         bytes32 org = getOrgBySquad(squad);
         address _squad = squads[org][squad].safe;
@@ -1095,7 +1095,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     }
 
     /// @notice Private method to remove indexId from mapping of indexes into organizations
-    /// @param org ID's of the organization
+    /// @param org ID's of the organisation
     /// @param squad uint256 of the squad
     function removeIndexSquad(bytes32 org, uint256 squad) private {
         for (uint256 i = 0; i < indexSquad[org].length; ++i) {
@@ -1108,7 +1108,7 @@ contract KeyperModule is Auth, ReentrancyGuard, Helpers {
     }
 
     /// @notice Private method to remove Org from Array of Hashes of organizations
-    /// @param org ID's of the organization
+    /// @param org ID's of the organisation
     function removeOrg(bytes32 org) private {
         for (uint256 i = 0; i < orgHash.length; ++i) {
             if (orgHash[i] == org) {

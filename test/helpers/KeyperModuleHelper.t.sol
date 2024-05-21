@@ -39,7 +39,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     /// function Encode signatures for a keypertx
-    /// @param org Organization address
+    /// @param org Organisation address
     /// @param superSafe Super Safe address
     /// @param targetSafe Target Safe address
     /// @param to Address to send the transaction
@@ -79,7 +79,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     /// function Sign keyperTx with invalid signatures (do not belong to any safe owner)
-    /// @param org Organization address
+    /// @param org Organisation address
     /// @param superSafe Super Safe address
     /// @param targetSafe Target Safe address
     /// @param to Address to send the transaction
@@ -115,7 +115,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     /// function to create a keyperTx hash
-    /// @param org Organization address
+    /// @param org Organisation address
     /// @param superSafe Super Safe address
     /// @param targetSafe Target Safe address
     /// @param to Address to send the transaction

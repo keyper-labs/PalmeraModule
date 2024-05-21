@@ -157,7 +157,7 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.stopPrank();
     }
 
-    /// @notice Test Reverted Expected if the contract any DenyHelper actions when the Caller is Another Safe not registered into the Organization
+    /// @notice Test Reverted Expected if the contract any DenyHelper actions when the Caller is Another Safe not registered into the Organisation
     function testRevertIfCallAnotherSafeNotRegistered() public {
         listOfOwners();
         address anotherWallet = safeHelper.setupSeveralSafeEnv(30);
