@@ -8,3 +8,4 @@ package-lock.json
 types/
 .lcov.info
 .atcrc
+yarn-error.log

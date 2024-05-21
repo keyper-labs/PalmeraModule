@@ -116,7 +116,7 @@ contract EventsChekers is DeployHelper {
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
-            );
+        );
         uint256 rootId = keyperModule.registerOrg(orgName);
         vm.stopPrank();
     }
@@ -128,7 +128,7 @@ contract EventsChekers is DeployHelper {
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
-            );
+        );
         uint256 rootId = keyperModule.registerOrg(orgName);
         vm.stopPrank();
 
@@ -144,7 +144,7 @@ contract EventsChekers is DeployHelper {
             squadAddr,
             rootId,
             squadA1Name
-            );
+        );
         keyperModule.addSquad(rootId, squadA1Name);
     }
 
@@ -155,7 +155,7 @@ contract EventsChekers is DeployHelper {
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
-            );
+        );
         uint256 rootId = keyperModule.registerOrg(orgName);
         vm.stopPrank();
 
@@ -171,7 +171,7 @@ contract EventsChekers is DeployHelper {
             squadAddr,
             rootId,
             squadA1Name
-            );
+        );
         keyperModule.addSquad(rootId, squadA1Name);
         vm.stopPrank();
 
@@ -185,7 +185,7 @@ contract EventsChekers is DeployHelper {
             rootAddr,
             rootId,
             squadA1Name
-            );
+        );
         keyperModule.removeSquad(squadId);
     }
 
@@ -196,7 +196,7 @@ contract EventsChekers is DeployHelper {
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
-            );
+        );
         uint256 rootId = keyperModule.registerOrg(orgName);
         vm.stopPrank();
 
@@ -211,7 +211,7 @@ contract EventsChekers is DeployHelper {
             rootAddr,
             rootSafeAddr,
             org2Name
-            );
+        );
         keyperModule.createRootSafeSquad(rootSafeAddr, org2Name);
     }
 
@@ -222,7 +222,7 @@ contract EventsChekers is DeployHelper {
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
-            );
+        );
         uint256 rootId = keyperModule.registerOrg(orgName);
         vm.stopPrank();
 
@@ -237,7 +237,7 @@ contract EventsChekers is DeployHelper {
             rootAddr,
             rootSafeAddr,
             org2Name
-            );
+        );
         keyperModule.createRootSafeSquad(rootSafeAddr, org2Name);
         vm.stopPrank();
 
@@ -253,7 +253,7 @@ contract EventsChekers is DeployHelper {
             squadAddr,
             rootId,
             squadA1Name
-            );
+        );
         keyperModule.addSquad(rootId, squadA1Name);
         vm.stopPrank();
 
@@ -268,7 +268,7 @@ contract EventsChekers is DeployHelper {
             rootAddr,
             rootId,
             rootsafeId
-            );
+        );
         keyperModule.updateSuper(squadId, rootsafeId);
     }
 
@@ -279,7 +279,7 @@ contract EventsChekers is DeployHelper {
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
-            );
+        );
         uint256 rootId = keyperModule.registerOrg(orgName);
         vm.stopPrank();
 
@@ -295,7 +295,7 @@ contract EventsChekers is DeployHelper {
             squadAddr,
             rootId,
             squadA1Name
-            );
+        );
         keyperModule.addSquad(rootId, squadA1Name);
         vm.stopPrank();
 
@@ -311,7 +311,7 @@ contract EventsChekers is DeployHelper {
             childSquadAddr,
             squadId,
             subSquadA1Name
-            );
+        );
         keyperModule.addSquad(squadId, subSquadA1Name);
         vm.stopPrank();
 
@@ -324,7 +324,7 @@ contract EventsChekers is DeployHelper {
             rootAddr,
             squadAddr,
             squadA1Name
-            );
+        );
         keyperModule.promoteRoot(squadId);
     }
 
@@ -335,7 +335,7 @@ contract EventsChekers is DeployHelper {
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
-            );
+        );
         uint256 rootId = keyperModule.registerOrg(orgName);
         vm.stopPrank();
 
@@ -351,7 +351,7 @@ contract EventsChekers is DeployHelper {
             squadAddr,
             rootId,
             squadA1Name
-            );
+        );
         keyperModule.addSquad(rootId, squadA1Name);
         vm.stopPrank();
 
@@ -365,14 +365,14 @@ contract EventsChekers is DeployHelper {
             rootAddr,
             rootId,
             squadA1Name
-            );
+        );
         keyperModule.removeSquad(squadId);
 
         // Disconnect Squad through safe tx
         vm.expectEmit(true, true, true, true);
         emit SafeDisconnected(
             keccak256(abi.encodePacked(orgName)), squadId, squadAddr, rootAddr
-            );
+        );
         keyperModule.disconnectSafe(squadId);
     }
 
@@ -402,7 +402,7 @@ contract EventsChekers is DeployHelper {
             rootAddr,
             safeSquadA1Addr,
             true
-            );
+        );
         keyperModule.execTransactionOnBehalf(
             orgHash,
             safeSquadA1Addr,
@@ -430,7 +430,7 @@ contract EventsChekers is DeployHelper {
         vm.expectEmit(true, true, true, true);
         emit WholeTreeRemoved(
             keccak256(abi.encodePacked(orgName)), rootId, rootAddr, orgName
-            );
+        );
         keyperModule.removeWholeTree();
     }
 
@@ -441,7 +441,7 @@ contract EventsChekers is DeployHelper {
         vm.expectEmit(true, true, false, true);
         emit OrganizationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
-            );
+        );
         uint256 rootId = keyperModule.registerOrg(orgName);
         vm.stopPrank();
 
@@ -457,7 +457,7 @@ contract EventsChekers is DeployHelper {
             squadAddr,
             rootId,
             squadA1Name
-            );
+        );
         keyperModule.addSquad(rootId, squadA1Name);
         vm.stopPrank();
 
@@ -466,7 +466,7 @@ contract EventsChekers is DeployHelper {
         vm.expectEmit(true, true, true, true);
         emit NewLimitLevel(
             keccak256(abi.encodePacked(orgName)), rootId, rootAddr, 8, 49
-            );
+        );
         keyperModule.updateDepthTreeLimit(49);
     }
 

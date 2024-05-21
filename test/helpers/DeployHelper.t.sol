@@ -77,10 +77,7 @@ contract DeployHelper is Test {
         uint256 maxTreeDepth = 50;
 
         keyperModule = new KeyperModule(
-            masterCopy,
-            safeFactory,
-            address(keyperRolesDeployed),
-            maxTreeDepth
+            masterCopy, safeFactory, address(keyperRolesDeployed), maxTreeDepth
         );
         keyperModuleAddr = address(keyperModule);
         // Deploy Guard Contract

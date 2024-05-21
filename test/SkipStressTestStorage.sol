@@ -214,9 +214,7 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
         }
 
         // Array of Address for the subSquads
-        address[] memory subSquadAaddr = new address[](
-            safeWallets.mul(members)
-        );
+        address[] memory subSquadAaddr = new address[](safeWallets.mul(members));
         uint256[] memory subSquadAid = new uint256[](safeWallets.mul(members));
         uint256[] memory level = new uint256[](safeWallets);
         uint256 indexLevel;
