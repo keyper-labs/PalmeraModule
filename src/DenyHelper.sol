@@ -40,7 +40,7 @@ abstract contract DenyHelper is ValidAddress {
     mapping(bytes32 => mapping(address => address)) internal listed;
 
     /// @dev Modifier for Valid if wallet is Denied/Allowed or Not
-    /// @param org Hash (Dao's name) of the Org
+    /// @param org Hash (On-chain Organisation) of the Org
     /// @param wallet Address to check if Denied/Allowed
     modifier Denied(bytes32 org, address wallet) {
         if (wallet == address(0) || wallet == Constants.SENTINEL_ADDRESS) {
@@ -57,7 +57,7 @@ abstract contract DenyHelper is ValidAddress {
     }
 
     /// @dev Function to check if a wallet is Denied/Allowed
-    /// @param org Hash (Dao's name) of the Org
+    /// @param org Hash (On-chain Organisation) of the Org
     /// @param wallet Address to check the wallet is Listed
     /// @return True if the wallet is Listed
     function isListed(bytes32 org, address wallet) public view returns (bool) {

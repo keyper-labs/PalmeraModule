@@ -365,8 +365,8 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         return result;
     }
 
-    /// function to register organization
-    /// @param orgName name of the organization
+    /// function to register organisation
+    /// @param orgName name of the organisation
     /// @return bool
     function registerOrgTx(string memory orgName) public returns (bool) {
         /// Create enableModule calldata
@@ -382,16 +382,16 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         return result;
     }
 
-    /// function to create a new squad
+    /// function to create a new safe
     /// @param superSafe super safe
-    /// @param name name of the Organization
+    /// @param name name of the Organisation
     /// @return bool
-    function createAddSquadTx(uint256 superSafe, string memory name)
+    function createAddSafeTx(uint256 superSafe, string memory name)
         public
         returns (bool)
     {
         bytes memory data =
-            abi.encodeWithSignature("addSquad(uint256,string)", superSafe, name);
+            abi.encodeWithSignature("addSafe(uint256,string)", superSafe, name);
         /// Create module safe tx
         Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
@@ -402,14 +402,14 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
 
     /// function to create a new Root Safe
     /// @param newRootSafe address of the new Root Safe
-    /// @param name name of the Organization
+    /// @param name name of the Organisation
     /// @return bool
     function createRootSafeTx(address newRootSafe, string memory name)
         public
         returns (bool)
     {
         bytes memory data = abi.encodeWithSignature(
-            "createRootSafeSquad(address,string)", newRootSafe, name
+            "createRootSafe(address,string)", newRootSafe, name
         );
         /// Create module safe tx
         Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
@@ -419,12 +419,11 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         return result;
     }
 
-    /// function to remove a squad
-    /// @param squad squad to remove
+    /// function to remove a safe
+    /// @param safe safe to remove
     /// @return bool
-    function createRemoveSquadTx(uint256 squad) public returns (bool) {
-        bytes memory data =
-            abi.encodeWithSignature("removeSquad(uint256)", squad);
+    function createRemoveSafeTx(uint256 safe) public returns (bool) {
+        bytes memory data = abi.encodeWithSignature("removeSafe(uint256)", safe);
         /// Create module safe tx
         Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
@@ -433,7 +432,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         return result;
     }
 
-    /// function to remove a whole tree of squads
+    /// function to remove a whole tree of safes
     /// @return bool
     function createRemoveWholeTreeTx() public returns (bool) {
         bytes memory data = abi.encodeWithSignature("removeWholeTree()");
@@ -445,12 +444,12 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         return result;
     }
 
-    /// function to promote a squad to root safe
-    /// @param squad squad to promote
+    /// function to promote a safe to root safe
+    /// @param safe safe to promote
     /// @return bool
-    function createPromoteToRootTx(uint256 squad) public returns (bool) {
+    function createPromoteToRootTx(uint256 safe) public returns (bool) {
         bytes memory data =
-            abi.encodeWithSignature("promoteRoot(uint256)", squad);
+            abi.encodeWithSignature("promoteRoot(uint256)", safe);
         /// Create module safe tx
         Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
@@ -462,17 +461,17 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     /// function to set role
     /// @param role role to set
     /// @param user user to set role
-    /// @param squad squad to set role
+    /// @param safe safe to set role
     /// @param enabled enable or disable role
     /// @return bool
     function createSetRoleTx(
         uint8 role,
         address user,
-        uint256 squad,
+        uint256 safe,
         bool enabled
     ) public returns (bool) {
         bytes memory data = abi.encodeWithSignature(
-            "setRole(uint8,address,uint256,bool)", role, user, squad, enabled
+            "setRole(uint8,address,uint256,bool)", role, user, safe, enabled
         );
         /// Create module tx
         Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
@@ -483,11 +482,11 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     }
 
     /// function to disconnect a safe
-    /// @param squad squad to disconnect
+    /// @param safe safe to disconnect
     /// @return bool
-    function createDisconnectSafeTx(uint256 squad) public returns (bool) {
+    function createDisconnectSafeTx(uint256 safe) public returns (bool) {
         bytes memory data =
-            abi.encodeWithSignature("disconnectSafe(uint256)", squad);
+            abi.encodeWithSignature("disconnectSafe(uint256)", safe);
         /// Create module safe tx
         Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
@@ -496,8 +495,8 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         return result;
     }
 
-    /// function to execute a transaction on behalf another safe in the organization, child from the super safe
-    /// @param org organization
+    /// function to execute a transaction on behalf another safe in the organisation, child from the super safe
+    /// @param org organisation
     /// @param superSafe super safe
     /// @param targetSafe target safe
     /// @param to receiver
@@ -541,7 +540,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     /// @param ownerRemoved owner to remove
     /// @param threshold threshold
     /// @param targetSafe target safe
-    /// @param org organization
+    /// @param org organisation
     /// @return bool
     function removeOwnerTx(
         address prevOwner,
@@ -570,7 +569,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     /// @param ownerAdded owner to add
     /// @param threshold threshold
     /// @param targetSafe target safe
-    /// @param org organization
+    /// @param org organisation
     /// @return bool
     function addOwnerWithThresholdTx(
         address ownerAdded,

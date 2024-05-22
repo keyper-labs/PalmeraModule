@@ -41,7 +41,7 @@ contract Attacker {
     }
 
     /// Function to perform the attack on the target contract, through the execTransactionOnBehalf
-    /// @param org ID's Organization
+    /// @param org ID's Organisation
     /// @param superSafe Safe super address
     /// @param targetSafe Safe target address
     /// @param to Address to which the transaction is being sent
@@ -114,7 +114,7 @@ contract Attacker {
     }
 
     /// function to set the parameters for the attack
-    /// @param _org ID's Organization
+    /// @param _org ID's Organisation
     /// @param _superSafe Safe super address
     /// @param _targetSafe Safe target address
     /// @param _data Data payload of the transaction

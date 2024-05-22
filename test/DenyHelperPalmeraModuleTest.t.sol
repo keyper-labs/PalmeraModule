@@ -8,22 +8,22 @@ import "./helpers/DeployHelper.t.sol";
 /// @notice
 contract DenyHelperPalmeraModuleTest is DeployHelper {
     address org1;
-    address squadA;
+    address safeA;
     address[] public owners = new address[](5);
     uint256 RootOrgId;
-    uint256 squadIdA1;
+    uint256 safeIdA1;
 
     // Function called before each test is run
     function setUp() public {
         // Initial Deploy Contracts
         deployAllContracts(60);
         // Setup of all Safe for Testing
-        (RootOrgId, squadIdA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
-        org1 = palmeraModule.getSquadSafeAddress(RootOrgId);
-        squadA = palmeraModule.getSquadSafeAddress(squadIdA1);
+        (RootOrgId, safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
+        org1 = palmeraModule.getSafeAddress(RootOrgId);
+        safeA = palmeraModule.getSafeAddress(safeIdA1);
         vm.label(org1, "Org 1");
-        vm.label(squadA, "SquadA");
+        vm.label(safeA, "SafeA");
     }
 
     /// @notice Test if the contract is able to add a list of owners to the allowlist
@@ -129,35 +129,35 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
     /// @notice Test Reverted Expected if the contract any DenyHelper actions when the Caller is not a Root Safe
     function testRevertInvalidRootSafe() public {
         listOfOwners();
-        vm.startPrank(squadA);
+        vm.startPrank(safeA);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, safeA)
         );
         palmeraModule.enableAllowlist();
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, safeA)
         );
         palmeraModule.enableDenylist();
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, safeA)
         );
         palmeraModule.addToList(owners);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, safeA)
         );
         palmeraModule.addToList(owners);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, safeA)
         );
         palmeraModule.dropFromList(owners[2]);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, safeA)
         );
         palmeraModule.dropFromList(owners[2]);
         vm.stopPrank();
     }
 
-    /// @notice Test Reverted Expected if the contract any DenyHelper actions when the Caller is Another Safe not registered into the Organization
+    /// @notice Test Reverted Expected if the contract any DenyHelper actions when the Caller is Another Safe not registered into the Organisation
     function testRevertIfCallAnotherSafeNotRegistered() public {
         listOfOwners();
         address anotherWallet = safeHelper.setupSeveralSafeEnv(30);

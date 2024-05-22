@@ -22,35 +22,35 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
 
     // ! ********************** Allow/Deny list Test ********************
 
-    // Revert AddresNotAllowed() execTransactionOnBehalf (safeSquadA1 is not on AllowList)
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
-    // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> NOT_ALLOW_LIST
+    // Revert AddresNotAllowed() execTransactionOnBehalf (safeA1 is not on AllowList)
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Safe, Name -> safeA1
+    // Target Info: Type-> SAFE, Name -> safeSubSafeA1, Hierarchy related to caller -> NOT_ALLOW_LIST
     function testRevertSuperSafeExecOnBehalfIsNotAllowList() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
+        (uint256 rootId, uint256 safeA1Id, uint256 subSafeA1Id,,) =
         palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
-        address subSquadA1Addr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
+        address subSafeA1Addr = palmeraModule.getSafeAddress(subSafeA1Id);
 
-        // Send ETH to squad&subsquad
-        vm.deal(squadA1Addr, 100 gwei);
-        vm.deal(subSquadA1Addr, 100 gwei);
+        // Send ETH to safe&subsafe
+        vm.deal(safeA1Addr, 100 gwei);
+        vm.deal(subSafeA1Addr, 100 gwei);
 
         /// Enable allowlist
         vm.startPrank(rootAddr);
         palmeraModule.enableAllowlist();
         vm.stopPrank();
 
-        // Set palmerahelper safe to safeSquadA1
-        palmeraHelper.setSafe(squadA1Addr);
+        // Set palmerahelper safe to safeA1
+        palmeraHelper.setSafe(safeA1Addr);
         bytes memory emptyData;
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
-            squadA1Addr,
-            subSquadA1Addr,
+            safeA1Addr,
+            subSafeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -58,12 +58,12 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
         );
 
         // Execute on behalf function
-        vm.startPrank(squadA1Addr);
+        vm.startPrank(safeA1Addr);
         vm.expectRevert(Errors.AddresNotAllowed.selector);
         palmeraModule.execTransactionOnBehalf(
             orgHash,
-            squadA1Addr,
-            subSquadA1Addr,
+            safeA1Addr,
+            subSafeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -72,22 +72,22 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
         );
     }
 
-    // Revert AddressDenied() execTransactionOnBehalf (safeSquadA1 is on DeniedList)
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
-    // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> DENY_LIST
+    // Revert AddressDenied() execTransactionOnBehalf (safeA1 is on DeniedList)
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Safe, Name -> safeA1
+    // Target Info: Type-> SAFE, Name -> safeSubSafeA1, Hierarchy related to caller -> DENY_LIST
     function testRevertSuperSafeExecOnBehalfIsDenyList() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
+        (uint256 rootId, uint256 safeA1Id, uint256 subSafeA1Id,,) =
         palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
-        address subSquadA1Addr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
+        address subSafeA1Addr = palmeraModule.getSafeAddress(subSafeA1Id);
 
-        // Send ETH to squad&subsquad
-        vm.deal(squadA1Addr, 100 gwei);
-        vm.deal(subSquadA1Addr, 100 gwei);
+        // Send ETH to safe&subsafe
+        vm.deal(safeA1Addr, 100 gwei);
+        vm.deal(subSafeA1Addr, 100 gwei);
         address[] memory receiverList = new address[](1);
         receiverList[0] = address(0xDDD);
 
@@ -97,13 +97,13 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
         palmeraModule.addToList(receiverList);
         vm.stopPrank();
 
-        // Set palmerahelper safe to safeSquadA1
-        palmeraHelper.setSafe(squadA1Addr);
+        // Set palmerahelper safe to safeA1
+        palmeraHelper.setSafe(safeA1Addr);
         bytes memory emptyData;
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
-            squadA1Addr,
-            subSquadA1Addr,
+            safeA1Addr,
+            subSafeA1Addr,
             receiverList[0],
             2 gwei,
             emptyData,
@@ -111,12 +111,12 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
         );
 
         // Execute on behalf function
-        vm.startPrank(squadA1Addr);
+        vm.startPrank(safeA1Addr);
         vm.expectRevert(Errors.AddressDenied.selector);
         palmeraModule.execTransactionOnBehalf(
             orgHash,
-            squadA1Addr,
-            subSquadA1Addr,
+            safeA1Addr,
+            subSafeA1Addr,
             receiverList[0],
             2 gwei,
             emptyData,
@@ -125,22 +125,22 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
         );
     }
 
-    // Revert AddressDenied() execTransactionOnBehalf (safeSquadA1 is on DeniedList)
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
-    // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> DENY_LIST
+    // Revert AddressDenied() execTransactionOnBehalf (safeA1 is on DeniedList)
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Safe, Name -> safeA1
+    // Target Info: Type-> SAFE, Name -> safeSubSafeA1, Hierarchy related to caller -> DENY_LIST
     function testDisableDenyHelperList() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
+        (uint256 rootId, uint256 safeA1Id, uint256 subSafeA1Id,,) =
         palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
-        address subSquadA1Addr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
+        address subSafeA1Addr = palmeraModule.getSafeAddress(subSafeA1Id);
 
-        // Send ETH to squad&subsquad
-        vm.deal(squadA1Addr, 100 gwei);
-        vm.deal(subSquadA1Addr, 100 gwei);
+        // Send ETH to safe&subsafe
+        vm.deal(safeA1Addr, 100 gwei);
+        vm.deal(subSafeA1Addr, 100 gwei);
         address[] memory receiverList = new address[](1);
         receiverList[0] = address(0xDDD);
 
@@ -152,13 +152,13 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
         palmeraModule.disableDenyHelper();
         vm.stopPrank();
 
-        // Set palmerahelper safe to safeSquadA1
-        palmeraHelper.setSafe(squadA1Addr);
+        // Set palmerahelper safe to safeA1
+        palmeraHelper.setSafe(safeA1Addr);
         bytes memory emptyData;
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
-            squadA1Addr,
-            subSquadA1Addr,
+            safeA1Addr,
+            subSafeA1Addr,
             receiverList[0],
             2 gwei,
             emptyData,
@@ -166,11 +166,11 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
         );
 
         // Execute on behalf function
-        vm.startPrank(squadA1Addr);
+        vm.startPrank(safeA1Addr);
         palmeraModule.execTransactionOnBehalf(
             orgHash,
-            squadA1Addr,
-            subSquadA1Addr,
+            safeA1Addr,
+            subSafeA1Addr,
             receiverList[0],
             2 gwei,
             emptyData,
@@ -190,175 +190,175 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
         );
     }
 
-    // ! ******************** removeSquad Test *************************************
+    // ! ******************** removeSafe Test *************************************
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
-    // Target Info: Type-> SAFE, Name -> safeSquadA1, Hierarchy related to caller -> SAME_TREE
-    function testCan_RemoveSquad_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree()
+    // Target Info: Type-> SAFE, Name -> safeA1, Hierarchy related to caller -> SAME_TREE
+    function testCan_RemoveSafe_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree()
         public
     {
         (
             uint256 rootId,
-            uint256 squadA1Id,
-            uint256 subSquadA1Id,
-            uint256 subSubsquadA1Id
+            uint256 safeA1Id,
+            uint256 subSafeA1Id,
+            uint256 subSubsafeA1Id
         ) = palmeraSafeBuilder.setupOrgFourTiersTree(
-            orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
+            orgName, safeA1Name, subSafeA1Name, subSubSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
 
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
+        bool result = safeHelper.createRemoveSafeTx(subSafeA1Id);
         assertEq(result, true);
-        assertEq(palmeraModule.isSuperSafe(rootId, subSquadA1Id), false);
+        assertEq(palmeraModule.isSuperSafe(rootId, subSafeA1Id), false);
 
-        // Check safeSubSquadA1 is now a child of org
-        assertEq(palmeraModule.isTreeMember(rootId, subSubsquadA1Id), true);
-        // Check org is parent of safeSubSquadA1
-        assertEq(palmeraModule.isSuperSafe(squadA1Id, subSubsquadA1Id), true);
+        // Check safeSubSafeA1 is now a child of org
+        assertEq(palmeraModule.isTreeMember(rootId, subSubsafeA1Id), true);
+        // Check org is parent of safeSubSafeA1
+        assertEq(palmeraModule.isSuperSafe(safeA1Id, subSubsafeA1Id), true);
 
-        // Check removed squad parent has subSafeSquad A as child an not safeSquadA1
+        // Check removed safe parent has subSafe A as child an not safeA1
         uint256[] memory child;
-        (,,,, child,) = palmeraModule.getSquadInfo(squadA1Id);
+        (,,,, child,) = palmeraModule.getSafeInfo(safeA1Id);
         assertEq(child.length, 1);
-        assertEq(child[0] == subSquadA1Id, false);
-        assertEq(child[0] == subSubsquadA1Id, true);
-        assertEq(palmeraModule.isTreeMember(rootId, subSquadA1Id), false);
+        assertEq(child[0] == subSafeA1Id, false);
+        assertEq(child[0] == subSubsafeA1Id, true);
+        assertEq(palmeraModule.isTreeMember(rootId, subSafeA1Id), false);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
-    // Target Info: Type-> SAFE, Name -> squadB, Hierarchy related to caller -> DIFFERENT_TREE
-    function testCannot_RemoveSquad_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentTree(
+    // Target Info: Type-> SAFE, Name -> safeB, Hierarchy related to caller -> DIFFERENT_TREE
+    function testCannot_RemoveSafe_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentTree(
     ) public {
-        (uint256 rootIdA, uint256 squadAId, uint256 rootIdB, uint256 squadBId) =
-        palmeraSafeBuilder.setupTwoRootOrgWithOneSquadEach(
-            orgName, squadA1Name, root2Name, squadBName
+        (uint256 rootIdA, uint256 safeAId, uint256 rootIdB, uint256 safeBId) =
+        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootIdA);
+        address rootAddr = palmeraModule.getSafeAddress(rootIdA);
         vm.startPrank(rootAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        palmeraModule.removeSquad(squadBId);
+        palmeraModule.removeSafe(safeBId);
         vm.stopPrank();
 
-        address rootBAddr = palmeraModule.getSquadSafeAddress(rootIdB);
+        address rootBAddr = palmeraModule.getSafeAddress(rootIdB);
         vm.startPrank(rootBAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        palmeraModule.removeSquad(squadAId);
+        palmeraModule.removeSafe(safeAId);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     // Target Info: Type-> ROOT_SAFE, Name -> rootB, Hierarchy related to caller -> DIFFERENT_TREE
-    function testCannot_RemoveSquad_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentOrg(
+    function testCannot_RemoveSafe_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentOrg(
     ) public {
-        (uint256 rootIdA, uint256 squadAId, uint256 rootIdB, uint256 squadBId,,)
-        = palmeraSafeBuilder.setupTwoOrgWithOneRootOneSquadAndOneChildEach(
+        (uint256 rootIdA, uint256 safeAId, uint256 rootIdB, uint256 safeBId,,) =
+        palmeraSafeBuilder.setupTwoOrgWithOneRootOneSafeAndOneChildEach(
             orgName,
-            squadA1Name,
+            safeA1Name,
             root2Name,
-            squadBName,
-            subSquadA1Name,
-            subSubSquadA1Name
+            safeBName,
+            subSafeA1Name,
+            subSubSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootIdA);
+        address rootAddr = palmeraModule.getSafeAddress(rootIdA);
         vm.startPrank(rootAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        palmeraModule.removeSquad(squadBId);
+        palmeraModule.removeSafe(safeBId);
         vm.stopPrank();
 
-        address rootBAddr = palmeraModule.getSquadSafeAddress(rootIdB);
+        address rootBAddr = palmeraModule.getSafeAddress(rootIdB);
         vm.startPrank(rootBAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        palmeraModule.removeSquad(squadAId);
+        palmeraModule.removeSafe(safeAId);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> squadA
-    // Target Info: Type-> SAFE, Name -> subSquadA, Hierarchy related to caller -> SAME_TREE, CHILDREN
-    function testCan_RemoveSquad_SUPER_SAFE_as_SAFE_is_SUPER_SAFE_SameTree()
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> safeA
+    // Target Info: Type-> SAFE, Name -> subSafeA, Hierarchy related to caller -> SAME_TREE, CHILDREN
+    function testCan_RemoveSafe_SUPER_SAFE_as_SAFE_is_SUPER_SAFE_SameTree()
         public
     {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
+        (uint256 rootId, uint256 safeA1Id, uint256 subSafeA1Id,,) =
         palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address safeAAddr = palmeraModule.getSafeAddress(safeA1Id);
 
-        safeHelper.updateSafeInterface(squadAAddr);
-        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
+        safeHelper.updateSafeInterface(safeAAddr);
+        bool result = safeHelper.createRemoveSafeTx(subSafeA1Id);
         assertEq(result, true);
-        assertEq(palmeraModule.isSuperSafe(squadA1Id, subSquadA1Id), false);
-        assertEq(palmeraModule.isSuperSafe(rootId, subSquadA1Id), false);
-        assertEq(palmeraModule.isTreeMember(rootId, subSquadA1Id), false);
+        assertEq(palmeraModule.isSuperSafe(safeA1Id, subSafeA1Id), false);
+        assertEq(palmeraModule.isSuperSafe(rootId, subSafeA1Id), false);
+        assertEq(palmeraModule.isTreeMember(rootId, subSafeA1Id), false);
 
         // Check supersafe has not any children
-        (,,,, uint256[] memory child,) = palmeraModule.getSquadInfo(squadA1Id);
+        (,,,, uint256[] memory child,) = palmeraModule.getSafeInfo(safeA1Id);
         assertEq(child.length, 0);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> squadA
-    // Target Info: Type-> SAFE, Name -> squadB, Hierarchy related to caller -> DIFFERENT_TREE,NOT_DIRECT_CHILDREN
-    function testCannot_RemoveSquad_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_DifferentTree(
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> safeA
+    // Target Info: Type-> SAFE, Name -> safeB, Hierarchy related to caller -> DIFFERENT_TREE,NOT_DIRECT_CHILDREN
+    function testCannot_RemoveSafe_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_DifferentTree(
     ) public {
-        (, uint256 squadAId,, uint256 squadBId,,) = palmeraSafeBuilder
-            .setupTwoOrgWithOneRootOneSquadAndOneChildEach(
+        (, uint256 safeAId,, uint256 safeBId,,) = palmeraSafeBuilder
+            .setupTwoOrgWithOneRootOneSafeAndOneChildEach(
             orgName,
-            squadA1Name,
+            safeA1Name,
             root2Name,
-            squadBName,
-            subSquadA1Name,
-            subSquadB1Name
+            safeBName,
+            subSafeA1Name,
+            subSafeB1Name
         );
 
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadAId);
-        vm.startPrank(squadAAddr);
+        address safeAAddr = palmeraModule.getSafeAddress(safeAId);
+        vm.startPrank(safeAAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        palmeraModule.removeSquad(squadBId);
+        palmeraModule.removeSafe(safeBId);
         vm.stopPrank();
 
-        address squadBAddr = palmeraModule.getSquadSafeAddress(squadBId);
-        vm.startPrank(squadBAddr);
+        address safeBAddr = palmeraModule.getSafeAddress(safeBId);
+        vm.startPrank(safeBAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        palmeraModule.removeSquad(squadAId);
+        palmeraModule.removeSafe(safeAId);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> squadA
-    // Target Info: Type-> SAFE, Name -> subsubSquadA, Hierarchy related to caller -> SAME_TREE,NOT_DIRECT_CHILDREN
-    function testCannot_RemoveSquad_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_SameTree(
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Safe, Name -> safeA
+    // Target Info: Type-> SAFE, Name -> subsubSafeA, Hierarchy related to caller -> SAME_TREE,NOT_DIRECT_CHILDREN
+    function testCannot_RemoveSafe_SUPER_SAFE_as_SAFE_is_not_TARGET_SUPER_SAFE_SameTree(
     ) public {
-        (, uint256 squadAId,, uint256 subSubSquadA1) = palmeraSafeBuilder
+        (, uint256 safeAId,, uint256 subSubSafeA1) = palmeraSafeBuilder
             .setupOrgFourTiersTree(
-            orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
+            orgName, safeA1Name, subSafeA1Name, subSubSafeA1Name
         );
 
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadAId);
-        vm.startPrank(squadAAddr);
+        address safeAAddr = palmeraModule.getSafeAddress(safeAId);
+        vm.startPrank(safeAAddr);
         vm.expectRevert(Errors.NotAuthorizedAsNotRootOrSuperSafe.selector);
-        palmeraModule.removeSquad(subSubSquadA1);
+        palmeraModule.removeSafe(subSubSafeA1);
         vm.stopPrank();
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
-    // Target Info: Type-> SAFE, Name -> squadA, Hierarchy related to caller -> SAME_TREE, CHILDREN
-    function testRemoveSquadAndCheckDisables() public {
-        (uint256 rootId, uint256 squadA1Id) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+    // Target Info: Type-> SAFE, Name -> safeA, Hierarchy related to caller -> SAME_TREE, CHILDREN
+    function testRemoveSafeAndCheckDisables() public {
+        (uint256 rootId, uint256 safeA1Id) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
 
-        (,,,,, uint256 superSafe) = palmeraModule.getSquadInfo(squadA1Id);
-        (,, address superSafeAddr,,) = palmeraModule.squads(orgHash, superSafe);
+        (,,,,, uint256 superSafe) = palmeraModule.getSafeInfo(safeA1Id);
+        (,, address superSafeAddr,,) = palmeraModule.safes(orgHash, superSafe);
 
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createRemoveSquadTx(squadA1Id);
+        bool result = safeHelper.createRemoveSafeTx(safeA1Id);
         assertEq(result, true);
 
         assertEq(
             palmeraRolesContract.doesUserHaveRole(
-                squadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
+                safeA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
@@ -379,67 +379,67 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
-    // Target Info: Type-> SUPER_SAFE, Name -> squadA, Hierarchy related to caller -> SAME_TREE
+    // Target Info: Type-> SUPER_SAFE, Name -> safeA, Hierarchy related to caller -> SAME_TREE
     function testCan_hasNotPermissionOverTarget_is_root_of_target() public {
-        (uint256 rootId, uint256 squadA1Id) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1Id) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadAddr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeAddr = palmeraModule.getSafeAddress(safeA1Id);
 
         bool result = palmeraModule.hasNotPermissionOverTarget(
-            rootAddr, orgHash, squadAddr
+            rootAddr, orgHash, safeAddr
         );
         assertFalse(result);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Super, Name -> squadA
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Super, Name -> safeA
     // Target Info: Type-> ROOT_SAFE, Name -> rootA, Hierarchy related to caller -> SAME_TREE
     function testCan_hasNotPermissionOverTarget_is_not_root_of_target()
         public
     {
-        (uint256 rootId, uint256 squadA1Id) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1Id) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadAddr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeAddr = palmeraModule.getSafeAddress(safeA1Id);
 
         bool result = palmeraModule.hasNotPermissionOverTarget(
-            squadAddr, orgHash, rootAddr
+            safeAddr, orgHash, rootAddr
         );
         assertTrue(result);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Super, Name -> squadA
-    // Target Info: Type-> CHILD_SAFE, Name -> subSquadA, Hierarchy related to caller -> SAME_TREE
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Super, Name -> safeA
+    // Target Info: Type-> CHILD_SAFE, Name -> subSafeA, Hierarchy related to caller -> SAME_TREE
     function testCan_hasNotPermissionOverTarget_is_super_safe_of_target()
         public
     {
-        (, uint256 squadA1Id, uint256 subSquadA1Id,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (, uint256 safeA1Id, uint256 subSafeA1Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address squadAddr = palmeraModule.getSquadSafeAddress(squadA1Id);
-        address subSquadAddr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
+        address safeAddr = palmeraModule.getSafeAddress(safeA1Id);
+        address subSafeAddr = palmeraModule.getSafeAddress(subSafeA1Id);
 
         bool result = palmeraModule.hasNotPermissionOverTarget(
-            squadAddr, orgHash, subSquadAddr
+            safeAddr, orgHash, subSafeAddr
         );
         assertFalse(result);
     }
 
-    // Caller Info: Role-> CHILD_SAFE, Type -> SAFE, Hierarchy -> Child, Name -> subSquadA
-    // Target Info: Type-> SUPER_SAFE, Name -> squadA, Hierarchy related to caller -> SAME_TREE
+    // Caller Info: Role-> CHILD_SAFE, Type -> SAFE, Hierarchy -> Child, Name -> subSafeA
+    // Target Info: Type-> SUPER_SAFE, Name -> safeA, Hierarchy related to caller -> SAME_TREE
     function testCan_hasNotPermissionOverTarget_is_not_super_safe_of_target()
         public
     {
-        (, uint256 squadA1Id, uint256 subSquadA1Id,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (, uint256 safeA1Id, uint256 subSafeA1Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address squadAddr = palmeraModule.getSquadSafeAddress(squadA1Id);
-        address subSquadAddr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
+        address safeAddr = palmeraModule.getSafeAddress(safeA1Id);
+        address subSafeAddr = palmeraModule.getSafeAddress(subSafeA1Id);
 
         bool result = palmeraModule.hasNotPermissionOverTarget(
-            subSquadAddr, orgHash, squadAddr
+            subSafeAddr, orgHash, safeAddr
         );
         assertTrue(result);
     }

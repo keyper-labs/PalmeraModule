@@ -46,71 +46,71 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
         assertEq(isPalmeraModuleEnabled, false);
     }
 
-    /// @notice Test Cannot Replay Attack Test to Remove Squad
-    function testCannotReplayAttackRemoveSquad() public {
-        (uint256 rootId, uint256 squadA1Id) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+    /// @notice Test Cannot Replay Attack Test to Remove Safe
+    function testCannotReplayAttackRemoveSafe() public {
+        (uint256 rootId, uint256 safeA1Id) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
 
-        /// Remove Squad A1
+        /// Remove Safe A1
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createRemoveSquadTx(squadA1Id);
+        bool result = safeHelper.createRemoveSafeTx(safeA1Id);
         assertEq(result, true);
         // Replay attack
         vm.startPrank(rootAddr);
-        vm.expectRevert(Errors.SquadAlreadyRemoved.selector);
-        palmeraModule.removeSquad(squadA1Id);
+        vm.expectRevert(Errors.SafeAlreadyRemoved.selector);
+        palmeraModule.removeSafe(safeA1Id);
         vm.stopPrank();
     }
 
     /// @notice Test Cannot Replay Attack Test to Disconnect Safe
     function testCannotReplayAttackDisconnectedSafe() public {
-        (uint256 rootId, uint256 squadA1Id) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1Id) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
 
-        /// Remove Squad A1
+        /// Remove Safe A1
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createDisconnectSafeTx(squadA1Id);
+        bool result = safeHelper.createDisconnectSafeTx(safeA1Id);
         assertEq(result, true);
         // Replay attack
         vm.startPrank(rootAddr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.SquadNotRegistered.selector, squadA1Id
+                Errors.SafeIdNotRegistered.selector, safeA1Id
             )
         );
-        palmeraModule.disconnectSafe(squadA1Id);
+        palmeraModule.disconnectSafe(safeA1Id);
         vm.stopPrank();
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
-    // Target Info: Type-> SUPER_SAFE, Name -> SquadA, Hierarchy related to caller -> SAME_TREE
+    // Target Info: Type-> SUPER_SAFE, Name -> SafeA, Hierarchy related to caller -> SAME_TREE
     function testDisconnectSafe_As_ROOTSAFE_TARGET_SUPERSAFE_SAME_TREE()
         public
     {
-        (uint256 rootId, uint256 squadIdA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
 
-        // Remove Squad A1
+        // Remove Safe A1
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createDisconnectSafeTx(squadIdA1);
+        bool result = safeHelper.createDisconnectSafeTx(safeIdA1);
         assertEq(result, true);
 
         // Verify Safe is disconnected
         // Verify module has been disabled
-        safeHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(safeA1Addr);
         bool isPalmeraModuleEnabled =
             safeHelper.safeWallet().isModuleEnabled(address(palmeraModule));
         assertEq(isPalmeraModuleEnabled, false);
         // Verify guard has been enabled
         address ZeroAddress = abi.decode(
-            StorageAccessible(squadA1Addr).getStorageAt(
+            StorageAccessible(safeA1Addr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -119,30 +119,30 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
-    // Target Info: Type-> SQUAD_SAFE, Name -> SubSquadA, Hierarchy related to caller -> SAME_TREE
+    // Target Info: Type-> safe_SAFE, Name -> SubSafeA, Hierarchy related to caller -> SAME_TREE
     function testCannotDisconnectSafe_As_ROOTSAFE_TARGET_ROOTSAFE_SAME_TREE()
         public
     {
-        (uint256 rootId,, uint256 subSquadA1Id,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (uint256 rootId,, uint256 subSafeA1Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address subSquadA1Addr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address subSafeA1Addr = palmeraModule.getSafeAddress(subSafeA1Id);
 
         // Disconnect Safe
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createDisconnectSafeTx(subSquadA1Id);
+        bool result = safeHelper.createDisconnectSafeTx(subSafeA1Id);
         assertEq(result, true);
 
         // Verify Safe is disconnected
         // Verify module has been disabled
-        safeHelper.updateSafeInterface(subSquadA1Addr);
+        safeHelper.updateSafeInterface(subSafeA1Addr);
         bool isPalmeraModuleEnabled =
             safeHelper.safeWallet().isModuleEnabled(address(palmeraModule));
         assertEq(isPalmeraModuleEnabled, false);
         // Verify guard has been enabled
         address ZeroAddress = abi.decode(
-            StorageAccessible(subSquadA1Addr).getStorageAt(
+            StorageAccessible(subSafeA1Addr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -155,16 +155,16 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     function testCannotDisconnectSafe_As_ROOTSAFE_TARGET_ITSELF_If_Have_children(
     ) public {
         (uint256 rootId,) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
         safeHelper.updateSafeInterface(rootAddr);
 
         /// Disconnect Safe
         vm.startPrank(rootAddr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.CannotRemoveSquadBeforeRemoveChild.selector, 1
+                Errors.CannotRemoveSafeBeforeRemoveChild.selector, 1
             )
         );
         palmeraModule.disconnectSafe(rootId);
@@ -190,17 +190,17 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     function testDisconnectSafe_As_ROOTSAFE_TARGET_ITSELF_If_Not_Have_children()
         public
     {
-        (uint256 rootId, uint256 squadA1Id) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1Id) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
 
-        /// Remove Squad A1
+        /// Remove Safe A1
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createRemoveSquadTx(squadA1Id);
+        bool result = safeHelper.createRemoveSafeTx(safeA1Id);
         assertEq(result, true);
 
-        safeHelper.createRemoveSquadTx(rootId);
+        safeHelper.createRemoveSafeTx(rootId);
         assertEq(result, true);
 
         /// Disconnect Safe
@@ -222,36 +222,36 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
         assertEq(ZeroAddress, zeroAddress);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> squadA
-    // Target Info: Type-> SAFE, Name -> subSquadA, Hierarchy related to caller -> SAME_TREE
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Safe, Name -> safeA
+    // Target Info: Type-> SAFE, Name -> subSafeA, Hierarchy related to caller -> SAME_TREE
     function testCannotDisconnectSafe_As_SuperSafe_As_SameTree() public {
-        (, uint256 squadIdA1, uint256 subSquadA1Id,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (, uint256 safeIdA1, uint256 subSafeA1Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
-        address subSquadA1Addr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
+        address subSafeA1Addr = palmeraModule.getSafeAddress(subSafeA1Id);
 
-        // Remove Squad A1
-        safeHelper.updateSafeInterface(squadA1Addr);
-        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
+        // Remove Safe A1
+        safeHelper.updateSafeInterface(safeA1Addr);
+        bool result = safeHelper.createRemoveSafeTx(subSafeA1Id);
         assertEq(result, true);
 
         // Try to Disconnect Safe
-        vm.startPrank(squadA1Addr);
+        vm.startPrank(safeA1Addr);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA1Addr)
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, safeA1Addr)
         );
-        palmeraModule.disconnectSafe(subSquadA1Id);
+        palmeraModule.disconnectSafe(subSafeA1Id);
         vm.stopPrank();
 
         // Verify module still enabled
-        safeHelper.updateSafeInterface(subSquadA1Addr);
+        safeHelper.updateSafeInterface(subSafeA1Addr);
         bool isPalmeraModuleEnabled =
             safeHelper.safeWallet().isModuleEnabled(address(palmeraModule));
         assertEq(isPalmeraModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
-            StorageAccessible(subSquadA1Addr).getStorageAt(
+            StorageAccessible(subSafeA1Addr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -259,44 +259,44 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
         assertEq(guardAddress, address(palmeraGuard));
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> squadA
-    // Target Info: Type-> SAFE, Name -> subSquadA, Hierarchy related to caller -> DIFFERENT_TREE
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Safe, Name -> safeA
+    // Target Info: Type-> SAFE, Name -> subSafeA, Hierarchy related to caller -> DIFFERENT_TREE
     function testCannotDisconnectSafe_As_SuperSafe_As_DifferentTree() public {
-        (, uint256 squadIdA1,, uint256 squadIdB1, uint256 subSquadA1Id,) =
-        palmeraSafeBuilder.setupTwoOrgWithOneRootOneSquadAndOneChildEach(
+        (, uint256 safeIdA1,, uint256 safeIdB1, uint256 subSafeA1Id,) =
+        palmeraSafeBuilder.setupTwoOrgWithOneRootOneSafeAndOneChildEach(
             orgName,
-            squadA1Name,
+            safeA1Name,
             root2Name,
-            squadBName,
-            subSquadA1Name,
-            subSquadB1Name
+            safeBName,
+            subSafeA1Name,
+            subSafeB1Name
         );
 
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
-        address subSquadA1Addr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
-        address squadB1Addr = palmeraModule.getSquadSafeAddress(squadIdB1);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
+        address subSafeA1Addr = palmeraModule.getSafeAddress(subSafeA1Id);
+        address safeB1Addr = palmeraModule.getSafeAddress(safeIdB1);
 
-        // Remove Squad A1
-        safeHelper.updateSafeInterface(squadA1Addr);
-        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
+        // Remove Safe A1
+        safeHelper.updateSafeInterface(safeA1Addr);
+        bool result = safeHelper.createRemoveSafeTx(subSafeA1Id);
         assertEq(result, true);
 
         // Try to Disconnect Safe
-        vm.startPrank(squadB1Addr);
+        vm.startPrank(safeB1Addr);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadB1Addr)
+            abi.encodeWithSelector(Errors.InvalidRootSafe.selector, safeB1Addr)
         );
-        palmeraModule.disconnectSafe(subSquadA1Id);
+        palmeraModule.disconnectSafe(subSafeA1Id);
         vm.stopPrank();
 
         // Verify module still enabled
-        safeHelper.updateSafeInterface(subSquadA1Addr);
+        safeHelper.updateSafeInterface(subSafeA1Addr);
         bool isPalmeraModuleEnabled =
             safeHelper.safeWallet().isModuleEnabled(address(palmeraModule));
         assertEq(isPalmeraModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
-            StorageAccessible(subSquadA1Addr).getStorageAt(
+            StorageAccessible(subSafeA1Addr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -304,42 +304,42 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
         assertEq(guardAddress, address(palmeraGuard));
     }
 
-    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> rootB
-    // Target Info: Type-> SQUAD_SAFE, Name -> subSquadA1Id, Hierarchy related to caller -> DIFFERENT_TREE
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Safe, Name -> rootB
+    // Target Info: Type-> safe_SAFE, Name -> subSafeA1Id, Hierarchy related to caller -> DIFFERENT_TREE
     function testCannotDisconnectSafe_As_RootSafe_As_DifferentTree() public {
-        (uint256 rootIdA,, uint256 rootIdB,, uint256 subSquadA1Id,) =
-        palmeraSafeBuilder.setupTwoOrgWithOneRootOneSquadAndOneChildEach(
+        (uint256 rootIdA,, uint256 rootIdB,, uint256 subSafeA1Id,) =
+        palmeraSafeBuilder.setupTwoOrgWithOneRootOneSafeAndOneChildEach(
             orgName,
-            squadA1Name,
+            safeA1Name,
             root2Name,
-            squadBName,
-            subSquadA1Name,
-            subSquadB1Name
+            safeBName,
+            subSafeA1Name,
+            subSafeB1Name
         );
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
-        address subSquadA1Addr = palmeraModule.getSquadSafeAddress(subSquadA1Id);
-        address rootAddrB = palmeraModule.getSquadSafeAddress(rootIdB);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
+        address subSafeA1Addr = palmeraModule.getSafeAddress(subSafeA1Id);
+        address rootAddrB = palmeraModule.getSafeAddress(rootIdB);
 
-        // Remove Squad A1
+        // Remove Safe A1
         safeHelper.updateSafeInterface(rootAddrA);
-        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
+        bool result = safeHelper.createRemoveSafeTx(subSafeA1Id);
         assertEq(result, true);
 
         // Try to Disconnect Safe
         vm.startPrank(rootAddrB);
-        vm.expectRevert(Errors.NotAuthorizedDisconnectChildrenSquad.selector);
-        palmeraModule.disconnectSafe(subSquadA1Id);
+        vm.expectRevert(Errors.NotAuthorizedDisconnectChildrenSafe.selector);
+        palmeraModule.disconnectSafe(subSafeA1Id);
         vm.stopPrank();
 
         // Verify module still enabled
-        safeHelper.updateSafeInterface(subSquadA1Addr);
+        safeHelper.updateSafeInterface(subSafeA1Addr);
         bool isPalmeraModuleEnabled =
             safeHelper.safeWallet().isModuleEnabled(address(palmeraModule));
         assertEq(isPalmeraModuleEnabled, true);
         // Verify guard still enabled
         address guardAddress = abi.decode(
-            StorageAccessible(subSquadA1Addr).getStorageAt(
+            StorageAccessible(subSafeA1Addr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -348,27 +348,27 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
-    // Target Info: Type-> SAFE, Name -> squadA1Id, Hierarchy related to caller -> SAME_TREE
-    function testDisconnectSafeBeforeToRemoveSquad_One_Level() public {
-        (uint256 rootId, uint256 squadIdA1,,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+    // Target Info: Type-> SAFE, Name -> safeA1Id, Hierarchy related to caller -> SAME_TREE
+    function testDisconnectSafeBeforeToRemoveSafe_One_Level() public {
+        (uint256 rootId, uint256 safeIdA1,,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
 
-        // Disconnect Safe before to remove squad
+        // Disconnect Safe before to remove safe
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createDisconnectSafeTx(squadIdA1);
+        bool result = safeHelper.createDisconnectSafeTx(safeIdA1);
         assertEq(result, true);
 
         // Verify module has been disabled
-        safeHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(safeA1Addr);
         bool isPalmeraModuleEnabled =
             safeHelper.safeWallet().isModuleEnabled(address(palmeraModule));
         assertEq(isPalmeraModuleEnabled, false);
         // Verify guard has been disabled
         address ZeroAddress = abi.decode(
-            StorageAccessible(squadA1Addr).getStorageAt(
+            StorageAccessible(safeA1Addr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -377,30 +377,30 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
-    // Target Info: Type-> SQUAD_SAFE, Name -> subSquadIdA1, Hierarchy related to caller -> SAME_TREE
-    function testDisconnectSafeBeforeToRemoveSquad_Two_Level() public {
-        (uint256 rootId,, uint256 subSquadIdA1,) = palmeraSafeBuilder
+    // Target Info: Type-> safe_SAFE, Name -> subSafeIdA1, Hierarchy related to caller -> SAME_TREE
+    function testDisconnectSafeBeforeToRemoveSafe_Two_Level() public {
+        (uint256 rootId,, uint256 subSafeIdA1,) = palmeraSafeBuilder
             .setupOrgFourTiersTree(
-            orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
+            orgName, safeA1Name, subSafeA1Name, subSubSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address subSquadA1Addr = palmeraModule.getSquadSafeAddress(subSquadIdA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address subSafeA1Addr = palmeraModule.getSafeAddress(subSafeIdA1);
 
-        // Try to Disconnect Safe before to remove squad
-        // Disconnect Safe before to remove squad
+        // Try to Disconnect Safe before to remove safe
+        // Disconnect Safe before to remove safe
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createDisconnectSafeTx(subSquadIdA1);
+        bool result = safeHelper.createDisconnectSafeTx(subSafeIdA1);
         assertEq(result, true);
 
         // Verify module has been disabled
-        safeHelper.updateSafeInterface(subSquadA1Addr);
+        safeHelper.updateSafeInterface(subSafeA1Addr);
         bool isPalmeraModuleEnabled =
             safeHelper.safeWallet().isModuleEnabled(address(palmeraModule));
         assertEq(isPalmeraModuleEnabled, false);
         // Verify guard has been disabled
         address ZeroAddress = abi.decode(
-            StorageAccessible(subSquadA1Addr).getStorageAt(
+            StorageAccessible(subSafeA1Addr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -409,89 +409,87 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> EOA, Type -> SAFE, Hierarchy -> SAFE_LEAD, Name -> fakerCaller
-    // Target Info: Type-> SQUAD_SAFE, Name -> childSquadA1, Hierarchy related to caller -> N/A
+    // Target Info: Type-> safe_SAFE, Name -> childSafeA1, Hierarchy related to caller -> N/A
     function testCannotDisconnectSafe_As_SafeLead_As_EOA() public {
-        (uint256 rootId,, uint256 childSquadA1,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (uint256 rootId,, uint256 childSafeA1,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address childSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(childSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address childSafeA1Addr = palmeraModule.getSafeAddress(childSafeA1);
 
-        // Send ETH to squad&subsquad
+        // Send ETH to safe&subsafe
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(childSquadA1Addr, 100 gwei);
+        vm.deal(childSafeA1Addr, 100 gwei);
 
         // Create a a Ramdom Right EOA Caller
         address fakerCaller = address(0xCBA);
 
-        // Set Safe Role in Safe Squad A1 over Child Squad A1
+        // Set Safe Role in Safe A1 over Child Safe A1
         vm.startPrank(rootAddr);
         palmeraModule.setRole(
             DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
             fakerCaller,
-            childSquadA1,
+            childSafeA1,
             true
         );
-        assertTrue(palmeraModule.isSafeLead(childSquadA1, fakerCaller));
+        assertTrue(palmeraModule.isSafeLead(childSafeA1, fakerCaller));
         vm.stopPrank();
 
-        // Try to Disconnect Safe before to remove squad
+        // Try to Disconnect Safe before to remove safe
         vm.startPrank(fakerCaller);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, fakerCaller)
         );
-        palmeraModule.disconnectSafe(childSquadA1);
+        palmeraModule.disconnectSafe(childSafeA1);
         vm.stopPrank();
     }
 
     // Caller Info: Role-> SAFE, Type -> SAFE, Hierarchy -> SAFE_LEAD, Name -> fakerCaller
-    // Target Info: Type-> SQUAD_SAFE, Name -> childSquadA1, Hierarchy related to caller -> N/A
+    // Target Info: Type-> safe_SAFE, Name -> childSafeA1, Hierarchy related to caller -> N/A
     function testCannotDisconnectSafe_As_SafeLead_As_SAFE() public {
-        (uint256 rootId,, uint256 childSquadA1,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (uint256 rootId,, uint256 childSafeA1,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address childSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(childSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address childSafeA1Addr = palmeraModule.getSafeAddress(childSafeA1);
 
-        // Send ETH to squad&subsquad
+        // Send ETH to safe&subsafe
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(childSquadA1Addr, 100 gwei);
+        vm.deal(childSafeA1Addr, 100 gwei);
 
         // Create a a Ramdom Right EOA Caller
         address fakerCaller = safeHelper.newPalmeraSafe(3, 1);
 
-        // Set Safe Role in Safe Squad A1 over Child Squad A1
+        // Set Safe Role in Safe A1 over Child Safe A1
         vm.startPrank(rootAddr);
         palmeraModule.setRole(
             DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
             fakerCaller,
-            childSquadA1,
+            childSafeA1,
             true
         );
-        assertTrue(palmeraModule.isSafeLead(childSquadA1, fakerCaller));
+        assertTrue(palmeraModule.isSafeLead(childSafeA1, fakerCaller));
         vm.stopPrank();
 
-        // Try to Disconnect Safe before to remove squad
+        // Try to Disconnect Safe before to remove safe
         vm.startPrank(fakerCaller);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.SafeNotRegistered.selector, fakerCaller
             )
         );
-        palmeraModule.disconnectSafe(childSquadA1);
+        palmeraModule.disconnectSafe(childSafeA1);
         vm.stopPrank();
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
-    // Target Info: Type-> SQUAD_SAFE, Name -> squadIdA1, Hierarchy related to caller -> SAME_TREE
+    // Target Info: Type-> safe_SAFE, Name -> safeIdA1, Hierarchy related to caller -> SAME_TREE
     function testCannotDisablePalmeraModuleIfGuardEnabled() public {
-        (uint256 rootId, uint256 squadIdA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
 
         // Try to disable Module from root
         safeHelper.updateSafeInterface(rootAddr);
@@ -510,8 +508,8 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
             safeHelper.safeWallet().isModuleEnabled(address(palmeraModule));
         assertEq(isPalmeraModuleEnabled, true);
 
-        // Try to disable Module from squad
-        safeHelper.updateSafeInterface(squadA1Addr);
+        // Try to disable Module from safe
+        safeHelper.updateSafeInterface(safeA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisablePalmeraModule.selector,
@@ -519,7 +517,7 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
             )
         );
         result =
-            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, squadA1Addr);
+            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, safeA1Addr);
         assertEq(result, false);
 
         // Verify module is still enabled
@@ -529,21 +527,21 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
-    // Target Info: Type-> SQUAD_SAFE, Name -> squadIdA1, Hierarchy related to caller -> SAME_TREE
-    function testCannotDisablePalmeraModuleAfterRemoveSquad() public {
-        (uint256 rootId, uint256 squadIdA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+    // Target Info: Type-> safe_SAFE, Name -> safeIdA1, Hierarchy related to caller -> SAME_TREE
+    function testCannotDisablePalmeraModuleAfterRemoveSafe() public {
+        (uint256 rootId, uint256 safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
 
-        // Remove Squad A1
+        // Remove Safe A1
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createRemoveSquadTx(squadIdA1);
+        bool result = safeHelper.createRemoveSafeTx(safeIdA1);
         assertEq(result, true);
 
-        // Try to disable Guard from Squad Removed
-        safeHelper.updateSafeInterface(squadA1Addr);
+        // Try to disable Guard from Safe Removed
+        safeHelper.updateSafeInterface(safeA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisablePalmeraModule.selector,
@@ -551,7 +549,7 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
             )
         );
         result =
-            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, squadA1Addr);
+            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, safeA1Addr);
         assertEq(result, false);
 
         // Verify module still enabled
@@ -561,13 +559,13 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
-    // Target Info: Type-> SQUAD_SAFE, Name -> squadIdA1, Hierarchy related to caller -> SAME_TREE
+    // Target Info: Type-> safe_SAFE, Name -> safeIdA1, Hierarchy related to caller -> SAME_TREE
     function testCannotDisablePalmeraGuardIfGuardEnabled() public {
-        (uint256 rootId, uint256 squadIdA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
 
         // Try to disable Guard from root
         safeHelper.updateSafeInterface(rootAddr);
@@ -588,14 +586,14 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
         );
         assertEq(palmeraGuardAddrTest, palmeraGuardAddr);
 
-        // Try to disable Guard from squad
-        safeHelper.updateSafeInterface(squadA1Addr);
+        // Try to disable Guard from safe
+        safeHelper.updateSafeInterface(safeA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisablePalmeraGuard.selector, address(palmeraGuard)
             )
         );
-        result = safeHelper.disableGuardTx(squadA1Addr);
+        result = safeHelper.disableGuardTx(safeA1Addr);
         assertEq(result, false);
 
         // Verify Guard is still enabled
@@ -609,20 +607,20 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
-    // Target Info: Type-> SQUAD_SAFE, Name -> squadIdA1, Hierarchy related to caller -> SAME_TREE
-    function testCannotDisablePalmeraGuardAfterRemoveSquad() public {
-        (uint256 rootId, uint256 squadIdA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+    // Target Info: Type-> safe_SAFE, Name -> safeIdA1, Hierarchy related to caller -> SAME_TREE
+    function testCannotDisablePalmeraGuardAfterRemoveSafe() public {
+        (uint256 rootId, uint256 safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
-        // Remove Squad A1
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
+        // Remove Safe A1
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createRemoveSquadTx(squadIdA1);
+        bool result = safeHelper.createRemoveSafeTx(safeIdA1);
         assertEq(result, true);
 
-        // Try to disable Guard from Squad Removed
-        safeHelper.updateSafeInterface(squadA1Addr);
+        // Try to disable Guard from Safe Removed
+        safeHelper.updateSafeInterface(safeA1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisablePalmeraModule.selector,
@@ -630,14 +628,14 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
             )
         );
         result =
-            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, squadA1Addr);
+            safeHelper.disableModuleTx(Constants.SENTINEL_ADDRESS, safeA1Addr);
         assertEq(result, false);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.CannotDisablePalmeraGuard.selector, address(palmeraGuard)
             )
         );
-        result = safeHelper.disableGuardTx(squadA1Addr);
+        result = safeHelper.disableGuardTx(safeA1Addr);
         assertEq(result, false);
 
         // Verify Guard still enabled
@@ -651,37 +649,36 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
-    // Target Info: Type-> SQUAD_SAFE, Name -> childSquadA1, Hierarchy related to caller -> SAME_TREE
+    // Target Info: Type-> safe_SAFE, Name -> childSafeA1, Hierarchy related to caller -> SAME_TREE
     function testDisconnectSafe_As_ROOTSAFE_TARGET_ROOT_SAFE() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1,,) =
+        (uint256 rootId, uint256 safeA1Id, uint256 childSafeA1,,) =
         palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
-        address childSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(childSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
+        address childSafeA1Addr = palmeraModule.getSafeAddress(childSafeA1);
 
-        /// Remove Squad A1
-        safeHelper.updateSafeInterface(squadA1Addr);
-        bool result = safeHelper.createRemoveSquadTx(childSquadA1);
+        /// Remove Safe A1
+        safeHelper.updateSafeInterface(safeA1Addr);
+        bool result = safeHelper.createRemoveSafeTx(childSafeA1);
         assertEq(result, true);
 
         /// Disconnect Safe
         safeHelper.updateSafeInterface(rootAddr);
-        result = safeHelper.createDisconnectSafeTx(childSquadA1);
+        result = safeHelper.createDisconnectSafeTx(childSafeA1);
         assertEq(result, true);
 
         /// Verify Safe has been removed
         /// Verify module has been removed
-        safeHelper.updateSafeInterface(childSquadA1Addr);
+        safeHelper.updateSafeInterface(childSafeA1Addr);
         bool isPalmeraModuleEnabled =
             safeHelper.safeWallet().isModuleEnabled(address(palmeraModule));
         assertEq(isPalmeraModuleEnabled, false);
         /// Verify guard has been removed
         address ZeroAddress = abi.decode(
-            StorageAccessible(childSquadA1Addr).getStorageAt(
+            StorageAccessible(childSafeA1Addr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)
@@ -692,65 +689,64 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     // ! **************** List of Promote to Root *******************************
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
-    // Target Info: Type-> SQUAD_SAFE, Name -> childSquadA1, Hierarchy related to caller -> SAME_TREE
-    function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SQUAD_SAFE() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1,,) =
+    // Target Info: Type-> safe_SAFE, Name -> childSafeA1, Hierarchy related to caller -> SAME_TREE
+    function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_safe_SAFE() public {
+        (uint256 rootId, uint256 safeA1Id, uint256 childSafeA1,,) =
         palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
-        address childSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(childSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
+        address childSafeA1Addr = palmeraModule.getSafeAddress(childSafeA1);
 
         /// Promote to Root
         vm.startPrank(rootAddr);
         vm.expectRevert(Errors.NotAuthorizedUpdateNonSuperSafe.selector);
-        palmeraModule.promoteRoot(childSquadA1);
+        palmeraModule.promoteRoot(childSafeA1);
         vm.stopPrank();
 
         /// Verify child Safe is not an Root
-        assertEq(palmeraModule.getRootSafe(childSquadA1) == rootId, true);
-        assertEq(palmeraModule.getRootSafe(childSquadA1) == childSquadA1, false);
-        assertEq(palmeraModule.isRootSafeOf(childSquadA1Addr, rootId), false);
-        assertEq(palmeraModule.isRootSafeOf(rootAddr, childSquadA1), true);
-        assertEq(palmeraModule.isRootSafeOf(squadA1Addr, childSquadA1), false);
-        assertEq(palmeraModule.isSuperSafe(rootId, squadA1Id), true);
-        assertEq(palmeraModule.isSuperSafe(squadA1Id, childSquadA1), true);
-        assertEq(palmeraModule.isTreeMember(rootId, squadA1Id), true);
-        assertEq(palmeraModule.isTreeMember(squadA1Id, childSquadA1), true);
+        assertEq(palmeraModule.getRootSafe(childSafeA1) == rootId, true);
+        assertEq(palmeraModule.getRootSafe(childSafeA1) == childSafeA1, false);
+        assertEq(palmeraModule.isRootSafeOf(childSafeA1Addr, rootId), false);
+        assertEq(palmeraModule.isRootSafeOf(rootAddr, childSafeA1), true);
+        assertEq(palmeraModule.isRootSafeOf(safeA1Addr, childSafeA1), false);
+        assertEq(palmeraModule.isSuperSafe(rootId, safeA1Id), true);
+        assertEq(palmeraModule.isSuperSafe(safeA1Id, childSafeA1), true);
+        assertEq(palmeraModule.isTreeMember(rootId, safeA1Id), true);
+        assertEq(palmeraModule.isTreeMember(safeA1Id, childSafeA1), true);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
-    // Target Info: Type-> SUPER_SAFE, Name -> squadA1, Hierarchy related to caller -> SAME_TREE
+    // Target Info: Type-> SUPER_SAFE, Name -> safeA1, Hierarchy related to caller -> SAME_TREE
     function testCanPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1,,) =
+        (uint256 rootId, uint256 safeA1Id, uint256 childSafeA1,,) =
         palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
 
         /// Promote to Root
         safeHelper.updateSafeInterface(rootAddr);
-        bool result = safeHelper.createPromoteToRootTx(squadA1Id);
+        bool result = safeHelper.createPromoteToRootTx(safeA1Id);
         assertEq(result, true);
 
         /// Verify Safe has been promoted to Root
-        assertEq(palmeraModule.getRootSafe(squadA1Id) == rootId, false);
-        assertEq(palmeraModule.getRootSafe(squadA1Id) == squadA1Id, true);
-        assertEq(palmeraModule.isRootSafeOf(squadA1Addr, rootId), false);
-        assertEq(palmeraModule.isRootSafeOf(rootAddr, squadA1Id), false);
-        assertEq(palmeraModule.isRootSafeOf(squadA1Addr, squadA1Id), true);
-        assertEq(palmeraModule.isRootSafeOf(squadA1Addr, childSquadA1), true);
-        assertEq(palmeraModule.isSuperSafe(rootId, squadA1Id), false);
-        assertEq(palmeraModule.isSuperSafe(squadA1Id, childSquadA1), true);
-        assertEq(palmeraModule.isTreeMember(rootId, squadA1Id), false);
-        assertEq(palmeraModule.isTreeMember(squadA1Id, childSquadA1), true);
+        assertEq(palmeraModule.getRootSafe(safeA1Id) == rootId, false);
+        assertEq(palmeraModule.getRootSafe(safeA1Id) == safeA1Id, true);
+        assertEq(palmeraModule.isRootSafeOf(safeA1Addr, rootId), false);
+        assertEq(palmeraModule.isRootSafeOf(rootAddr, safeA1Id), false);
+        assertEq(palmeraModule.isRootSafeOf(safeA1Addr, safeA1Id), true);
+        assertEq(palmeraModule.isRootSafeOf(safeA1Addr, childSafeA1), true);
+        assertEq(palmeraModule.isSuperSafe(rootId, safeA1Id), false);
+        assertEq(palmeraModule.isSuperSafe(safeA1Id, childSafeA1), true);
+        assertEq(palmeraModule.isTreeMember(rootId, safeA1Id), false);
+        assertEq(palmeraModule.isTreeMember(safeA1Id, childSafeA1), true);
 
-        // Validate Info Safe Squad
+        // Validate Info Safe
         (
             DataTypes.Tier tier,
             string memory name,
@@ -758,98 +754,98 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
             address safe,
             uint256[] memory child,
             uint256 superSafe
-        ) = palmeraModule.getSquadInfo(squadA1Id);
+        ) = palmeraModule.getSafeInfo(safeA1Id);
 
         assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
-        assertEq(name, squadA1Name);
+        assertEq(name, safeA1Name);
         assertEq(lead, address(0));
-        assertEq(safe, squadA1Addr);
+        assertEq(safe, safeA1Addr);
         assertEq(child.length, 1);
-        assertEq(child[0], childSquadA1);
+        assertEq(child[0], childSafeA1);
         assertEq(superSafe, 0);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootB
-    // Target Info: Type-> SUPER_SAFE, Name -> squadA1, Hierarchy related to caller -> SAME_TREE
+    // Target Info: Type-> SUPER_SAFE, Name -> safeA1, Hierarchy related to caller -> SAME_TREE
     function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE_ANOTHER_TREE(
     ) public {
         (
             uint256 rootIdA,
-            uint256 squadA1Id,
+            uint256 safeA1Id,
             uint256 rootIdB,
             ,
-            uint256 childSquadA1,
-        ) = palmeraSafeBuilder.setupTwoRootOrgWithOneSquadAndOneChildEach(
+            uint256 childSafeA1,
+        ) = palmeraSafeBuilder.setupTwoRootOrgWithOneSafeAndOneChildEach(
             orgName,
-            squadA1Name,
+            safeA1Name,
             org2Name,
-            squadBName,
-            subSquadA1Name,
-            subSquadB1Name
+            safeBName,
+            subSafeA1Name,
+            subSafeB1Name
         );
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
-        address rootAddrB = palmeraModule.getSquadSafeAddress(rootIdB);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
+        address rootAddrB = palmeraModule.getSafeAddress(rootIdB);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
 
         /// Try Promote to Root
         vm.startPrank(rootAddrB);
-        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenSquad.selector);
-        palmeraModule.promoteRoot(squadA1Id);
+        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenSafe.selector);
+        palmeraModule.promoteRoot(safeA1Id);
         vm.stopPrank();
 
         /// Verify SuperSafe is not an Root
-        assertEq(palmeraModule.getRootSafe(squadA1Id) == rootIdA, true);
-        assertEq(palmeraModule.getRootSafe(squadA1Id) == childSquadA1, false);
-        assertEq(palmeraModule.isRootSafeOf(squadA1Addr, rootIdA), false);
-        assertEq(palmeraModule.isRootSafeOf(rootAddrA, squadA1Id), true);
-        assertEq(palmeraModule.isRootSafeOf(squadA1Addr, childSquadA1), false);
-        assertEq(palmeraModule.isSuperSafe(rootIdA, squadA1Id), true);
-        assertEq(palmeraModule.isSuperSafe(squadA1Id, childSquadA1), true);
-        assertEq(palmeraModule.isTreeMember(rootIdA, squadA1Id), true);
-        assertEq(palmeraModule.isTreeMember(squadA1Id, childSquadA1), true);
+        assertEq(palmeraModule.getRootSafe(safeA1Id) == rootIdA, true);
+        assertEq(palmeraModule.getRootSafe(safeA1Id) == childSafeA1, false);
+        assertEq(palmeraModule.isRootSafeOf(safeA1Addr, rootIdA), false);
+        assertEq(palmeraModule.isRootSafeOf(rootAddrA, safeA1Id), true);
+        assertEq(palmeraModule.isRootSafeOf(safeA1Addr, childSafeA1), false);
+        assertEq(palmeraModule.isSuperSafe(rootIdA, safeA1Id), true);
+        assertEq(palmeraModule.isSuperSafe(safeA1Id, childSafeA1), true);
+        assertEq(palmeraModule.isTreeMember(rootIdA, safeA1Id), true);
+        assertEq(palmeraModule.isTreeMember(safeA1Id, childSafeA1), true);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootB
-    // Target Info: Type-> SUPER_SAFE, Name -> squadA1, Hierarchy related to caller -> SAME_TREE
+    // Target Info: Type-> SUPER_SAFE, Name -> safeA1, Hierarchy related to caller -> SAME_TREE
     function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE_ANOTHER_ORG()
         public
     {
         (
             uint256 rootIdA,
-            uint256 squadA1Id,
+            uint256 safeA1Id,
             uint256 rootIdB,
             ,
-            uint256 childSquadA1,
-        ) = palmeraSafeBuilder.setupTwoOrgWithOneRootOneSquadAndOneChildEach(
+            uint256 childSafeA1,
+        ) = palmeraSafeBuilder.setupTwoOrgWithOneRootOneSafeAndOneChildEach(
             orgName,
-            squadA1Name,
+            safeA1Name,
             org2Name,
-            squadBName,
-            subSquadA1Name,
-            subSquadB1Name
+            safeBName,
+            subSafeA1Name,
+            subSafeB1Name
         );
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
-        address rootAddrB = palmeraModule.getSquadSafeAddress(rootIdB);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
+        address rootAddrB = palmeraModule.getSafeAddress(rootIdB);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
 
         /// Try Promote to Root
         vm.startPrank(rootAddrB);
-        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenSquad.selector);
-        palmeraModule.promoteRoot(squadA1Id);
+        vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenSafe.selector);
+        palmeraModule.promoteRoot(safeA1Id);
         vm.stopPrank();
 
         /// Verify SuperSafe is not an Root
-        assertEq(palmeraModule.getRootSafe(squadA1Id) == rootIdA, true);
-        assertEq(palmeraModule.getRootSafe(squadA1Id) == childSquadA1, false);
-        assertEq(palmeraModule.isRootSafeOf(squadA1Addr, rootIdA), false);
-        assertEq(palmeraModule.isRootSafeOf(rootAddrA, squadA1Id), true);
-        assertEq(palmeraModule.isRootSafeOf(squadA1Addr, childSquadA1), false);
-        assertEq(palmeraModule.isSuperSafe(rootIdA, squadA1Id), true);
-        assertEq(palmeraModule.isSuperSafe(squadA1Id, childSquadA1), true);
-        assertEq(palmeraModule.isTreeMember(rootIdA, squadA1Id), true);
-        assertEq(palmeraModule.isTreeMember(squadA1Id, childSquadA1), true);
+        assertEq(palmeraModule.getRootSafe(safeA1Id) == rootIdA, true);
+        assertEq(palmeraModule.getRootSafe(safeA1Id) == childSafeA1, false);
+        assertEq(palmeraModule.isRootSafeOf(safeA1Addr, rootIdA), false);
+        assertEq(palmeraModule.isRootSafeOf(rootAddrA, safeA1Id), true);
+        assertEq(palmeraModule.isRootSafeOf(safeA1Addr, childSafeA1), false);
+        assertEq(palmeraModule.isSuperSafe(rootIdA, safeA1Id), true);
+        assertEq(palmeraModule.isSuperSafe(safeA1Id, childSafeA1), true);
+        assertEq(palmeraModule.isTreeMember(rootIdA, safeA1Id), true);
+        assertEq(palmeraModule.isTreeMember(safeA1Id, childSafeA1), true);
     }
 
     // ! **************** List of Remove Whole Tree *******************************
@@ -859,28 +855,26 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     function testCanRemoveWholeTree() public {
         (
             uint256 rootId,
-            uint256 squadA1Id,
+            uint256 safeA1Id,
             uint256 rootId2,
-            uint256 squadB1Id,
-            uint256 childSquadA1,
-            uint256 childSquadB1
-        ) = palmeraSafeBuilder.setupTwoRootOrgWithOneSquadAndOneChildEach(
+            uint256 safeB1Id,
+            uint256 childSafeA1,
+            uint256 childSafeB1
+        ) = palmeraSafeBuilder.setupTwoRootOrgWithOneSafeAndOneChildEach(
             orgName,
-            squadA1Name,
+            safeA1Name,
             org2Name,
-            squadBName,
-            subSquadA1Name,
-            subSquadB1Name
+            safeBName,
+            subSafeA1Name,
+            subSafeB1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address rootAddr2 = palmeraModule.getSquadSafeAddress(rootId2);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
-        address squadB1Addr = palmeraModule.getSquadSafeAddress(squadB1Id);
-        address childSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(childSquadA1);
-        address childSquadB1Addr =
-            palmeraModule.getSquadSafeAddress(childSquadB1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address rootAddr2 = palmeraModule.getSafeAddress(rootId2);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
+        address safeB1Addr = palmeraModule.getSafeAddress(safeB1Id);
+        address childSafeA1Addr = palmeraModule.getSafeAddress(childSafeA1);
+        address childSafeB1Addr = palmeraModule.getSafeAddress(childSafeB1);
 
         /// Remove Whole Tree A
         safeHelper.updateSafeInterface(rootAddr);
@@ -889,11 +883,11 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
 
         /// Verify Whole Tree A is removed
         assertEq(palmeraModule.isSafeRegistered(rootAddr), false);
-        assertEq(palmeraModule.isSafeRegistered(squadA1Addr), false);
-        assertEq(palmeraModule.isSafeRegistered(childSquadA1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(safeA1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(childSafeA1Addr), false);
         assertTrue(palmeraModule.isSafeRegistered(rootAddr2));
-        assertTrue(palmeraModule.isSafeRegistered(squadB1Addr));
-        assertTrue(palmeraModule.isSafeRegistered(childSquadB1Addr));
+        assertTrue(palmeraModule.isSafeRegistered(safeB1Addr));
+        assertTrue(palmeraModule.isSafeRegistered(childSafeB1Addr));
 
         /// Remove Whole Tree B
         safeHelper.updateSafeInterface(rootAddr2);
@@ -902,8 +896,8 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
 
         /// Verify Tree is removed
         assertEq(palmeraModule.isSafeRegistered(rootAddr2), false);
-        assertEq(palmeraModule.isSafeRegistered(squadB1Addr), false);
-        assertEq(palmeraModule.isSafeRegistered(childSquadB1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(safeB1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(childSafeB1Addr), false);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
@@ -911,21 +905,20 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     function testCanRemoveWholeTreeFourthLevel() public {
         (
             uint256 rootId,
-            uint256 squadA1Id,
-            uint256 squadB1Id,
-            uint256 childSquadA1,
-            uint256 subChildSquadA1
+            uint256 safeA1Id,
+            uint256 safeB1Id,
+            uint256 childSafeA1,
+            uint256 subChildSafeA1
         ) = palmeraSafeBuilder.setUpBaseOrgTree(
-            orgName, squadA1Name, squadBName, subSquadA1Name, subSquadB1Name
+            orgName, safeA1Name, safeBName, subSafeA1Name, subSafeB1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
-        address squadB1Addr = palmeraModule.getSquadSafeAddress(squadB1Id);
-        address childSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(childSquadA1);
-        address subChildSquadB1Addr =
-            palmeraModule.getSquadSafeAddress(subChildSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
+        address safeB1Addr = palmeraModule.getSafeAddress(safeB1Id);
+        address childSafeA1Addr = palmeraModule.getSafeAddress(childSafeA1);
+        address subChildSafeB1Addr =
+            palmeraModule.getSafeAddress(subChildSafeA1);
 
         /// Remove Whole Tree A
         safeHelper.updateSafeInterface(rootAddr);
@@ -934,26 +927,26 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
 
         /// Verify Whole Tree A is removed
         assertEq(palmeraModule.isSafeRegistered(rootAddr), false);
-        assertEq(palmeraModule.isSafeRegistered(squadA1Addr), false);
-        assertEq(palmeraModule.isSafeRegistered(childSquadA1Addr), false);
-        assertEq(palmeraModule.isSafeRegistered(subChildSquadB1Addr), false);
-        assertEq(palmeraModule.isSafeRegistered(squadB1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(safeA1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(childSafeA1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(subChildSafeB1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(safeB1Addr), false);
 
-        // Validate Info Root Safe Squad
+        // Validate Info Root Safe
         vm.startPrank(rootAddr);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.SquadNotRegistered.selector, rootId)
+            abi.encodeWithSelector(Errors.SafeIdNotRegistered.selector, rootId)
         );
-        palmeraModule.getSquadInfo(rootId);
+        palmeraModule.getSafeInfo(rootId);
         vm.stopPrank();
-        // Validate Info Root Safe Squad
-        vm.startPrank(subChildSquadB1Addr);
+        // Validate Info Root Safe
+        vm.startPrank(subChildSafeB1Addr);
         vm.expectRevert(
             abi.encodeWithSelector(
-                Errors.SquadNotRegistered.selector, subChildSquadA1
+                Errors.SafeIdNotRegistered.selector, subChildSafeA1
             )
         );
-        palmeraModule.getSquadInfo(subChildSquadA1);
+        palmeraModule.getSafeInfo(subChildSafeA1);
         vm.stopPrank();
     }
 
@@ -962,21 +955,20 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
     function testCannotReplayAttackRemoveWholeTree() public {
         (
             uint256 rootId,
-            uint256 squadA1Id,
-            uint256 squadB1Id,
-            uint256 childSquadA1,
-            uint256 subChildSquadA1
+            uint256 safeA1Id,
+            uint256 safeB1Id,
+            uint256 childSafeA1,
+            uint256 subChildSafeA1
         ) = palmeraSafeBuilder.setUpBaseOrgTree(
-            orgName, squadA1Name, squadBName, subSquadA1Name, subSquadB1Name
+            orgName, safeA1Name, safeBName, subSafeA1Name, subSafeB1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1Id);
-        address squadB1Addr = palmeraModule.getSquadSafeAddress(squadB1Id);
-        address childSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(childSquadA1);
-        address subChildSquadB1Addr =
-            palmeraModule.getSquadSafeAddress(subChildSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
+        address safeB1Addr = palmeraModule.getSafeAddress(safeB1Id);
+        address childSafeA1Addr = palmeraModule.getSafeAddress(childSafeA1);
+        address subChildSafeB1Addr =
+            palmeraModule.getSafeAddress(subChildSafeA1);
 
         /// Remove Whole Tree A
         safeHelper.updateSafeInterface(rootAddr);
@@ -993,9 +985,9 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
 
         /// Verify Whole Tree A is removed
         assertEq(palmeraModule.isSafeRegistered(rootAddr), false);
-        assertEq(palmeraModule.isSafeRegistered(squadA1Addr), false);
-        assertEq(palmeraModule.isSafeRegistered(childSquadA1Addr), false);
-        assertEq(palmeraModule.isSafeRegistered(subChildSquadB1Addr), false);
-        assertEq(palmeraModule.isSafeRegistered(squadB1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(safeA1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(childSafeA1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(subChildSafeB1Addr), false);
+        assertEq(palmeraModule.isSafeRegistered(safeB1Addr), false);
     }
 }

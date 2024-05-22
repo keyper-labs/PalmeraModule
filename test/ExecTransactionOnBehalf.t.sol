@@ -23,14 +23,14 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // TargetSafe Type: Child from same hierachical tree
     //            rootSafe -----------
     //               |                |
-    //           safeSquadA1 <--------
+    //           safeA1 <--------
     function testCan_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree(
     ) public {
-        (uint256 rootId, uint256 safeSquadA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
 
         // Set palmerahelper safe to org
         palmeraHelper.setSafe(rootAddr);
@@ -38,7 +38,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -50,7 +50,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bool result = safeHelper.execTransactionOnBehalfTx(
             orgHash,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -62,23 +62,23 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     }
 
     // Caller Info: ROOT_SAFE(role), SAFE(type), rootSafe(hierachie)
-    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
+    // TargerSafe: safeSubSafeA1, same hierachical tree with 2 levels diff
     //            rootSafe -----------
     //               |                |
-    //           safeSquadA1          |
+    //           safeA1          |
     //              |                 |
-    //           safeSubSquadA1 <-----
+    //           safeSubSafeA1 <-----
     function testCan_ExecTransactionOnBehalf_ROOT_SAFE_and_Target_Root_SameTree_2_levels(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (uint256 rootId,, uint256 safeSubSafeA1Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
 
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(safeSubSquadA1Addr, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
 
         // Set palmerahelper safe to org
 
@@ -87,7 +87,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             25 gwei,
             emptyData,
@@ -97,7 +97,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bool result = safeHelper.execTransactionOnBehalfTx(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             25 gwei,
             emptyData,
@@ -110,47 +110,45 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
 
     // ! ********************** SAFE_LEAD ROLE ********************
 
-    // Caller Info: SAFE_LEAD(role), SAFE(type), squadB(hierachie)
-    // TargerSafe: safeSubSubSquadA1
-    // TargetSafe Type: squad (not a child)
+    // Caller Info: SAFE_LEAD(role), SAFE(type), safeB(hierachie)
+    // TargerSafe: safeSubSubSafeA1
+    // TargetSafe Type: safe (not a child)
     //            rootSafe
     //           |        |
-    //  safeSquadA1       safeSquadB
+    //  safeA1       safeB
     //      |
-    // safeSubSquadA1
+    // safeSubSafeA1
     //      |
-    // safeSubSubSquadA1
+    // safeSubSubSafeA1
     function testCan_ExecTransactionOnBehalf_SAFE_LEAD_as_SAFE_is_TARGETS_LEAD()
         public
     {
-        (uint256 rootId,, uint256 safeSquadBId,, uint256 safeSubSubSquadA1Id) =
+        (uint256 rootId,, uint256 safeBId,, uint256 safeSubSubSafeA1Id) =
         palmeraSafeBuilder.setUpBaseOrgTree(
-            orgName, squadA1Name, squadBName, subSquadA1Name, subSubSquadA1Name
+            orgName, safeA1Name, safeBName, subSafeA1Name, subSubSafeA1Name
         );
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSquadBAddr = palmeraModule.getSquadSafeAddress(safeSquadBId);
-        address safeSubSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSubSubSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeBAddr = palmeraModule.getSafeAddress(safeBId);
+        address safeSubSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSubSafeA1Id);
 
-        vm.deal(safeSubSubSquadA1Addr, 100 gwei);
-        vm.deal(safeSquadBAddr, 100 gwei);
+        vm.deal(safeSubSubSafeA1Addr, 100 gwei);
+        vm.deal(safeBAddr, 100 gwei);
 
         vm.startPrank(rootAddr);
         palmeraModule.setRole(
-            DataTypes.Role.SAFE_LEAD, safeSquadBAddr, safeSubSubSquadA1Id, true
+            DataTypes.Role.SAFE_LEAD, safeBAddr, safeSubSubSafeA1Id, true
         );
         vm.stopPrank();
-        // Verify if the safeSquadBAddr have the role of Safe Lead to execute, executionTransactionOnBehalf
-        assertEq(
-            palmeraModule.isSuperSafe(safeSquadBId, safeSubSubSquadA1Id), false
-        );
-        palmeraHelper.setSafe(safeSquadBAddr);
+        // Verify if the safeBAddr have the role of Safe Lead to execute, executionTransactionOnBehalf
+        assertEq(palmeraModule.isSuperSafe(safeBId, safeSubSubSafeA1Id), false);
+        palmeraHelper.setSafe(safeBAddr);
 
         bytes memory emptyData;
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
-            safeSquadBAddr,
-            safeSubSubSquadA1Addr,
+            safeBAddr,
+            safeSubSubSafeA1Addr,
             receiver,
             12 gwei,
             emptyData,
@@ -160,8 +158,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         // Execute on behalf function
         bool result = safeHelper.execTransactionOnBehalfTx(
             orgHash,
-            safeSquadBAddr,
-            safeSubSubSquadA1Addr,
+            safeBAddr,
+            safeSubSubSafeA1Addr,
             receiver,
             12 gwei,
             emptyData,
@@ -182,9 +180,9 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         public
     {
         (uint256 rootId,) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
         palmeraHelper.setSafe(rootAddr);
 
         // Random wallet instead of a safe (EOA)
@@ -221,25 +219,25 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // Caller Type: EOA
     // Caller Role: nothing
     // SuperSafe: rootAddr
-    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
+    // TargerSafe: safeSubSafeA1, same hierachical tree with 2 levels diff
     //            rootSafe -----------
     //               |                |
-    //           safeSquadA1          |
+    //           safeA1          |
     //              |                 |
-    //           safeSubSquadA1 <-----
+    //           safeSubSafeA1 <-----
     function testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Straight_way(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK,)
-        = palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+        (uint256 rootId,, uint256 safeSubSafeA1Id, uint256[] memory ownersPK,) =
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
 
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(safeSubSquadA1Addr, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
 
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
@@ -264,7 +262,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
                 orgHash,
                 rootAddr,
-                safeSubSquadA1Addr,
+                safeSubSafeA1Addr,
                 receiver,
                 37 gwei,
                 emptyData,
@@ -288,7 +286,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             37 gwei,
             emptyData,
@@ -305,25 +303,25 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // Caller Type: EOA
     // Caller Role: nothing
     // SuperSafe: rootAddr
-    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
+    // TargerSafe: safeSubSafeA1, same hierachical tree with 2 levels diff
     //            rootSafe -----------
     //               |                |
-    //           safeSquadA1          |
+    //           safeA1          |
     //              |                 |
-    //           safeSubSquadA1 <-----
+    //           safeSubSafeA1 <-----
     function testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Inverse_WAY(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK,)
-        = palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+        (uint256 rootId,, uint256 safeSubSafeA1Id, uint256[] memory ownersPK,) =
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
 
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(safeSubSquadA1Addr, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
 
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
@@ -349,7 +347,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
                 orgHash,
                 rootAddr,
-                safeSubSquadA1Addr,
+                safeSubSafeA1Addr,
                 receiver,
                 26 gwei,
                 emptyData,
@@ -373,7 +371,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             26 gwei,
             emptyData,
@@ -390,23 +388,23 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // Caller Type: EOA
     // Caller Role: nothing
     // SuperSafe: rootAddr
-    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
+    // TargerSafe: safeSubSafeA1, same hierachical tree with 2 levels diff
     //            rootSafe -----------
     //               |                |
-    //           safeSquadA1          |
+    //           safeA1          |
     //              |                 |
-    //           safeSubSquadA1 <-----
+    //           safeSubSafeA1 <-----
     function testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (uint256 rootId,, uint256 safeSubSafeA1Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
 
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(safeSubSquadA1Addr, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
 
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
@@ -417,7 +415,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             25 gwei,
             emptyData,
@@ -428,7 +426,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             25 gwei,
             emptyData,
@@ -442,59 +440,56 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // // ! ********************** SUPER_SAFE ROLE ********************
 
     // // execTransactionOnBehalf
-    // // Caller: safeSquadA1
+    // // Caller: safeA1
     // // Caller Type: safe
-    // // Caller Role: SUPER_SAFE of safeSubSquadA1
-    // // TargerSafe: safeSubSquadA1
+    // // Caller Role: SUPER_SAFE of safeSubSafeA1
+    // // TargerSafe: safeSubSafeA1
     // // TargetSafe Type: safe
     // //            rootSafe
     // //               |
-    // //           safeSquadA1 as superSafe ---
+    // //           safeA1 as superSafe ---
     // //              |                        |
-    // //           safeSubSquadA1 <------------
+    // //           safeSubSafeA1 <------------
     function testCan_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_is_TARGETS_LEAD_SameTree(
     ) public {
-        (, uint256 safeSquadA1Id, uint256 safeSubSquadA1Id,,) =
-        palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
-        );
+        (, uint256 safeA1Id, uint256 safeSubSafeA1Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address safeSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSquadA1Id);
-        address safeSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
 
-        // Send ETH to squad&subsquad
-        vm.deal(safeSquadA1Addr, 100 gwei);
-        vm.deal(safeSubSquadA1Addr, 100 gwei);
+        // Send ETH to safe&subsafe
+        vm.deal(safeA1Addr, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
 
-        // Set palmerahelper safe to safeSquadA1
-        palmeraHelper.setSafe(safeSquadA1Addr);
+        // Set palmerahelper safe to safeA1
+        palmeraHelper.setSafe(safeA1Addr);
         bytes memory emptyData;
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
-            safeSquadA1Addr,
-            safeSubSquadA1Addr,
+            safeA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             2 gwei,
             emptyData,
             Enum.Operation(0)
         );
 
-        /// Verify if the safeSquadA1Addr have the role to execute, executionTransactionOnBehalf
+        /// Verify if the safeA1Addr have the role to execute, executionTransactionOnBehalf
         assertEq(
             palmeraRolesContract.doesUserHaveRole(
-                safeSquadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
+                safeA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
 
         // Execute on safe tx
-        safeHelper.updateSafeInterface(safeSquadA1Addr);
+        safeHelper.updateSafeInterface(safeA1Addr);
         bool result = safeHelper.execTransactionOnBehalfTx(
             orgHash,
-            safeSquadA1Addr,
-            safeSubSquadA1Addr,
+            safeA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -509,36 +504,36 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // Caller: callerEOA
     // Caller Type: EOA
     // Caller Role: nothing
-    // Caller Role: SUPER_SAFE of safeSubSquadA1
-    // SuperSafe: squadA1Name
-    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
-    //           safeSquadA1 ---------
+    // Caller Role: SUPER_SAFE of safeSubSafeA1
+    // SuperSafe: safeA1Name
+    // TargerSafe: safeSubSafeA1, same hierachical tree with 2 levels diff
+    //           safeA1 ---------
     //              |                 |
-    //           safeSubSquadA1 <-----
+    //           safeSubSafeA1 <-----
     function testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Straight_way_from_superSafe(
     ) public {
         (
             ,
-            uint256 squadA1NId,
-            uint256 safeSubSquadA1Id,
+            uint256 safeA1NId,
+            uint256 safeSubSafeA1Id,
             ,
             uint256[] memory ownersSuperPK
         ) = palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address squadA1NAddr = palmeraModule.getSquadSafeAddress(squadA1NId);
-        address safeSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+        address safeA1NAddr = palmeraModule.getSafeAddress(safeA1NId);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
 
-        vm.deal(squadA1NAddr, 100 gwei);
-        vm.deal(safeSubSquadA1Addr, 100 gwei);
+        vm.deal(safeA1NAddr, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
 
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
 
-        // get safe from squadA1NAddr
-        GnosisSafe superSafe = GnosisSafe(payable(squadA1NAddr));
+        // get safe from safeA1NAddr
+        GnosisSafe superSafe = GnosisSafe(payable(safeA1NAddr));
 
         // get owners of the root safe
         address[] memory owners = superSafe.getOwners();
@@ -556,8 +551,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             vm.startPrank(currentOwner);
             bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
                 orgHash,
-                squadA1NAddr,
-                safeSubSquadA1Addr,
+                safeA1NAddr,
+                safeSubSafeA1Addr,
                 receiver,
                 39 gwei,
                 emptyData,
@@ -580,8 +575,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         vm.startPrank(callerEOA);
         bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
-            squadA1NAddr,
-            safeSubSquadA1Addr,
+            safeA1NAddr,
+            safeSubSafeA1Addr,
             receiver,
             39 gwei,
             emptyData,
@@ -600,34 +595,34 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // Caller Type: EOA
     // Caller Role: nothing
     // SuperSafe: rootAddr
-    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
+    // TargerSafe: safeSubSafeA1, same hierachical tree with 2 levels diff
     //            rootSafe -----------
     //               |                |
-    //           safeSquadA1          |
+    //           safeA1          |
     //              |                 |
-    //           safeSubSquadA1 <-----
+    //           safeSubSafeA1 <-----
     function testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_WRONG_SIGNATURES(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (uint256 rootId,, uint256 safeSubSafeA1Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
 
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(safeSubSquadA1Addr, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
 
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
 
         // Owner of Target Safe signed args and of Root/Super Safe
-        palmeraHelper.setSafe(safeSubSquadA1Addr);
+        palmeraHelper.setSafe(safeSubSafeA1Addr);
         bytes memory emptyData;
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             25 gwei,
             emptyData,
@@ -639,7 +634,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             25 gwei,
             emptyData,
@@ -653,23 +648,23 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // Caller Type: EOA
     // Caller Role: nothing
     // SuperSafe: rootAddr
-    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
+    // TargerSafe: safeSubSafeA1, same hierachical tree with 2 levels diff
     //            rootSafe -----------
     //               |                |
-    //           safeSquadA1          |
+    //           safeA1          |
     //              |                 |
-    //           safeSubSquadA1 <-----
+    //           safeSubSafeA1 <-----
     function testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_INVALID_SIGNATURES(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (uint256 rootId,, uint256 safeSubSafeA1Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
 
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(safeSubSquadA1Addr, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
 
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
@@ -681,7 +676,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory signatures = palmeraHelper.encodeInvalidSignaturesPalmeraTx(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             25 gwei,
             emptyData,
@@ -693,7 +688,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             25 gwei,
             emptyData,
@@ -707,25 +702,25 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // Caller Type: EOA
     // Caller Role: nothing
     // SuperSafe: rootAddr
-    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
+    // TargerSafe: safeSubSafeA1, same hierachical tree with 2 levels diff
     //            rootSafe -----------
     //               |                |
-    //           safeSquadA1          |
+    //           safeA1          |
     //              |                 |
-    //           safeSubSquadA1 <-----
+    //           safeSubSafeA1 <-----
     function testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Straight_way_incomplete(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK,)
-        = palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+        (uint256 rootId,, uint256 safeSubSafeA1Id, uint256[] memory ownersPK,) =
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
 
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(safeSubSquadA1Addr, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
 
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
@@ -751,7 +746,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
                 orgHash,
                 rootAddr,
-                safeSubSquadA1Addr,
+                safeSubSafeA1Addr,
                 receiver,
                 37 gwei,
                 emptyData,
@@ -776,7 +771,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             37 gwei,
             emptyData,
@@ -791,25 +786,25 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // Caller Type: EOA
     // Caller Role: nothing
     // SuperSafe: rootAddr
-    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
+    // TargerSafe: safeSubSafeA1, same hierachical tree with 2 levels diff
     //            rootSafe -----------
     //               |                |
-    //           safeSquadA1          |
+    //           safeA1          |
     //              |                 |
-    //           safeSubSquadA1 <-----
+    //           safeSubSafeA1 <-----
     function testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Inverse_WAY_incomplete(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK,)
-        = palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+        (uint256 rootId,, uint256 safeSubSafeA1Id, uint256[] memory ownersPK,) =
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
 
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(safeSubSquadA1Addr, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
 
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
@@ -836,7 +831,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
                 orgHash,
                 rootAddr,
-                safeSubSquadA1Addr,
+                safeSubSafeA1Addr,
                 receiver,
                 26 gwei,
                 emptyData,
@@ -861,7 +856,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
-            safeSubSquadA1Addr,
+            safeSubSafeA1Addr,
             receiver,
             26 gwei,
             emptyData,
@@ -871,53 +866,52 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         vm.stopPrank();
     }
 
-    // // Revert NotAuthorizedExecOnBehalf() execTransactionOnBehalf (safeSubSquadA1 is attempting to execute on its superSafe)
-    // // Caller: safeSubSquadA1
+    // // Revert NotAuthorizedExecOnBehalf() execTransactionOnBehalf (safeSubSafeA1 is attempting to execute on its superSafe)
+    // // Caller: safeSubSafeA1
     // // Caller Type: safe
     // // Caller Role: SUPER_SAFE
-    // // TargerSafe: safeSquadA1
+    // // TargerSafe: safeA1
     // // TargetSafe Type: safe as lead
     // //   rootSafe
     // //      |
-    // //  safeSquadA1 <----
+    // //  safeA1 <----
     // //      |            |
-    // // safeSubSquadA1 ---
+    // // safeSubSafeA1 ---
     // //      |
-    // // safeSubSubSquadA1
+    // // safeSubSubSafeA1
     function testRevertSuperSafeExecOnBehalf() public {
-        (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1,) =
+        (uint256 rootId, uint256 safeIdA1, uint256 subSafeIdA1,) =
         palmeraSafeBuilder.setupOrgFourTiersTree(
-            orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
+            orgName, safeA1Name, subSafeA1Name, subSubSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
-        address safeSubSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(subSquadIdA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
+        address safeSubSafeA1Addr = palmeraModule.getSafeAddress(subSafeIdA1);
 
-        // Send ETH to org&subsquad
+        // Send ETH to org&subsafe
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(safeSquadA1Addr, 100 gwei);
+        vm.deal(safeA1Addr, 100 gwei);
 
-        // Set palmerahelper safe to safeSubSquadA1
-        palmeraHelper.setSafe(safeSubSquadA1Addr);
+        // Set palmerahelper safe to safeSubSafeA1
+        palmeraHelper.setSafe(safeSubSafeA1Addr);
         bytes memory emptyData;
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
-            safeSubSquadA1Addr,
-            safeSquadA1Addr,
+            safeSubSafeA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
             Enum.Operation(0)
         );
 
-        vm.startPrank(safeSubSquadA1Addr);
+        vm.startPrank(safeSubSafeA1Addr);
         vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector);
         bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
-            safeSubSquadA1Addr,
-            safeSquadA1Addr,
+            safeSubSafeA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -931,14 +925,14 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // Caller: rootAddr
     // Caller Type: rootSafe
     // Caller Role: ROOT_SAFE
-    // TargerSafe: safeSquadA1
+    // TargerSafe: safeA1
     // TargetSafe Type: safe
     function testRevertInvalidSignatureExecOnBehalf() public {
-        (uint256 rootId, uint256 safeSquadA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
         palmeraHelper.setSafe(rootAddr);
 
         // Try onbehalf with incorrect signers
@@ -947,7 +941,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory signatures = palmeraHelper.encodeInvalidSignaturesPalmeraTx(
             orgHash,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -960,7 +954,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         safeHelper.execTransactionOnBehalfTx(
             orgHash,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -974,18 +968,18 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // // Caller: rootAddr (org)
     // // Caller Type: rootSafe
     // // Caller Role: ROOT_SAFE
-    // // TargerSafe: safeSquadA1
+    // // TargerSafe: safeA1
     // // TargetSafe Type: safe as a Child
     // //            rootSafe -----------
     // //               |                |
-    // //           safeSquadA1 <--------
+    // //           safeA1 <--------
     function testRevertInvalidAddressProvidedExecTransactionOnBehalfScenarioOne(
     ) public {
-        (uint256 rootId, uint256 safeSquadA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
         // Fake receiver = Zero address
         address fakeReceiver = address(0);
 
@@ -995,7 +989,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -1008,7 +1002,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             fakeReceiver,
             2 gwei,
             emptyData,
@@ -1022,19 +1016,19 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // // Caller: rootAddr (org)
     // // Caller Type: rootSafe
     // // Caller Role: ROOT_SAFE
-    // // TargerSafe: safeSquadA1
+    // // TargerSafe: safeA1
     // // TargetSafe Type: safe as a Child
     // //            rootSafe -----------
     // //               |                |
-    // //           safeSquadA1 <--------
+    // //           safeA1 <--------
     function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo()
         public
     {
-        (uint256 rootId, uint256 safeSquadA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
 
         // Set palmerahelper safe to org
         palmeraHelper.setSafe(rootAddr);
@@ -1042,7 +1036,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -1071,19 +1065,19 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // // Caller: rootAddr (org)
     // // Caller Type: rootSafe
     // // Caller Role: ROOT_SAFE
-    // // TargerSafe: safeSquadA1
+    // // TargerSafe: safeA1
     // // TargetSafe Type: safe as a Child
     // //            rootSafe -----------
     // //               |                |
-    // //           safeSquadA1 <--------
+    // //           safeA1 <--------
     function testRevertOrgNotRegisteredExecTransactionOnBehalfScenarioThree()
         public
     {
-        (uint256 rootId, uint256 safeSquadA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
 
         // Set palmerahelper safe to org
         palmeraHelper.setSafe(rootAddr);
@@ -1091,7 +1085,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -1105,7 +1099,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         palmeraModule.execTransactionOnBehalf(
             bytes32(0),
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -1121,11 +1115,11 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // // TargerSafe: fakeTargetSafe
     // // TargetSafe Type: EOA
     function testRevertInvalidSafeExecTransactionOnBehalf() public {
-        (uint256 rootId, uint256 safeSquadA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
         address fakeTargetSafe = address(0xFFE);
 
         // Set palmerahelper safe to org
@@ -1134,7 +1128,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -1159,41 +1153,40 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     }
 
     // Org with a root safe with 3 child levels: A, B, C
-    //    Squad A starts a executeOnBehalf tx for his children B
+    //    Safe A starts a executeOnBehalf tx for his children B
     //    -> The calldata for the function is another executeOnBehalfTx for children C
     //       -> Verify that this wrapped executeOnBehalf tx does not work
     // TODO: test this scenario in Live Testnet
-    function testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(
+    function testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSafe_over_RootSafe_With_SAFE(
     ) public {
-        (uint256 rootId, uint256 safeSquadA1, uint256 childSquadA1,,) =
+        (uint256 rootId, uint256 safeA1, uint256 childSafeA1,,) =
         palmeraSafeBuilder.setupOrgThreeTiersTree(
-            orgName, squadA1Name, subSquadA1Name
+            orgName, safeA1Name, subSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
-        address childSquadA1Addr =
-            palmeraModule.getSquadSafeAddress(childSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
+        address childSafeA1Addr = palmeraModule.getSafeAddress(childSafeA1);
 
-        // Send ETH to squad&subsquad
+        // Send ETH to safe&subsafe
         vm.deal(rootAddr, 100 gwei);
-        vm.deal(safeSquadA1Addr, 100 gwei);
-        vm.deal(childSquadA1Addr, 100 gwei);
+        vm.deal(safeA1Addr, 100 gwei);
+        vm.deal(childSafeA1Addr, 100 gwei);
 
-        // Create a child safe for squad A2
+        // Create a child safe for safe A2
         address fakeCaller = safeHelper.newPalmeraSafe(4, 2);
-        bool result = safeHelper.createAddSquadTx(safeSquadA1, "ChildSquadA2");
+        bool result = safeHelper.createAddSafeTx(safeA1, "ChildSafeA2");
         assertEq(result, true);
 
-        // Set Safe Role in Safe Squad A1 over Child Squad A1
+        // Set Safe Role in Safe A1 over Child Safe A1
         vm.startPrank(rootAddr);
         palmeraModule.setRole(
             DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
             fakeCaller,
-            childSquadA1,
+            childSafeA1,
             true
         );
-        assertTrue(palmeraModule.isSafeLead(childSquadA1, fakeCaller));
+        assertTrue(palmeraModule.isSafeLead(childSafeA1, fakeCaller));
         vm.stopPrank();
 
         // Set palmerahelper safe to fakeCaller
@@ -1202,7 +1195,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             fakeCaller,
-            childSquadA1Addr,
+            childSafeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -1232,12 +1225,12 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         );
         vm.stopPrank();
 
-        // Execute on behalf function from a not authorized caller (Root Safe of Another Tree) over Super Safe and Squad Safe in another Three
+        // Execute on behalf function from a not authorized caller (Root Safe of Another Tree) over Super Safe and Safe Safe in another Three
         safeHelper.updateSafeInterface(fakeCaller);
         result = safeHelper.execTransactionOnBehalfTx(
             orgHash,
             fakeCaller,
-            childSquadA1Addr,
+            childSafeA1Addr,
             receiver,
             2 gwei,
             internalData,

@@ -7,34 +7,34 @@ import "./helpers/DeployHelper.t.sol";
 /// @custom:security-contact general@palmeradao.xyz
 contract EventsChekers is DeployHelper {
     address[] public owners = new address[](5);
-    /// @dev Event Fire when create a new Organization
+    /// @dev Event Fire when create a new Organisation
 
-    event OrganizationCreated(
+    event OrganisationCreated(
         address indexed creator, bytes32 indexed org, string name
     );
-    /// @dev Event Fire when create a New Squad (Tier 0) into the organization
-    event SquadCreated(
+    /// @dev Event Fire when create a New Safe (Tier 0) into the organisation
+    event SafeCreated(
         bytes32 indexed org,
-        uint256 indexed squadCreated,
+        uint256 indexed safeCreated,
         address lead,
         address indexed creator,
         uint256 superSafe,
         string name
     );
-    /// @dev Event Fire when remove a Squad (Tier 0) from the organization
-    event SquadRemoved(
+    /// @dev Event Fire when remove a Safe (Tier 0) from the organisation
+    event SafeRemoved(
         bytes32 indexed org,
-        uint256 indexed squadRemoved,
+        uint256 indexed safeRemoved,
         address lead,
         address indexed remover,
         uint256 superSafe,
         string name
     );
 
-    /// @dev Event Fire when update SuperSafe of a Squad (Tier 0) from the organization
-    event SquadSuperUpdated(
+    /// @dev Event Fire when update SuperSafe of a Safe (Tier 0) from the organisation
+    event SafeSuperUpdated(
         bytes32 indexed org,
-        uint256 indexed squadUpdated,
+        uint256 indexed safeUpdated,
         address lead,
         address indexed updater,
         uint256 oldSuperSafe,
@@ -51,27 +51,27 @@ contract EventsChekers is DeployHelper {
     );
 
     /// @dev Event Fire when any Root Safe create a new Root Safe
-    event RootSafeSquadCreated(
+    event RootSafeCreated(
         bytes32 indexed org,
-        uint256 indexed newIdRootSafeSquad,
+        uint256 indexed newIdRootSafe,
         address indexed creator,
-        address newRootSafeSquad,
+        address newRootSafe,
         string name
     );
 
-    /// @dev Event Fire when update SuperSafe of a Squad To Root Safe
+    /// @dev Event Fire when update SuperSafe of a Safe To Root Safe
     event RootSafePromoted(
         bytes32 indexed org,
-        uint256 indexed newIdRootSafeSquad,
+        uint256 indexed newIdRootSafe,
         address indexed updater,
-        address newRootSafeSquad,
+        address newRootSafe,
         string name
     );
 
     /// @dev Event Fire when an Root Safe Remove Whole of Tree
     event WholeTreeRemoved(
         bytes32 indexed org,
-        uint256 indexed rootSafeSquadId,
+        uint256 indexed rootSafeId,
         address indexed remover,
         string name
     );
@@ -79,16 +79,16 @@ contract EventsChekers is DeployHelper {
     /// @dev Event Fire when any Root Safe change Depth Tree Limit
     event NewLimitLevel(
         bytes32 indexed org,
-        uint256 indexed rootSafeSquadId,
+        uint256 indexed rootSafeId,
         address indexed updater,
         uint256 oldLimit,
         uint256 newLimit
     );
 
-    /// @dev Event Fire when remove a Squad (Tier 0) from the organization
+    /// @dev Event Fire when remove a Safe (Tier 0) from the organisation
     event SafeDisconnected(
         bytes32 indexed org,
-        uint256 indexed squad,
+        uint256 indexed safeId,
         address indexed safe,
         address disconnector
     );
@@ -112,87 +112,87 @@ contract EventsChekers is DeployHelper {
         owners[4] = address(0xEEE);
     }
 
-    /// @notice Test Events when Register Root Organization
+    /// @notice Test Events when Register Root Organisation
     function testEventWhenRegisterRootOrg() public {
         // Register Org through safe tx
         address rootAddr = safeHelper.newPalmeraSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
-        emit OrganizationCreated(
+        emit OrganisationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
         );
         uint256 rootId = palmeraModule.registerOrg(orgName);
         vm.stopPrank();
     }
 
-    /// @notice Test Events when Add Squad
-    function testEventWhenAddSquad() public {
+    /// @notice Test Events when Add Safe
+    function testEventWhenAddSafe() public {
         // Register Org through safe tx
         address rootAddr = safeHelper.newPalmeraSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
-        emit OrganizationCreated(
+        emit OrganisationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
         );
         uint256 rootId = palmeraModule.registerOrg(orgName);
         vm.stopPrank();
 
-        // Add Squad through safe tx
-        address squadAddr = safeHelper.newPalmeraSafe(4, 2);
-        uint256 squadId = 2;
-        vm.startPrank(squadAddr);
+        // Add Safe through safe tx
+        address safeAddr = safeHelper.newPalmeraSafe(4, 2);
+        uint256 safeId = 2;
+        vm.startPrank(safeAddr);
         vm.expectEmit(true, true, true, true);
-        emit SquadCreated(
+        emit SafeCreated(
             keccak256(abi.encodePacked(orgName)),
-            squadId,
+            safeId,
             address(0),
-            squadAddr,
+            safeAddr,
             rootId,
-            squadA1Name
+            safeA1Name
         );
-        palmeraModule.addSquad(rootId, squadA1Name);
+        palmeraModule.addSafe(rootId, safeA1Name);
     }
 
-    /// @notice Test Events when Remove Squad
-    function testEventWhenRemoveSquad() public {
+    /// @notice Test Events when Remove Safe
+    function testEventWhenRemoveSafe() public {
         // Register Org through safe tx
         address rootAddr = safeHelper.newPalmeraSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
-        emit OrganizationCreated(
+        emit OrganisationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
         );
         uint256 rootId = palmeraModule.registerOrg(orgName);
         vm.stopPrank();
 
-        // Add Squad through safe tx
-        address squadAddr = safeHelper.newPalmeraSafe(4, 2);
-        uint256 squadId = 2;
-        vm.startPrank(squadAddr);
+        // Add Safe through safe tx
+        address safeAddr = safeHelper.newPalmeraSafe(4, 2);
+        uint256 safeId = 2;
+        vm.startPrank(safeAddr);
         vm.expectEmit(true, true, true, true);
-        emit SquadCreated(
+        emit SafeCreated(
             keccak256(abi.encodePacked(orgName)),
-            squadId,
+            safeId,
             address(0),
-            squadAddr,
+            safeAddr,
             rootId,
-            squadA1Name
+            safeA1Name
         );
-        palmeraModule.addSquad(rootId, squadA1Name);
+        palmeraModule.addSafe(rootId, safeA1Name);
         vm.stopPrank();
 
-        // Remove Squad through safe tx
+        // Remove Safe through safe tx
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
-        emit SquadRemoved(
+        emit SafeRemoved(
             keccak256(abi.encodePacked(orgName)),
-            squadId,
+            safeId,
             address(0),
             rootAddr,
             rootId,
-            squadA1Name
+            safeA1Name
         );
-        palmeraModule.removeSquad(squadId);
+        palmeraModule.removeSafe(safeId);
     }
 
     /// @notice Test Events when Register Root Safe
@@ -201,7 +201,7 @@ contract EventsChekers is DeployHelper {
         address rootAddr = safeHelper.newPalmeraSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
-        emit OrganizationCreated(
+        emit OrganisationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
         );
         uint256 rootId = palmeraModule.registerOrg(orgName);
@@ -209,17 +209,17 @@ contract EventsChekers is DeployHelper {
 
         // Register Root Safe through safe tx
         address rootSafeAddr = safeHelper.newPalmeraSafe(4, 2);
-        uint256 squadId = 2;
+        uint256 safeId = 2;
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
-        emit RootSafeSquadCreated(
+        emit RootSafeCreated(
             keccak256(abi.encodePacked(orgName)),
-            squadId,
+            safeId,
             rootAddr,
             rootSafeAddr,
             org2Name
         );
-        palmeraModule.createRootSafeSquad(rootSafeAddr, org2Name);
+        palmeraModule.createRootSafe(rootSafeAddr, org2Name);
     }
 
     /// @notice Test Events when Update Super Safe
@@ -228,7 +228,7 @@ contract EventsChekers is DeployHelper {
         address rootAddr = safeHelper.newPalmeraSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
-        emit OrganizationCreated(
+        emit OrganisationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
         );
         uint256 rootId = palmeraModule.registerOrg(orgName);
@@ -239,102 +239,102 @@ contract EventsChekers is DeployHelper {
         uint256 rootsafeId = 2;
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
-        emit RootSafeSquadCreated(
+        emit RootSafeCreated(
             keccak256(abi.encodePacked(orgName)),
             rootsafeId,
             rootAddr,
             rootSafeAddr,
             org2Name
         );
-        palmeraModule.createRootSafeSquad(rootSafeAddr, org2Name);
+        palmeraModule.createRootSafe(rootSafeAddr, org2Name);
         vm.stopPrank();
 
-        // Add Squad through safe tx
-        address squadAddr = safeHelper.newPalmeraSafe(4, 2);
-        uint256 squadId = 3;
-        vm.startPrank(squadAddr);
+        // Add Safe through safe tx
+        address safeAddr = safeHelper.newPalmeraSafe(4, 2);
+        uint256 safeId = 3;
+        vm.startPrank(safeAddr);
         vm.expectEmit(true, true, true, true);
-        emit SquadCreated(
+        emit SafeCreated(
             keccak256(abi.encodePacked(orgName)),
-            squadId,
+            safeId,
             address(0),
-            squadAddr,
+            safeAddr,
             rootId,
-            squadA1Name
+            safeA1Name
         );
-        palmeraModule.addSquad(rootId, squadA1Name);
+        palmeraModule.addSafe(rootId, safeA1Name);
         vm.stopPrank();
 
         // Update Super through safe tx
         address newRootSafeAddr = safeHelper.newPalmeraSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
-        emit SquadSuperUpdated(
+        emit SafeSuperUpdated(
             keccak256(abi.encodePacked(orgName)),
-            squadId,
+            safeId,
             address(0),
             rootAddr,
             rootId,
             rootsafeId
         );
-        palmeraModule.updateSuper(squadId, rootsafeId);
+        palmeraModule.updateSuper(safeId, rootsafeId);
     }
 
-    /// @notice Test Events when Promote Squad to Root Safe
+    /// @notice Test Events when Promote Safe to Root Safe
     function testEventWhenPromoteRootSafe() public {
         // Register Org through safe tx
         address rootAddr = safeHelper.newPalmeraSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
-        emit OrganizationCreated(
+        emit OrganisationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
         );
         uint256 rootId = palmeraModule.registerOrg(orgName);
         vm.stopPrank();
 
-        // Add Squad through safe tx
-        address squadAddr = safeHelper.newPalmeraSafe(4, 2);
-        uint256 squadId = 2;
-        vm.startPrank(squadAddr);
+        // Add Safe through safe tx
+        address safeAddr = safeHelper.newPalmeraSafe(4, 2);
+        uint256 safeId = 2;
+        vm.startPrank(safeAddr);
         vm.expectEmit(true, true, true, true);
-        emit SquadCreated(
+        emit SafeCreated(
             keccak256(abi.encodePacked(orgName)),
-            squadId,
+            safeId,
             address(0),
-            squadAddr,
+            safeAddr,
             rootId,
-            squadA1Name
+            safeA1Name
         );
-        palmeraModule.addSquad(rootId, squadA1Name);
+        palmeraModule.addSafe(rootId, safeA1Name);
         vm.stopPrank();
 
-        // Add Squad through safe tx
-        address childSquadAddr = safeHelper.newPalmeraSafe(4, 2);
-        uint256 childSquadId = 3;
-        vm.startPrank(childSquadAddr);
+        // Add Safe through safe tx
+        address childSafeAddr = safeHelper.newPalmeraSafe(4, 2);
+        uint256 childSafeId = 3;
+        vm.startPrank(childSafeAddr);
         vm.expectEmit(true, true, true, true);
-        emit SquadCreated(
+        emit SafeCreated(
             keccak256(abi.encodePacked(orgName)),
-            childSquadId,
+            childSafeId,
             address(0),
-            childSquadAddr,
-            squadId,
-            subSquadA1Name
+            childSafeAddr,
+            safeId,
+            subSafeA1Name
         );
-        palmeraModule.addSquad(squadId, subSquadA1Name);
+        palmeraModule.addSafe(safeId, subSafeA1Name);
         vm.stopPrank();
 
-        // Promote Squad to Root Safe through safe tx
+        // Promote Safe to Root Safe through safe tx
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
         emit RootSafePromoted(
             keccak256(abi.encodePacked(orgName)),
-            squadId,
+            safeId,
             rootAddr,
-            squadAddr,
-            squadA1Name
+            safeAddr,
+            safeA1Name
         );
-        palmeraModule.promoteRoot(squadId);
+        palmeraModule.promoteRoot(safeId);
     }
 
     /// @notice Test Events when Disconnect Safe
@@ -343,56 +343,56 @@ contract EventsChekers is DeployHelper {
         address rootAddr = safeHelper.newPalmeraSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
-        emit OrganizationCreated(
+        emit OrganisationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
         );
         uint256 rootId = palmeraModule.registerOrg(orgName);
         vm.stopPrank();
 
-        // Add Squad through safe tx
-        address squadAddr = safeHelper.newPalmeraSafe(4, 2);
-        uint256 squadId = 2;
-        vm.startPrank(squadAddr);
+        // Add Safe through safe tx
+        address safeAddr = safeHelper.newPalmeraSafe(4, 2);
+        uint256 safeId = 2;
+        vm.startPrank(safeAddr);
         vm.expectEmit(true, true, true, true);
-        emit SquadCreated(
+        emit SafeCreated(
             keccak256(abi.encodePacked(orgName)),
-            squadId,
+            safeId,
             address(0),
-            squadAddr,
+            safeAddr,
             rootId,
-            squadA1Name
+            safeA1Name
         );
-        palmeraModule.addSquad(rootId, squadA1Name);
+        palmeraModule.addSafe(rootId, safeA1Name);
         vm.stopPrank();
 
-        // Remove Squad through safe tx
+        // Remove Safe through safe tx
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
-        emit SquadRemoved(
+        emit SafeRemoved(
             keccak256(abi.encodePacked(orgName)),
-            squadId,
+            safeId,
             address(0),
             rootAddr,
             rootId,
-            squadA1Name
+            safeA1Name
         );
-        palmeraModule.removeSquad(squadId);
+        palmeraModule.removeSafe(safeId);
 
-        // Disconnect Squad through safe tx
+        // Disconnect Safe through safe tx
         vm.expectEmit(true, true, true, true);
         emit SafeDisconnected(
-            keccak256(abi.encodePacked(orgName)), squadId, squadAddr, rootAddr
+            keccak256(abi.encodePacked(orgName)), safeId, safeAddr, rootAddr
         );
-        palmeraModule.disconnectSafe(squadId);
+        palmeraModule.disconnectSafe(safeId);
     }
 
     /// @notice Test Events when Call Execution on Behalf
     function testEventWhenExecutionOnBehalf() public {
-        (uint256 rootId, uint256 safeSquadA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
 
         // Set palmerahelper safe to org
         palmeraHelper.setSafe(rootAddr);
@@ -400,7 +400,7 @@ contract EventsChekers is DeployHelper {
         bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -413,13 +413,13 @@ contract EventsChekers is DeployHelper {
             keccak256(abi.encodePacked(orgName)),
             rootAddr,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             true
         );
         palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
-            safeSquadA1Addr,
+            safeA1Addr,
             receiver,
             2 gwei,
             emptyData,
@@ -433,14 +433,14 @@ contract EventsChekers is DeployHelper {
     function testEventWhenRemoveWholeTree() public {
         (
             uint256 rootId,
-            uint256 squadIdA1,
-            uint256 subSquadIdA1,
-            uint256 subSubSquadIdA1
+            uint256 safeIdA1,
+            uint256 subSafeIdA1,
+            uint256 subSubSafeIdA1
         ) = palmeraSafeBuilder.setupOrgFourTiersTree(
-            orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
+            orgName, safeA1Name, subSafeA1Name, subSubSafeA1Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
         emit WholeTreeRemoved(
@@ -455,26 +455,26 @@ contract EventsChekers is DeployHelper {
         address rootAddr = safeHelper.newPalmeraSafe(4, 2);
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, false, true);
-        emit OrganizationCreated(
+        emit OrganisationCreated(
             rootAddr, keccak256(abi.encodePacked(orgName)), orgName
         );
         uint256 rootId = palmeraModule.registerOrg(orgName);
         vm.stopPrank();
 
-        // Add Squad through safe tx
-        address squadAddr = safeHelper.newPalmeraSafe(4, 2);
-        uint256 squadId = 2;
-        vm.startPrank(squadAddr);
+        // Add Safe through safe tx
+        address safeAddr = safeHelper.newPalmeraSafe(4, 2);
+        uint256 safeId = 2;
+        vm.startPrank(safeAddr);
         vm.expectEmit(true, true, true, true);
-        emit SquadCreated(
+        emit SafeCreated(
             keccak256(abi.encodePacked(orgName)),
-            squadId,
+            safeId,
             address(0),
-            squadAddr,
+            safeAddr,
             rootId,
-            squadA1Name
+            safeA1Name
         );
-        palmeraModule.addSquad(rootId, squadA1Name);
+        palmeraModule.addSafe(rootId, safeA1Name);
         vm.stopPrank();
 
         // Update new limit through safe tx

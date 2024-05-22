@@ -26,16 +26,16 @@ contract SkipSetupEnv is Script, SkipSafeHelper {
     address sentinel = address(0x1);
     uint256 initOwners = 10;
 
-    // Org, Squad and subSquad String names
+    // Org, Safe and subSafe String names
     string orgName = "Main Org";
     string org2Name = "Second Org";
     string root2Name = "Second Root";
-    string squadA1Name = "SquadA1";
-    string squadA2Name = "SquadA2";
-    string squadBName = "SquadB";
-    string subSquadA1Name = "subSquadA1";
-    string subSquadB1Name = "subSquadB1";
-    string subSubSquadA1Name = "SubSubSquadA";
+    string safeA1Name = "SafeA1";
+    string safeA2Name = "SafeA2";
+    string safeBName = "SafeB";
+    string subSafeA1Name = "subSafeA1";
+    string subSafeB1Name = "subSafeB1";
+    string subSubSafeA1Name = "SubSubSafeA";
 
     bytes32 orgHash;
 
@@ -47,7 +47,7 @@ contract SkipSetupEnv is Script, SkipSafeHelper {
         palmeraModule = PalmeraModule(vm.envAddress("PALMERA_MODULE_ADDRESS"));
         palmeraGuard = PalmeraGuard(vm.envAddress("PALMERA_GUARD_ADDRESS"));
         receiver = vm.envAddress("RECEIVER_ADDRESS");
-        // Init a new safe as main organization (3 owners, 1 threshold)
+        // Init a new safe as main organisation (3 owners, 1 threshold)
         safeAddr = setupSeveralSafeEnv(30);
         // setting palmeraRoles Address
         setPalmeraRoles(address(palmeraRolesContract));
@@ -63,55 +63,51 @@ contract SkipSetupEnv is Script, SkipSafeHelper {
         vm.stopBroadcast();
     }
 
-    // Just deploy a root org and a Squad
+    // Just deploy a root org and a Safe
     //           RootOrg
     //              |
-    //           squadA1
-    function setupRootOrgAndOneSquad(
+    //           safeA1
+    function setupRootOrgAndOneSafe(
         string memory orgNameArg,
-        string memory squadA1NameArg
-    ) public returns (uint256 rootId, uint256 squadIdA1) {
+        string memory safeA1NameArg
+    ) public returns (uint256 rootId, uint256 safeIdA1) {
         // Register Org through safe tx
         address rootAddr = newPalmeraSafe(4, 2);
         console.log("Root address: ", rootAddr);
         bool result = registerOrgTx(orgNameArg);
         // Get org Id
         orgHash = palmeraModule.getOrgHashBySafe(rootAddr);
-        rootId = palmeraModule.getSquadIdBySafe(orgHash, rootAddr);
+        rootId = palmeraModule.getSafeIdBySafe(orgHash, rootAddr);
 
-        address squadSafe = newPalmeraSafe(4, 2);
-        console.log("Squad A1 address: ", squadSafe);
-        // Create squad through safe tx
-        result = createAddSquadTx(rootId, squadA1NameArg);
-        squadIdA1 = palmeraModule.getSquadIdBySafe(orgHash, squadSafe);
+        address safe = newPalmeraSafe(4, 2);
+        console.log("Safe A1 address: ", safe);
+        // Create safe through safe tx
+        result = createAddSafeTx(rootId, safeA1NameArg);
+        safeIdA1 = palmeraModule.getSafeIdBySafe(orgHash, safe);
 
-        return (rootId, squadIdA1);
+        return (rootId, safeIdA1);
     }
 
     // Deploy 3 palmeraSafes : following structure
     //           RootOrg
     //              |
-    //         safeSquadA1
+    //         safeA1
     //              |
-    //        safeSubSquadA1
+    //        safeSubSafeA1
     function setupOrgThreeTiersTree(
         string memory orgNameArg,
-        string memory squadA1NameArg,
-        string memory subSquadA1NameArg
-    )
-        public
-        returns (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1)
-    {
-        // Create root & squadA1
-        (rootId, squadIdA1) =
-            setupRootOrgAndOneSquad(orgNameArg, squadA1NameArg);
-        address safeSubSquadA1 = newPalmeraSafe(2, 1);
+        string memory safeA1NameArg,
+        string memory subSafeA1NameArg
+    ) public returns (uint256 rootId, uint256 safeIdA1, uint256 subSafeIdA1) {
+        // Create root & safeA1
+        (rootId, safeIdA1) = setupRootOrgAndOneSafe(orgNameArg, safeA1NameArg);
+        address safeSubSafeA1 = newPalmeraSafe(2, 1);
 
-        // Create subsquadA1
-        bool result = createAddSquadTx(squadIdA1, subSquadA1NameArg);
-        orgHash = palmeraModule.getOrgBySquad(squadIdA1);
-        // Get subsquadA1 Id
-        subSquadIdA1 = palmeraModule.getSquadIdBySafe(orgHash, safeSubSquadA1);
-        return (rootId, squadIdA1, subSquadIdA1);
+        // Create subsafeA1
+        bool result = createAddSafeTx(safeIdA1, subSafeA1NameArg);
+        orgHash = palmeraModule.getOrgBySafe(safeIdA1);
+        // Get subsafeA1 Id
+        subSafeIdA1 = palmeraModule.getSafeIdBySafe(orgHash, safeSubSafeA1);
+        return (rootId, safeIdA1, subSafeIdA1);
     }
 }

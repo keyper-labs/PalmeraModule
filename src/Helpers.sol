@@ -55,7 +55,7 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
     }
 
     /// @dev Method to get the Encoded Packed Data for Palmera Transaction
-    /// @param org Hash(DAO's name)
+    /// @param org Hash (On-chain Organisation)
     /// @param superSafe address of the caller
     /// @param targetSafe address of the Safe
     /// @param to address of the receiver
@@ -93,7 +93,7 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
     }
 
     /// @dev Method to get the Hash Encoded Packed Data for Palmera Transaction
-    /// @param org Hash(DAO's name)
+    /// @param org Hash (On-chain Organisation)
     /// @param superSafe address of the caller
     /// @param targetSafe address of the Safe
     /// @param to address of the receiver

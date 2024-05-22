@@ -15,95 +15,95 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // ! ********************* addOwnerWithThreshold Test ***********************
 
     // Caller Info: Role-> SAFE_LEAD_MODIFY_OWNERS_ONLY, Type -> EOA, Hierarchy -> NOT_REGISTERED, Name -> userLeadModifyOwnersOnly
-    // Target Info: Name -> squadIdA1, Type -> SAFE, Hierarchy related to caller -> SAFE leading by caller
+    // Target Info: Name -> safeIdA1, Type -> SAFE, Hierarchy related to caller -> SAFE leading by caller
     function testCan_AddOwnerWithThreshold_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_EOA_is_TARGETS_LEAD(
     ) public {
-        (uint256 rootId, uint256 squadIdA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
         address userLeadModifyOwnersOnly = address(0x123);
 
         vm.startPrank(rootAddr);
         palmeraModule.setRole(
             DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
             userLeadModifyOwnersOnly,
-            squadIdA1,
+            safeIdA1,
             true
         );
         vm.stopPrank();
 
-        safeHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(safeA1Addr);
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
         vm.startPrank(userLeadModifyOwnersOnly);
         address newOwner = address(0xaaaf);
         palmeraModule.addOwnerWithThreshold(
-            newOwner, threshold + 1, squadA1Addr, orgHash
+            newOwner, threshold + 1, safeA1Addr, orgHash
         );
 
         assertEq(safeHelper.safeWallet().getThreshold(), threshold + 1);
         assertEq(safeHelper.safeWallet().isOwner(newOwner), true);
     }
 
-    // Caller Info: Role-> SAFE_LEAD, Type -> SAFE, Hierarchy -> squad, Name -> squadBAddr
-    // Target Info: Name -> squadAAddr, Type -> SAFE, Hierarchy related to caller -> DIFFERENT_TREE
+    // Caller Info: Role-> SAFE_LEAD, Type -> SAFE, Hierarchy -> safe, Name -> safeBAddr
+    // Target Info: Name -> safeAAddr, Type -> SAFE, Hierarchy related to caller -> DIFFERENT_TREE
     function testCan_AddOwnerWithThreshold_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_SAFE_is_TARGETS_LEAD(
     ) public {
-        (uint256 rootIdA, uint256 squadIdA1,, uint256 squadIdB1) =
-        palmeraSafeBuilder.setupTwoRootOrgWithOneSquadEach(
-            orgName, squadA1Name, root2Name, squadBName
+        (uint256 rootIdA, uint256 safeIdA1,, uint256 safeIdB1) =
+        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
         );
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
-        address squadBAddr = palmeraModule.getSquadSafeAddress(squadIdB1);
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
+        address safeBAddr = palmeraModule.getSafeAddress(safeIdB1);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
 
         vm.startPrank(rootAddrA);
         palmeraModule.setRole(
             DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
-            squadBAddr,
-            squadIdA1,
+            safeBAddr,
+            safeIdA1,
             true
         );
         vm.stopPrank();
-        assertEq(palmeraModule.isSafeLead(squadIdA1, squadBAddr), true);
+        assertEq(palmeraModule.isSafeLead(safeIdA1, safeBAddr), true);
 
-        // Get squadA signers info
-        safeHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = safeHelper.safeWallet().getOwners();
+        // Get safeA signers info
+        safeHelper.updateSafeInterface(safeAAddr);
+        address[] memory safeA1Owners = safeHelper.safeWallet().getOwners();
         address newOwner = address(0xDEF);
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
-        assertEq(safeHelper.safeWallet().isOwner(squadA1Owners[1]), true);
+        assertEq(safeHelper.safeWallet().isOwner(safeA1Owners[1]), true);
 
-        // SquadB AddOwnerWithThreshold from squadA
-        safeHelper.updateSafeInterface(squadBAddr);
+        // SafeB AddOwnerWithThreshold from safeA
+        safeHelper.updateSafeInterface(safeBAddr);
         bool result = safeHelper.addOwnerWithThresholdTx(
-            newOwner, threshold, squadAAddr, orgHash
+            newOwner, threshold, safeAAddr, orgHash
         );
         assertEq(result, true);
 
-        safeHelper.updateSafeInterface(squadAAddr);
+        safeHelper.updateSafeInterface(safeAAddr);
         assertEq(safeHelper.safeWallet().getThreshold(), threshold);
         assertEq(
-            safeHelper.safeWallet().getOwners().length, squadA1Owners.length + 1
+            safeHelper.safeWallet().getOwners().length, safeA1Owners.length + 1
         );
         assertEq(safeHelper.safeWallet().isOwner(newOwner), true);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> squadAAddr
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> safeAAddr
     // Target Info: Name -> childAAddr, Type -> SAFE,Hierarchy related to caller -> SAME_TREE,CHILDREN
     function testCan_AddOwnerWithThreshold_SUPER_SAFE_as_SAFE_is_TARGETS_SUPER_SAFE(
     ) public {
-        (, uint256 squadIdA1, uint256 childIdA,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (, uint256 safeIdA1, uint256 childIdA,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
-        address childAAddr = palmeraModule.getSquadSafeAddress(childIdA);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
+        address childAAddr = palmeraModule.getSafeAddress(childIdA);
 
-        // Get squadA signers info
+        // Get safeA signers info
         safeHelper.updateSafeInterface(childAAddr);
         address[] memory childA1Owners = safeHelper.safeWallet().getOwners();
         address newOwner = address(0xDEF);
@@ -111,8 +111,8 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         assertEq(safeHelper.safeWallet().isOwner(childA1Owners[1]), true);
 
-        // SquadB AddOwnerWithThreshold from squadA
-        safeHelper.updateSafeInterface(squadAAddr);
+        // SafeB AddOwnerWithThreshold from safeA
+        safeHelper.updateSafeInterface(safeAAddr);
         bool result = safeHelper.addOwnerWithThresholdTx(
             newOwner, threshold, childAAddr, orgHash
         );
@@ -127,68 +127,68 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> rootAddrA
-    // Target Info: Name -> squadAAddr, Type -> SAFE, Hierarchy related to caller -> SAME_TREE,CHILDREN
+    // Target Info: Name -> safeAAddr, Type -> SAFE, Hierarchy related to caller -> SAME_TREE,CHILDREN
     function testCan_AddOwnerWithThreshold_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SAFE(
     ) public {
-        (uint256 rootIdA, uint256 squadIdA1,,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (uint256 rootIdA, uint256 safeIdA1,,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
 
-        // Get squadA signers info
-        safeHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = safeHelper.safeWallet().getOwners();
+        // Get safeA signers info
+        safeHelper.updateSafeInterface(safeAAddr);
+        address[] memory safeA1Owners = safeHelper.safeWallet().getOwners();
         address newOwner = address(0xDEF);
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
-        assertEq(safeHelper.safeWallet().isOwner(squadA1Owners[1]), true);
+        assertEq(safeHelper.safeWallet().isOwner(safeA1Owners[1]), true);
 
-        // SquadB AddOwnerWithThreshold from squadA
+        // SafeB AddOwnerWithThreshold from safeA
         safeHelper.updateSafeInterface(rootAddrA);
         bool result = safeHelper.addOwnerWithThresholdTx(
-            newOwner, threshold, squadAAddr, orgHash
+            newOwner, threshold, safeAAddr, orgHash
         );
         assertEq(result, true);
 
-        safeHelper.updateSafeInterface(squadAAddr);
+        safeHelper.updateSafeInterface(safeAAddr);
         assertEq(safeHelper.safeWallet().getThreshold(), threshold);
         assertEq(
-            safeHelper.safeWallet().getOwners().length, squadA1Owners.length + 1
+            safeHelper.safeWallet().getOwners().length, safeA1Owners.length + 1
         );
         assertEq(safeHelper.safeWallet().isOwner(newOwner), true);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> SUPER, Name -> squadBAddr
-    // Target Info: Name -> squadAAddr, Type -> SAFE, Hierarchy related to caller -> DIFFERENT_TREE,
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> SUPER, Name -> safeBAddr
+    // Target Info: Name -> safeAAddr, Type -> SAFE, Hierarchy related to caller -> DIFFERENT_TREE,
     function testRevertRootSafeToAttemptTo_AddOwnerWithThreshold_SUPER_SAFE_as_SAFE_is_TARGETS_SUPER_SAFE(
     ) public {
-        (, uint256 squadIdA1,, uint256 squadIdB1,,) = palmeraSafeBuilder
-            .setupTwoRootOrgWithOneSquadAndOneChildEach(
+        (, uint256 safeIdA1,, uint256 safeIdB1,,) = palmeraSafeBuilder
+            .setupTwoRootOrgWithOneSafeAndOneChildEach(
             orgName,
-            squadA1Name,
+            safeA1Name,
             root2Name,
-            squadBName,
-            subSquadA1Name,
-            "subSquadB1"
+            safeBName,
+            subSafeA1Name,
+            "subSafeB1"
         );
 
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
-        address squadBAddr = palmeraModule.getSquadSafeAddress(squadIdB1);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
+        address safeBAddr = palmeraModule.getSafeAddress(safeIdB1);
 
-        // Get squadA signers info
-        safeHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = safeHelper.safeWallet().getOwners();
+        // Get safeA signers info
+        safeHelper.updateSafeInterface(safeAAddr);
+        address[] memory safeA1Owners = safeHelper.safeWallet().getOwners();
         address newOwner = address(0xDEF);
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
-        assertEq(safeHelper.safeWallet().isOwner(squadA1Owners[1]), true);
+        assertEq(safeHelper.safeWallet().isOwner(safeA1Owners[1]), true);
 
-        // SquadB AddOwnerWithThreshold from squadA
-        vm.startPrank(squadBAddr);
+        // SafeB AddOwnerWithThreshold from safeA
+        vm.startPrank(safeBAddr);
         vm.expectRevert(Errors.NotAuthorizedAddOwnerWithThreshold.selector);
         palmeraModule.addOwnerWithThreshold(
-            newOwner, threshold, squadAAddr, orgHash
+            newOwner, threshold, safeAAddr, orgHash
         );
         vm.stopPrank();
     }
@@ -198,14 +198,14 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     function testRevertRootSafeToAttemptTo_AddOwnerWithThreshold_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SAFE(
     ) public {
         (uint256 rootIdA,, uint256 rootIdB,) = palmeraSafeBuilder
-            .setupTwoRootOrgWithOneSquadEach(
-            orgName, squadA1Name, root2Name, squadBName
+            .setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
         );
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
-        address rootAddrB = palmeraModule.getSquadSafeAddress(rootIdB);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
+        address rootAddrB = palmeraModule.getSafeAddress(rootIdB);
 
-        // Get squadA signers info
+        // Get safeA signers info
         safeHelper.updateSafeInterface(rootAddrA);
         address[] memory rootAOwners = safeHelper.safeWallet().getOwners();
         address newOwner = address(0xDEF);
@@ -213,7 +213,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         assertEq(safeHelper.safeWallet().isOwner(rootAOwners[1]), true);
 
-        // SquadB AddOwnerWithThreshold from squadA
+        // SafeB AddOwnerWithThreshold from safeA
         vm.startPrank(rootAddrB);
         vm.expectRevert(Errors.NotAuthorizedAddOwnerWithThreshold.selector);
         palmeraModule.addOwnerWithThreshold(
@@ -222,89 +222,89 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
-    // Caller Info: Role-> SAFE_LEAD, Type -> SAFE, Hierarchy -> squad, Name -> squadA
-    // Target Info: Name -> squadB, Type -> SAFE, Hierarchy related to caller -> DIFFERENT_TREE,
+    // Caller Info: Role-> SAFE_LEAD, Type -> SAFE, Hierarchy -> safe, Name -> safeA
+    // Target Info: Name -> safeB, Type -> SAFE, Hierarchy related to caller -> DIFFERENT_TREE,
     function testCan_AddOwnerWithThreshold_SAFE_LEAD_as_SAFE_is_TARGETS_LEAD()
         public
     {
-        (uint256 rootIdA, uint256 squadIdA1,, uint256 squadIdB1) =
-        palmeraSafeBuilder.setupTwoRootOrgWithOneSquadEach(
-            orgName, squadA1Name, root2Name, squadBName
+        (uint256 rootIdA, uint256 safeIdA1,, uint256 safeIdB1) =
+        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
         );
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
-        address squadBAddr = palmeraModule.getSquadSafeAddress(squadIdB1);
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
+        address safeBAddr = palmeraModule.getSafeAddress(safeIdB1);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
 
         vm.startPrank(rootAddrA);
         palmeraModule.setRole(
-            DataTypes.Role.SAFE_LEAD, squadBAddr, squadIdA1, true
+            DataTypes.Role.SAFE_LEAD, safeBAddr, safeIdA1, true
         );
         vm.stopPrank();
-        assertEq(palmeraModule.isSafeLead(squadIdA1, squadBAddr), true);
+        assertEq(palmeraModule.isSafeLead(safeIdA1, safeBAddr), true);
 
-        // Get squadA signers info
-        safeHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = safeHelper.safeWallet().getOwners();
+        // Get safeA signers info
+        safeHelper.updateSafeInterface(safeAAddr);
+        address[] memory safeA1Owners = safeHelper.safeWallet().getOwners();
         address newOwner = address(0xDEF);
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
-        assertEq(safeHelper.safeWallet().isOwner(squadA1Owners[1]), true);
+        assertEq(safeHelper.safeWallet().isOwner(safeA1Owners[1]), true);
 
-        // SquadB AddOwnerWithThreshold from squadA
-        safeHelper.updateSafeInterface(squadBAddr);
+        // SafeB AddOwnerWithThreshold from safeA
+        safeHelper.updateSafeInterface(safeBAddr);
         bool result = safeHelper.addOwnerWithThresholdTx(
-            newOwner, threshold, squadAAddr, orgHash
+            newOwner, threshold, safeAAddr, orgHash
         );
         assertEq(result, true);
 
-        safeHelper.updateSafeInterface(squadAAddr);
+        safeHelper.updateSafeInterface(safeAAddr);
         assertEq(safeHelper.safeWallet().getThreshold(), threshold);
         assertEq(
-            safeHelper.safeWallet().getOwners().length, squadA1Owners.length + 1
+            safeHelper.safeWallet().getOwners().length, safeA1Owners.length + 1
         );
         assertEq(safeHelper.safeWallet().isOwner(newOwner), true);
     }
 
-    // Caller Info: Role-> SAFE_LEAD, Type -> EOA, Hierarchy -> squad, Name -> rightCaller
-    // Target Info: Name -> squadAAddr, Type -> SAFE, Hierarchy related to caller -> SAFE Leading by rightCaller,
+    // Caller Info: Role-> SAFE_LEAD, Type -> EOA, Hierarchy -> safe, Name -> rightCaller
+    // Target Info: Name -> safeAAddr, Type -> SAFE, Hierarchy related to caller -> SAFE Leading by rightCaller,
     function testCan_AddOwnerWithThreshold_SAFE_LEAD_as_EOA_is_TARGETS_LEAD()
         public
     {
-        (uint256 rootIdA, uint256 squadIdA1,,) = palmeraSafeBuilder
-            .setupTwoRootOrgWithOneSquadEach(
-            orgName, squadA1Name, root2Name, squadBName
+        (uint256 rootIdA, uint256 safeIdA1,,) = palmeraSafeBuilder
+            .setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
         );
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
         address rightCaller = address(0x123);
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
 
         vm.startPrank(rootAddrA);
         palmeraModule.setRole(
-            DataTypes.Role.SAFE_LEAD, rightCaller, squadIdA1, true
+            DataTypes.Role.SAFE_LEAD, rightCaller, safeIdA1, true
         );
         vm.stopPrank();
-        assertEq(palmeraModule.isSafeLead(squadIdA1, rightCaller), true);
+        assertEq(palmeraModule.isSafeLead(safeIdA1, rightCaller), true);
 
-        // Get squadA signers info
-        safeHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = safeHelper.safeWallet().getOwners();
+        // Get safeA signers info
+        safeHelper.updateSafeInterface(safeAAddr);
+        address[] memory safeA1Owners = safeHelper.safeWallet().getOwners();
         address newOwner = address(0xDEF);
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
-        assertEq(safeHelper.safeWallet().isOwner(squadA1Owners[1]), true);
+        assertEq(safeHelper.safeWallet().isOwner(safeA1Owners[1]), true);
 
         vm.startPrank(rightCaller);
         palmeraModule.addOwnerWithThreshold(
-            newOwner, threshold, squadAAddr, orgHash
+            newOwner, threshold, safeAAddr, orgHash
         );
         vm.stopPrank();
 
-        safeHelper.updateSafeInterface(squadAAddr);
+        safeHelper.updateSafeInterface(safeAAddr);
         assertEq(safeHelper.safeWallet().getThreshold(), threshold);
         assertEq(
-            safeHelper.safeWallet().getOwners().length, squadA1Owners.length + 1
+            safeHelper.safeWallet().getOwners().length, safeA1Owners.length + 1
         );
         assertEq(safeHelper.safeWallet().isOwner(newOwner), true);
     }
@@ -313,9 +313,9 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Target Info: Name -> rootAddr, Type -> SAFE, Hierarchy related to caller -> SAFE Leading by safeLead,
     function testRevertOwnerAlreadyExistsAddOwnerWithThreshold() public {
         (uint256 rootId,) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
         address safeLead = address(0x123);
 
         vm.startPrank(rootAddr);
@@ -345,9 +345,9 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Target Info: Name -> rootAddr, Type -> SAFE, Hierarchy related to caller -> ITSELF,
     function testRevertZeroAddressAddOwnerWithThreshold() public {
         (uint256 rootId,) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
 
         safeHelper.updateSafeInterface(rootAddr);
         uint256 threshold = safeHelper.safeWallet().getThreshold();
@@ -369,9 +369,9 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Target Info: Name -> rootAddr, Type -> SAFE, Hierarchy related to caller -> ITSELF,
     function testRevertInvalidThresholdAddOwnerWithThreshold() public {
         (uint256 rootId,) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
         address safeLead = address(0x123);
 
         vm.startPrank(rootAddr);
@@ -446,12 +446,12 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Target Info: Name -> rootAddr, Type -> SAFE, Hierarchy related to caller -> Not Related,
     function testRevertRootSafesAttemptToAddToExternalSafeOrg() public {
         (uint256 rootIdA,, uint256 rootIdB,) = palmeraSafeBuilder
-            .setupTwoRootOrgWithOneSquadEach(
-            orgName, squadA1Name, root2Name, squadBName
+            .setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootIdA);
-        address rootBAddr = palmeraModule.getSquadSafeAddress(rootIdB);
+        address rootAddr = palmeraModule.getSafeAddress(rootIdA);
+        address rootBAddr = palmeraModule.getSafeAddress(rootIdB);
 
         address newOwnerOnOrgA = address(0xF1F1);
         uint256 threshold = safeHelper.safeWallet().getThreshold();
@@ -468,43 +468,43 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // ! ********************* removeOwner Test ***********************************
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> fakeCaller
-    // Target Info: Name -> squadAAddr, Type -> SAFE, Hierarchy related to caller -> SAME_TREE,
+    // Target Info: Name -> safeAAddr, Type -> SAFE, Hierarchy related to caller -> SAME_TREE,
     function testRevertZeroAddressProvidedRemoveOwner() public {
-        (uint256 rootIdA, uint256 squadIdA1,,) = palmeraSafeBuilder
-            .setupTwoRootOrgWithOneSquadEach(
-            orgName, squadA1Name, root2Name, squadBName
+        (uint256 rootIdA, uint256 safeIdA1,,) = palmeraSafeBuilder
+            .setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
         );
 
-        address fakeCaller = palmeraModule.getSquadSafeAddress(rootIdA);
+        address fakeCaller = palmeraModule.getSafeAddress(rootIdA);
 
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
 
-        // Get squadA signers info
-        safeHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = safeHelper.safeWallet().getOwners();
-        address prevOwner = squadA1Owners[0];
-        address ownerToRemove = squadA1Owners[1];
+        // Get safeA signers info
+        safeHelper.updateSafeInterface(safeAAddr);
+        address[] memory safeA1Owners = safeHelper.safeWallet().getOwners();
+        address prevOwner = safeA1Owners[0];
+        address ownerToRemove = safeA1Owners[1];
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
         vm.startPrank(fakeCaller);
         vm.expectRevert(Errors.ZeroAddressProvided.selector);
         palmeraModule.removeOwner(
-            zeroAddress, ownerToRemove, threshold, squadAAddr, orgHash
+            zeroAddress, ownerToRemove, threshold, safeAAddr, orgHash
         );
 
         vm.expectRevert(Errors.ZeroAddressProvided.selector);
         palmeraModule.removeOwner(
-            prevOwner, zeroAddress, threshold, squadAAddr, orgHash
+            prevOwner, zeroAddress, threshold, safeAAddr, orgHash
         );
 
         vm.expectRevert(Errors.ZeroAddressProvided.selector);
         palmeraModule.removeOwner(
-            sentinel, ownerToRemove, threshold, squadAAddr, orgHash
+            sentinel, ownerToRemove, threshold, safeAAddr, orgHash
         );
 
         vm.expectRevert(Errors.ZeroAddressProvided.selector);
         palmeraModule.removeOwner(
-            prevOwner, sentinel, threshold, squadAAddr, orgHash
+            prevOwner, sentinel, threshold, safeAAddr, orgHash
         );
         vm.stopPrank();
     }
@@ -512,11 +512,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Caller Info: Role-> SAFE_LEAD, Type -> EOA, Hierarchy -> ROOT, Name -> safeLead
     // Target Info: Name -> rootAddr, Type -> SAFE, Hierarchy related to caller -> Not Related,
     function testRevertInvalidThresholdRemoveOwner() public {
-        (uint256 rootId, uint256 squadA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
         address safeLead = address(0x123);
 
         vm.startPrank(rootAddr);
@@ -524,10 +524,10 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
 
         // (When threshold < 1)
-        safeHelper.updateSafeInterface(squadA1Addr);
-        address[] memory squadA1Owners = safeHelper.safeWallet().getOwners();
-        address prevOwner = squadA1Owners[0];
-        address removeOwner = squadA1Owners[1];
+        safeHelper.updateSafeInterface(safeA1Addr);
+        address[] memory safeA1Owners = safeHelper.safeWallet().getOwners();
+        address prevOwner = safeA1Owners[0];
+        address removeOwner = safeA1Owners[1];
         uint256 zeroThreshold = 0;
 
         vm.startPrank(safeLead);
@@ -589,23 +589,23 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> SAFE_LEAD, Type -> EOA, Hierarchy -> ROOT, Name -> userLeadEOA
-    // Target Info: Name -> squadA1Addr, Type -> SAFE, Hierarchy related to caller -> SAFE Leading by EOA,
+    // Target Info: Name -> safeA1Addr, Type -> SAFE, Hierarchy related to caller -> SAFE Leading by EOA,
     function testCan_RemoveOwner_SAFE_LEAD_as_EOA_is_TARGETS_LEAD() public {
-        (uint256 rootId, uint256 squadIdA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
 
         address userLeadEOA = address(0x123);
 
         vm.startPrank(rootAddr);
         palmeraModule.setRole(
-            DataTypes.Role.SAFE_LEAD, userLeadEOA, squadIdA1, true
+            DataTypes.Role.SAFE_LEAD, userLeadEOA, safeIdA1, true
         );
         vm.stopPrank();
 
-        safeHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(safeA1Addr);
         address[] memory ownersList = safeHelper.safeWallet().getOwners();
 
         address prevOwner = ownersList[0];
@@ -614,7 +614,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         vm.startPrank(userLeadEOA);
         palmeraModule.removeOwner(
-            prevOwner, owner, threshold, squadA1Addr, orgHash
+            prevOwner, owner, threshold, safeA1Addr, orgHash
         );
 
         address[] memory postRemoveOwnersList =
@@ -625,36 +625,36 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         assertEq(safeHelper.safeWallet().getThreshold(), threshold);
     }
 
-    // Caller Info: Role-> SAFE_LEAD, Type -> SAFE, Hierarchy -> squad, Name -> squadA2Addr
-    // Target Info: Name -> squadA1Addr, Type -> SAFE, Hierarchy related to caller -> SAME TREE,
+    // Caller Info: Role-> SAFE_LEAD, Type -> SAFE, Hierarchy -> safe, Name -> safeA2Addr
+    // Target Info: Name -> safeA1Addr, Type -> SAFE, Hierarchy related to caller -> SAME TREE,
     function testCan_RemoveOwner_SAFE_LEAD_as_SAFE_is_TARGETS_LEAD() public {
-        (uint256 rootId, uint256 squadIdA1, uint256 squadIdA2) =
-        palmeraSafeBuilder.setupRootWithTwoSquads(
-            orgName, squadA1Name, squadA2Name
+        (uint256 rootId, uint256 safeIdA1, uint256 safeIdA2) =
+        palmeraSafeBuilder.setupRootWithTwoSafes(
+            orgName, safeA1Name, safeA2Name
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
-        address squadA2Addr = palmeraModule.getSquadSafeAddress(squadIdA2);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
+        address safeA2Addr = palmeraModule.getSafeAddress(safeIdA2);
 
         vm.startPrank(rootAddr);
         palmeraModule.setRole(
-            DataTypes.Role.SAFE_LEAD, squadA2Addr, squadIdA1, true
+            DataTypes.Role.SAFE_LEAD, safeA2Addr, safeIdA1, true
         );
         vm.stopPrank();
 
-        safeHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(safeA1Addr);
         address[] memory ownersList = safeHelper.safeWallet().getOwners();
 
         address prevOwner = ownersList[0];
         address owner = ownersList[1];
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
-        safeHelper.updateSafeInterface(squadA2Addr);
+        safeHelper.updateSafeInterface(safeA2Addr);
         safeHelper.removeOwnerTx(
-            prevOwner, owner, threshold, squadA1Addr, orgHash
+            prevOwner, owner, threshold, safeA1Addr, orgHash
         );
-        safeHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(safeA1Addr);
         address[] memory postRemoveOwnersList =
             safeHelper.safeWallet().getOwners();
 
@@ -664,48 +664,48 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> SAFE_LEAD, Type -> SAFE, Hierarchy -> ROOT, Name -> rootAddrA
-    // Target Info: Name -> squadA1Addr, Type -> SAFE, Hierarchy related to caller -> DIFFERENT TREE,
+    // Target Info: Name -> safeA1Addr, Type -> SAFE, Hierarchy related to caller -> DIFFERENT TREE,
     function testCan_RemoveOwner_SAFE_LEAD_as_SAFE_is_TARGETS_LEAD_DifferentTree(
     ) public {
-        (uint256 rootIdA, uint256 squadIdA1,, uint256 squadIdB1) =
-        palmeraSafeBuilder.setupTwoRootOrgWithOneSquadEach(
-            orgName, squadA1Name, root2Name, squadBName
+        (uint256 rootIdA, uint256 safeIdA1,, uint256 safeIdB1) =
+        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
         );
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
-        address squadBAddr = palmeraModule.getSquadSafeAddress(squadIdB1);
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
+        address safeBAddr = palmeraModule.getSafeAddress(safeIdB1);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
 
         vm.startPrank(rootAddrA);
         palmeraModule.setRole(
-            DataTypes.Role.SAFE_LEAD, squadBAddr, squadIdA1, true
+            DataTypes.Role.SAFE_LEAD, safeBAddr, safeIdA1, true
         );
         vm.stopPrank();
 
-        // Get squadA signers info
-        safeHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = safeHelper.safeWallet().getOwners();
+        // Get safeA signers info
+        safeHelper.updateSafeInterface(safeAAddr);
+        address[] memory safeA1Owners = safeHelper.safeWallet().getOwners();
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
-        // SquadB RemoveOwner from squadA
-        safeHelper.updateSafeInterface(squadBAddr);
+        // SafeB RemoveOwner from safeA
+        safeHelper.updateSafeInterface(safeBAddr);
         bool result = safeHelper.removeOwnerTx(
-            squadA1Owners[0], squadA1Owners[1], threshold, squadAAddr, orgHash
+            safeA1Owners[0], safeA1Owners[1], threshold, safeAAddr, orgHash
         );
         assertEq(result, true);
-        assertEq(safeHelper.safeWallet().isOwner(squadA1Owners[1]), false);
+        assertEq(safeHelper.safeWallet().isOwner(safeA1Owners[1]), false);
     }
 
-    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> squad, Name -> squadAAddr
-    // Target Info: Name -> squadA1Addr, Type -> SAFE, Hierarchy related to caller -> SAME TREE,
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> safe, Name -> safeAAddr
+    // Target Info: Name -> safeA1Addr, Type -> SAFE, Hierarchy related to caller -> SAME TREE,
     function testCan_RemoveOwner_SUPER_SAFE_as_SAFE_is_TARGETS_SUPER_SAFE()
         public
     {
-        (, uint256 squadIdA1, uint256 childIdA,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (, uint256 safeIdA1, uint256 childIdA,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
-        address childAAddr = palmeraModule.getSquadSafeAddress(childIdA);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
+        address childAAddr = palmeraModule.getSafeAddress(childIdA);
 
         safeHelper.updateSafeInterface(childAAddr);
         address[] memory ownersList = safeHelper.safeWallet().getOwners();
@@ -714,7 +714,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address owner = ownersList[1];
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
-        safeHelper.updateSafeInterface(squadAAddr);
+        safeHelper.updateSafeInterface(safeAAddr);
         safeHelper.removeOwnerTx(
             prevOwner, owner, threshold, childAAddr, orgHash
         );
@@ -728,17 +728,17 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> rootAddrA
-    // Target Info: Name -> squadAAddr, Type -> SAFE, Hierarchy related to caller -> SAME TREE,
+    // Target Info: Name -> safeAAddr, Type -> SAFE, Hierarchy related to caller -> SAME TREE,
     function testCan_RemoveOwner_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SAFE()
         public
     {
-        (uint256 rootIdA, uint256 squadIdA1,,,) = palmeraSafeBuilder
-            .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
+        (uint256 rootIdA, uint256 safeIdA1,,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
 
-        safeHelper.updateSafeInterface(squadAAddr);
+        safeHelper.updateSafeInterface(safeAAddr);
         address[] memory ownersList = safeHelper.safeWallet().getOwners();
 
         address prevOwner = ownersList[0];
@@ -747,10 +747,10 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         safeHelper.updateSafeInterface(rootAddrA);
         safeHelper.removeOwnerTx(
-            prevOwner, owner, threshold, squadAAddr, orgHash
+            prevOwner, owner, threshold, safeAAddr, orgHash
         );
 
-        safeHelper.updateSafeInterface(squadAAddr);
+        safeHelper.updateSafeInterface(safeAAddr);
         address[] memory postRemoveOwnersList =
             safeHelper.safeWallet().getOwners();
 
@@ -760,36 +760,36 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> ROOT, Name -> rootAddrA
-    // Target Info: Name -> squadAAddr, Type -> SAFE, Hierarchy related to caller -> SAME TREE,
+    // Target Info: Name -> safeAAddr, Type -> SAFE, Hierarchy related to caller -> SAME TREE,
     function testRevertRootSafeToAttemptTo_removeOwner_SUPER_SAFE_as_SAFE_is_TARGETS_SUPER_SAFE(
     ) public {
-        (, uint256 squadIdA1,, uint256 squadIdB1,,) = palmeraSafeBuilder
-            .setupTwoRootOrgWithOneSquadAndOneChildEach(
+        (, uint256 safeIdA1,, uint256 safeIdB1,,) = palmeraSafeBuilder
+            .setupTwoRootOrgWithOneSafeAndOneChildEach(
             orgName,
-            squadA1Name,
+            safeA1Name,
             root2Name,
-            squadBName,
-            subSquadA1Name,
-            "subSquadB1"
+            safeBName,
+            subSafeA1Name,
+            "subSafeB1"
         );
 
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
-        address squadBAddr = palmeraModule.getSquadSafeAddress(squadIdB1);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
+        address safeBAddr = palmeraModule.getSafeAddress(safeIdB1);
 
-        // Get squadA signers info
-        safeHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = safeHelper.safeWallet().getOwners();
-        address prevOwner = squadA1Owners[1];
-        address removeOwner = squadA1Owners[2];
+        // Get safeA signers info
+        safeHelper.updateSafeInterface(safeAAddr);
+        address[] memory safeA1Owners = safeHelper.safeWallet().getOwners();
+        address prevOwner = safeA1Owners[1];
+        address removeOwner = safeA1Owners[2];
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
-        assertEq(safeHelper.safeWallet().isOwner(squadA1Owners[1]), true);
+        assertEq(safeHelper.safeWallet().isOwner(safeA1Owners[1]), true);
 
-        // SquadB AddOwnerWithThreshold from squadA
-        vm.startPrank(squadBAddr);
+        // SafeB AddOwnerWithThreshold from safeA
+        vm.startPrank(safeBAddr);
         vm.expectRevert(Errors.NotAuthorizedRemoveOwner.selector);
         palmeraModule.removeOwner(
-            prevOwner, removeOwner, threshold, squadAAddr, orgHash
+            prevOwner, removeOwner, threshold, safeAAddr, orgHash
         );
         vm.stopPrank();
     }
@@ -799,14 +799,14 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     function testRevertRootSafeToAttemptTo_removeOwner_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SAFE(
     ) public {
         (uint256 rootIdA,, uint256 rootIdB,) = palmeraSafeBuilder
-            .setupTwoRootOrgWithOneSquadEach(
-            orgName, squadA1Name, root2Name, squadBName
+            .setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
         );
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
-        address rootAddrB = palmeraModule.getSquadSafeAddress(rootIdB);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
+        address rootAddrB = palmeraModule.getSafeAddress(rootIdB);
 
-        // Get squadA signers info
+        // Get safeA signers info
         safeHelper.updateSafeInterface(rootAddrA);
         address[] memory rootAOwners = safeHelper.safeWallet().getOwners();
         address prevOwner = rootAOwners[1];
@@ -815,7 +815,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         assertEq(safeHelper.safeWallet().isOwner(rootAOwners[1]), true);
 
-        // SquadB AddOwnerWithThreshold from squadA
+        // SafeB AddOwnerWithThreshold from safeA
         vm.startPrank(rootAddrB);
         vm.expectRevert(Errors.NotAuthorizedRemoveOwner.selector);
         palmeraModule.removeOwner(
@@ -824,83 +824,83 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
-    // Caller Info: Role-> SAFE_LEAD_MODIFY_OWNERS_ONLY, Type -> SAFE, Hierarchy -> squad, Name -> squadBAddr
-    // Target Info: Name -> squadAAddr, Type -> SAFE, Hierarchy related to caller -> SAME TREE,
+    // Caller Info: Role-> SAFE_LEAD_MODIFY_OWNERS_ONLY, Type -> SAFE, Hierarchy -> safe, Name -> safeBAddr
+    // Target Info: Name -> safeAAddr, Type -> SAFE, Hierarchy related to caller -> SAME TREE,
     function testCan_RemoveOwner_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_SAFE_is_TARGETS_LEAD(
     ) public {
-        (uint256 rootIdA, uint256 squadIdA1,, uint256 squadIdB1) =
-        palmeraSafeBuilder.setupTwoRootOrgWithOneSquadEach(
-            orgName, squadA1Name, root2Name, squadBName
+        (uint256 rootIdA, uint256 safeIdA1,, uint256 safeIdB1) =
+        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
         );
 
-        address rootAddrA = palmeraModule.getSquadSafeAddress(rootIdA);
-        address squadBAddr = palmeraModule.getSquadSafeAddress(squadIdB1);
-        address squadAAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddrA = palmeraModule.getSafeAddress(rootIdA);
+        address safeBAddr = palmeraModule.getSafeAddress(safeIdB1);
+        address safeAAddr = palmeraModule.getSafeAddress(safeIdA1);
 
         vm.startPrank(rootAddrA);
         palmeraModule.setRole(
             DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
-            squadBAddr,
-            squadIdA1,
+            safeBAddr,
+            safeIdA1,
             true
         );
         vm.stopPrank();
-        assertEq(palmeraModule.isSafeLead(squadIdA1, squadBAddr), true);
+        assertEq(palmeraModule.isSafeLead(safeIdA1, safeBAddr), true);
 
-        // Get squadA signers info
-        safeHelper.updateSafeInterface(squadAAddr);
-        address[] memory squadA1Owners = safeHelper.safeWallet().getOwners();
-        address prevOwner = squadA1Owners[1];
-        address removeOwner = squadA1Owners[2];
+        // Get safeA signers info
+        safeHelper.updateSafeInterface(safeAAddr);
+        address[] memory safeA1Owners = safeHelper.safeWallet().getOwners();
+        address prevOwner = safeA1Owners[1];
+        address removeOwner = safeA1Owners[2];
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
-        assertEq(safeHelper.safeWallet().isOwner(squadA1Owners[1]), true);
+        assertEq(safeHelper.safeWallet().isOwner(safeA1Owners[1]), true);
 
-        // SquadB AddOwnerWithThreshold from squadA
-        safeHelper.updateSafeInterface(squadBAddr);
+        // SafeB AddOwnerWithThreshold from safeA
+        safeHelper.updateSafeInterface(safeBAddr);
         bool result = safeHelper.removeOwnerTx(
-            prevOwner, removeOwner, threshold, squadAAddr, orgHash
+            prevOwner, removeOwner, threshold, safeAAddr, orgHash
         );
         assertEq(result, true);
 
-        safeHelper.updateSafeInterface(squadAAddr);
+        safeHelper.updateSafeInterface(safeAAddr);
         assertEq(safeHelper.safeWallet().getThreshold(), threshold);
         assertEq(
-            safeHelper.safeWallet().getOwners().length, squadA1Owners.length - 1
+            safeHelper.safeWallet().getOwners().length, safeA1Owners.length - 1
         );
         assertEq(safeHelper.safeWallet().isOwner(removeOwner), false);
     }
 
     // Caller Info: Role-> SAFE_LEAD_MODIFY_OWNERS_ONLY, Type -> EOA, Hierarchy -> NOT_REGISTERED, Name -> userLeadModifyOwnersOnly
-    // Target Info: Name -> squadA1Addr, Type -> SAFE, Hierarchy related to caller -> SAFE Leading by caller,
+    // Target Info: Name -> safeA1Addr, Type -> SAFE, Hierarchy related to caller -> SAFE Leading by caller,
     function testCan_RemoveOwner_SAFE_LEAD_MODIFY_OWNERS_ONLY_as_EOA_is_TARGETS_LEAD(
     ) public {
-        (uint256 rootId, uint256 squadIdA1) =
-            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        (uint256 rootId, uint256 safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
-        address squadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
         address userLeadModifyOwnersOnly = address(0x123);
 
-        address[] memory squadA1Owners = safeHelper.safeWallet().getOwners();
-        address prevOwner = squadA1Owners[1];
-        address removeOwner = squadA1Owners[2];
+        address[] memory safeA1Owners = safeHelper.safeWallet().getOwners();
+        address prevOwner = safeA1Owners[1];
+        address removeOwner = safeA1Owners[2];
 
         vm.startPrank(rootAddr);
         palmeraModule.setRole(
             DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
             userLeadModifyOwnersOnly,
-            squadIdA1,
+            safeIdA1,
             true
         );
         vm.stopPrank();
 
-        safeHelper.updateSafeInterface(squadA1Addr);
+        safeHelper.updateSafeInterface(safeA1Addr);
         uint256 threshold = safeHelper.safeWallet().getThreshold();
 
         vm.startPrank(userLeadModifyOwnersOnly);
         palmeraModule.removeOwner(
-            prevOwner, removeOwner, threshold - 1, squadA1Addr, orgHash
+            prevOwner, removeOwner, threshold - 1, safeA1Addr, orgHash
         );
 
         assertEq(safeHelper.safeWallet().getThreshold(), threshold - 1);
@@ -911,12 +911,12 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Target Info: Name -> rootAddr, Type -> SAFE, Hierarchy related to caller -> DIFFERENT TREE,
     function testRevertRootSafesToAttemptToRemoveFromExternalOrg() public {
         (uint256 rootIdA,, uint256 rootIdB,) = palmeraSafeBuilder
-            .setupTwoRootOrgWithOneSquadEach(
-            orgName, squadA1Name, root2Name, squadBName
+            .setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
         );
 
-        address rootAddr = palmeraModule.getSquadSafeAddress(rootIdA);
-        address rootBAddr = palmeraModule.getSquadSafeAddress(rootIdB);
+        address rootAddr = palmeraModule.getSafeAddress(rootIdA);
+        address rootBAddr = palmeraModule.getSafeAddress(rootIdB);
 
         address prevOwnerToRemoveOnOrgA = safeHelper.safeWallet().getOwners()[0];
         address ownerToRemove = safeHelper.safeWallet().getOwners()[1];
@@ -941,7 +941,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
 
         address rootAddr = palmeraSafes[orgName];
 
-        uint256 rootId = palmeraModule.getSquadIdBySafe(orgHash, rootAddr);
+        uint256 rootId = palmeraModule.getSafeIdBySafe(orgHash, rootAddr);
         address safeLead = address(0x123);
 
         vm.startPrank(rootAddr);
