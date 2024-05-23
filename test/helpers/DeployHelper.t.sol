@@ -74,13 +74,10 @@ contract DeployHelper is Test {
         safeHelper.setPalmeraRoles(palmeraRolesDeployed);
 
         // Init PalmeraModule
-        address masterCopy = safeHelper.safeMasterCopy();
-        address safeFactory = address(safeHelper.safeFactory());
         uint256 maxTreeDepth = 50;
 
-        palmeraModule = new PalmeraModule(
-            masterCopy, safeFactory, address(palmeraRolesDeployed), maxTreeDepth
-        );
+        palmeraModule =
+            new PalmeraModule(address(palmeraRolesDeployed), maxTreeDepth);
         palmeraModuleAddr = address(palmeraModule);
         // Deploy Guard Contract
         palmeraGuard = new PalmeraGuard(payable(palmeraModuleAddr));

@@ -14,7 +14,7 @@ library DataTypes {
     }
     /// @dev typos of safes into Palmera Modules
     enum Tier {
-        safe, // 0
+        SAFE, // 0
         ROOT, // 1
         REMOVED // 2
     }

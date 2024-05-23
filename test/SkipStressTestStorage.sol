@@ -49,7 +49,7 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
         subSafeAid[0] = rootId;
         subSafeAid[1] = safeIdA1;
 
-        for (uint256 i = 2; i < 8100; i++) {
+        for (uint256 i = 2; i < 8100; ++i) {
             // Create a new Safe
             subSafeAaddr[i] = safeHelper.newPalmeraSafe(3, 1);
             // Start Prank
@@ -229,10 +229,10 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
         level[indexLevel] = 0;
         indexSafe = members.sub(1);
         uint256 structLevel = 1;
-        for (uint256 i = 0; i < safeWallets.div(members); i++) {
+        for (uint256 i = 0; i < safeWallets.div(members); ++i) {
             // SuperSafe of Iteration
             uint256 superSafe = subSafeAid[level[i]];
-            for (uint256 j = 0; j < members; j++) {
+            for (uint256 j = 0; j < members; ++j) {
                 // Create a new Safe
                 subSafeAaddr[indexSafe] = safeHelper.newPalmeraSafe(3, 1);
                 // Start Prank
@@ -302,7 +302,7 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
         if (exp == 0) {
             return result;
         }
-        for (uint256 i = 0; i < exp; i++) {
+        for (uint256 i = 0; i < exp; ++i) {
             result *= base;
         }
     }
@@ -312,7 +312,7 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
         pure
         returns (uint256 result)
     {
-        for (uint256 i = 1; i < level; i++) {
+        for (uint256 i = 1; i < level; ++i) {
             result += pod(base, i);
         }
     }

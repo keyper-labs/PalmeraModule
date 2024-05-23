@@ -18,13 +18,9 @@ contract TestEnableModule is Test {
         safeHelper = new SafeHelper();
         safeAddr = safeHelper.setupSafeEnv();
         // Init PalmeraModule
-        address masterCopy = safeHelper.safeMasterCopy();
-        address safeFactory = address(safeHelper.safeFactory());
         address rolesAuthority = address(0xBEEF);
         uint256 maxTreeDepth = 50;
-        palmeraModule = new PalmeraModule(
-            masterCopy, safeFactory, rolesAuthority, maxTreeDepth
-        );
+        palmeraModule = new PalmeraModule(rolesAuthority, maxTreeDepth);
         safeHelper.setPalmeraModule(address(palmeraModule));
     }
 

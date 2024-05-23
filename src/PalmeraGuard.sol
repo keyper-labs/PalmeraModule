@@ -38,6 +38,7 @@ contract PalmeraGuard is BaseGuard, Context {
         revert("This contract does not accept ETH");
     }
 
+    /// @notice Instance of Base Guard Safe Interface
     function checkTransaction(
         address,
         uint256,
@@ -52,6 +53,8 @@ contract PalmeraGuard is BaseGuard, Context {
         address
     ) external {}
 
+    /// @notice Instance of Base Guard Safe Interface
+    /// @dev Check if the transaction is allowed, based of have the rights to execute it.
     function checkAfterExecution(bytes32, bool) external view {
         address caller = _msgSender();
         // if it does, check if try to disable guard and revert if it does.

@@ -10,14 +10,19 @@ import {Constants} from "../libraries/Constants.sol";
 /// @title Attacker
 /// @custom:security-contact general@palmeradao.xyz
 contract Attacker {
+    /// @notice Hash On-chain Organisation to Attack
     bytes32 public orgFromAttacker;
+    /// @notice Safe super address to Attack
     address public superSafeFromAttacker;
+    /// @notice Safe target address to Attack
     address public targetSafeFromAttacker;
+    /// @notice Data payload of the transaction to Attack
     bytes public dataFromAttacker;
+    /// @notice Packed signatures data (v, r, s) to Attack
     bytes public signaturesFromAttacker;
-
+    /// @notice Owners of the Safe Multisig Wallet Attacker
     address[] public owners = new address[](2);
-
+    /// @notice Instance of PalmeraModule
     PalmeraModule public palmeraModule;
 
     constructor(address payable _contractToAttackAddress) {

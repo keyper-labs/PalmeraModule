@@ -12,19 +12,11 @@ import "@solenv/Solenv.sol";
 contract DeployModuleWithMockedSafe is Script {
     function run() public {
         Solenv.config();
-        address masterCopy = vm.envAddress("MASTER_COPY_ADDRESS");
-        address proxyFactory = vm.envAddress("PROXY_FACTORY_ADDRESS");
         address rolesAuthority = address(0xBEEF);
         uint256 maxTreeDepth = 50;
         vm.startBroadcast();
-        MockedContract masterCopyMocked = new MockedContract();
-        MockedContract proxyFactoryMocked = new MockedContract();
-        PalmeraModule palmeraModule = new PalmeraModule(
-            address(masterCopyMocked),
-            address(proxyFactoryMocked),
-            rolesAuthority,
-            maxTreeDepth
-        );
+        PalmeraModule palmeraModule =
+            new PalmeraModule(rolesAuthority, maxTreeDepth);
         vm.stopBroadcast();
     }
 }

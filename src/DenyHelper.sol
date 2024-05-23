@@ -9,6 +9,8 @@ import {DataTypes} from "../libraries/DataTypes.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {Events} from "../libraries/Events.sol";
 
+/// @title ValidAddress
+/// @dev Helper contract to check if an address is valid
 abstract contract ValidAddress is Context {
     /// @dev Modifier for Valid if wallet is Zero Address or Not
     /// @param to Address to check

@@ -55,7 +55,7 @@ contract Hierarchies is DeployHelper {
             uint256 superSafe
         ) = palmeraModule.getSafeInfo(safeIdA1);
 
-        assertEq(uint256(tier), uint256(DataTypes.Tier.safe));
+        assertEq(uint256(tier), uint256(DataTypes.Tier.SAFE));
         assertEq(safeName, safeA1Name);
         assertEq(lead, address(0));
         assertEq(safe, address(safeHelper.safeWallet()));
@@ -264,7 +264,7 @@ contract Hierarchies is DeployHelper {
             uint256 superSafe
         ) = palmeraModule.getSafeInfo(safeA1Id);
 
-        assertEq(uint8(tier), uint8(DataTypes.Tier.safe));
+        assertEq(uint8(tier), uint8(DataTypes.Tier.SAFE));
         assertEq(name, safeA1Name);
         assertEq(lead, address(0));
         assertEq(safe, safeA1Addr);
@@ -276,7 +276,7 @@ contract Hierarchies is DeployHelper {
         (tier, name, lead, safe, child, superSafe) =
             palmeraModule.getSafeInfo(safeSubSafeA1Id);
 
-        assertEq(uint8(tier), uint8(DataTypes.Tier.safe));
+        assertEq(uint8(tier), uint8(DataTypes.Tier.SAFE));
         assertEq(name, subSafeA1Name);
         assertEq(lead, address(0));
         assertEq(safe, safeSubSafeA1Addr);
@@ -835,5 +835,160 @@ contract Hierarchies is DeployHelper {
                 vm.stopPrank();
             }
         }
+    }
+
+    // ! **************** Validate increment of IndexID ******************************* !
+
+    /// @notice Test Register Root Organisation and check index increment
+    function testRegisterRootOrgAndCheckIndexIncrement() public {
+        uint256 initialIndex = palmeraModule.indexId();
+
+        (uint256 rootId, uint256 safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
+
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+
+        uint256 newIndex = palmeraModule.indexId();
+        assertEq(
+            newIndex,
+            initialIndex + 2,
+            "IndexId should increment by 2 after setting up root and one safe"
+        );
+
+        initialIndex = palmeraModule.indexId();
+
+        address newRootSafe = safeHelper.newPalmeraSafe(3, 1);
+        safeHelper.updateSafeInterface(rootAddr);
+
+        bool result = safeHelper.createRootSafeTx(newRootSafe, orgName);
+        assertEq(result, true);
+
+        newIndex = palmeraModule.indexId();
+        assertEq(
+            newIndex,
+            initialIndex + 1,
+            "IndexId should increment by 1 after adding a Root Safe"
+        );
+
+        assertEq(orgHash, keccak256(abi.encodePacked(orgName)));
+        (
+            DataTypes.Tier tier,
+            string memory name,
+            address lead,
+            address safe,
+            uint256[] memory child,
+            uint256 superSafe
+        ) = palmeraModule.getSafeInfo(rootId);
+        assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
+        assertEq(name, orgName);
+        assertEq(lead, address(0));
+        assertEq(safe, address(safeHelper.safeWallet()));
+        assertEq(superSafe, 0);
+        assertEq(child.length, 1);
+        assertEq(palmeraModule.isOrgRegistered(orgHash), true);
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safe, uint8(DataTypes.Role.ROOT_SAFE)
+            ),
+            true
+        );
+    }
+
+    /// @notice Test Add Safe and check index increment
+    function testAddSafeAndCheckIndexIncrement() public {
+        uint256 initialIndex = palmeraModule.indexId();
+
+        (uint256 rootId, uint256 safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
+
+        uint256 newIndex = palmeraModule.indexId();
+        assertEq(
+            newIndex,
+            initialIndex + 2,
+            "IndexId should increment by 2 after setting up root and one safe"
+        );
+
+        (
+            DataTypes.Tier tier,
+            string memory safeName,
+            address lead,
+            address safe,
+            uint256[] memory child,
+            uint256 superSafe
+        ) = palmeraModule.getSafeInfo(safeIdA1);
+
+        assertEq(uint256(tier), uint256(DataTypes.Tier.SAFE));
+        assertEq(safeName, safeA1Name);
+        assertEq(lead, address(0));
+        assertEq(safe, address(safeHelper.safeWallet()));
+        assertEq(child.length, 0);
+        assertEq(superSafe, rootId);
+
+        address safeAddr = palmeraModule.getSafeAddress(safeIdA1);
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+
+        assertEq(palmeraModule.isRootSafeOf(rootAddr, safeIdA1), true);
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeAddr, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            false
+        );
+
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            true
+        );
+    }
+
+    /// @notice Test Add Multiple Safes and check index increment
+    function testAddMultipleSafesAndCheckIndexIncrement() public {
+        uint256 initialIndex = palmeraModule.indexId();
+
+        (uint256 rootId, uint256 safeIdA1) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
+
+        address safeA2Addr = safeHelper.newPalmeraSafe(3, 1);
+        address safeA3Addr = safeHelper.newPalmeraSafe(3, 1);
+
+        vm.startPrank(safeA2Addr);
+        uint256 safeIdA2 = palmeraModule.addSafe(safeIdA1, "Safe A2");
+        vm.stopPrank();
+        assertEq(
+            uint256(3),
+            safeIdA2,
+            "SafeId should be 3 after adding a safe safeIdA2"
+        );
+        assertEq(
+            safeIdA2,
+            safeIdA1 + 1,
+            "SafeId should increment by 1 after adding a safe"
+        );
+        vm.startPrank(safeA3Addr);
+        uint256 safeIdA3 = palmeraModule.addSafe(safeIdA1, "Safe A3");
+        vm.stopPrank();
+        assertEq(
+            uint256(4),
+            safeIdA3,
+            "SafeId should be 4 after adding a safe safeIdA3"
+        );
+        assertEq(
+            safeIdA3,
+            safeIdA2 + 1,
+            "SafeId should increment by 1 after adding a safe"
+        );
+        uint256 newIndex = palmeraModule.indexId();
+        assertEq(
+            uint256(5),
+            newIndex,
+            "IndexId should increment by 5 after adding 1 rootsafe and 3 safes"
+        );
+        assertEq(
+            newIndex,
+            initialIndex + 4,
+            "IndexId should increment correctly after adding multiple safes"
+        );
     }
 }

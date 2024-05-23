@@ -32,9 +32,6 @@ contract PalmeraModule is Auth, Helpers {
     uint256 public indexId;
     /// @dev Max Depth Tree Limit
     uint256 public maxDepthTreeLimit;
-    /// @dev Safe contracts
-    address public immutable masterCopy;
-    address public immutable proxyFactory;
     /// @dev RoleAuthority
     address public rolesAuthority;
     /// @dev Array of Orgs (based on Hash (On-chain Organisation) of the Org)
@@ -92,19 +89,13 @@ contract PalmeraModule is Auth, Helpers {
         _;
     }
 
-    constructor(
-        address masterCopyAddress,
-        address proxyFactoryAddress,
-        address authorityAddress,
-        uint256 maxDepthTreeLimitInitial
-    ) Auth(address(0), Authority(authorityAddress)) {
-        if (
-            (authorityAddress == address(0)) || !masterCopyAddress.isContract()
-                || !proxyFactoryAddress.isContract()
-        ) revert Errors.InvalidAddressProvided();
+    constructor(address authorityAddress, uint256 maxDepthTreeLimitInitial)
+        Auth(address(0), Authority(authorityAddress))
+    {
+        if (authorityAddress == address(0)) {
+            revert Errors.InvalidAddressProvided();
+        }
 
-        masterCopy = masterCopyAddress;
-        proxyFactory = proxyFactoryAddress;
         rolesAuthority = authorityAddress;
         /// Index of Safes starts in 1 Always
         indexId = 1;
@@ -223,9 +214,9 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.OwnerAlreadyExists();
         }
 
-        bytes memory data = abi.encodeWithSelector(
-            ISafe.addOwnerWithThreshold.selector, ownerAdded, threshold
-        );
+        bytes memory data =
+            abi.encodeCall(ISafe.addOwnerWithThreshold, (ownerAdded, threshold));
+
         /// Execute transaction from target safe
         _executeModuleTransaction(targetSafe, data);
     }
@@ -262,8 +253,8 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.OwnerNotFound();
         }
 
-        bytes memory data = abi.encodeWithSelector(
-            ISafe.removeOwner.selector, prevOwner, ownerRemoved, threshold
+        bytes memory data = abi.encodeCall(
+            ISafe.removeOwner, (prevOwner, ownerRemoved, threshold)
         );
 
         /// Execute transaction from target safe
@@ -375,14 +366,13 @@ contract PalmeraModule is Auth, Helpers {
         /// Add to org root/safe
         DataTypes.Safe storage superSafeOrgSafe = safes[org][superSafe];
         /// Add child to superSafe
-        safeId = indexId;
+        safeId = indexId++;
         superSafeOrgSafe.child.push(safeId);
 
         newSafe.safe = caller;
         newSafe.name = name;
         newSafe.superSafe = superSafe;
         indexSafe[org].push(safeId);
-        indexId++;
         /// Give Role SuperSafe
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         if (
@@ -517,7 +507,7 @@ contract PalmeraModule is Auth, Helpers {
         uint256 rootSafe = getSafeIdBySafe(org, caller);
         uint256[] memory _indexSafe = getTreeMember(rootSafe, indexSafe[org]);
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        for (uint256 j = 0; j < _indexSafe.length; j++) {
+        for (uint256 j = 0; j < _indexSafe.length; ++j) {
             uint256 safe = _indexSafe[j];
             DataTypes.Safe memory _safe = safes[org][safe];
             // Revoke roles to safe
@@ -751,7 +741,7 @@ contract PalmeraModule is Auth, Helpers {
     /// @param safe uint256 of the safe
     /// @return all the information about a safe
     function getSafeInfo(uint256 safe)
-        public
+        external
         view
         SafeIdRegistered(safe)
         returns (
@@ -881,7 +871,7 @@ contract PalmeraModule is Auth, Helpers {
         // Check if the Child Safe is was removed or not Exist and Return False
         if (
             (childSafe.safe == address(0))
-                || (childSafe.tier == DataTypes.Tier.safe)
+                || (childSafe.tier == DataTypes.Tier.SAFE)
                 || (childSafe.tier == DataTypes.Tier.ROOT)
         ) {
             return false;
@@ -889,6 +879,8 @@ contract PalmeraModule is Auth, Helpers {
         return (childSafe.superSafe == rootSafe);
     }
 
+    /// @notice Verify if the Safe is registered in any Org
+    /// @param safe address of the Safe
     function isSafeRegistered(address safe) public view returns (bool) {
         if ((safe == address(0)) || safe == Constants.SENTINEL_ADDRESS) {
             return false;
@@ -917,7 +909,7 @@ contract PalmeraModule is Auth, Helpers {
     /// @param safe uint256 of the safe
     /// @return safe address
     function getSafeAddress(uint256 safe)
-        public
+        external
         view
         SafeIdRegistered(safe)
         returns (address)
@@ -1013,7 +1005,7 @@ contract PalmeraModule is Auth, Helpers {
         if (isSafeRegistered(newRootSafe)) {
             revert Errors.SafeAlreadyRegistered(newRootSafe);
         }
-        safeId = indexId;
+        safeId = indexId++;
         safes[org][safeId] = DataTypes.Safe({
             tier: DataTypes.Tier.ROOT,
             name: name,
@@ -1023,7 +1015,6 @@ contract PalmeraModule is Auth, Helpers {
             superSafe: 0
         });
         indexSafe[org].push(safeId);
-        indexId++;
 
         /// Assign SUPER_SAFE Role + SAFE_ROOT Role
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
@@ -1046,8 +1037,7 @@ contract PalmeraModule is Auth, Helpers {
         delete safes[org][safe];
 
         /// Disable Guard
-        bytes memory data =
-            abi.encodeWithSelector(ISafe.setGuard.selector, address(0));
+        bytes memory data = abi.encodeCall(ISafe.setGuard, (address(0)));
         /// Execute transaction from target safe
         _executeModuleTransaction(_safe, data);
 
@@ -1056,9 +1046,7 @@ contract PalmeraModule is Auth, Helpers {
         if (prevModule == address(0)) {
             revert Errors.PreviewModuleNotFound(_safe);
         }
-        data = abi.encodeWithSelector(
-            ISafe.disableModule.selector, prevModule, address(this)
-        );
+        data = abi.encodeCall(ISafe.disableModule, (prevModule, address(this)));
         /// Execute transaction from target safe
         _executeModuleTransaction(_safe, data);
 
@@ -1171,7 +1159,7 @@ contract PalmeraModule is Auth, Helpers {
                 (getRootSafe(indexSafeByOrg[i]) == rootSafe)
                     && (indexSafeByOrg[i] != rootSafe)
             ) {
-                index++;
+                ++index;
             }
         }
         indexTree = new uint256[](index);

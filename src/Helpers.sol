@@ -111,7 +111,7 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
         bytes calldata data,
         Enum.Operation operation,
         uint256 _nonce
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
         return keccak256(
             encodeTransactionData(
                 org, superSafe, targetSafe, to, value, data, operation, _nonce
@@ -152,9 +152,9 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
         uint256 count = signatures.length / 65;
         bytes memory concatenatedSignatures;
 
-        for (uint256 j = 0; j < owners.length; j++) {
+        for (uint256 j = 0; j < owners.length; ++j) {
             address currentOwner = owners[j];
-            for (uint256 i = 0; i < count; i++) {
+            for (uint256 i = 0; i < count; ++i) {
                 // Inline 'signatureSplit' logic here (r, s, v extraction)
                 (uint8 v, bytes32 r, bytes32 s) = signatureSplit(signatures, i);
 
