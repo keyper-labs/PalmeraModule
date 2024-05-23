@@ -20,6 +20,14 @@ contract PalmeraRoles is RolesAuthority, ValidAddress {
         setupRoles(palmeraModule);
     }
 
+    /// @notice Fallback function: called when someone sends ETH or calls a function that does not exist
+    fallback() external {}
+
+    /// @notice Receive function: called when someone sends ETH to the contract without data
+    receive() external payable {
+        revert("This contract does not accept ETH");
+    }
+
     /// Configure roles access control on Authority
     function setupRoles(address palmeraModule)
         internal

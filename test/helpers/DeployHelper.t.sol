@@ -83,7 +83,7 @@ contract DeployHelper is Test {
         );
         palmeraModuleAddr = address(palmeraModule);
         // Deploy Guard Contract
-        palmeraGuard = new PalmeraGuard(palmeraModuleAddr);
+        palmeraGuard = new PalmeraGuard(payable(palmeraModuleAddr));
         palmeraGuardAddr = address(palmeraGuard);
 
         // Init palmeraModuleHelper
@@ -105,7 +105,8 @@ contract DeployHelper is Test {
         bytes memory bytecode =
             abi.encodePacked(vm.getCode("PalmeraRoles.sol:PalmeraRoles"), args);
 
-        palmeraRolesContract = PalmeraRoles(factory.deploy(salt, bytecode));
+        palmeraRolesContract =
+            PalmeraRoles(payable(factory.deploy(salt, bytecode)));
 
         palmeraSafeBuilder = new PalmeraSafeBuilder();
         palmeraSafeBuilder.setUpParams(

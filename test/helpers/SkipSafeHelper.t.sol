@@ -64,7 +64,7 @@ contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
     /// @param palmeraModule address of the PalmeraModule
     function setPalmeraModule(address palmeraModule) public override {
         palmeraModuleAddr = palmeraModule;
-        palmera = PalmeraModule(palmeraModuleAddr);
+        palmera = PalmeraModule(payable(palmeraModuleAddr));
     }
 
     /// function to create a new Palmera Safe

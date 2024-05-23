@@ -20,7 +20,7 @@ contract Attacker {
 
     PalmeraModule public palmeraModule;
 
-    constructor(address _contractToAttackAddress) {
+    constructor(address payable _contractToAttackAddress) {
         palmeraModule = PalmeraModule(_contractToAttackAddress);
     }
 

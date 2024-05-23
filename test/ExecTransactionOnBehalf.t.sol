@@ -1244,7 +1244,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // // ! ****************** Reentrancy Attack Test to execOnBehalf ***************
 
     function testReentrancyAttack() public {
-        Attacker attackerContract = new Attacker(address(palmeraModule));
+        Attacker attackerContract =
+            new Attacker(payable(address(palmeraModule)));
         AttackerHelper attackerHelper = new AttackerHelper();
         attackerHelper.initHelper(
             palmeraModule, attackerContract, safeHelper, 30

@@ -21,11 +21,19 @@ contract PalmeraGuard is BaseGuard, Context {
     string public constant NAME = "Palmera Guard";
     string public constant VERSION = "0.2.0";
 
-    constructor(address palmeraModuleAddr) {
+    constructor(address payable palmeraModuleAddr) {
         if (palmeraModuleAddr == address(0)) {
             revert Errors.ZeroAddressProvided();
         }
         palmeraModule = PalmeraModule(palmeraModuleAddr);
+    }
+
+    /// @notice Fallback function: called when someone sends ETH or calls a function that does not exist
+    fallback() external {}
+
+    /// @notice Receive function: called when someone sends ETH to the contract without data
+    receive() external payable {
+        revert("This contract does not accept ETH");
     }
 
     function checkTransaction(

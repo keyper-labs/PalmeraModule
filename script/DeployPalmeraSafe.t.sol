@@ -10,7 +10,8 @@ import "@solenv/Solenv.sol";
 contract DeployPalmeraSafe is Script {
     function run() public {
         Solenv.config();
-        address palmeraModuleAddress = vm.envAddress("PALMERA_MODULE_ADDRESS");
+        address payable palmeraModuleAddress =
+            payable(vm.envAddress("PALMERA_MODULE_ADDRESS"));
         address[] memory owners = new address[](2);
         owners[0] = vm.envAddress("OWNER_1");
         owners[1] = vm.envAddress("OWNER_2");

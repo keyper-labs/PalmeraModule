@@ -28,7 +28,7 @@ contract TestEnableGuard is Test {
         palmeraModule = new PalmeraModule(
             masterCopy, safeFactory, rolesAuthority, maxTreeDepth
         );
-        palmeraGuard = new PalmeraGuard(address(palmeraModule));
+        palmeraGuard = new PalmeraGuard(payable(address(palmeraModule)));
         safeHelper.setPalmeraModule(address(palmeraModule));
         safeHelper.setPalmeraGuard(address(palmeraGuard));
     }

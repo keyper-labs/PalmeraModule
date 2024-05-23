@@ -51,7 +51,7 @@ contract DeployPalmeraEnv is Script {
         console.log("PalmeraModule deployed at: ", palmeraModuleAddr);
 
         /// Deploy Guard Contract
-        PalmeraGuard palmeraGuard = new PalmeraGuard(palmeraModuleAddr);
+        PalmeraGuard palmeraGuard = new PalmeraGuard(payable(palmeraModuleAddr));
         console.log("PalmeraGuard deployed at: ", address(palmeraGuard));
 
         vm.stopBroadcast();

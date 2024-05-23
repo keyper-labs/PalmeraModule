@@ -111,6 +111,14 @@ contract PalmeraModule is Auth, Helpers {
         maxDepthTreeLimit = maxDepthTreeLimitInitial;
     }
 
+    /// @notice Fallback function: called when someone sends ETH or calls a function that does not exist
+    fallback() external {}
+
+    /// @notice Receive function: called when someone sends ETH to the contract without data
+    receive() external payable {
+        revert("This contract does not accept ETH");
+    }
+
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
     /// @param org ID's Organisation
     /// @param superSafe Safe super address
@@ -478,22 +486,22 @@ contract PalmeraModule is Auth, Helpers {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 rootSafe = getSafeIdBySafe(org, caller);
-        DataTypes.Safe memory disconnectSafe = safes[org][safe];
+        DataTypes.Safe memory _disconnectSafe = safes[org][safe];
         /// RootSafe usecase : Check if the safe is Member of the Tree of the caller (rootSafe)
         if (
             (
                 (!isRootSafeOf(caller, safe))
-                    && (disconnectSafe.tier != DataTypes.Tier.REMOVED)
+                    && (_disconnectSafe.tier != DataTypes.Tier.REMOVED)
             )
                 || (
                     (!isPendingRemove(rootSafe, safe))
-                        && (disconnectSafe.tier == DataTypes.Tier.REMOVED)
+                        && (_disconnectSafe.tier == DataTypes.Tier.REMOVED)
                 )
         ) {
             revert Errors.NotAuthorizedDisconnectChildrenSafe();
         }
         /// In case Root Safe Disconnect Safe without removeSafe Before
-        if (disconnectSafe.tier != DataTypes.Tier.REMOVED) {
+        if (_disconnectSafe.tier != DataTypes.Tier.REMOVED) {
             removeSafe(safe);
         }
         // Disconnect Safe
@@ -608,7 +616,6 @@ contract PalmeraModule is Auth, Helpers {
             _authority.setUserRole(
                 oldSuper.safe, uint8(DataTypes.Role.SUPER_SAFE), false
             );
-            /// TODO: verify if the oldSuper need or not the Safe Lead role (after MVP)
         }
 
         /// Update safe superSafe
