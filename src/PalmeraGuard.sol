@@ -29,7 +29,9 @@ contract PalmeraGuard is BaseGuard, Context {
     }
 
     /// @notice Fallback function: called when someone sends ETH or calls a function that does not exist
-    fallback() external {}
+    fallback() external {
+        revert("Fallback function called");
+    }
 
     /// @notice Receive function: called when someone sends ETH to the contract without data
     receive() external payable {
