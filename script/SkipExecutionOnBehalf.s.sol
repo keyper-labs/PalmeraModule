@@ -219,7 +219,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
-        // ttry to encode the end of the signature, from EOA random the internal data to the Wrapper of
+        // try to encode the end of the signature, from EOA random the internal data to the Wrapper of
         // Execution On Behalf, with a rogue caller and that is secondary squad A1 over Root Safe
         bytes memory internalData = abi.encodeWithSignature(
             "execTransactionOnBehalf(bytes32,address,address,address,uint256,bytes,uint8,bytes)",
@@ -467,7 +467,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
 
-        // vm.expectRevert("GS020"); // GS020: Signatures data too short
+        // GS020: Invalid signatures provided
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
@@ -523,7 +523,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
 
-        // vm.expectRevert("GS026"); // GS026: Invalid owner provided
+
+        // GS026: Invalid signatures provided
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
@@ -581,7 +582,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         );
 
         setGnosisSafe(safeSubSquadA1Addr);
-        // vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector); // NotAuthorizedExecOnBehalf: Caller is not authorized to execute on behalf
+        // NotAuthorizedExecOnBehalf: Caller is not authorized to execute on behalf
         bool result = execTransactionOnBehalfTx(
             orgHash,
             safeSubSquadA1Addr,
@@ -625,7 +626,8 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
 
-        // vm.expectRevert("GS013"); // GS026/GS013: Invalid owner provided
+
+        // GS013: Invalid signatures provided
         execTransactionOnBehalfTx(
             orgHash,
             rootAddr,
@@ -639,16 +641,16 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         vm.stopBroadcast();
     }
 
-    // // Revert ZeroAddressProvided() execTransactionOnBehalf when arg "to" is address(0)
-    // // Scenario 1
-    // // Caller: rootAddr (org)
-    // // Caller Type: rootSafe
-    // // Caller Role: ROOT_SAFE
-    // // TargerSafe: safeSquadA1
-    // // TargetSafe Type: safe as a Child
-    // //            rootSafe -----------
-    // //               |                |
-    // //           safeSquadA1 <--------
+    // Revert ZeroAddressProvided() execTransactionOnBehalf when arg "to" is address(0)
+    // Scenario 1
+    // Caller: rootAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeSquadA1
+    // TargetSafe Type: safe as a Child
+    //            rootSafe -----------
+    //               |                |
+    //           safeSquadA1 <--------
     function testRevertInvalidAddressProvidedExecTransactionOnBehalfScenarioOne(
     ) public {
         vm.startBroadcast();
@@ -674,7 +676,6 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
         // Execute on behalf function with invalid receiver
-        // vm.expectRevert(Errors.InvalidAddressProvided.selector); // InvalidAddressProvided: Invalid address provided
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
@@ -688,16 +689,16 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         vm.stopBroadcast();
     }
 
-    // // Revert ZeroAddressProvided() execTransactionOnBehalf when param "targetSafe" is address(0)
-    // // Scenario 2
-    // // Caller: rootAddr (org)
-    // // Caller Type: rootSafe
-    // // Caller Role: ROOT_SAFE
-    // // TargerSafe: safeSquadA1
-    // // TargetSafe Type: safe as a Child
-    // //            rootSafe -----------
-    // //               |                |
-    // //           safeSquadA1 <--------
+    // Revert ZeroAddressProvided() execTransactionOnBehalf when param "targetSafe" is address(0)
+    // Scenario 2
+    // Caller: rootAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeSquadA1
+    // TargetSafe Type: safe as a Child
+    //            rootSafe -----------
+    //               |                |
+    //           safeSquadA1 <--------
     function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo()
         public
     {
@@ -723,12 +724,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             Enum.Operation(0)
         );
 
-        // Execute on behalf function from a not authorized caller
-        // vm.expectRevert(
-        //     abi.encodeWithSelector(
-        //         Errors.InvalidGnosisSafe.selector, address(0)
-        //     )
-        // ); // InvalidGnosisSafe: Invalid Gnosis Safe
+        // InvalidGnosisSafe: Invalid Gnosis Safe
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
@@ -742,16 +738,16 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         vm.stopBroadcast();
     }
 
-    // // Revert ZeroAddressProvided() execTransactionOnBehalf when param "org" is address(0)
-    // // Scenario 3
-    // // Caller: rootAddr (org)
-    // // Caller Type: rootSafe
-    // // Caller Role: ROOT_SAFE
-    // // TargerSafe: safeSquadA1
-    // // TargetSafe Type: safe as a Child
-    // //            rootSafe -----------
-    // //               |                |
-    // //           safeSquadA1 <--------
+    // Revert ZeroAddressProvided() execTransactionOnBehalf when param "org" is address(0)
+    // Scenario 3
+    // Caller: rootAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeSquadA1
+    // TargetSafe Type: safe as a Child
+    //            rootSafe -----------
+    //               |                |
+    //           safeSquadA1 <--------
     function testRevertOrgNotRegisteredExecTransactionOnBehalfScenarioThree()
         public
     {
@@ -776,10 +772,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
-        // Execute on behalf function from a not authorized caller
-        // vm.expectRevert(
-        //     abi.encodeWithSelector(Errors.OrgNotRegistered.selector, address(0))
-        // ); // OrgNotRegistered: Org not registered
+        // OrgNotRegistered: Org not registered
         keyperModule.execTransactionOnBehalf(
             bytes32(0),
             rootAddr,
@@ -793,12 +786,12 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         vm.stopBroadcast();
     }
 
-    // // Revert InvalidGnosisSafe() execTransactionOnBehalf : when param "targetSafe" is not a safe
-    // // Caller: rootAddr (org)
-    // // Caller Type: rootSafe
-    // // Caller Role: ROOT_SAFE, SAFE_LEAD
-    // // TargerSafe: fakeTargetSafe
-    // // TargetSafe Type: EOA
+    // Revert InvalidGnosisSafe() execTransactionOnBehalf : when param "targetSafe" is not a safe
+    // Caller: rootAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SAFE_LEAD
+    // TargerSafe: fakeTargetSafe
+    // TargetSafe Type: EOA
     function testRevertInvalidGnosisSafeExecTransactionOnBehalf() public {
         vm.startBroadcast();
         (uint256 rootId, uint256 safeSquadA1) =
@@ -822,12 +815,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
-        // Execute on behalf function from a not authorized caller
-        // vm.expectRevert(
-        //     abi.encodeWithSelector(
-        //         Errors.InvalidGnosisSafe.selector, fakeTargetSafe
-        //     )
-        // ); // InvalidGnosisSafe: Invalid Gnosis Safe
+        // InvalidGnosisSafe: Invalid Gnosis Safe
         keyperModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
