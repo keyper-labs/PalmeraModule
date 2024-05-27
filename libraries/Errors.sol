@@ -6,9 +6,9 @@ import {DataTypes} from "./DataTypes.sol";
 /// @title Library DataTypes
 /// @custom:security-contact general@palmeradao.xyz
 library Errors {
-    /// @notice Error codes for the Keyper module
-    /// @dev Errors Keyper Modules
-    /// @dev Error messages when the Org Hash (On-chain Organisation) is not Registered
+    /// @notice Error codes for the Palmera module
+    /// @dev Errors Palmera Modules
+    /// @dev Error messages when the Org Hash (Dao's name) is not Registered
     error OrgNotRegistered(bytes32 org);
     /// @dev Error messages when the Squad(`squad`) is not Registered
     error SquadNotRegistered(uint256 squad);
@@ -28,8 +28,8 @@ library Errors {
     error CannotDisconnectedSafeBeforeRemoveChild(uint256 children);
     /// @dev Error messages when try to remove Squad before remove it's children, and show the Squad's children Squad Id's
     error CannotRemoveSquadBeforeRemoveChild(uint256 children);
-    error CannotDisableKeyperModule(address module);
-    error CannotDisableKeyperGuard(address guard);
+    error CannotDisablePalmeraModule(address module);
+    error CannotDisablePalmeraGuard(address guard);
     error SquadAlreadyRemoved();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
     error NotAuthorizedAsNotSafeLead();
@@ -46,7 +46,7 @@ library Errors {
     error OwnerNotFound();
     /// @dev Error messages the Owner Already Exist into the Safe Owners
     error OwnerAlreadyExists();
-    /// @dev Error messages when Fail try to create a new Safe with the Keyper Module Enabled
+    /// @dev Error messages when Fail try to create a new Safe with the Palmera Module Enabled
     error CreateSafeProxyFailed();
     /// @dev Error messages when Invalid Threshold is provided
     error InvalidThreshold();

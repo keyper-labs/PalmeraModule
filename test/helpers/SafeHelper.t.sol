@@ -16,9 +16,9 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     GnosisSafe public safeWallet;
     DeploySafeFactory public safeFactory;
 
-    address public keyperRolesAddr;
-    address public keyperModuleAddr;
-    address public keyperGuardAddr;
+    address public palmeraRolesAddr;
+    address public palmeraModuleAddr;
+    address public palmeraGuardAddr;
     address public safeMasterCopy;
 
     uint256 public salt;
@@ -102,29 +102,29 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         return address(safeWallet);
     }
 
-    /// function to set keyperRoles address
-    /// @param keyperRoles keyperRoles address
-    function setKeyperRoles(address keyperRoles) public {
-        keyperRolesAddr = keyperRoles;
+    /// function to set palmeraRoles address
+    /// @param palmeraRoles palmeraRoles address
+    function setPalmeraRoles(address palmeraRoles) public {
+        palmeraRolesAddr = palmeraRoles;
     }
 
-    /// function to set keyperModule address
-    /// @param keyperModule keyperModule address
-    function setKeyperModule(address keyperModule) public virtual {
-        keyperModuleAddr = keyperModule;
+    /// function to set palmeraModule address
+    /// @param palmeraModule palmeraModule address
+    function setPalmeraModule(address palmeraModule) public virtual {
+        palmeraModuleAddr = palmeraModule;
     }
 
-    /// function to set keyperGuard address
-    /// @param keyperGuard keyperGuard address
-    function setKeyperGuard(address keyperGuard) public {
-        keyperGuardAddr = keyperGuard;
+    /// function to set palmeraGuard address
+    /// @param palmeraGuard palmeraGuard address
+    function setPalmeraGuard(address palmeraGuard) public {
+        palmeraGuardAddr = palmeraGuard;
     }
 
-    /// function to create Safe with Keyper and send module enabled tx
+    /// function to create Safe with Palmera and send module enabled tx
     /// @param numberOwners number of owners
     /// @param threshold threshold
     /// @return address of the new safe
-    function newKeyperSafe(uint256 numberOwners, uint256 threshold)
+    function newPalmeraSafe(uint256 numberOwners, uint256 threshold)
         public
         virtual
         returns (address)
@@ -137,7 +137,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
             countUsed + numberOwners <= privateKeyOwners.length,
             "No private keys available"
         );
-        require(keyperModuleAddr != address(0), "Keyper module not set");
+        require(palmeraModuleAddr != address(0), "Palmera module not set");
         address[] memory owners = new address[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
             owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
@@ -169,11 +169,11 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         return address(safeWallet);
     }
 
-    /// fucntion to create Safe with Keyper and send module enabled tx
+    /// fucntion to create Safe with Palmera and send module enabled tx
     /// @param numberOwners number of owners
     /// @param threshold threshold
     /// @return address of the new safe
-    function newKeyperSafeWithPKOwners(uint256 numberOwners, uint256 threshold)
+    function newPalmeraSafeWithPKOwners(uint256 numberOwners, uint256 threshold)
         public
         virtual
         returns (address, uint256[] memory)
@@ -187,7 +187,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
             countUsed + numberOwners <= privateKeyOwners.length,
             "No private keys available"
         );
-        require(keyperModuleAddr != address(0), "Keyper module not set");
+        require(palmeraModuleAddr != address(0), "Palmera module not set");
         address[] memory owners = new address[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
             ownersPK[i] = privateKeyOwners[i + countUsed];
@@ -282,7 +282,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     function enableModuleTx(address safe) public returns (bool) {
         /// Create enableModule calldata
         bytes memory data =
-            abi.encodeWithSignature("enableModule(address)", keyperModuleAddr);
+            abi.encodeWithSignature("enableModule(address)", palmeraModuleAddr);
 
         /// Create enable module safe tx
         Transaction memory mockTx = createDefaultTx(safe, data);
@@ -297,7 +297,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     function enableGuardTx(address safe) public returns (bool) {
         /// Create enableModule calldata
         bytes memory data =
-            abi.encodeWithSignature("setGuard(address)", keyperGuardAddr);
+            abi.encodeWithSignature("setGuard(address)", palmeraGuardAddr);
 
         /// Create enable module safe tx
         Transaction memory mockTx = createDefaultTx(safe, data);
@@ -316,7 +316,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     {
         /// Create enableModule calldata
         bytes memory data = abi.encodeWithSignature(
-            "disableModule(address,address)", prevModule, keyperModuleAddr
+            "disableModule(address,address)", prevModule, palmeraModuleAddr
         );
 
         /// Create enable module safe tx
@@ -374,7 +374,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
             abi.encodeWithSignature("registerOrg(string)", orgName);
 
         /// Create module safe tx
-        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
 
@@ -393,7 +393,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         bytes memory data =
             abi.encodeWithSignature("addSquad(uint256,string)", superSafe, name);
         /// Create module safe tx
-        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
@@ -412,7 +412,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
             "createRootSafeSquad(address,string)", newRootSafe, name
         );
         /// Create module safe tx
-        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
@@ -426,7 +426,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         bytes memory data =
             abi.encodeWithSignature("removeSquad(uint256)", squad);
         /// Create module safe tx
-        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
@@ -438,7 +438,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     function createRemoveWholeTreeTx() public returns (bool) {
         bytes memory data = abi.encodeWithSignature("removeWholeTree()");
         /// Create module safe tx
-        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
@@ -452,7 +452,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         bytes memory data =
             abi.encodeWithSignature("promoteRoot(uint256)", squad);
         /// Create module safe tx
-        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
@@ -475,7 +475,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
             "setRole(uint8,address,uint256,bool)", role, user, squad, enabled
         );
         /// Create module tx
-        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
@@ -489,7 +489,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         bytes memory data =
             abi.encodeWithSignature("disconnectSafe(uint256)", squad);
         /// Create module safe tx
-        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
@@ -529,14 +529,14 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         );
         /// Create module safe tx
         Transaction memory mockTx =
-            createDefaultTx(keyperModuleAddr, internalData);
+            createDefaultTx(palmeraModuleAddr, internalData);
         /// Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
         return result;
     }
 
-    /// function to remove a owner of a safe, into the keyper module
+    /// function to remove a owner of a safe, into the palmera module
     /// @param prevOwner previous owner
     /// @param ownerRemoved owner to remove
     /// @param threshold threshold
@@ -559,14 +559,14 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
             org
         );
         /// Create module safe tx
-        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
         return result;
     }
 
-    /// function to add a owner of a safe, into the keyper module
+    /// function to add a owner of a safe, into the palmera module
     /// @param ownerAdded owner to add
     /// @param threshold threshold
     /// @param targetSafe target safe
@@ -586,14 +586,14 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
             org
         );
         /// Create module safe tx
-        Transaction memory mockTx = createDefaultTx(keyperModuleAddr, data);
+        Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
         bytes memory signatures = encodeSignaturesModuleSafeTx(mockTx);
         bool result = executeSafeTx(mockTx, signatures);
         return result;
     }
 
-    /// function to encode signatures of a Safe transaction to enable a keyper module
+    /// function to encode signatures of a Safe transaction to enable a palmera module
     /// @param mockTx Safe transaction
     /// @return bytes signatures
     function encodeSignaturesModuleSafeTx(Transaction memory mockTx)

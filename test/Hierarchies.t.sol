@@ -16,7 +16,7 @@ contract Hierarchies is DeployHelper {
         bool result = safeHelper.registerOrgTx(orgName);
         assertEq(result, true);
         assertEq(orgHash, keccak256(abi.encodePacked(orgName)));
-        uint256 rootId = keyperModule.getSquadIdBySafe(
+        uint256 rootId = palmeraModule.getSquadIdBySafe(
             orgHash, address(safeHelper.safeWallet())
         );
         (
@@ -26,16 +26,16 @@ contract Hierarchies is DeployHelper {
             address safe,
             uint256[] memory child,
             uint256 superSafe
-        ) = keyperModule.getSquadInfo(rootId);
+        ) = palmeraModule.getSquadInfo(rootId);
         assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
         assertEq(name, orgName);
         assertEq(lead, address(0));
         assertEq(safe, address(safeHelper.safeWallet()));
         assertEq(superSafe, 0);
         assertEq(child.length, 0);
-        assertEq(keyperModule.isOrgRegistered(orgHash), true);
+        assertEq(palmeraModule.isOrgRegistered(orgHash), true);
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 safe, uint8(DataTypes.Role.ROOT_SAFE)
             ),
             true
@@ -45,7 +45,7 @@ contract Hierarchies is DeployHelper {
     /// @notice Test Add Squad to Root Organisation
     function testAddSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         (
             DataTypes.Tier tier,
             string memory squadName,
@@ -53,7 +53,7 @@ contract Hierarchies is DeployHelper {
             address safe,
             uint256[] memory child,
             uint256 superSafe
-        ) = keyperModule.getSquadInfo(squadIdA1);
+        ) = palmeraModule.getSquadInfo(squadIdA1);
 
         assertEq(uint256(tier), uint256(DataTypes.Tier.SQUAD));
         assertEq(squadName, squadA1Name);
@@ -62,19 +62,19 @@ contract Hierarchies is DeployHelper {
         assertEq(child.length, 0);
         assertEq(superSafe, rootId);
 
-        address squadAddr = keyperModule.getSquadSafeAddress(squadIdA1);
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address squadAddr = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
 
-        assertEq(keyperModule.isRootSafeOf(rootAddr, squadIdA1), true);
+        assertEq(palmeraModule.isRootSafeOf(rootAddr, squadIdA1), true);
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 squadAddr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
 
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 rootAddr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
@@ -85,7 +85,7 @@ contract Hierarchies is DeployHelper {
     function testExpectInvalidSquadId() public {
         uint256 orgIdNotRegistered = 2;
         vm.expectRevert(Errors.InvalidSquadId.selector);
-        keyperModule.addSquad(orgIdNotRegistered, squadA1Name);
+        palmeraModule.addSquad(orgIdNotRegistered, squadA1Name);
     }
 
     /// @notice Test Expect Squad Not Registered
@@ -96,36 +96,36 @@ contract Hierarchies is DeployHelper {
                 Errors.SquadNotRegistered.selector, orgIdNotRegistered
             )
         );
-        keyperModule.addSquad(orgIdNotRegistered, squadA1Name);
+        palmeraModule.addSquad(orgIdNotRegistered, squadA1Name);
     }
 
     /// @notice Test Add SubSquad to Squad
     function testAddSubSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
-        address squadBaddr = safeHelper.newKeyperSafe(4, 2);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        address squadBaddr = safeHelper.newPalmeraSafe(4, 2);
         vm.startPrank(squadBaddr);
-        uint256 squadIdB = keyperModule.addSquad(squadIdA1, squadBName);
-        assertEq(keyperModule.isTreeMember(rootId, squadIdA1), true);
-        assertEq(keyperModule.isSuperSafe(rootId, squadIdA1), true);
-        assertEq(keyperModule.isTreeMember(squadIdA1, squadIdB), true);
-        assertEq(keyperModule.isSuperSafe(squadIdA1, squadIdB), true);
+        uint256 squadIdB = palmeraModule.addSquad(squadIdA1, squadBName);
+        assertEq(palmeraModule.isTreeMember(rootId, squadIdA1), true);
+        assertEq(palmeraModule.isSuperSafe(rootId, squadIdA1), true);
+        assertEq(palmeraModule.isTreeMember(squadIdA1, squadIdB), true);
+        assertEq(palmeraModule.isSuperSafe(squadIdA1, squadIdB), true);
     }
 
     /// @notice Test an Org with Tree Levels of Tree Member
     function testTreeOrgsTreeMember() public {
         (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1,,) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
-        assertEq(keyperModule.isTreeMember(rootId, squadIdA1), true);
-        assertEq(keyperModule.isTreeMember(squadIdA1, subSquadIdA1), true);
+        assertEq(palmeraModule.isTreeMember(rootId, squadIdA1), true);
+        assertEq(palmeraModule.isTreeMember(squadIdA1, subSquadIdA1), true);
         (uint256 rootId2, uint256 squadIdB) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(root2Name, squadBName);
-        assertEq(keyperModule.isTreeMember(rootId2, squadIdB), true);
-        assertEq(keyperModule.isTreeMember(rootId2, rootId), false);
-        assertEq(keyperModule.isTreeMember(rootId2, squadIdA1), false);
-        assertEq(keyperModule.isTreeMember(rootId, squadIdB), false);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(root2Name, squadBName);
+        assertEq(palmeraModule.isTreeMember(rootId2, squadIdB), true);
+        assertEq(palmeraModule.isTreeMember(rootId2, rootId), false);
+        assertEq(palmeraModule.isTreeMember(rootId2, squadIdA1), false);
+        assertEq(palmeraModule.isTreeMember(rootId, squadIdB), false);
     }
 
     /// @notice Test if a Squad is Super Safe
@@ -135,16 +135,18 @@ contract Hierarchies is DeployHelper {
             uint256 squadIdA1,
             uint256 subSquadIdA1,
             uint256 subsubSquadIdA1
-        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+        ) = palmeraSafeBuilder.setupOrgFourTiersTree(
             orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
         );
-        assertEq(keyperModule.isSuperSafe(rootId, squadIdA1), true);
-        assertEq(keyperModule.isSuperSafe(squadIdA1, subSquadIdA1), true);
-        assertEq(keyperModule.isSuperSafe(subSquadIdA1, subsubSquadIdA1), true);
-        assertEq(keyperModule.isSuperSafe(subsubSquadIdA1, subSquadIdA1), false);
-        assertEq(keyperModule.isSuperSafe(subsubSquadIdA1, squadIdA1), false);
-        assertEq(keyperModule.isSuperSafe(subsubSquadIdA1, rootId), false);
-        assertEq(keyperModule.isSuperSafe(subSquadIdA1, squadIdA1), false);
+        assertEq(palmeraModule.isSuperSafe(rootId, squadIdA1), true);
+        assertEq(palmeraModule.isSuperSafe(squadIdA1, subSquadIdA1), true);
+        assertEq(palmeraModule.isSuperSafe(subSquadIdA1, subsubSquadIdA1), true);
+        assertEq(
+            palmeraModule.isSuperSafe(subsubSquadIdA1, subSquadIdA1), false
+        );
+        assertEq(palmeraModule.isSuperSafe(subsubSquadIdA1, squadIdA1), false);
+        assertEq(palmeraModule.isSuperSafe(subsubSquadIdA1, rootId), false);
+        assertEq(palmeraModule.isSuperSafe(subSquadIdA1, squadIdA1), false);
     }
 
     /// @notice Test Update Super Safe
@@ -155,50 +157,50 @@ contract Hierarchies is DeployHelper {
             uint256 squadIdB,
             uint256 subSquadIdA1,
             uint256 subsubSquadIdA1
-        ) = keyperSafeBuilder.setUpBaseOrgTree(
+        ) = palmeraSafeBuilder.setUpBaseOrgTree(
             orgName, squadA1Name, squadBName, subSquadA1Name, subSubSquadA1Name
         );
-        address rootSafe = keyperModule.getSquadSafeAddress(rootId);
-        address squadA1 = keyperModule.getSquadSafeAddress(squadIdA1);
-        address squadBB = keyperModule.getSquadSafeAddress(squadIdB);
-        address subSquadA1 = keyperModule.getSquadSafeAddress(subSquadIdA1);
+        address rootSafe = palmeraModule.getSquadSafeAddress(rootId);
+        address squadA1 = palmeraModule.getSquadSafeAddress(squadIdA1);
+        address squadBB = palmeraModule.getSquadSafeAddress(squadIdB);
+        address subSquadA1 = palmeraModule.getSquadSafeAddress(subSquadIdA1);
 
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 squadA1, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 squadBB, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 subSquadA1, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
-        assertEq(keyperModule.isTreeMember(rootId, subSquadIdA1), true);
+        assertEq(palmeraModule.isTreeMember(rootId, subSquadIdA1), true);
         vm.startPrank(rootSafe);
-        keyperModule.updateSuper(subSquadIdA1, squadIdB);
+        palmeraModule.updateSuper(subSquadIdA1, squadIdB);
         vm.stopPrank();
-        assertEq(keyperModule.isSuperSafe(squadIdB, subSquadIdA1), true);
-        assertEq(keyperModule.isSuperSafe(squadIdA1, subSquadIdA1), false);
-        assertEq(keyperModule.isSuperSafe(squadIdA1, subSquadIdA1), false);
-        assertEq(keyperModule.isSuperSafe(squadIdA1, subsubSquadIdA1), false);
-        assertEq(keyperModule.isTreeMember(squadIdA1, subsubSquadIdA1), false);
-        assertEq(keyperModule.isTreeMember(squadIdB, subsubSquadIdA1), true);
+        assertEq(palmeraModule.isSuperSafe(squadIdB, subSquadIdA1), true);
+        assertEq(palmeraModule.isSuperSafe(squadIdA1, subSquadIdA1), false);
+        assertEq(palmeraModule.isSuperSafe(squadIdA1, subSquadIdA1), false);
+        assertEq(palmeraModule.isSuperSafe(squadIdA1, subsubSquadIdA1), false);
+        assertEq(palmeraModule.isTreeMember(squadIdA1, subsubSquadIdA1), false);
+        assertEq(palmeraModule.isTreeMember(squadIdB, subsubSquadIdA1), true);
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 squadA1, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
         );
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 squadBB, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
@@ -208,53 +210,53 @@ contract Hierarchies is DeployHelper {
     /// @notice Test Revert Expected when Update Super Invalid Squad Id
     function testRevertUpdateSuperInvalidSquadId() public {
         (uint256 rootId, uint256 squadIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         // Get root info
-        address rootSafe = keyperModule.getSquadSafeAddress(rootId);
+        address rootSafe = palmeraModule.getSquadSafeAddress(rootId);
 
         uint256 squadNotRegisteredId = 6;
         vm.expectRevert(Errors.InvalidSquadId.selector);
         vm.startPrank(rootSafe);
-        keyperModule.updateSuper(squadIdA1, squadNotRegisteredId);
+        palmeraModule.updateSuper(squadIdA1, squadNotRegisteredId);
     }
 
     /// @notice Test Revert Expected when Update Super if Caller is not Safe
     function testRevertUpdateSuperIfCallerIsNotSafe() public {
         (uint256 rootId, uint256 squadIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         vm.startPrank(address(0xDDD));
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, address(0xDDD))
         );
-        keyperModule.updateSuper(squadIdA1, rootId);
+        palmeraModule.updateSuper(squadIdA1, rootId);
         vm.stopPrank();
     }
 
     /// @notice Test Revert Expected when Update Super if Caller is not Part of the Org
     function testRevertUpdateSuperIfCallerNotPartofTheOrg() public {
         (uint256 rootId, uint256 squadIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         (uint256 rootId2,) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(root2Name, squadBName);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(root2Name, squadBName);
         // Get root2 info
-        address rootSafe2 = keyperModule.getSquadSafeAddress(rootId2);
+        address rootSafe2 = palmeraModule.getSquadSafeAddress(rootId2);
         vm.startPrank(rootSafe2);
         vm.expectRevert(Errors.NotAuthorizedUpdateNonChildrenSquad.selector);
-        keyperModule.updateSuper(squadIdA1, rootId);
+        palmeraModule.updateSuper(squadIdA1, rootId);
         vm.stopPrank();
     }
 
     /// @notice Test Create Squad Three Tiers Tree
     function testCreateSquadThreeTiersTree() public {
         (uint256 orgRootId, uint256 safeSquadA1Id, uint256 safeSubSquadA1Id,,) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
         address safeSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSquadA1Id);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         (
             DataTypes.Tier tier,
@@ -263,7 +265,7 @@ contract Hierarchies is DeployHelper {
             address safe,
             uint256[] memory child,
             uint256 superSafe
-        ) = keyperModule.getSquadInfo(safeSquadA1Id);
+        ) = palmeraModule.getSquadInfo(safeSquadA1Id);
 
         assertEq(uint8(tier), uint8(DataTypes.Tier.SQUAD));
         assertEq(name, squadA1Name);
@@ -275,7 +277,7 @@ contract Hierarchies is DeployHelper {
 
         /// Reuse the local-variable for avoid stack too deep error
         (tier, name, lead, safe, child, superSafe) =
-            keyperModule.getSquadInfo(safeSubSquadA1Id);
+            palmeraModule.getSquadInfo(safeSubSquadA1Id);
 
         assertEq(uint8(tier), uint8(DataTypes.Tier.SQUAD));
         assertEq(name, subSquadA1Name);
@@ -292,37 +294,37 @@ contract Hierarchies is DeployHelper {
             uint256 squadIdA1,
             uint256 subSquadIdA1,
             uint256 subSubSquadIdA1
-        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+        ) = palmeraSafeBuilder.setupOrgFourTiersTree(
             orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
         );
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(subSquadIdA1);
+            palmeraModule.getSquadSafeAddress(subSquadIdA1);
         address safeSubSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(subSubSquadIdA1);
+            palmeraModule.getSquadSafeAddress(subSubSquadIdA1);
 
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 rootAddr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 safeSquadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 safeSubSquadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
         );
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 safeSubSubSquadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             false
@@ -332,9 +334,9 @@ contract Hierarchies is DeployHelper {
     /// @notice Test Revert Expected when Add Squad Already Registered
     function testRevertSafeAlreadyRegisteredAddSquad() public {
         (, uint256 squadIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address safeSubSquadA1 = safeHelper.newKeyperSafe(2, 1);
+        address safeSubSquadA1 = safeHelper.newPalmeraSafe(2, 1);
         safeHelper.updateSafeInterface(safeSubSquadA1);
 
         bool result = safeHelper.createAddSquadTx(squadIdA1, subSquadA1Name);
@@ -346,7 +348,7 @@ contract Hierarchies is DeployHelper {
                 Errors.SafeAlreadyRegistered.selector, safeSubSquadA1
             )
         );
-        keyperModule.addSquad(squadIdA1, subSquadA1Name);
+        palmeraModule.addSquad(squadIdA1, subSquadA1Name);
 
         vm.deal(safeSubSquadA1, 1 ether);
         safeHelper.updateSafeInterface(safeSubSquadA1);
@@ -359,41 +361,41 @@ contract Hierarchies is DeployHelper {
     /// @notice Test Reverted Expected if Try to Update Depth Tree Limit with Invalid Value
     function testRevertIfTryInvalidLimit() public {
         (uint256 rootId,) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
         vm.startPrank(rootAddr);
         vm.expectRevert(Errors.InvalidLimit.selector);
-        keyperModule.updateDepthTreeLimit(0);
+        palmeraModule.updateDepthTreeLimit(0);
         vm.expectRevert(Errors.InvalidLimit.selector);
-        keyperModule.updateDepthTreeLimit(7);
+        palmeraModule.updateDepthTreeLimit(7);
         vm.expectRevert(Errors.InvalidLimit.selector);
-        keyperModule.updateDepthTreeLimit(51); // 50 is the max limit
+        palmeraModule.updateDepthTreeLimit(51); // 50 is the max limit
         vm.stopPrank();
     }
 
     /// @notice Test Reverted Expected if Try to Update Depth Tree Limit from Non Root Safe
     function testRevertIfTryNotRootSafe() public {
         (, uint256 squadA1Id) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
-        address squadA = keyperModule.getSquadSafeAddress(squadA1Id);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        address squadA = palmeraModule.getSquadSafeAddress(squadA1Id);
         vm.startPrank(squadA);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
-        keyperModule.updateDepthTreeLimit(10);
+        palmeraModule.updateDepthTreeLimit(10);
         vm.stopPrank();
 
-        (,,, uint256 lastSubSquad) = keyperSafeBuilder.setupOrgFourTiersTree(
+        (,,, uint256 lastSubSquad) = palmeraSafeBuilder.setupOrgFourTiersTree(
             org2Name, squadA2Name, subSquadA1Name, subSubSquadA1Name
         );
-        address LastSubSquad = keyperModule.getSquadSafeAddress(lastSubSquad);
+        address LastSubSquad = palmeraModule.getSquadSafeAddress(lastSubSquad);
         vm.startPrank(LastSubSquad);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.InvalidRootSafe.selector, LastSubSquad
             )
         );
-        keyperModule.updateDepthTreeLimit(10);
+        palmeraModule.updateDepthTreeLimit(10);
         vm.stopPrank();
     }
 
@@ -404,7 +406,7 @@ contract Hierarchies is DeployHelper {
             uint256 squadIdA1,
             uint256 subSquadA,
             uint256 subSubSquadA
-        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+        ) = palmeraSafeBuilder.setupOrgFourTiersTree(
             org2Name, squadA2Name, subSquadA1Name, subSubSquadA1Name
         );
         // Array of Address for the subSquads
@@ -412,10 +414,10 @@ contract Hierarchies is DeployHelper {
         uint256[] memory subSquadAid = new uint256[](9);
 
         // Assig the Address to first two subSquads
-        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootId);
-        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
-        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
-        subSquadAaddr[3] = keyperModule.getSquadSafeAddress(subSubSquadA);
+        subSquadAaddr[0] = palmeraModule.getSquadSafeAddress(rootId);
+        subSquadAaddr[1] = palmeraModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = palmeraModule.getSquadSafeAddress(subSquadA);
+        subSquadAaddr[3] = palmeraModule.getSquadSafeAddress(subSubSquadA);
 
         // Assig the Id to first two subSquads
         subSquadAid[0] = rootId;
@@ -424,26 +426,26 @@ contract Hierarchies is DeployHelper {
         subSquadAid[3] = subSubSquadA;
 
         /// depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
-        uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        bytes32 org = palmeraModule.getOrgHashBySafe(subSquadAaddr[0]);
+        uint256 depthTreeLimit = palmeraModule.depthTreeLimit(org) + 1;
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newPalmeraSafe(3, 1);
             // Start Prank
             vm.startPrank(subSquadAaddr[i]);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 subSquadAid[i] =
-                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
+                    palmeraModule.addSquad(subSquadAid[i - 1], squadBName);
             } else {
                 vm.expectRevert(
                     abi.encodeWithSelector(
                         Errors.TreeDepthLimitReached.selector, i
                     )
                 );
-                keyperModule.addSquad(subSquadAid[i - 1], squadBName);
-                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
+                palmeraModule.addSquad(subSquadAid[i - 1], squadBName);
+                assertEq(palmeraModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
             }
@@ -458,7 +460,7 @@ contract Hierarchies is DeployHelper {
             uint256 squadIdA1,
             uint256 subSquadA,
             uint256 subSubSquadA
-        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+        ) = palmeraSafeBuilder.setupOrgFourTiersTree(
             org2Name, squadA2Name, subSquadA1Name, subSubSquadA1Name
         );
         // Array of Address for the subSquads
@@ -466,10 +468,10 @@ contract Hierarchies is DeployHelper {
         uint256[] memory subSquadAid = new uint256[](16);
 
         // Assig the Address to first two subSquads
-        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootId);
-        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
-        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
-        subSquadAaddr[3] = keyperModule.getSquadSafeAddress(subSubSquadA);
+        subSquadAaddr[0] = palmeraModule.getSquadSafeAddress(rootId);
+        subSquadAaddr[1] = palmeraModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = palmeraModule.getSquadSafeAddress(subSquadA);
+        subSquadAaddr[3] = palmeraModule.getSquadSafeAddress(subSubSquadA);
 
         // Assig the Id to first two subSquads
         subSquadAid[0] = rootId;
@@ -478,54 +480,54 @@ contract Hierarchies is DeployHelper {
         subSquadAid[3] = subSubSquadA;
 
         // depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
-        uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        bytes32 org = palmeraModule.getOrgHashBySafe(subSquadAaddr[0]);
+        uint256 depthTreeLimit = palmeraModule.depthTreeLimit(org) + 1;
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newPalmeraSafe(3, 1);
             // Start Prank
             vm.startPrank(subSquadAaddr[i]);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 subSquadAid[i] =
-                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
+                    palmeraModule.addSquad(subSquadAid[i - 1], squadBName);
             } else {
                 vm.expectRevert(
                     abi.encodeWithSelector(
                         Errors.TreeDepthLimitReached.selector, i
                     )
                 );
-                keyperModule.addSquad(subSquadAid[i - 1], squadBName);
-                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
+                palmeraModule.addSquad(subSquadAid[i - 1], squadBName);
+                assertEq(palmeraModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
             }
             vm.stopPrank();
         }
         vm.startPrank(subSquadAaddr[0]);
-        keyperModule.updateDepthTreeLimit(15);
+        palmeraModule.updateDepthTreeLimit(15);
         vm.stopPrank();
 
         // Update depth Tree Lmit by org
-        depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        depthTreeLimit = palmeraModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subSquadAaddr[j] = safeHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[j] = safeHelper.newPalmeraSafe(3, 1);
             // Start Prank
             vm.startPrank(subSquadAaddr[j]);
             // Add the new Safe as a subSquad
             if (j != 15) {
                 subSquadAid[j] =
-                    keyperModule.addSquad(subSquadAid[j - 1], squadBName);
+                    palmeraModule.addSquad(subSquadAid[j - 1], squadBName);
             } else {
                 vm.expectRevert(
                     abi.encodeWithSelector(
                         Errors.TreeDepthLimitReached.selector, j
                     )
                 );
-                keyperModule.addSquad(subSquadAid[j - 1], squadBName);
-                assertEq(keyperModule.isLimitLevel(subSquadAid[j - 1]), true);
+                palmeraModule.addSquad(subSquadAid[j - 1], squadBName);
+                assertEq(palmeraModule.isLimitLevel(subSquadAid[j - 1]), true);
                 console.log("j: ", j);
                 console.log("New Max Depth Limit Reached");
             }
@@ -542,7 +544,7 @@ contract Hierarchies is DeployHelper {
             ,
             uint256 subSquadA,
             uint256 subSquadB
-        ) = keyperSafeBuilder.setupTwoRootOrgWithOneSquadAndOneChildEach(
+        ) = palmeraSafeBuilder.setupTwoRootOrgWithOneSquadAndOneChildEach(
             orgName,
             squadA1Name,
             org2Name,
@@ -555,9 +557,9 @@ contract Hierarchies is DeployHelper {
         uint256[] memory subSquadAid = new uint256[](9);
 
         // Assig the Address to first two subSquads
-        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootIdA);
-        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
-        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
+        subSquadAaddr[0] = palmeraModule.getSquadSafeAddress(rootIdA);
+        subSquadAaddr[1] = palmeraModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = palmeraModule.getSquadSafeAddress(subSquadA);
 
         // Assig the Id to first two subSquads
         subSquadAid[0] = rootIdA;
@@ -565,22 +567,22 @@ contract Hierarchies is DeployHelper {
         subSquadAid[2] = subSquadA;
 
         // Address of Root B
-        address rootAddrB = keyperModule.getSquadSafeAddress(rootIdB);
+        address rootAddrB = palmeraModule.getSquadSafeAddress(rootIdB);
 
         /// depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
-        uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        bytes32 org = palmeraModule.getOrgHashBySafe(subSquadAaddr[0]);
+        uint256 depthTreeLimit = palmeraModule.depthTreeLimit(org) + 1;
         console.log("depthTreeLimit: ", depthTreeLimit);
 
         for (uint256 i = 3; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
                 vm.startPrank(subSquadAaddr[i]);
                 subSquadAid[i] =
-                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
+                    palmeraModule.addSquad(subSquadAid[i - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootAddrB);
@@ -589,8 +591,8 @@ contract Hierarchies is DeployHelper {
                         Errors.TreeDepthLimitReached.selector, i
                     )
                 );
-                keyperModule.updateSuper(subSquadB, subSquadAid[i - 1]);
-                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
+                palmeraModule.updateSuper(subSquadB, subSquadAid[i - 1]);
+                assertEq(palmeraModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
                 vm.stopPrank();
@@ -609,7 +611,7 @@ contract Hierarchies is DeployHelper {
             ,
             uint256 subSquadA,
             uint256 subSquadB
-        ) = keyperSafeBuilder.setupTwoRootOrgWithOneSquadAndOneChildEach(
+        ) = palmeraSafeBuilder.setupTwoRootOrgWithOneSquadAndOneChildEach(
             orgName,
             squadA1Name,
             org2Name,
@@ -622,9 +624,9 @@ contract Hierarchies is DeployHelper {
         uint256[] memory subSquadAid = new uint256[](16);
 
         // Assig the Address to first two subSquads
-        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootIdA);
-        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
-        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
+        subSquadAaddr[0] = palmeraModule.getSquadSafeAddress(rootIdA);
+        subSquadAaddr[1] = palmeraModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = palmeraModule.getSquadSafeAddress(subSquadA);
 
         // Assig the Id to first two subSquads
         subSquadAid[0] = rootIdA;
@@ -632,21 +634,21 @@ contract Hierarchies is DeployHelper {
         subSquadAid[2] = subSquadA;
 
         // Address of Root B
-        address rootAddrB = keyperModule.getSquadSafeAddress(rootIdB);
+        address rootAddrB = palmeraModule.getSquadSafeAddress(rootIdB);
 
         /// depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
-        uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        bytes32 org = palmeraModule.getOrgHashBySafe(subSquadAaddr[0]);
+        uint256 depthTreeLimit = palmeraModule.depthTreeLimit(org) + 1;
 
         for (uint256 i = 3; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
                 vm.startPrank(subSquadAaddr[i]);
                 subSquadAid[i] =
-                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
+                    palmeraModule.addSquad(subSquadAid[i - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootAddrB);
@@ -655,28 +657,28 @@ contract Hierarchies is DeployHelper {
                         Errors.TreeDepthLimitReached.selector, i
                     )
                 );
-                keyperModule.updateSuper(subSquadB, subSquadAid[i - 1]);
-                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
+                palmeraModule.updateSuper(subSquadB, subSquadAid[i - 1]);
+                assertEq(palmeraModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
                 vm.stopPrank();
             }
         }
         vm.startPrank(subSquadAaddr[0]);
-        keyperModule.updateDepthTreeLimit(15);
+        palmeraModule.updateDepthTreeLimit(15);
         vm.stopPrank();
 
         // Update depth Tree Lmit by org
-        depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        depthTreeLimit = palmeraModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subSquadAaddr[j] = safeHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[j] = safeHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (j != 15) {
                 // Start Prank
                 vm.startPrank(subSquadAaddr[j]);
                 subSquadAid[j] =
-                    keyperModule.addSquad(subSquadAid[j - 1], squadBName);
+                    palmeraModule.addSquad(subSquadAid[j - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootAddrB);
@@ -685,8 +687,8 @@ contract Hierarchies is DeployHelper {
                         Errors.TreeDepthLimitReached.selector, j
                     )
                 );
-                keyperModule.updateSuper(subSquadB, subSquadAid[j - 1]);
-                assertEq(keyperModule.isLimitLevel(subSquadAid[j - 1]), true);
+                palmeraModule.updateSuper(subSquadB, subSquadAid[j - 1]);
+                assertEq(palmeraModule.isLimitLevel(subSquadAid[j - 1]), true);
                 console.log("j: ", j);
                 console.log("New Max Depth Limit Reached");
                 vm.stopPrank();
@@ -701,22 +703,22 @@ contract Hierarchies is DeployHelper {
             uint256 squadIdA1,
             uint256 subSquadA,
             uint256 subSubSquadA
-        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+        ) = palmeraSafeBuilder.setupOrgFourTiersTree(
             org2Name, squadA2Name, subSquadA1Name, subSubSquadA1Name
         );
 
         (uint256 rootId2, uint256 squadB) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadBName);
-        address rootId2Addr = keyperModule.getSquadSafeAddress(rootId2);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadBName);
+        address rootId2Addr = palmeraModule.getSquadSafeAddress(rootId2);
         // Array of Address for the subSquads
         address[] memory subSquadAaddr = new address[](9);
         uint256[] memory subSquadAid = new uint256[](9);
 
         // Assig the Address to first two subSquads
-        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootId);
-        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
-        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
-        subSquadAaddr[3] = keyperModule.getSquadSafeAddress(subSubSquadA);
+        subSquadAaddr[0] = palmeraModule.getSquadSafeAddress(rootId);
+        subSquadAaddr[1] = palmeraModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = palmeraModule.getSquadSafeAddress(subSquadA);
+        subSquadAaddr[3] = palmeraModule.getSquadSafeAddress(subSubSquadA);
 
         // Assig the Id to first two subSquads
         subSquadAid[0] = rootId;
@@ -725,26 +727,26 @@ contract Hierarchies is DeployHelper {
         subSquadAid[3] = subSubSquadA;
 
         /// depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
-        uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        bytes32 org = palmeraModule.getOrgHashBySafe(subSquadAaddr[0]);
+        uint256 depthTreeLimit = palmeraModule.depthTreeLimit(org) + 1;
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
                 vm.startPrank(subSquadAaddr[i]);
                 subSquadAid[i] =
-                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
+                    palmeraModule.addSquad(subSquadAid[i - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootId2Addr);
                 vm.expectRevert(
                     Errors.NotAuthorizedUpdateSquadToOtherOrg.selector
                 );
-                keyperModule.updateSuper(squadB, subSquadAid[i - 1]);
-                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
+                palmeraModule.updateSuper(squadB, subSquadAid[i - 1]);
+                assertEq(palmeraModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
                 vm.stopPrank();
@@ -761,22 +763,22 @@ contract Hierarchies is DeployHelper {
             uint256 squadIdA1,
             uint256 subSquadA,
             uint256 subSubSquadA
-        ) = keyperSafeBuilder.setupOrgFourTiersTree(
+        ) = palmeraSafeBuilder.setupOrgFourTiersTree(
             org2Name, squadA2Name, subSquadA1Name, subSubSquadA1Name
         );
 
         (uint256 rootId2, uint256 squadB) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadBName);
-        address rootId2Addr = keyperModule.getSquadSafeAddress(rootId2);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadBName);
+        address rootId2Addr = palmeraModule.getSquadSafeAddress(rootId2);
         // Array of Address for the subSquads
         address[] memory subSquadAaddr = new address[](16);
         uint256[] memory subSquadAid = new uint256[](16);
 
         // Assig the Address to first two subSquads
-        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootId);
-        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
-        subSquadAaddr[2] = keyperModule.getSquadSafeAddress(subSquadA);
-        subSquadAaddr[3] = keyperModule.getSquadSafeAddress(subSubSquadA);
+        subSquadAaddr[0] = palmeraModule.getSquadSafeAddress(rootId);
+        subSquadAaddr[1] = palmeraModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[2] = palmeraModule.getSquadSafeAddress(subSquadA);
+        subSquadAaddr[3] = palmeraModule.getSquadSafeAddress(subSubSquadA);
 
         // Assig the Id to first two subSquads
         subSquadAid[0] = rootId;
@@ -785,26 +787,26 @@ contract Hierarchies is DeployHelper {
         subSquadAid[3] = subSubSquadA;
 
         /// depth Tree Lmit by org
-        bytes32 org = keyperModule.getOrgHashBySafe(subSquadAaddr[0]);
-        uint256 depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        bytes32 org = palmeraModule.getOrgHashBySafe(subSquadAaddr[0]);
+        uint256 depthTreeLimit = palmeraModule.depthTreeLimit(org) + 1;
 
         for (uint256 i = 4; i < depthTreeLimit; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (i != 8) {
                 // Start Prank
                 vm.startPrank(subSquadAaddr[i]);
                 subSquadAid[i] =
-                    keyperModule.addSquad(subSquadAid[i - 1], squadBName);
+                    palmeraModule.addSquad(subSquadAid[i - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootId2Addr);
                 vm.expectRevert(
                     Errors.NotAuthorizedUpdateSquadToOtherOrg.selector
                 );
-                keyperModule.updateSuper(squadB, subSquadAid[i - 1]);
-                assertEq(keyperModule.isLimitLevel(subSquadAid[i - 1]), true);
+                palmeraModule.updateSuper(squadB, subSquadAid[i - 1]);
+                assertEq(palmeraModule.isLimitLevel(subSquadAid[i - 1]), true);
                 console.log("i: ", i);
                 console.log("Max Depth Limit Reached");
                 vm.stopPrank();
@@ -812,28 +814,28 @@ contract Hierarchies is DeployHelper {
         }
 
         vm.startPrank(subSquadAaddr[0]);
-        keyperModule.updateDepthTreeLimit(15);
+        palmeraModule.updateDepthTreeLimit(15);
         vm.stopPrank();
 
         // Update depth Tree Lmit by org
-        depthTreeLimit = keyperModule.depthTreeLimit(org) + 1;
+        depthTreeLimit = palmeraModule.depthTreeLimit(org) + 1;
         for (uint256 j = 8; j < depthTreeLimit; j++) {
             // Create a new Safe
-            subSquadAaddr[j] = safeHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[j] = safeHelper.newPalmeraSafe(3, 1);
             // Add the new Safe as a subSquad
             if (j != 15) {
                 // Start Prank
                 vm.startPrank(subSquadAaddr[j]);
                 subSquadAid[j] =
-                    keyperModule.addSquad(subSquadAid[j - 1], squadBName);
+                    palmeraModule.addSquad(subSquadAid[j - 1], squadBName);
                 vm.stopPrank();
             } else {
                 vm.startPrank(rootId2Addr);
                 vm.expectRevert(
                     Errors.NotAuthorizedUpdateSquadToOtherOrg.selector
                 );
-                keyperModule.updateSuper(squadB, subSquadAid[j - 1]);
-                assertEq(keyperModule.isLimitLevel(subSquadAid[j - 1]), true);
+                palmeraModule.updateSuper(squadB, subSquadAid[j - 1]);
+                assertEq(palmeraModule.isLimitLevel(subSquadAid[j - 1]), true);
                 console.log("j: ", j);
                 console.log("New Max Depth Limit Reached");
                 vm.stopPrank();

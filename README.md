@@ -1,6 +1,6 @@
-# KeyperModule - Safe module for Palmera
+# PalmeraModule - Safe module for Palmera
 
-This contract is a registry of keyper organisation/squads setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
+This contract is a registry of palmera organisation/squads setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
 
 ## Tech requirements
 
@@ -40,7 +40,7 @@ forge test or make test-gas-report
 
 ### Deploy contracts
 
--   Deploy Keypermodule
+-   Deploy Palmeramodule
 
 Execute the command `deploy-module` located in the Makefile
 

@@ -2,12 +2,12 @@
 pragma solidity ^0.8.15;
 
 import "./SafeHelper.t.sol";
-import "./KeyperModuleHelper.t.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
+import "./PalmeraModuleHelper.t.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
 
 /// @notice Helper contract handling deployment Safe contracts
 /// @custom:security-contact general@palmeradao.xyz
-contract SkipSafeHelper is SafeHelper, KeyperModuleHelper {
+contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
     GnosisSafeProxyFactory public proxyFactory;
     GnosisSafe public safeContract;
     GnosisSafeProxy safeProxy;
@@ -60,18 +60,18 @@ contract SkipSafeHelper is SafeHelper, KeyperModuleHelper {
         safeContract = GnosisSafe(payable(vm.envAddress("MASTER_COPY_ADDRESS")));
     }
 
-    /// function to set the KeyperModule address
-    /// @param keyperModule address of the KeyperModule
-    function setKeyperModule(address keyperModule) public override {
-        keyperModuleAddr = keyperModule;
-        keyper = KeyperModule(keyperModuleAddr);
+    /// function to set the PalmeraModule address
+    /// @param palmeraModule address of the PalmeraModule
+    function setPalmeraModule(address palmeraModule) public override {
+        palmeraModuleAddr = palmeraModule;
+        palmera = PalmeraModule(palmeraModuleAddr);
     }
 
-    /// function to create a new Keyper Safe
+    /// function to create a new Palmera Safe
     /// @param numberOwners amount of owners to initialize
     /// @param threshold amount of signatures required to execute a transaction
-    /// @return address of the new Keyper Safe
-    function newKeyperSafe(uint256 numberOwners, uint256 threshold)
+    /// @return address of the new Palmera Safe
+    function newPalmeraSafe(uint256 numberOwners, uint256 threshold)
         public
         override
         returns (address)
@@ -84,7 +84,7 @@ contract SkipSafeHelper is SafeHelper, KeyperModuleHelper {
             countUsed + numberOwners <= privateKeyOwners.length,
             "No private keys available"
         );
-        require(keyperModuleAddr != address(0), "Keyper module not set");
+        require(palmeraModuleAddr != address(0), "Palmera module not set");
         address[] memory owners = new address[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
             owners[i] = vm.addr(privateKeyOwners[i + countUsed]);

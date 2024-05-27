@@ -4,26 +4,28 @@ pragma solidity ^0.8.15;
 import {Guard, BaseGuard} from "@safe-contracts/base/GuardManager.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 import {
-    KeyperModule,
+    PalmeraModule,
     Context,
     Errors,
     Constants,
     ISafe,
     ISafeProxy,
     Enum
-} from "./KeyperModule.sol";
+} from "./PalmeraModule.sol";
 
-/// @title Keyper Guard
+/// @title Palmera Guard
 /// @custom:security-contact general@palmeradao.xyz
-contract KeyperGuard is BaseGuard, Context {
-    KeyperModule keyperModule;
+contract PalmeraGuard is BaseGuard, Context {
+    PalmeraModule palmeraModule;
 
-    string public constant NAME = "Keyper Guard";
+    string public constant NAME = "Palmera Guard";
     string public constant VERSION = "0.2.0";
 
-    constructor(address keyperModuleAddr) {
-        if (keyperModuleAddr == address(0)) revert Errors.ZeroAddressProvided();
-        keyperModule = KeyperModule(keyperModuleAddr);
+    constructor(address palmeraModuleAddr) {
+        if (palmeraModuleAddr == address(0)) {
+            revert Errors.ZeroAddressProvided();
+        }
+        palmeraModule = PalmeraModule(palmeraModuleAddr);
     }
 
     function checkTransaction(
@@ -43,10 +45,10 @@ contract KeyperGuard is BaseGuard, Context {
     function checkAfterExecution(bytes32, bool) external view {
         address caller = _msgSender();
         // if it does, check if try to disable guard and revert if it does.
-        // if it does, check if try to disable the Keyper Module and revert if it does.
-        if (keyperModule.isSafeRegistered(caller)) {
-            if (!ISafe(caller).isModuleEnabled(address(keyperModule))) {
-                revert Errors.CannotDisableKeyperModule(address(keyperModule));
+        // if it does, check if try to disable the Palmera Module and revert if it does.
+        if (palmeraModule.isSafeRegistered(caller)) {
+            if (!ISafe(caller).isModuleEnabled(address(palmeraModule))) {
+                revert Errors.CannotDisablePalmeraModule(address(palmeraModule));
             }
             if (
                 abi.decode(
@@ -56,14 +58,14 @@ contract KeyperGuard is BaseGuard, Context {
                     (address)
                 ) != address(this)
             ) {
-                revert Errors.CannotDisableKeyperGuard(address(this));
+                revert Errors.CannotDisablePalmeraGuard(address(this));
             }
         } else {
-            if (!keyperModule.isSafe(caller)) {
+            if (!palmeraModule.isSafe(caller)) {
                 bool isSafeLead;
                 // Caller is EAO (lead) : check if it has the rights over the target safe
-                for (uint256 i = 1; i < keyperModule.indexId(); ++i) {
-                    if (keyperModule.isSafeLead(i, caller)) {
+                for (uint256 i = 1; i < palmeraModule.indexId(); ++i) {
+                    if (palmeraModule.isSafeLead(i, caller)) {
                         isSafeLead = true;
                         break;
                     }

@@ -27,15 +27,15 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     function testCan_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree(
     ) public {
         (uint256 rootId, uint256 safeSquadA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
 
-        // Set keyperhelper safe to org
-        keyperHelper.setSafe(rootAddr);
+        // Set palmerahelper safe to org
+        palmeraHelper.setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -70,21 +70,21 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //           safeSubSquadA1 <-----
     function testCan_ExecTransactionOnBehalf_ROOT_SAFE_and_Target_Root_SameTree_2_levels(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = keyperSafeBuilder
+        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = palmeraSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         vm.deal(rootAddr, 100 gwei);
         vm.deal(safeSubSquadA1Addr, 100 gwei);
 
-        // Set keyperhelper safe to org
+        // Set palmerahelper safe to org
 
-        keyperHelper.setSafe(rootAddr);
+        palmeraHelper.setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -124,30 +124,30 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         public
     {
         (uint256 rootId,, uint256 safeSquadBId,, uint256 safeSubSubSquadA1Id) =
-        keyperSafeBuilder.setUpBaseOrgTree(
+        palmeraSafeBuilder.setUpBaseOrgTree(
             orgName, squadA1Name, squadBName, subSquadA1Name, subSubSquadA1Name
         );
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadBAddr = keyperModule.getSquadSafeAddress(safeSquadBId);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadBAddr = palmeraModule.getSquadSafeAddress(safeSquadBId);
         address safeSubSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSubSquadA1Id);
 
         vm.deal(safeSubSubSquadA1Addr, 100 gwei);
         vm.deal(safeSquadBAddr, 100 gwei);
 
         vm.startPrank(rootAddr);
-        keyperModule.setRole(
+        palmeraModule.setRole(
             DataTypes.Role.SAFE_LEAD, safeSquadBAddr, safeSubSubSquadA1Id, true
         );
         vm.stopPrank();
         // Verify if the safeSquadBAddr have the role of Safe Lead to execute, executionTransactionOnBehalf
         assertEq(
-            keyperModule.isSuperSafe(safeSquadBId, safeSubSubSquadA1Id), false
+            palmeraModule.isSuperSafe(safeSquadBId, safeSubSubSquadA1Id), false
         );
-        keyperHelper.setSafe(safeSquadBAddr);
+        palmeraHelper.setSafe(safeSquadBAddr);
 
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             safeSquadBAddr,
             safeSubSubSquadA1Addr,
@@ -182,26 +182,26 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         public
     {
         (uint256 rootId,) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        keyperHelper.setSafe(rootAddr);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        palmeraHelper.setSafe(rootAddr);
 
         // Random wallet instead of a safe (EOA)
         address callerEOA = address(0xFED);
 
         // Set safe_lead role to fake caller
         vm.startPrank(rootAddr);
-        keyperModule.setRole(DataTypes.Role.SAFE_LEAD, callerEOA, rootId, true);
+        palmeraModule.setRole(DataTypes.Role.SAFE_LEAD, callerEOA, rootId, true);
         vm.stopPrank();
 
         // Verify if the callerEOA have the role of Safe Lead to execute, executionTransactionOnBehalf
-        assertEq(keyperModule.isSafeLead(rootId, callerEOA), true);
+        assertEq(palmeraModule.isSafeLead(rootId, callerEOA), true);
         bytes memory emptyData;
         bytes memory signatures;
 
         vm.startPrank(callerEOA);
-        bool result = keyperModule.execTransactionOnBehalf(
+        bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             rootAddr,
@@ -230,13 +230,13 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     function testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Straight_way(
     ) public {
         (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK,)
-        = keyperSafeBuilder.setupOrgThreeTiersTree(
+        = palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         vm.deal(rootAddr, 100 gwei);
         vm.deal(safeSubSquadA1Addr, 100 gwei);
@@ -250,7 +250,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         // get owners of the root safe
         address[] memory owners = rootSafe.getOwners();
         uint256 threshold = rootSafe.getThreshold();
-        uint256 nonce = keyperModule.nonce();
+        uint256 nonce = palmeraModule.nonce();
 
         // Init Valid Owners
         initValidOnwers(4);
@@ -261,7 +261,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         for (uint256 j = 0; j < threshold; j++) {
             address currentOwner = owners[j];
             vm.startPrank(currentOwner);
-            bytes memory keyperTxHashData = keyperModule.encodeTransactionData(
+            bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
                 orgHash,
                 rootAddr,
                 safeSubSquadA1Addr,
@@ -271,7 +271,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
                 Enum.Operation(0),
                 nonce
             );
-            bytes32 digest = keccak256(keyperTxHashData);
+            bytes32 digest = keccak256(palmeraTxHashData);
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownersPK[j], digest);
             // verify signer
             address signer = ecrecover(digest, v, r, s);
@@ -285,7 +285,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         assertEq(concatenatedSignatures.length, threshold * 65);
 
         vm.startPrank(callerEOA);
-        bool result = keyperModule.execTransactionOnBehalf(
+        bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -314,13 +314,13 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     function testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Inverse_WAY(
     ) public {
         (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK,)
-        = keyperSafeBuilder.setupOrgThreeTiersTree(
+        = palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         vm.deal(rootAddr, 100 gwei);
         vm.deal(safeSubSquadA1Addr, 100 gwei);
@@ -334,7 +334,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         // get owners of the root safe
         address[] memory owners = rootSafe.getOwners();
         uint256 threshold = rootSafe.getThreshold();
-        uint256 nonce = keyperModule.nonce();
+        uint256 nonce = palmeraModule.nonce();
 
         // Init Valid Owners
         initValidOnwers(4);
@@ -346,7 +346,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             uint256 j = threshold - 1 - i; // reverse order
             address currentOwner = owners[j];
             vm.startPrank(currentOwner);
-            bytes memory keyperTxHashData = keyperModule.encodeTransactionData(
+            bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
                 orgHash,
                 rootAddr,
                 safeSubSquadA1Addr,
@@ -356,7 +356,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
                 Enum.Operation(0),
                 nonce
             );
-            bytes32 digest = keccak256(keyperTxHashData);
+            bytes32 digest = keccak256(palmeraTxHashData);
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownersPK[j], digest);
             // verify signer
             address signer = ecrecover(digest, v, r, s);
@@ -370,7 +370,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         assertEq(concatenatedSignatures.length, threshold * 65);
 
         vm.startPrank(callerEOA);
-        bool result = keyperModule.execTransactionOnBehalf(
+        bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -398,12 +398,12 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //           safeSubSquadA1 <-----
     function testCan_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = keyperSafeBuilder
+        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = palmeraSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         vm.deal(rootAddr, 100 gwei);
         vm.deal(safeSubSquadA1Addr, 100 gwei);
@@ -412,9 +412,9 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         address callerEOA = address(0xFED);
 
         // Root Safe sign args
-        keyperHelper.setSafe(rootAddr);
+        palmeraHelper.setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -425,7 +425,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         );
 
         vm.startPrank(callerEOA);
-        bool result = keyperModule.execTransactionOnBehalf(
+        bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -455,23 +455,23 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     function testCan_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_is_TARGETS_LEAD_SameTree(
     ) public {
         (, uint256 safeSquadA1Id, uint256 safeSubSquadA1Id,,) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
         address safeSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSquadA1Id);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         // Send ETH to squad&subsquad
         vm.deal(safeSquadA1Addr, 100 gwei);
         vm.deal(safeSubSquadA1Addr, 100 gwei);
 
-        // Set keyperhelper safe to safeSquadA1
-        keyperHelper.setSafe(safeSquadA1Addr);
+        // Set palmerahelper safe to safeSquadA1
+        palmeraHelper.setSafe(safeSquadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             safeSquadA1Addr,
             safeSubSquadA1Addr,
@@ -483,7 +483,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
 
         /// Verify if the safeSquadA1Addr have the role to execute, executionTransactionOnBehalf
         assertEq(
-            keyperRolesContract.doesUserHaveRole(
+            palmeraRolesContract.doesUserHaveRole(
                 safeSquadA1Addr, uint8(DataTypes.Role.SUPER_SAFE)
             ),
             true
@@ -523,13 +523,13 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             uint256 safeSubSquadA1Id,
             ,
             uint256[] memory ownersSuperPK
-        ) = keyperSafeBuilder.setupOrgThreeTiersTree(
+        ) = palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
-        address squadA1NAddr = keyperModule.getSquadSafeAddress(squadA1NId);
+        address squadA1NAddr = palmeraModule.getSquadSafeAddress(squadA1NId);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         vm.deal(squadA1NAddr, 100 gwei);
         vm.deal(safeSubSquadA1Addr, 100 gwei);
@@ -543,7 +543,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         // get owners of the root safe
         address[] memory owners = superSafe.getOwners();
         uint256 threshold = superSafe.getThreshold();
-        uint256 nonce = keyperModule.nonce();
+        uint256 nonce = palmeraModule.nonce();
 
         // Init Valid Owners
         initValidOnwers(4);
@@ -554,7 +554,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         for (uint256 j = 0; j < threshold; j++) {
             address currentOwner = owners[j];
             vm.startPrank(currentOwner);
-            bytes memory keyperTxHashData = keyperModule.encodeTransactionData(
+            bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
                 orgHash,
                 squadA1NAddr,
                 safeSubSquadA1Addr,
@@ -564,7 +564,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
                 Enum.Operation(0),
                 nonce
             );
-            bytes32 digest = keccak256(keyperTxHashData);
+            bytes32 digest = keccak256(palmeraTxHashData);
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownersSuperPK[j], digest);
             // verify signer
             address signer = ecrecover(digest, v, r, s);
@@ -578,7 +578,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         assertEq(concatenatedSignatures.length, threshold * 65);
 
         vm.startPrank(callerEOA);
-        bool result = keyperModule.execTransactionOnBehalf(
+        bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             squadA1NAddr,
             safeSubSquadA1Addr,
@@ -608,12 +608,12 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //           safeSubSquadA1 <-----
     function testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_WRONG_SIGNATURES(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = keyperSafeBuilder
+        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = palmeraSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         vm.deal(rootAddr, 100 gwei);
         vm.deal(safeSubSquadA1Addr, 100 gwei);
@@ -622,9 +622,9 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         address callerEOA = address(0xFED);
 
         // Owner of Target Safe signed args and of Root/Super Safe
-        keyperHelper.setSafe(safeSubSquadA1Addr);
+        palmeraHelper.setSafe(safeSubSquadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -636,7 +636,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
 
         vm.startPrank(callerEOA);
         vm.expectRevert("GS020");
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -661,12 +661,12 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //           safeSubSquadA1 <-----
     function testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_INVALID_SIGNATURES(
     ) public {
-        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = keyperSafeBuilder
+        (uint256 rootId,, uint256 safeSubSquadA1Id,,) = palmeraSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(safeSubSquadA1Id);
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
 
         vm.deal(rootAddr, 100 gwei);
         vm.deal(safeSubSquadA1Addr, 100 gwei);
@@ -675,10 +675,10 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         address callerEOA = address(0xFED);
 
         // Owner of Root Safe sign args
-        keyperHelper.setSafe(rootAddr);
+        palmeraHelper.setSafe(rootAddr);
         bytes memory emptyData;
         // use invalid signatures
-        bytes memory signatures = keyperHelper.encodeInvalidSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeInvalidSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -690,7 +690,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
 
         vm.startPrank(callerEOA);
         vm.expectRevert("GS020");
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             safeSubSquadA1Addr,
@@ -717,23 +717,23 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // safeSubSubSquadA1
     function testRevertSuperSafeExecOnBehalf() public {
         (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1,) =
-        keyperSafeBuilder.setupOrgFourTiersTree(
+        palmeraSafeBuilder.setupOrgFourTiersTree(
             orgName, squadA1Name, subSquadA1Name, subSubSquadA1Name
         );
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(squadIdA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(squadIdA1);
         address safeSubSquadA1Addr =
-            keyperModule.getSquadSafeAddress(subSquadIdA1);
+            palmeraModule.getSquadSafeAddress(subSquadIdA1);
 
         // Send ETH to org&subsquad
         vm.deal(rootAddr, 100 gwei);
         vm.deal(safeSquadA1Addr, 100 gwei);
 
-        // Set keyperhelper safe to safeSubSquadA1
-        keyperHelper.setSafe(safeSubSquadA1Addr);
+        // Set palmerahelper safe to safeSubSquadA1
+        palmeraHelper.setSafe(safeSubSquadA1Addr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             safeSubSquadA1Addr,
             safeSquadA1Addr,
@@ -745,7 +745,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
 
         vm.startPrank(safeSubSquadA1Addr);
         vm.expectRevert(Errors.NotAuthorizedExecOnBehalf.selector);
-        bool result = keyperModule.execTransactionOnBehalf(
+        bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             safeSubSquadA1Addr,
             safeSquadA1Addr,
@@ -766,16 +766,16 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // TargetSafe Type: safe
     function testRevertInvalidSignatureExecOnBehalf() public {
         (uint256 rootId, uint256 safeSquadA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
-        keyperHelper.setSafe(rootAddr);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
+        palmeraHelper.setSafe(rootAddr);
 
         // Try onbehalf with incorrect signers
-        keyperHelper.setSafe(rootAddr);
+        palmeraHelper.setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeInvalidSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeInvalidSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -813,17 +813,17 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     function testRevertInvalidAddressProvidedExecTransactionOnBehalfScenarioOne(
     ) public {
         (uint256 rootId, uint256 safeSquadA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
         // Fake receiver = Zero address
         address fakeReceiver = address(0);
 
-        // Set keyperhelper safe to org
-        keyperHelper.setSafe(rootAddr);
+        // Set palmerahelper safe to org
+        palmeraHelper.setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -836,7 +836,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         // Execute on behalf function from a not authorized caller
         vm.startPrank(rootAddr);
         vm.expectRevert(Errors.InvalidAddressProvided.selector);
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -862,15 +862,15 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         public
     {
         (uint256 rootId, uint256 safeSquadA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
 
-        // Set keyperhelper safe to org
-        keyperHelper.setSafe(rootAddr);
+        // Set palmerahelper safe to org
+        palmeraHelper.setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -885,7 +885,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, address(0))
         );
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             address(0),
@@ -911,15 +911,15 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         public
     {
         (uint256 rootId, uint256 safeSquadA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
 
-        // Set keyperhelper safe to org
-        keyperHelper.setSafe(rootAddr);
+        // Set palmerahelper safe to org
+        palmeraHelper.setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -933,7 +933,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.OrgNotRegistered.selector, address(0))
         );
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             bytes32(0),
             rootAddr,
             safeSquadA1Addr,
@@ -953,16 +953,16 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // TargetSafe Type: EOA
     function testRevertInvalidGnosisSafeExecTransactionOnBehalf() public {
         (uint256 rootId, uint256 safeSquadA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
         address fakeTargetSafe = address(0xFFE);
 
-        // Set keyperhelper safe to org
-        keyperHelper.setSafe(rootAddr);
+        // Set palmerahelper safe to org
+        palmeraHelper.setSafe(rootAddr);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             safeSquadA1Addr,
@@ -977,7 +977,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, fakeTargetSafe)
         );
-        keyperModule.execTransactionOnBehalf(
+        palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
             fakeTargetSafe,
@@ -996,14 +996,14 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     function testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(
     ) public {
         (uint256 rootId, uint256 safeSquadA1, uint256 childSquadA1,,) =
-        keyperSafeBuilder.setupOrgThreeTiersTree(
+        palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
 
-        address rootAddr = keyperModule.getSquadSafeAddress(rootId);
-        address safeSquadA1Addr = keyperModule.getSquadSafeAddress(safeSquadA1);
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSquadA1Addr = palmeraModule.getSquadSafeAddress(safeSquadA1);
         address childSquadA1Addr =
-            keyperModule.getSquadSafeAddress(childSquadA1);
+            palmeraModule.getSquadSafeAddress(childSquadA1);
 
         // Send ETH to squad&subsquad
         vm.deal(rootAddr, 100 gwei);
@@ -1011,25 +1011,25 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         vm.deal(childSquadA1Addr, 100 gwei);
 
         // Create a child safe for squad A2
-        address fakeCaller = safeHelper.newKeyperSafe(4, 2);
+        address fakeCaller = safeHelper.newPalmeraSafe(4, 2);
         bool result = safeHelper.createAddSquadTx(safeSquadA1, "ChildSquadA2");
         assertEq(result, true);
 
         // Set Safe Role in Safe Squad A1 over Child Squad A1
         vm.startPrank(rootAddr);
-        keyperModule.setRole(
+        palmeraModule.setRole(
             DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
             fakeCaller,
             childSquadA1,
             true
         );
-        assertTrue(keyperModule.isSafeLead(childSquadA1, fakeCaller));
+        assertTrue(palmeraModule.isSafeLead(childSquadA1, fakeCaller));
         vm.stopPrank();
 
-        // Set keyperhelper safe to fakeCaller
-        keyperHelper.setSafe(fakeCaller);
+        // Set palmerahelper safe to fakeCaller
+        palmeraHelper.setSafe(fakeCaller);
         bytes memory emptyData;
-        bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             fakeCaller,
             childSquadA1Addr,
@@ -1038,7 +1038,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
             emptyData,
             Enum.Operation(0)
         );
-        bytes memory signatures2 = keyperHelper.encodeSignaturesKeyperTx(
+        bytes memory signatures2 = palmeraHelper.encodeSignaturesPalmeraTx(
             orgHash,
             rootAddr,
             rootAddr,
@@ -1081,10 +1081,10 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // // ! ****************** Reentrancy Attack Test to execOnBehalf ***************
 
     function testReentrancyAttack() public {
-        Attacker attackerContract = new Attacker(address(keyperModule));
+        Attacker attackerContract = new Attacker(address(palmeraModule));
         AttackerHelper attackerHelper = new AttackerHelper();
         attackerHelper.initHelper(
-            keyperModule, attackerContract, safeHelper, 30
+            palmeraModule, attackerContract, safeHelper, 30
         );
 
         (bytes32 orgName, address orgAddr, address attacker, address victim) =
@@ -1098,7 +1098,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
 
         bytes memory emptyData;
         bytes memory signatures = attackerHelper
-            .encodeSignaturesForAttackKeyperTx(
+            .encodeSignaturesForAttackPalmeraTx(
             orgName,
             attacker,
             victim,

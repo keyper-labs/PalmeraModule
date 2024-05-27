@@ -2,180 +2,182 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
-import {KeyperRoles} from "../src/KeyperRoles.sol";
+import {PalmeraRoles} from "../src/PalmeraRoles.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 
-// Helper contract to test internal method of KeyperRoles
-contract KeyperRolesHarness is KeyperRoles(address(0xAAAA)) {
-    function exposed_setupRoles(address keyperModule) external {
-        setupRoles(keyperModule);
+// Helper contract to test internal method of PalmeraRoles
+contract PalmeraRolesHarness is PalmeraRoles(address(0xAAAA)) {
+    function exposed_setupRoles(address palmeraModule) external {
+        setupRoles(palmeraModule);
     }
 }
 
-/// @title KeyperRolesTest
+/// @title PalmeraRolesTest
 /// @custom:security-contact general@palmeradao.xyz
-contract KeyperRoleDeployTest is Test {
-    KeyperRolesHarness keyperRolesHarness;
-    address keyperModule = address(0xAAAA);
+contract PalmeraRoleDeployTest is Test {
+    PalmeraRolesHarness palmeraRolesHarness;
+    address palmeraModule = address(0xAAAA);
 
     function setUp() public {
-        keyperRolesHarness = new KeyperRolesHarness();
+        palmeraRolesHarness = new PalmeraRolesHarness();
     }
 
     /// @notice Test setupRoles Capabilities
     function testSetupRolesCapabilities() public {
-        vm.startPrank(keyperModule);
-        keyperRolesHarness.exposed_setupRoles(keyperModule);
+        vm.startPrank(palmeraModule);
+        palmeraRolesHarness.exposed_setupRoles(palmeraModule);
         vm.stopPrank();
 
         // Check SAFE_LEAD capabilities
-        bool hasSAFELEADCapabilityAddOwner = keyperRolesHarness
+        bool hasSAFELEADCapabilityAddOwner = palmeraRolesHarness
             .doesRoleHaveCapability(
-            uint8(DataTypes.Role.SAFE_LEAD), keyperModule, Constants.ADD_OWNER
+            uint8(DataTypes.Role.SAFE_LEAD), palmeraModule, Constants.ADD_OWNER
         );
         assertTrue(hasSAFELEADCapabilityAddOwner);
-        bool hasSAFELEADCapabilityRemoveOwner = keyperRolesHarness
+        bool hasSAFELEADCapabilityRemoveOwner = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.SAFE_LEAD),
-            keyperModule,
+            palmeraModule,
             Constants.REMOVE_OWNER
         );
         assertTrue(hasSAFELEADCapabilityRemoveOwner);
-        bool hasSAFELEADCapabilityExecOnBehalf = keyperRolesHarness
+        bool hasSAFELEADCapabilityExecOnBehalf = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.SAFE_LEAD),
-            keyperModule,
+            palmeraModule,
             Constants.EXEC_ON_BEHALF
         );
         assertTrue(hasSAFELEADCapabilityExecOnBehalf);
 
         // Check SAFE_LEAD_EXEC_ON_BEHALF_ONLY capabilities
         bool hasSAFE_LEAD_EXEC_ON_BEHALF_ONLYCapabilityExecOnBehalf =
-        keyperRolesHarness.doesRoleHaveCapability(
+        palmeraRolesHarness.doesRoleHaveCapability(
             uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY),
-            keyperModule,
+            palmeraModule,
             Constants.EXEC_ON_BEHALF
         );
         assertTrue(hasSAFE_LEAD_EXEC_ON_BEHALF_ONLYCapabilityExecOnBehalf);
 
         // Check SAFE_LEAD_MODIFY_OWNERS_ONLY capabilities
         bool hasSAFE_LEAD_MODIFY_OWNERS_ONLYCapabilityAddOwner =
-        keyperRolesHarness.doesRoleHaveCapability(
+        palmeraRolesHarness.doesRoleHaveCapability(
             uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
-            keyperModule,
+            palmeraModule,
             Constants.ADD_OWNER
         );
         assertTrue(hasSAFE_LEAD_MODIFY_OWNERS_ONLYCapabilityAddOwner);
         bool hasSAFE_LEAD_MODIFY_OWNERS_ONLYCapabilityRemoveOwner =
-        keyperRolesHarness.doesRoleHaveCapability(
+        palmeraRolesHarness.doesRoleHaveCapability(
             uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
-            keyperModule,
+            palmeraModule,
             Constants.REMOVE_OWNER
         );
         assertTrue(hasSAFE_LEAD_MODIFY_OWNERS_ONLYCapabilityRemoveOwner);
 
         // Check SUPER_SAFE capabilities
-        bool hasSUPER_SAFECapabilityAddOwner = keyperRolesHarness
+        bool hasSUPER_SAFECapabilityAddOwner = palmeraRolesHarness
             .doesRoleHaveCapability(
-            uint8(DataTypes.Role.SUPER_SAFE), keyperModule, Constants.ADD_OWNER
+            uint8(DataTypes.Role.SUPER_SAFE), palmeraModule, Constants.ADD_OWNER
         );
         assertTrue(hasSUPER_SAFECapabilityAddOwner);
-        bool hasSUPER_SAFECapabilityRemoveOwner = keyperRolesHarness
+        bool hasSUPER_SAFECapabilityRemoveOwner = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.REMOVE_OWNER
         );
         assertTrue(hasSUPER_SAFECapabilityRemoveOwner);
-        bool hasSUPER_SAFECapabilityExecOnBehalf = keyperRolesHarness
+        bool hasSUPER_SAFECapabilityExecOnBehalf = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.EXEC_ON_BEHALF
         );
         assertTrue(hasSUPER_SAFECapabilityExecOnBehalf);
-        bool hasSUPER_SAFECapabilityRemoveSquad = keyperRolesHarness
+        bool hasSUPER_SAFECapabilityRemoveSquad = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.REMOVE_SQUAD
         );
         assertTrue(hasSUPER_SAFECapabilityRemoveSquad);
 
         // Check ROOT_SAFE capabilities
-        bool hasROOT_SAFECapabilityEnableAllowlist = keyperRolesHarness
+        bool hasROOT_SAFECapabilityEnableAllowlist = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.ENABLE_ALLOWLIST
         );
         assertTrue(hasROOT_SAFECapabilityEnableAllowlist);
-        bool hasROOT_SAFECapabilityEnableDenyList = keyperRolesHarness
+        bool hasROOT_SAFECapabilityEnableDenyList = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.ENABLE_DENYLIST
         );
         assertTrue(hasROOT_SAFECapabilityEnableDenyList);
-        bool hasROOT_SAFECapabilityDisableDenyHelper = keyperRolesHarness
+        bool hasROOT_SAFECapabilityDisableDenyHelper = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.DISABLE_DENY_HELPER
         );
         assertTrue(hasROOT_SAFECapabilityDisableDenyHelper);
-        bool hasROOT_SAFECapabilityAddTolist = keyperRolesHarness
-            .doesRoleHaveCapability(
-            uint8(DataTypes.Role.ROOT_SAFE), keyperModule, Constants.ADD_TO_LIST
-        );
-        assertTrue(hasROOT_SAFECapabilityAddTolist);
-        bool hasROOT_SAFECapabilityDropFromlist = keyperRolesHarness
+        bool hasROOT_SAFECapabilityAddTolist = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
+            Constants.ADD_TO_LIST
+        );
+        assertTrue(hasROOT_SAFECapabilityAddTolist);
+        bool hasROOT_SAFECapabilityDropFromlist = palmeraRolesHarness
+            .doesRoleHaveCapability(
+            uint8(DataTypes.Role.ROOT_SAFE),
+            palmeraModule,
             Constants.DROP_FROM_LIST
         );
         assertTrue(hasROOT_SAFECapabilityDropFromlist);
-        bool hasROOT_SAFECapabilityUpdateSuperSafe = keyperRolesHarness
+        bool hasROOT_SAFECapabilityUpdateSuperSafe = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.UPDATE_SUPER_SAFE
         );
         assertTrue(hasROOT_SAFECapabilityUpdateSuperSafe);
-        bool hasROOT_SAFECapabilityCreateRootSafe = keyperRolesHarness
+        bool hasROOT_SAFECapabilityCreateRootSafe = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.CREATE_ROOT_SAFE
         );
         assertTrue(hasROOT_SAFECapabilityCreateRootSafe);
-        bool hasROOT_SAFECapabilityUpdateDepthTreeLimit = keyperRolesHarness
+        bool hasROOT_SAFECapabilityUpdateDepthTreeLimit = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.UPDATE_DEPTH_TREE_LIMIT
         );
         assertTrue(hasROOT_SAFECapabilityUpdateDepthTreeLimit);
-        bool hasROOT_SAFECapabilityDisconnectSafe = keyperRolesHarness
+        bool hasROOT_SAFECapabilityDisconnectSafe = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.DISCONNECT_SAFE
         );
         assertTrue(hasROOT_SAFECapabilityDisconnectSafe);
-        bool hasROOT_SAFECapabilityPromoteRoot = keyperRolesHarness
+        bool hasROOT_SAFECapabilityPromoteRoot = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.PROMOTE_ROOT
         );
         assertTrue(hasROOT_SAFECapabilityPromoteRoot);
-        bool hasROOT_SAFECapabilityRemoveWholeTree = keyperRolesHarness
+        bool hasROOT_SAFECapabilityRemoveWholeTree = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.REMOVE_WHOLE_TREE
         );
         assertTrue(hasROOT_SAFECapabilityRemoveWholeTree);
@@ -183,18 +185,18 @@ contract KeyperRoleDeployTest is Test {
 
     /// @notice Test Set User Roles
     function testSetUserRoles() public {
-        vm.startPrank(keyperModule);
-        keyperRolesHarness.setUserRole(
+        vm.startPrank(palmeraModule);
+        palmeraRolesHarness.setUserRole(
             address(0xCCCC), uint8(DataTypes.Role.SAFE_LEAD), true
         );
-        bool isSafeLead = keyperRolesHarness.doesUserHaveRole(
+        bool isSafeLead = palmeraRolesHarness.doesUserHaveRole(
             address(0xCCCC), uint8(DataTypes.Role.SAFE_LEAD)
         );
         assertTrue(isSafeLead);
-        keyperRolesHarness.setUserRole(
+        palmeraRolesHarness.setUserRole(
             address(0xCCCC), uint8(DataTypes.Role.SAFE_LEAD), false
         );
-        isSafeLead = keyperRolesHarness.doesUserHaveRole(
+        isSafeLead = palmeraRolesHarness.doesUserHaveRole(
             address(0xCCCC), uint8(DataTypes.Role.SAFE_LEAD)
         );
         assertFalse(isSafeLead);

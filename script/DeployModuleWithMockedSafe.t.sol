@@ -2,12 +2,12 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
-import "src/KeyperModule.sol";
+import "src/PalmeraModule.sol";
 import "test/mocks/MockedContract.t.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import "@solenv/Solenv.sol";
 
-/// Deployement of Safe contracts, KeyperRoles and KeyperModule
+/// Deployement of Safe contracts, PalmeraRoles and PalmeraModule
 /// @custom:security-contact general@palmeradao.xyz
 contract DeployModuleWithMockedSafe is Script {
     function run() public {
@@ -19,7 +19,7 @@ contract DeployModuleWithMockedSafe is Script {
         vm.startBroadcast();
         MockedContract masterCopyMocked = new MockedContract();
         MockedContract proxyFactoryMocked = new MockedContract();
-        KeyperModule keyperModule = new KeyperModule(
+        PalmeraModule palmeraModule = new PalmeraModule(
             address(masterCopyMocked),
             address(proxyFactoryMocked),
             rolesAuthority,

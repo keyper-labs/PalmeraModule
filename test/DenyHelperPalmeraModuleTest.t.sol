@@ -3,10 +3,10 @@ pragma solidity ^0.8.15;
 
 import "./helpers/DeployHelper.t.sol";
 
-/// @title DenyHelperKeyperModuleTest
+/// @title DenyHelperPalmeraModuleTest
 /// @author
 /// @notice
-contract DenyHelperKeyperModuleTest is DeployHelper {
+contract DenyHelperPalmeraModuleTest is DeployHelper {
     address org1;
     address squadA;
     address[] public owners = new address[](5);
@@ -19,9 +19,9 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         deployAllContracts(60);
         // Setup of all Safe for Testing
         (RootOrgId, squadIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
-        org1 = keyperModule.getSquadSafeAddress(RootOrgId);
-        squadA = keyperModule.getSquadSafeAddress(squadIdA1);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        org1 = palmeraModule.getSquadSafeAddress(RootOrgId);
+        squadA = palmeraModule.getSquadSafeAddress(squadIdA1);
         vm.label(org1, "Org 1");
         vm.label(squadA, "SquadA");
     }
@@ -30,11 +30,11 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
     function testAddToList() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableAllowlist();
-        keyperModule.addToList(owners);
-        assertEq(keyperModule.listCount(orgHash), owners.length);
+        palmeraModule.enableAllowlist();
+        palmeraModule.addToList(owners);
+        assertEq(palmeraModule.listCount(orgHash), owners.length);
         for (uint256 i = 0; i < owners.length; i++) {
-            assertEq(keyperModule.isListed(orgHash, owners[i]), true);
+            assertEq(palmeraModule.isListed(orgHash, owners[i]), true);
         }
     }
 
@@ -46,27 +46,27 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
-        keyperModule.enableAllowlist();
+        palmeraModule.enableAllowlist();
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
-        keyperModule.enableDenylist();
+        palmeraModule.enableDenylist();
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
-        keyperModule.dropFromList(owners[2]);
+        palmeraModule.dropFromList(owners[2]);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, owners[0])
         );
-        keyperModule.dropFromList(owners[2]);
+        palmeraModule.dropFromList(owners[2]);
         vm.stopPrank();
         // Zero Address
         address ZeroAddress = address(0);
@@ -74,27 +74,27 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
-        keyperModule.enableAllowlist();
+        palmeraModule.enableAllowlist();
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
-        keyperModule.enableDenylist();
+        palmeraModule.enableDenylist();
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
-        keyperModule.dropFromList(owners[2]);
+        palmeraModule.dropFromList(owners[2]);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, ZeroAddress)
         );
-        keyperModule.dropFromList(owners[2]);
+        palmeraModule.dropFromList(owners[2]);
         vm.stopPrank();
         // Sentinal Address
         address SentinalAddress = address(0x1);
@@ -102,27 +102,27 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
-        keyperModule.enableAllowlist();
+        palmeraModule.enableAllowlist();
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
-        keyperModule.enableDenylist();
+        palmeraModule.enableDenylist();
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
-        keyperModule.dropFromList(owners[2]);
+        palmeraModule.dropFromList(owners[2]);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidSafe.selector, SentinalAddress)
         );
-        keyperModule.dropFromList(owners[2]);
+        palmeraModule.dropFromList(owners[2]);
         vm.stopPrank();
     }
 
@@ -133,27 +133,27 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
-        keyperModule.enableAllowlist();
+        palmeraModule.enableAllowlist();
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
-        keyperModule.enableDenylist();
+        palmeraModule.enableDenylist();
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
-        keyperModule.dropFromList(owners[2]);
+        palmeraModule.dropFromList(owners[2]);
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidRootSafe.selector, squadA)
         );
-        keyperModule.dropFromList(owners[2]);
+        palmeraModule.dropFromList(owners[2]);
         vm.stopPrank();
     }
 
@@ -167,37 +167,37 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
                 Errors.SafeNotRegistered.selector, anotherWallet
             )
         );
-        keyperModule.enableAllowlist();
+        palmeraModule.enableAllowlist();
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.SafeNotRegistered.selector, anotherWallet
             )
         );
-        keyperModule.enableDenylist();
+        palmeraModule.enableDenylist();
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.SafeNotRegistered.selector, anotherWallet
             )
         );
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.SafeNotRegistered.selector, anotherWallet
             )
         );
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.SafeNotRegistered.selector, anotherWallet
             )
         );
-        keyperModule.dropFromList(owners[2]);
+        palmeraModule.dropFromList(owners[2]);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Errors.SafeNotRegistered.selector, anotherWallet
             )
         );
-        keyperModule.dropFromList(owners[2]);
+        palmeraModule.dropFromList(owners[2]);
         vm.stopPrank();
     }
 
@@ -206,10 +206,10 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         listOfOwners();
         vm.startPrank(org1);
         vm.expectRevert(Errors.DenyHelpersDisabled.selector);
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         address dropOwner = owners[1];
         vm.expectRevert(Errors.DenyHelpersDisabled.selector);
-        keyperModule.dropFromList(dropOwner);
+        palmeraModule.dropFromList(dropOwner);
         vm.stopPrank();
     }
 
@@ -218,9 +218,9 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         listOfOwners();
         vm.startPrank(org1);
         address dropOwner = owners[1];
-        keyperModule.enableAllowlist();
+        palmeraModule.enableAllowlist();
         vm.expectRevert(Errors.ListEmpty.selector);
-        keyperModule.dropFromList(dropOwner);
+        palmeraModule.dropFromList(dropOwner);
         vm.stopPrank();
     }
 
@@ -229,9 +229,9 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         listOfOwners();
         vm.startPrank(org1);
         address dropOwner = owners[1];
-        keyperModule.enableDenylist();
+        palmeraModule.enableDenylist();
         vm.expectRevert(Errors.ListEmpty.selector);
-        keyperModule.dropFromList(dropOwner);
+        palmeraModule.dropFromList(dropOwner);
         vm.stopPrank();
     }
 
@@ -239,11 +239,11 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
     function testRevertIfInvalidAddressProvidedForAllowList() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableAllowlist();
-        keyperModule.addToList(owners);
+        palmeraModule.enableAllowlist();
+        palmeraModule.addToList(owners);
         address dropOwner = address(0xFFF111);
         vm.expectRevert(Errors.InvalidAddressProvided.selector);
-        keyperModule.dropFromList(dropOwner);
+        palmeraModule.dropFromList(dropOwner);
         vm.stopPrank();
     }
 
@@ -251,11 +251,11 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
     function testRevertIfInvalidAddressProvidedForDenyList() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableDenylist();
-        keyperModule.addToList(owners);
+        palmeraModule.enableDenylist();
+        palmeraModule.addToList(owners);
         address dropOwner = address(0xFFF111);
         vm.expectRevert(Errors.InvalidAddressProvided.selector);
-        keyperModule.dropFromList(dropOwner);
+        palmeraModule.dropFromList(dropOwner);
         vm.stopPrank();
     }
 
@@ -263,11 +263,11 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
     function testIfAfterAddtoListtheLengthisCorrect() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableAllowlist();
-        keyperModule.addToList(owners);
-        assertEq(keyperModule.listCount(orgHash), owners.length);
+        palmeraModule.enableAllowlist();
+        palmeraModule.addToList(owners);
+        assertEq(palmeraModule.listCount(orgHash), owners.length);
         for (uint256 i = 0; i < owners.length; i++) {
-            assertEq(keyperModule.isListed(orgHash, owners[i]), true);
+            assertEq(palmeraModule.isListed(orgHash, owners[i]), true);
         }
     }
 
@@ -275,9 +275,9 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
     function testRevertAddToListZeroAddress() public {
         address[] memory voidOwnersArray = new address[](0);
         vm.startPrank(org1);
-        keyperModule.enableDenylist();
+        palmeraModule.enableDenylist();
         vm.expectRevert(Errors.ZeroAddressProvided.selector);
-        keyperModule.addToList(voidOwnersArray);
+        palmeraModule.addToList(voidOwnersArray);
         vm.stopPrank();
     }
 
@@ -285,9 +285,9 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
     function testRevertAddToListInvalidAddress() public {
         listOfInvalidOwners();
         vm.startPrank(org1);
-        keyperModule.enableDenylist();
+        palmeraModule.enableDenylist();
         vm.expectRevert(Errors.InvalidAddressProvided.selector);
-        keyperModule.addToList(owners);
+        palmeraModule.addToList(owners);
         vm.stopPrank();
     }
 
@@ -295,14 +295,14 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
     function testRevertAddToDuplicateAddress() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableDenylist();
-        keyperModule.addToList(owners);
+        palmeraModule.enableDenylist();
+        palmeraModule.addToList(owners);
 
         address[] memory newOwner = new address[](1);
         newOwner[0] = address(0xDDD);
 
         vm.expectRevert(Errors.UserAlreadyOnList.selector);
-        keyperModule.addToList(newOwner);
+        palmeraModule.addToList(newOwner);
         vm.stopPrank();
     }
 
@@ -310,25 +310,25 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
     function testDropFromList() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableDenylist();
-        keyperModule.addToList(owners);
+        palmeraModule.enableDenylist();
+        palmeraModule.addToList(owners);
 
         // Must be Revert if drop not address (0)
         address newOwner = address(0x0);
         vm.expectRevert(Errors.InvalidAddressProvided.selector);
-        keyperModule.dropFromList(newOwner);
+        palmeraModule.dropFromList(newOwner);
 
         // Must be the address(0xCCC)
         address ownerToRemove = owners[2];
 
-        keyperModule.dropFromList(ownerToRemove);
-        assertEq(keyperModule.isListed(orgHash, ownerToRemove), false);
+        palmeraModule.dropFromList(ownerToRemove);
+        assertEq(palmeraModule.isListed(orgHash, ownerToRemove), false);
 
         // Must be the address(0xEEE)
         address secOwnerToRemove = owners[4];
 
-        keyperModule.dropFromList(secOwnerToRemove);
-        assertEq(keyperModule.isListed(orgHash, secOwnerToRemove), false);
+        palmeraModule.dropFromList(secOwnerToRemove);
+        assertEq(palmeraModule.isListed(orgHash, secOwnerToRemove), false);
         vm.stopPrank();
     }
 
@@ -336,33 +336,33 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
     function testGetPrevUserList() public {
         listOfOwners();
         vm.startPrank(org1);
-        keyperModule.enableAllowlist();
-        keyperModule.addToList(owners);
-        assertEq(keyperModule.getPrevUser(orgHash, owners[1]), owners[0]);
-        assertEq(keyperModule.getPrevUser(orgHash, owners[2]), owners[1]);
-        assertEq(keyperModule.getPrevUser(orgHash, owners[3]), owners[2]);
-        assertEq(keyperModule.getPrevUser(orgHash, owners[4]), owners[3]);
-        assertEq(keyperModule.getPrevUser(orgHash, address(0)), owners[4]);
+        palmeraModule.enableAllowlist();
+        palmeraModule.addToList(owners);
+        assertEq(palmeraModule.getPrevUser(orgHash, owners[1]), owners[0]);
+        assertEq(palmeraModule.getPrevUser(orgHash, owners[2]), owners[1]);
+        assertEq(palmeraModule.getPrevUser(orgHash, owners[3]), owners[2]);
+        assertEq(palmeraModule.getPrevUser(orgHash, owners[4]), owners[3]);
+        assertEq(palmeraModule.getPrevUser(orgHash, address(0)), owners[4]);
         // SENTINEL_WALLETS
-        assertEq(keyperModule.getPrevUser(orgHash, owners[0]), address(0x1));
+        assertEq(palmeraModule.getPrevUser(orgHash, owners[0]), address(0x1));
         vm.stopPrank();
     }
 
     /// @notice Test Enable Allowlist
     function testEnableAllowlist() public {
         vm.startPrank(org1);
-        keyperModule.enableAllowlist();
-        assertEq(keyperModule.allowFeature(orgHash), true);
-        assertEq(keyperModule.denyFeature(orgHash), false);
+        palmeraModule.enableAllowlist();
+        assertEq(palmeraModule.allowFeature(orgHash), true);
+        assertEq(palmeraModule.denyFeature(orgHash), false);
         vm.stopPrank();
     }
 
     /// @notice Test Enable Denylist
     function testEnableDenylist() public {
         vm.startPrank(org1);
-        keyperModule.enableDenylist();
-        assertEq(keyperModule.allowFeature(orgHash), false);
-        assertEq(keyperModule.denyFeature(orgHash), true);
+        palmeraModule.enableDenylist();
+        assertEq(palmeraModule.allowFeature(orgHash), false);
+        assertEq(palmeraModule.denyFeature(orgHash), true);
         vm.stopPrank();
     }
 

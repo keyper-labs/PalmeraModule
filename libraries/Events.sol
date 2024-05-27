@@ -8,7 +8,7 @@ library Events {
     /// @param creator Address of the creator
     /// @param org Hash(on-chain Organisation)
     /// @param name String name of the organisation
-    event OrganizationCreated(
+    event OrganisationCreated(
         address indexed creator,
         bytes32 indexed org,
         string name
@@ -62,7 +62,7 @@ library Events {
         uint256 newSuperSafe
     );
 
-    /// @dev Event Fire when Keyper Module execute a transaction on behalf of a Safe
+    /// @dev Event Fire when Palmera Module execute a transaction on behalf of a Safe
     /// @param org Hash(on-chain Organisation)
     /// @param executor Address of the executor
     /// @param target Address of the Target Safe
@@ -75,7 +75,7 @@ library Events {
         bool result
     );
 
-    /// @dev Event Fire when any Safe enable the Keyper Module
+    /// @dev Event Fire when any Safe enable the Palmera Module
     event ModuleEnabled(address indexed safe, address indexed module);
 
     /// @dev Event Fire when any Root Safe create a new Root Safe
@@ -154,8 +154,8 @@ library Events {
     /// @param user Wallet to drop of the deny/allow list
     event DroppedFromList(address indexed user);
 
-    /// @dev Event when a new keyperModule is setting up
-    /// @param keyperModule Address of the new keyperModule
+    /// @dev Event when a new palmeraModule is setting up
+    /// @param palmeraModule Address of the new palmeraModule
     /// @param caller Address of the deployer
-    event KeyperModuleSetup(address keyperModule, address caller);
+    event PalmeraModuleSetup(address palmeraModule, address caller);
 }

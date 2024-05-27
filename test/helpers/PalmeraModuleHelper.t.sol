@@ -4,15 +4,15 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
-import {KeyperModule} from "../../src/KeyperModule.sol";
+import {PalmeraModule} from "../../src/PalmeraModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {DeploySafeFactory} from "../../script/DeploySafeFactory.t.sol";
 
-/// @notice Helper contract handling KeyperModule
+/// @notice Helper contract handling PalmeraModule
 /// @custom:security-contact general@palmeradao.xyz
-contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
-    struct KeyperTransaction {
+contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
+    struct PalmeraTransaction {
         address org;
         address safe;
         address to;
@@ -21,14 +21,14 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         Enum.Operation operation;
     }
 
-    KeyperModule public keyper;
+    PalmeraModule public palmera;
     GnosisSafe public safeHelper;
 
     /// function to initialize the helper
-    /// @param _keyper instance of KeyperModule
+    /// @param _palmera instance of PalmeraModule
     /// @param numberOwners number of owners to initialize
-    function initHelper(KeyperModule _keyper, uint256 numberOwners) public {
-        keyper = _keyper;
+    function initHelper(PalmeraModule _palmera, uint256 numberOwners) public {
+        palmera = _palmera;
         initOnwers(numberOwners);
     }
 
@@ -38,7 +38,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         safeHelper = GnosisSafe(payable(safe));
     }
 
-    /// function Encode signatures for a keypertx
+    /// function Encode signatures for a palmeratx
     /// @param org Organisation address
     /// @param superSafe Super Safe address
     /// @param targetSafe Target Safe address
@@ -47,7 +47,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     /// @param data Data payload
     /// @param operation Operation type
     /// @return signatures Packed signatures data (v, r, s)
-    function encodeSignaturesKeyperTx(
+    function encodeSignaturesPalmeraTx(
         bytes32 org,
         address superSafe,
         address targetSafe,
@@ -57,9 +57,16 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         Enum.Operation operation
     ) public view returns (bytes memory) {
         // Create encoded tx to be signed
-        uint256 nonce = keyper.nonce();
-        bytes32 txHashed = keyper.getTransactionHash(
-            org, superSafe, targetSafe, to, value, data, operation, nonce
+        uint256 nonce = palmera.nonce();
+        bytes32 txHashed = palmera.getTransactionHash(
+            org,
+            superSafe,
+            targetSafe,
+            to,
+            value,
+            data,
+            operation,
+            nonce
         );
 
         address[] memory owners = safeHelper.getOwners();
@@ -78,7 +85,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         return signatures;
     }
 
-    /// function Sign keyperTx with invalid signatures (do not belong to any safe owner)
+    /// function Sign palmeraTx with invalid signatures (do not belong to any safe owner)
     /// @param org Organisation address
     /// @param superSafe Super Safe address
     /// @param targetSafe Target Safe address
@@ -87,7 +94,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     /// @param data Data payload
     /// @param operation Operation type
     /// @return signatures Packed signatures data (v, r, s)
-    function encodeInvalidSignaturesKeyperTx(
+    function encodeInvalidSignaturesPalmeraTx(
         bytes32 org,
         address superSafe,
         address targetSafe,
@@ -97,9 +104,16 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         Enum.Operation operation
     ) public view returns (bytes memory) {
         // Create encoded tx to be signed
-        uint256 nonce = keyper.nonce();
-        bytes32 txHashed = keyper.getTransactionHash(
-            org, superSafe, targetSafe, to, value, data, operation, nonce
+        uint256 nonce = palmera.nonce();
+        bytes32 txHashed = palmera.getTransactionHash(
+            org,
+            superSafe,
+            targetSafe,
+            to,
+            value,
+            data,
+            operation,
+            nonce
         );
 
         uint256 threshold = safeHelper.getThreshold();
@@ -114,7 +128,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         return signatures;
     }
 
-    /// function to create a keyperTx hash
+    /// function to create a palmeraTx hash
     /// @param org Organisation address
     /// @param superSafe Super Safe address
     /// @param targetSafe Target Safe address
@@ -124,7 +138,7 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
     /// @param operation Operation type
     /// @param nonce Nonce of the transaction
     /// @return txHashed Hash of the transaction
-    function createKeyperTxHash(
+    function createPalmeraTxHash(
         bytes32 org,
         address superSafe,
         address targetSafe,
@@ -134,8 +148,15 @@ contract KeyperModuleHelper is Test, SignDigestHelper, SignersHelper {
         Enum.Operation operation,
         uint256 nonce
     ) public view returns (bytes32) {
-        bytes32 txHashed = keyper.getTransactionHash(
-            org, superSafe, targetSafe, to, value, data, operation, nonce
+        bytes32 txHashed = palmera.getTransactionHash(
+            org,
+            superSafe,
+            targetSafe,
+            to,
+            value,
+            data,
+            operation,
+            nonce
         );
         return txHashed;
     }

@@ -8,216 +8,216 @@ import {DataTypes} from "../libraries/DataTypes.sol";
 import {ValidAddress} from "./DenyHelper.sol";
 import {Events} from "../libraries/Events.sol";
 
-/// @title Keyper Roles
+/// @title Palmera Roles
 /// @custom:security-contact general@palmeradao.xyz
-contract KeyperRoles is RolesAuthority, ValidAddress {
-    string public constant NAME = "Keyper Roles";
+contract PalmeraRoles is RolesAuthority, ValidAddress {
+    string public constant NAME = "Palmera Roles";
     string public constant VERSION = "0.2.0";
 
-    constructor(address keyperModule)
+    constructor(address palmeraModule)
         RolesAuthority(_msgSender(), Authority(address(0)))
     {
-        setupRoles(keyperModule);
+        setupRoles(palmeraModule);
     }
 
     /// Configure roles access control on Authority
-    function setupRoles(address keyperModule)
+    function setupRoles(address palmeraModule)
         internal
-        validAddress(keyperModule)
+        validAddress(palmeraModule)
     {
         /// Define Role 0 - SAFE_LEAD
 
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function addOwnerWithThreshold
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD),
-            keyperModule,
+            palmeraModule,
             Constants.ADD_OWNER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function removeOwner
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD),
-            keyperModule,
+            palmeraModule,
             Constants.REMOVE_OWNER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function execTransactionOnBehalf
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD),
-            keyperModule,
+            palmeraModule,
             Constants.EXEC_ON_BEHALF,
             true
         );
 
         /// Define Role 1 - SAFE_LEAD_EXEC_ON_BEHALF_ONLY
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function execTransactionOnBehalf
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY),
-            keyperModule,
+            palmeraModule,
             Constants.EXEC_ON_BEHALF,
             true
         );
 
         /// Define Role 2 - SAFE_LEAD_MODIFY_OWNERS_ONLY
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function addOwnerWithThreshold
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
-            keyperModule,
+            palmeraModule,
             Constants.ADD_OWNER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function removeOwner
         setRoleCapability(
             uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
-            keyperModule,
+            palmeraModule,
             Constants.REMOVE_OWNER,
             true
         );
 
         /// Define Role 3 - SUPER_SAFE
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function addOwnerWithThreshold
         setRoleCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.ADD_OWNER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function removeOwner
         setRoleCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.REMOVE_OWNER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function execTransactionOnBehalf
         setRoleCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.EXEC_ON_BEHALF,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function removeSquad
         setRoleCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.REMOVE_SQUAD,
             true
         );
 
         /// Define Role 4 - ROOT_SAFE
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function setRole
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.ROLE_ASSIGMENT,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function enable Allow List
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.ENABLE_ALLOWLIST,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function enable Deny List
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.ENABLE_DENYLIST,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function Disable Deny Helper
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.DISABLE_DENY_HELPER,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function Add to The List
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.ADD_TO_LIST,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function Remove from List
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.DROP_FROM_LIST,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function updateSuper
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.UPDATE_SUPER_SAFE,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function createRootSafeSquad
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.CREATE_ROOT_SAFE,
             true
         );
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function updateDepthTreeLimit
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.UPDATE_DEPTH_TREE_LIMIT,
             true
         );
 
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function disconnectedSafe
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.DISCONNECT_SAFE,
             true
         );
 
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function promoteRoot
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.PROMOTE_ROOT,
             true
         );
 
-        /// Target contract: KeyperModule
+        /// Target contract: PalmeraModule
         /// Auth function promoteRoot
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
-            keyperModule,
+            palmeraModule,
             Constants.REMOVE_WHOLE_TREE,
             true
         );
 
-        /// Transfer ownership of authority to keyper module
-        setOwner(keyperModule);
-        emit Events.KeyperModuleSetup(keyperModule, _msgSender());
+        /// Transfer ownership of authority to palmera module
+        setOwner(palmeraModule);
+        emit Events.PalmeraModuleSetup(palmeraModule, _msgSender());
     }
 
     /*//////////////////////////////////////////////////////////////

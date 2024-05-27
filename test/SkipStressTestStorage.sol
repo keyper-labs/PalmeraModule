@@ -21,29 +21,29 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
     // Initial Test for verification of Add subSquad
     function testAddSubSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
-        address squadBaddr = safeHelper.newKeyperSafe(4, 2);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+        address squadBaddr = safeHelper.newPalmeraSafe(4, 2);
         vm.startPrank(squadBaddr);
-        uint256 squadIdB = keyperModule.addSquad(squadIdA1, squadBName);
-        assertEq(keyperModule.isTreeMember(rootId, squadIdA1), true);
-        assertEq(keyperModule.isSuperSafe(rootId, squadIdA1), true);
-        assertEq(keyperModule.isTreeMember(squadIdA1, squadIdB), true);
-        assertEq(keyperModule.isSuperSafe(squadIdA1, squadIdB), true);
+        uint256 squadIdB = palmeraModule.addSquad(squadIdA1, squadBName);
+        assertEq(palmeraModule.isTreeMember(rootId, squadIdA1), true);
+        assertEq(palmeraModule.isSuperSafe(rootId, squadIdA1), true);
+        assertEq(palmeraModule.isTreeMember(squadIdA1, squadIdB), true);
+        assertEq(palmeraModule.isSuperSafe(squadIdA1, squadIdB), true);
         vm.stopPrank();
     }
 
     // Stress Test for Verification of maximal level when add sub Squad, in a lineal secuencial way
     function testAddSubSquadLinealSecuenceMaxLevel() public {
         (uint256 rootId, uint256 squadIdA1) =
-            keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
+            palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
         // Array of Address for the subSquads
         address[] memory subSquadAaddr = new address[](8100);
         uint256[] memory subSquadAid = new uint256[](8100);
 
         // Assig the Address to first two subSquads
-        subSquadAaddr[0] = keyperModule.getSquadSafeAddress(rootId);
-        subSquadAaddr[1] = keyperModule.getSquadSafeAddress(squadIdA1);
+        subSquadAaddr[0] = palmeraModule.getSquadSafeAddress(rootId);
+        subSquadAaddr[1] = palmeraModule.getSquadSafeAddress(squadIdA1);
 
         // Assig the Id to first two subSquads
         subSquadAid[0] = rootId;
@@ -51,11 +51,11 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
 
         for (uint256 i = 2; i < 8100; i++) {
             // Create a new Safe
-            subSquadAaddr[i] = safeHelper.newKeyperSafe(3, 1);
+            subSquadAaddr[i] = safeHelper.newPalmeraSafe(3, 1);
             // Start Prank
             vm.startPrank(subSquadAaddr[i]);
             // Add the new Safe as a subSquad
-            try keyperModule.addSquad(subSquadAid[i - 1], squadBName) returns (
+            try palmeraModule.addSquad(subSquadAid[i - 1], squadBName) returns (
                 uint256 squadId
             ) {
                 subSquadAid[i] = squadId;
@@ -67,16 +67,16 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
 
             // Verify that the new Safe is a member of tree of the previous Safe
             assertEq(
-                keyperModule.isTreeMember(subSquadAid[i - 1], subSquadAid[i]),
+                palmeraModule.isTreeMember(subSquadAid[i - 1], subSquadAid[i]),
                 true
             );
             // Verify that the new Safe is a superSafe of the previous Safe
             assertEq(
-                keyperModule.isSuperSafe(subSquadAid[i - 1], subSquadAid[i]),
+                palmeraModule.isSuperSafe(subSquadAid[i - 1], subSquadAid[i]),
                 true
             );
             // Verify that the new Safe is a member of the root Tree
-            assertEq(keyperModule.isTreeMember(rootId, subSquadAid[i]), true);
+            assertEq(palmeraModule.isTreeMember(rootId, subSquadAid[i]), true);
             // Show in consola the level of the new Safe
             console.log("Level: ", i);
         }
@@ -90,7 +90,7 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
     // 	      /|\     /|\    /|\
     // 	     B1B2B3  B1B2B3 B1B2B3 ........
     function testAddThreeSubSquadLinealSecuenceMaxLevel() public {
-        address orgSafe = safeHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newPalmeraSafe(3, 1);
         createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 3, 30000);
 
         /// Remove Whole Tree A
@@ -108,7 +108,7 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
     // 	       /|\\      /|\\     /|\\       /|\\
     // 	     B1B2B3B4  B1B2B3B4  B1B2B3B4  B1B2B3B4
     function testAddFourthSubSquadLinealSecuenceMaxLevel() public {
-        address orgSafe = safeHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newPalmeraSafe(3, 1);
         createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 4, 22000);
     }
 
@@ -120,15 +120,15 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
     // 	       /|\\\       /|\\\       /|\\\      /|\\\        /|\\\
     // 	     B1B2B3B4B5  B1B2B3B4B5  B1B2B3B4B5 B1B2B3B4B5   B1B2B3B4B5
     function testAddFifthSubSquadLinealSecuenceMaxLevel() public {
-        address orgSafe = safeHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newPalmeraSafe(3, 1);
         createTreeStressTest("RootOrg", "RootOrg", orgSafe, orgSafe, 5, 20000);
     }
 
     function testSeveralsSmallOrgsSquadSecuenceMaxLevel() public {
         setUp();
-        address orgSafe = safeHelper.newKeyperSafe(3, 1);
-        address orgSafe1 = safeHelper.newKeyperSafe(3, 1);
-        address orgSafe2 = safeHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newPalmeraSafe(3, 1);
+        address orgSafe1 = safeHelper.newPalmeraSafe(3, 1);
+        address orgSafe2 = safeHelper.newPalmeraSafe(3, 1);
         console.log("Test Severals Small Orgs Squad Secuence Max Level");
         console.log("Squad of 3 Members");
         console.log("---------------------");
@@ -149,9 +149,9 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
 
     function testSeveralsBigOrgsSquadSecuenceMaxLevel() public {
         setUp();
-        address orgSafe = safeHelper.newKeyperSafe(3, 1);
-        address orgSafe1 = safeHelper.newKeyperSafe(3, 1);
-        address orgSafe2 = safeHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newPalmeraSafe(3, 1);
+        address orgSafe1 = safeHelper.newPalmeraSafe(3, 1);
+        address orgSafe2 = safeHelper.newPalmeraSafe(3, 1);
         console.log("Full Org 1");
         console.log("---------------------");
         createTreeStressTest("RootOrg3", "RootOrg3", orgSafe, orgSafe, 3, 30000);
@@ -169,9 +169,9 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
 
     function testFullOrgSquadSecuenceMaxLevel() public {
         setUp();
-        address orgSafe = safeHelper.newKeyperSafe(3, 1);
-        address rootSafe1 = safeHelper.newKeyperSafe(3, 1);
-        address rootSafe2 = safeHelper.newKeyperSafe(3, 1);
+        address orgSafe = safeHelper.newPalmeraSafe(3, 1);
+        address rootSafe1 = safeHelper.newPalmeraSafe(3, 1);
+        address rootSafe2 = safeHelper.newPalmeraSafe(3, 1);
         console.log("Full Org 2");
         console.log("---------------------");
         createTreeStressTest("RootOrg2", "RootOrg2", orgSafe, orgSafe, 3, 30000);
@@ -198,7 +198,7 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
         uint256 rootId;
         bytes32 org = bytes32(keccak256(abi.encodePacked(OrgName)));
         if (
-            (keyperModule.isOrgRegistered(org)) && (orgSafe != rootSafe)
+            (palmeraModule.isOrgRegistered(org)) && (orgSafe != rootSafe)
                 && (
                     keccak256(abi.encodePacked(RootSafeName))
                         != keccak256(abi.encodePacked(OrgName))
@@ -207,12 +207,12 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
             safeHelper.updateSafeInterface(orgSafe);
             bool result = safeHelper.createRootSafeTx(rootSafe, RootSafeName);
             assertEq(result, true);
-            rootId = keyperModule.getSquadIdBySafe(org, rootSafe);
+            rootId = palmeraModule.getSquadIdBySafe(org, rootSafe);
         } else {
             safeHelper.updateSafeInterface(orgSafe);
             bool result = safeHelper.registerOrgTx(OrgName);
             assertEq(result, true);
-            rootId = keyperModule.getSquadIdBySafe(org, orgSafe);
+            rootId = palmeraModule.getSquadIdBySafe(org, orgSafe);
         }
 
         // Array of Address for the subSquads
@@ -234,11 +234,11 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
             uint256 superSafe = subSquadAid[level[i]];
             for (uint256 j = 0; j < members; j++) {
                 // Create a new Safe
-                subSquadAaddr[indexSquad] = safeHelper.newKeyperSafe(3, 1);
+                subSquadAaddr[indexSquad] = safeHelper.newPalmeraSafe(3, 1);
                 // Start Prank
                 vm.startPrank(subSquadAaddr[indexSquad]);
                 // Add the new Safe as a subSquad
-                try keyperModule.addSquad(superSafe, squadA1Name) returns (
+                try palmeraModule.addSquad(superSafe, squadA1Name) returns (
                     uint256 squadId
                 ) {
                     subSquadAid[indexSquad] = squadId;
@@ -250,19 +250,21 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
 
                 // Verify that the new Safe is a member of the previous Safe
                 assertEq(
-                    keyperModule.isTreeMember(
+                    palmeraModule.isTreeMember(
                         superSafe, subSquadAid[indexSquad]
                     ),
                     true
                 );
                 // Verify that the new Safe is a superSafe of the previous Safe
                 assertEq(
-                    keyperModule.isSuperSafe(superSafe, subSquadAid[indexSquad]),
+                    palmeraModule.isSuperSafe(
+                        superSafe, subSquadAid[indexSquad]
+                    ),
                     true
                 );
                 // Verify that the new Safe is a member of the root Safe
                 assertEq(
-                    keyperModule.isTreeMember(rootId, subSquadAid[indexSquad]),
+                    palmeraModule.isTreeMember(rootId, subSquadAid[indexSquad]),
                     true
                 );
                 // Only increment indexLevel if is the first Safe of the level

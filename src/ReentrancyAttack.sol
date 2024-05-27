@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
-import {KeyperModule} from "../src/KeyperModule.sol";
+import {PalmeraModule} from "../src/PalmeraModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
@@ -18,16 +18,16 @@ contract Attacker {
 
     address[] public owners = new address[](2);
 
-    KeyperModule public keyperModule;
+    PalmeraModule public palmeraModule;
 
     constructor(address _contractToAttackAddress) {
-        keyperModule = KeyperModule(_contractToAttackAddress);
+        palmeraModule = PalmeraModule(_contractToAttackAddress);
     }
 
     //this is called when Attackee sends Ether to this contract (Attacker)
     receive() external payable {
         if (address(targetSafeFromAttacker).balance > 0 gwei) {
-            keyperModule.execTransactionOnBehalf(
+            palmeraModule.execTransactionOnBehalf(
                 orgFromAttacker,
                 superSafeFromAttacker,
                 targetSafeFromAttacker,
@@ -61,7 +61,7 @@ contract Attacker {
         bytes memory signatures
     ) external returns (bool result) {
         setParamsForAttack(org, superSafe, targetSafe, data, signatures);
-        result = keyperModule.execTransactionOnBehalf(
+        result = palmeraModule.execTransactionOnBehalf(
             org, superSafe, targetSafe, to, value, data, operation, signatures
         );
         return true;
