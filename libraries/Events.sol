@@ -4,18 +4,18 @@ pragma solidity ^0.8.15;
 /// @title Library Events
 /// @custom:security-contact general@palmeradao.xyz
 library Events {
-	/// @dev Event Fire when create a new Organization
-	/// @param creator Address of the creator
-	/// @param org Hash(DAO's name)
-	/// @param name String name of the organization
+    /// @dev Event Fire when create a new Organisation
+    /// @param creator Address of the creator
+    /// @param org Hash(on-chain Organisation)
+    /// @param name String name of the organisation
     event OrganizationCreated(
         address indexed creator,
         bytes32 indexed org,
         string name
     );
 
-    /// @dev Event Fire when create a New Squad (Tier 0) into the organization
-    /// @param org Hash(DAO's name)
+    /// @dev Event Fire when create a New Squad (Tier 0) into the organisation
+    /// @param org Hash(on-chain Organisation)
     /// @param squadCreated ID of the squad
     /// @param lead Address of Safe Lead of the squad
     /// @param creator Address of the creator of the squad
@@ -30,8 +30,8 @@ library Events {
         string name
     );
 
-    /// @dev Event Fire when remove a Squad (Tier 0) from the organization
-    /// @param org Hash(DAO's name)
+    /// @dev Event Fire when remove a Squad (Tier 0) from the organisation
+    /// @param org Hash(on-chain Organisation)
     /// @param squadRemoved ID of the squad removed
     /// @param lead Address of Safe Lead of the squad
     /// @param remover Address of the creator of the squad
@@ -46,8 +46,8 @@ library Events {
         string name
     );
 
-    /// @dev Event Fire when update SuperSafe of a Squad (Tier 0) from the organization
-    /// @param org Hash(DAO's name)
+    /// @dev Event Fire when update SuperSafe of a Squad (Tier 0) from the organisation
+    /// @param org Hash(on-chain Organisation)
     /// @param squadUpdated ID of the squad updated
     /// @param lead Address of Safe Lead of the squad
     /// @param updater Address of the updater of the squad
@@ -63,7 +63,7 @@ library Events {
     );
 
     /// @dev Event Fire when Keyper Module execute a transaction on behalf of a Safe
-    /// @param org Hash(DAO's name)
+    /// @param org Hash(on-chain Organisation)
     /// @param executor Address of the executor
     /// @param target Address of the Target Safe
     /// @param result Result of the execution of transaction on behalf of the Safe (true or false)
@@ -75,11 +75,11 @@ library Events {
         bool result
     );
 
-    /// @dev Event Fire when any Gnosis Safe enable the Keyper Module
+    /// @dev Event Fire when any Safe enable the Keyper Module
     event ModuleEnabled(address indexed safe, address indexed module);
 
     /// @dev Event Fire when any Root Safe create a new Root Safe
-    /// @param org Hash(DAO's name)
+    /// @param org Hash(on-chain Organisation)
     /// @param newIdRootSafeSquad New ID of the Root Safe Squad
     /// @param creator Address of the creator
     /// @param newRootSafeSquad Address of the new Root Safe
@@ -93,7 +93,7 @@ library Events {
     );
 
     /// @dev Event Fire when update SuperSafe of a Squad To Root Safe
-    /// @param org Hash(DAO's name)
+    /// @param org Hash(on-chain Organisation)
     /// @param newIdRootSafeSquad ID of the squad updated
     /// @param updater Address of the updater of the squad
     /// @param newRootSafeSquad Address of the new Root Safe
@@ -107,7 +107,7 @@ library Events {
     );
 
     /// @dev Event Fire when an Root Safe Remove Whole of Tree
-    /// @param org Hash(DAO's name)
+    /// @param org Hash(on-chain Organisation)
     /// @param rootSafeSquadId ID of the squad updated
     /// @param remover Address of the remover of the squad
     /// @param name String name of the new Root Safe
@@ -119,7 +119,7 @@ library Events {
     );
 
     /// @dev Event Fire when any Root Safe change Depth Tree Limit
-    /// @param org Hash(DAO's name)
+    /// @param org Hash(on-chain Organisation)
     /// @param rootSafeSquadId New ID of the Root Safe Squad
     /// @param updater Address of the Root Safe
     /// @param oldLimit uint256 Old Limit of Tree
@@ -132,8 +132,8 @@ library Events {
         uint256 newLimit
     );
 
-    /// @dev Event Fire when remove a Squad (Tier 0) from the organization
-    /// @param org Hash(DAO's name)
+    /// @dev Event Fire when remove a Squad (Tier 0) from the organisation
+    /// @param org Hash(on-chain Organisation)
     /// @param squad ID of the squad Disconnect
     /// @param safe Address of Safe Address of the squad Disconnect
     /// @param disconnector Address of the disconnector

@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 /// @title Library Constants
 /// @custom:security-contact general@palmeradao.xyz
 library Constants {
-    // Sentinel Owners for Gnosis Safe
+    // Sentinel Owners for Safe
     address internal constant SENTINEL_ADDRESS = address(0x1);
     // keccak256(
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"

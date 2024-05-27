@@ -8,7 +8,7 @@ import {DataTypes} from "./DataTypes.sol";
 library Errors {
     /// @notice Error codes for the Keyper module
     /// @dev Errors Keyper Modules
-    /// @dev Error messages when the Org Hash (Dao's name) is not Registered
+    /// @dev Error messages when the Org Hash (On-chain Organisation) is not Registered
     error OrgNotRegistered(bytes32 org);
     /// @dev Error messages when the Squad(`squad`) is not Registered
     error SquadNotRegistered(uint256 squad);
@@ -55,10 +55,10 @@ library Errors {
     error PreviewModuleNotFound(address squad);
     /// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
     error TxOnBehalfExecutedFailed();
-    /// @dev Error messages when the caller is an Invalid Gnosis Safe
-    error InvalidGnosisSafe(address safe);
-    /// @dev Error messages when the caller is an Invalid Gnosis Root Safe
-    error InvalidGnosisRootSafe(address safe);
+    /// @dev Error messages when the caller is an Invalid Safe
+    error InvalidSafe(address safe);
+    /// @dev Error messages when the caller is an Invalid Root Safe
+    error InvalidRootSafe(address safe);
     /// @dev Error messages when the Squad is an Invalid ID's
     error InvalidSquadId();
     /// @dev Error messages when the Try to Modify a Role Not Permitted

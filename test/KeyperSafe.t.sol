@@ -20,19 +20,6 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
     }
 
-    // ! ********************** createSafeFactory Test **************************
-
-    // Checks if a safe is created successfully from Module
-    // function testCreateSafeFromModule() public {
-    //     address newSafe = keyperHelper.createSafeProxy(4, 2);
-    //     assertFalse(newSafe == address(0));
-    //     // Verify newSafe has keyper modulle enabled
-    //     GnosisSafe safe = GnosisSafe(payable(newSafe));
-    //     bool isKeyperModuleEnabled =
-    //         safe.isModuleEnabled(address(keyperHelper.keyper()));
-    //     assertEq(isKeyperModuleEnabled, true);
-    // }
-
     // ! ********************** Allow/Deny list Test ********************
 
     // Revert AddresNotAllowed() execTransactionOnBehalf (safeSquadA1 is not on AllowList)
@@ -57,8 +44,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         keyperModule.enableAllowlist();
         vm.stopPrank();
 
-        // Set keyperhelper gnosis safe to safeSquadA1
-        keyperHelper.setGnosisSafe(squadA1Addr);
+        // Set keyperhelper safe to safeSquadA1
+        keyperHelper.setSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             orgHash,
@@ -110,8 +97,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         keyperModule.addToList(receiverList);
         vm.stopPrank();
 
-        // Set keyperhelper gnosis safe to safeSquadA1
-        keyperHelper.setGnosisSafe(squadA1Addr);
+        // Set keyperhelper safe to safeSquadA1
+        keyperHelper.setSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             orgHash,
@@ -165,8 +152,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         keyperModule.disableDenyHelper();
         vm.stopPrank();
 
-        // Set keyperhelper gnosis safe to safeSquadA1
-        keyperHelper.setGnosisSafe(squadA1Addr);
+        // Set keyperhelper safe to safeSquadA1
+        keyperHelper.setSafe(squadA1Addr);
         bytes memory emptyData;
         bytes memory signatures = keyperHelper.encodeSignaturesKeyperTx(
             orgHash,
@@ -221,8 +208,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address rootAddr = keyperModule.getSquadSafeAddress(rootId);
 
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveSquadTx(subSquadA1Id);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
         assertEq(result, true);
         assertEq(keyperModule.isSuperSafe(rootId, subSquadA1Id), false);
 
@@ -299,8 +286,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
 
         address squadAAddr = keyperModule.getSquadSafeAddress(squadA1Id);
 
-        gnosisHelper.updateSafeInterface(squadAAddr);
-        bool result = gnosisHelper.createRemoveSquadTx(subSquadA1Id);
+        safeHelper.updateSafeInterface(squadAAddr);
+        bool result = safeHelper.createRemoveSquadTx(subSquadA1Id);
         assertEq(result, true);
         assertEq(keyperModule.isSuperSafe(squadA1Id, subSquadA1Id), false);
         assertEq(keyperModule.isSuperSafe(rootId, subSquadA1Id), false);
@@ -365,8 +352,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         (,,,,, uint256 superSafe) = keyperModule.getSquadInfo(squadA1Id);
         (,, address superSafeAddr,,) = keyperModule.squads(orgHash, superSafe);
 
-        gnosisHelper.updateSafeInterface(rootAddr);
-        bool result = gnosisHelper.createRemoveSquadTx(squadA1Id);
+        safeHelper.updateSafeInterface(rootAddr);
+        bool result = safeHelper.createRemoveSquadTx(squadA1Id);
         assertEq(result, true);
 
         assertEq(
