@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import {ISafe, ISafeProxy} from "./SafeInterfaces.sol";
+import {ISafe} from "./SafeInterfaces.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {

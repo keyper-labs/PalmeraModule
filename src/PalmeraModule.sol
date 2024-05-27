@@ -13,8 +13,7 @@ import {
     Address,
     GnosisSafeMath,
     Enum,
-    ISafe,
-    ISafeProxy
+    ISafe
 } from "./Helpers.sol";
 
 /// @title Palmera Module
@@ -23,17 +22,19 @@ contract PalmeraModule is Auth, Helpers {
     using GnosisSafeMath for uint256;
     using Address for address;
 
-    /// @dev Definition of Safe module
+    /// @dev Definition of Safe Palmera Module
+    /// @notice NAME Name of the Palmera Module
     string public constant NAME = "Palmera Module";
+    /// @notice VERSION Version of the Palmera Module
     string public constant VERSION = "0.2.0";
-    /// @dev Control Nonce of the module
+    /// @dev Control Nonce of the Palmera Module
     uint256 public nonce;
     /// @dev indexId of the safe
     uint256 public indexId;
     /// @dev Max Depth Tree Limit
-    uint256 public maxDepthTreeLimit;
+    uint256 immutable maxDepthTreeLimit;
     /// @dev RoleAuthority
-    address public rolesAuthority;
+    address immutable rolesAuthority;
     /// @dev Array of Orgs (based on Hash (On-chain Organisation) of the Org)
     bytes32[] private orgHash;
     /// @dev Index of Safe

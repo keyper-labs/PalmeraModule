@@ -3,9 +3,6 @@ pragma solidity 0.8.23;
 
 import {PalmeraModule} from "../src/PalmeraModule.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
-import {Errors} from "../libraries/Errors.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Constants} from "../libraries/Constants.sol";
 
 /// @title Attacker
 /// @custom:security-contact general@palmeradao.xyz
@@ -95,16 +92,6 @@ contract Attacker {
     function getBalanceFromAttacker() external view returns (uint256) {
         return address(this).balance;
     }
-
-    /// function to get the balance of the attacker contract
-    /// @param dataHash Hash of the transaction data to sign
-    /// @param data Data payload of the transaction
-    /// @param signatures Packed signatures data (v, r, s)
-    function checkSignatures(
-        bytes32 dataHash,
-        bytes memory data,
-        bytes memory signatures
-    ) external view {}
 
     /// function to get the owners of the Safe Multisig Wallet
     /// @return Array of owners of the Safe Multisig Wallet

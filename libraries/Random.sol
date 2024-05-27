@@ -32,7 +32,7 @@ library Random {
             )
         );
 
-        return (seed - ((seed / 1e18) * 1e18));
+        return (seed - ((seed * 1e18) / 1e18));
     }
 
     /**

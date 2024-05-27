@@ -11,7 +11,9 @@ import {Events} from "../libraries/Events.sol";
 /// @title Palmera Roles
 /// @custom:security-contact general@palmeradao.xyz
 contract PalmeraRoles is RolesAuthority, ValidAddress {
+    /// @notice Name of the Palmera Roles
     string public constant NAME = "Palmera Roles";
+    /// @notice Version of the Palmera Roles
     string public constant VERSION = "0.2.0";
 
     constructor(address palmeraModule)

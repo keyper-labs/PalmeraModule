@@ -9,16 +9,16 @@ import {
     Errors,
     Constants,
     ISafe,
-    ISafeProxy,
     Enum
 } from "./PalmeraModule.sol";
 
 /// @title Palmera Guard
 /// @custom:security-contact general@palmeradao.xyz
 contract PalmeraGuard is BaseGuard, Context {
-    PalmeraModule palmeraModule;
-
+    PalmeraModule immutable palmeraModule;
+    /// @notice Name of the Guard
     string public constant NAME = "Palmera Guard";
+    /// @notice Version of the Guard
     string public constant VERSION = "0.2.0";
 
     constructor(address payable palmeraModuleAddr) {
