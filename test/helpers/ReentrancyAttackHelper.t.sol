@@ -37,7 +37,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     /// function to encode signatures for Attack PalmeraTx
-    /// @param org Organization address
+    /// @param org Organisation address
     /// @param superSafe Super Safe address
     /// @param targetSafe Target Safe address
     /// @param to Address to send the transaction
@@ -73,8 +73,8 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         return signatures;
     }
 
-    /// function to set Attacker Tree for the organization
-    /// @param _orgName Name of the organization
+    /// function to set Attacker Tree for the organisation
+    /// @param _orgName Name of the organisation
     /// @return orgHash, orgAddr, attackerSafe, victim
     function setAttackerTree(string memory _orgName)
         public

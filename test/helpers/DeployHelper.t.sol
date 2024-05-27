@@ -66,7 +66,7 @@ contract DeployHelper is Test {
         // Predict the future address of palmera roles
         palmeraRolesDeployed = factory.getDeployed(address(this), salt);
 
-        // Init a new safe as main organization (3 owners, 1 threshold)
+        // Init a new safe as main organisation (3 owners, 1 threshold)
         safeHelper = new SafeHelper();
         safeAddr = safeHelper.setupSeveralSafeEnv(initOwners);
 

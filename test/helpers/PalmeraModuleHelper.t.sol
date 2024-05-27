@@ -39,7 +39,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     /// function Encode signatures for a palmeratx
-    /// @param org Organization address
+    /// @param org Organisation address
     /// @param superSafe Super Safe address
     /// @param targetSafe Target Safe address
     /// @param to Address to send the transaction
@@ -59,7 +59,14 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = palmera.nonce();
         bytes32 txHashed = palmera.getTransactionHash(
-            org, superSafe, targetSafe, to, value, data, operation, nonce
+            org,
+            superSafe,
+            targetSafe,
+            to,
+            value,
+            data,
+            operation,
+            nonce
         );
 
         address[] memory owners = safeHelper.getOwners();
@@ -79,7 +86,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     /// function Sign palmeraTx with invalid signatures (do not belong to any safe owner)
-    /// @param org Organization address
+    /// @param org Organisation address
     /// @param superSafe Super Safe address
     /// @param targetSafe Target Safe address
     /// @param to Address to send the transaction
@@ -99,7 +106,14 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = palmera.nonce();
         bytes32 txHashed = palmera.getTransactionHash(
-            org, superSafe, targetSafe, to, value, data, operation, nonce
+            org,
+            superSafe,
+            targetSafe,
+            to,
+            value,
+            data,
+            operation,
+            nonce
         );
 
         uint256 threshold = safeHelper.getThreshold();
@@ -115,7 +129,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     /// function to create a palmeraTx hash
-    /// @param org Organization address
+    /// @param org Organisation address
     /// @param superSafe Super Safe address
     /// @param targetSafe Target Safe address
     /// @param to Address to send the transaction
@@ -135,7 +149,14 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
         uint256 nonce
     ) public view returns (bytes32) {
         bytes32 txHashed = palmera.getTransactionHash(
-            org, superSafe, targetSafe, to, value, data, operation, nonce
+            org,
+            superSafe,
+            targetSafe,
+            to,
+            value,
+            data,
+            operation,
+            nonce
         );
         return txHashed;
     }

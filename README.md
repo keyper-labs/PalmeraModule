@@ -1,6 +1,6 @@
 # PalmeraModule - Safe module for Palmera
 
-This contract is a registry of palmera organization/squads setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
+This contract is a registry of palmera organisation/squads setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
 
 ## Tech requirements
 
@@ -48,25 +48,25 @@ Execute the command `deploy-module` located in the Makefile
 
 Execute the command `deploy-new-safe` located in the Makefile
 
-## Setting up a DAO
+## Setting up a On-Chain Organisation
 
 All the following calls have to be executed from a safe using safe execTransation function. Check documentation https://safe-docs.dev.gnosisdev.com/safe/docs/contracts_tx_execution/
 
-# Register main organisation
+# Register main Organisation
 
 `function registerOrg(string memory name)`
 
 The address of the calling safe is going to be registered with the input name
 
-# Add Subsquads to main organisation
+# Add Subsquads to main Organisation
 
 `function addSquad(address org, address superSafe, string memory name)`
 
-Need to specify to which organisation the new squad will belong
+Need to specify to which Organisation the new squad will belong
 
 ## Requirements (not finalized)
 
-Organization=Safe Root has multiple squads
+Organisation=Safe Root has multiple squads
 Squads/Safe relationship
 
 -   Each squad is associated to a safe

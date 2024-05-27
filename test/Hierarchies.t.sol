@@ -11,7 +11,7 @@ contract Hierarchies is DeployHelper {
         DeployHelper.deployAllContracts(90);
     }
 
-    /// @notice Test Register Root Organization
+    /// @notice Test Register Root Organisation
     function testRegisterRootOrg() public {
         bool result = safeHelper.registerOrgTx(orgName);
         assertEq(result, true);
@@ -42,7 +42,7 @@ contract Hierarchies is DeployHelper {
         );
     }
 
-    /// @notice Test Add Squad to Root Organization
+    /// @notice Test Add Squad to Root Organisation
     function testAddSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
             palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
