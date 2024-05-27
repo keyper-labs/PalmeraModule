@@ -37,7 +37,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
     // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> NOT_ALLOW_LIST
     function testRevertSuperSafeExecOnBehalfIsNotAllowList() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
@@ -87,7 +87,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
     // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> DENY_LIST
     function testRevertSuperSafeExecOnBehalfIsDenyList() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
@@ -140,7 +140,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> safeSquadA1
     // Target Info: Type-> SAFE, Name -> safeSubSquadA1, Hierarchy related to caller -> DENY_LIST
     function testDisableDenyHelperList() public {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
@@ -259,6 +259,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         keyperModule.removeSquad(squadAId);
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
+    // Target Info: Type-> ROOT_SAFE, Name -> rootB, Hierarchy related to caller -> DIFFERENT_TREE
     function testCannot_RemoveSquad_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_DifferentOrg(
     ) public {
         (uint256 rootIdA, uint256 squadAId, uint256 rootIdB, uint256 squadBId,,)
@@ -288,7 +290,7 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
     function testCan_RemoveSquad_SUPER_SAFE_as_SAFE_is_SUPER_SAFE_SameTree()
         public
     {
-        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,) =
+        (uint256 rootId, uint256 squadA1Id, uint256 subSquadA1Id,,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
@@ -387,6 +389,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         );
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
+    // Target Info: Type-> SUPER_SAFE, Name -> squadA, Hierarchy related to caller -> SAME_TREE
     function testCan_hasNotPermissionOverTarget_is_root_of_target() public {
         (uint256 rootId, uint256 squadA1Id) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -400,6 +404,8 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         assertFalse(result);
     }
 
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Super, Name -> squadA
+    // Target Info: Type-> ROOT_SAFE, Name -> rootA, Hierarchy related to caller -> SAME_TREE
     function testCan_hasNotPermissionOverTarget_is_not_root_of_target()
         public
     {
@@ -415,10 +421,12 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         assertTrue(result);
     }
 
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Super, Name -> squadA
+    // Target Info: Type-> CHILD_SAFE, Name -> subSquadA, Hierarchy related to caller -> SAME_TREE
     function testCan_hasNotPermissionOverTarget_is_super_safe_of_target()
         public
     {
-        (, uint256 squadA1Id, uint256 subSquadA1Id,) = keyperSafeBuilder
+        (, uint256 squadA1Id, uint256 subSquadA1Id,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);
@@ -430,10 +438,12 @@ contract TestKeyperSafe is SigningUtils, DeployHelper {
         assertFalse(result);
     }
 
+    // Caller Info: Role-> CHILD_SAFE, Type -> SAFE, Hierarchy -> Child, Name -> subSquadA
+    // Target Info: Type-> SUPER_SAFE, Name -> squadA, Hierarchy related to caller -> SAME_TREE
     function testCan_hasNotPermissionOverTarget_is_not_super_safe_of_target()
         public
     {
-        (, uint256 squadA1Id, uint256 subSquadA1Id,) = keyperSafeBuilder
+        (, uint256 squadA1Id, uint256 subSquadA1Id,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
 
         address squadAddr = keyperModule.getSquadSafeAddress(squadA1Id);

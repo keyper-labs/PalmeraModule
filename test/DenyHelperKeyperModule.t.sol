@@ -15,8 +15,6 @@ contract DenyHelperKeyperModuleTest is DeployHelper {
         // Initial Deploy Contracts
         deployAllContracts(60);
         // Setup of all Safe for Testing
-        // org1 = gnosisHelper.setupSeveralSafeEnv(30);
-        // squadA = gnosisHelper.setupSeveralSafeEnv(30);
         (RootOrgId, squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
         org1 = keyperModule.getSquadSafeAddress(RootOrgId);

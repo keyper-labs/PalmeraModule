@@ -7,6 +7,7 @@ import {Enum} from "@safe-contracts/common/Enum.sol";
 /// @title SigningUtils
 /// @custom:security-contact general@palmeradao.xyz
 abstract contract SigningUtils {
+    /// @dev Transaction structure
     struct Transaction {
         address to;
         uint256 value;
@@ -44,6 +45,12 @@ abstract contract SigningUtils {
         return ECDSA.toTypedDataHash(domainSeparator, structHash);
     }
 
+    /**
+     * @dev Given a transaction, it creates a hash of the transaction that can be signed
+     * @param domainSeparatorGnosis Hash of the Gnosis Safe domain separator
+     * @param safeTx Gnosis Safe transaction
+     * @return Hash of the transaction
+     */
     function createDigestExecTx(
         bytes32 domainSeparatorGnosis,
         Transaction memory safeTx

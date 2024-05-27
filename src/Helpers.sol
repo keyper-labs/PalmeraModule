@@ -16,7 +16,7 @@ import {
 } from "./DenyHelper.sol";
 import {SignatureDecoder} from "@safe-contracts/common/SignatureDecoder.sol";
 
-/// @title DenyHelper
+/// @title Helpers
 /// @custom:security-contact general@palmeradao.xyz
 abstract contract Helpers is DenyHelper, SignatureDecoder {
     using GnosisSafeMath for uint256;

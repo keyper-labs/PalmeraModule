@@ -2,10 +2,11 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
-import "forge-std/console.sol";
 import {KeyperModule} from "../src/KeyperModule.sol";
 import "@solenv/Solenv.sol";
 
+/// @title Deploy KeyperSafe
+/// @custom:security-contact general@palmeradao.xyz
 contract DeployKeyperSafe is Script {
     function run() public {
         Solenv.config();

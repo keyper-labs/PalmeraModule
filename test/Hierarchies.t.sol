@@ -106,7 +106,7 @@ contract Hierarchies is DeployHelper {
     }
 
     function testTreeOrgsTreeMember() public {
-        (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1,) =
+        (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1,,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
@@ -234,7 +234,7 @@ contract Hierarchies is DeployHelper {
     }
 
     function testCreateSquadThreeTiersTree() public {
-        (uint256 orgRootId, uint256 safeSquadA1Id, uint256 safeSubSquadA1Id,) =
+        (uint256 orgRootId, uint256 safeSquadA1Id, uint256 safeSubSquadA1Id,,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
             orgName, squadA1Name, subSquadA1Name
         );
