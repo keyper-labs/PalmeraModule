@@ -12,7 +12,7 @@ abstract contract SignDigestHelper is Test {
         returns (bytes memory)
     {
         bytes memory signatures;
-        for (uint256 i = 0; i < _privateKeyOwners.length; i++) {
+        for (uint256 i; i < _privateKeyOwners.length; ++i) {
             (uint8 v, bytes32 r, bytes32 s) =
                 vm.sign(_privateKeyOwners[i], digest);
             signatures = abi.encodePacked(signatures, r, s, v);
@@ -27,7 +27,7 @@ abstract contract SignDigestHelper is Test {
         returns (address[] memory)
     {
         for (uint256 i = addresses.length - 1; i > 0; i--) {
-            for (uint256 j = 0; j < i; j++) {
+            for (uint256 j; j < i; ++j) {
                 if (addresses[i] < addresses[j]) {
                     (addresses[i], addresses[j]) = (addresses[j], addresses[i]);
                 }

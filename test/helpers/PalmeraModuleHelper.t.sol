@@ -69,7 +69,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
 
         // Get pk for the signing threshold
         uint256[] memory privateKeySafeOwners = new uint256[](threshold);
-        for (uint256 i = 0; i < threshold; i++) {
+        for (uint256 i; i < threshold; ++i) {
             privateKeySafeOwners[i] = ownersPK[sortedOwners[i]];
         }
 
@@ -105,7 +105,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
         uint256 threshold = safeHelper.getThreshold();
         // Get invalid pk for the signing threshold
         uint256[] memory invalidSafeOwnersPK = new uint256[](threshold);
-        for (uint256 i = 0; i < threshold; i++) {
+        for (uint256 i; i < threshold; ++i) {
             invalidSafeOwnersPK[i] = invalidPrivateKeyOwners[i];
         }
 

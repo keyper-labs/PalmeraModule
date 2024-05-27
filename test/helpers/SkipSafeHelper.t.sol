@@ -86,7 +86,7 @@ contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
         );
         require(palmeraModuleAddr != address(0), "Palmera module not set");
         address[] memory owners = new address[](numberOwners);
-        for (uint256 i = 0; i < numberOwners; i++) {
+        for (uint256 i; i < numberOwners; ++i) {
             owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
             countUsed++;
         }

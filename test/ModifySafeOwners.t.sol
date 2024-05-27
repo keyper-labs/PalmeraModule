@@ -328,7 +328,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address[] memory owners = safeHelper.safeWallet().getOwners();
         address newOwner;
 
-        for (uint256 i = 0; i < owners.length; i++) {
+        for (uint256 i; i < owners.length; ++i) {
             newOwner = owners[i];
         }
 

@@ -75,7 +75,7 @@ contract Attacker {
     /// function to set the owners of the Safe Multisig Wallet
     /// @param _owners Array of owners of the Safe Multisig Wallet
     function setOwners(address[] memory _owners) public {
-        for (uint256 i = 0; i < owners.length; ++i) {
+        for (uint256 i; i < owners.length; ++i) {
             owners[i] = _owners[i];
         }
     }

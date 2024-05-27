@@ -425,7 +425,7 @@ contract PalmeraModule is Auth, Helpers {
         DataTypes.Safe storage superSafe = safes[org][_safe.superSafe];
 
         /// Remove child from superSafe
-        for (uint256 i = 0; i < superSafe.child.length; ++i) {
+        for (uint256 i; i < superSafe.child.length; ++i) {
             if (superSafe.child[i] == safe) {
                 superSafe.child[i] = superSafe.child[superSafe.child.length - 1];
                 superSafe.child.pop();
@@ -433,7 +433,7 @@ contract PalmeraModule is Auth, Helpers {
             }
         }
         // Handle child from removed safe
-        for (uint256 i = 0; i < _safe.child.length; ++i) {
+        for (uint256 i; i < _safe.child.length; ++i) {
             // Add removed safe child to superSafe
             superSafe.child.push(_safe.child[i]);
             DataTypes.Safe storage childrenSafe = safes[org][_safe.child[i]];
@@ -507,7 +507,7 @@ contract PalmeraModule is Auth, Helpers {
         uint256 rootSafe = getSafeIdBySafe(org, caller);
         uint256[] memory _indexSafe = getTreeMember(rootSafe, indexSafe[org]);
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        for (uint256 j = 0; j < _indexSafe.length; ++j) {
+        for (uint256 j; j < _indexSafe.length; ++j) {
             uint256 safe = _indexSafe[j];
             DataTypes.Safe memory _safe = safes[org][safe];
             // Revoke roles to safe
@@ -593,7 +593,7 @@ contract PalmeraModule is Auth, Helpers {
         DataTypes.Safe storage oldSuper = safes[org][_safe.superSafe];
 
         /// Remove child from superSafe
-        for (uint256 i = 0; i < oldSuper.child.length; ++i) {
+        for (uint256 i; i < oldSuper.child.length; ++i) {
             if (oldSuper.child[i] == safe) {
                 oldSuper.child[i] = oldSuper.child[oldSuper.child.length - 1];
                 oldSuper.child.pop();
@@ -669,7 +669,7 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.DenyHelpersDisabled();
         }
         address currentWallet = Constants.SENTINEL_ADDRESS;
-        for (uint256 i = 0; i < users.length; ++i) {
+        for (uint256 i; i < users.length; ++i) {
             address wallet = users[i];
             if (
                 wallet == address(0) || wallet == Constants.SENTINEL_ADDRESS
@@ -922,7 +922,7 @@ contract PalmeraModule is Auth, Helpers {
     /// @param safe address of Safe
     /// @return Org Hashed Name
     function getOrgHashBySafe(address safe) public view returns (bytes32) {
-        for (uint256 i = 0; i < orgHash.length; ++i) {
+        for (uint256 i; i < orgHash.length; ++i) {
             if (getSafeIdBySafe(orgHash[i], safe) != 0) {
                 return orgHash[i];
             }
@@ -943,7 +943,7 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.OrgNotRegistered(org);
         }
         /// Check if the Safe address is into an Safe mapping
-        for (uint256 i = 0; i < indexSafe[org].length; ++i) {
+        for (uint256 i; i < indexSafe[org].length; ++i) {
             if (safes[org][indexSafe[org][i]].safe == safe) {
                 return indexSafe[org][i];
             }
@@ -957,7 +957,7 @@ contract PalmeraModule is Auth, Helpers {
     /// @return orgSafe Hash (On-chain Organisation)
     function getOrgBySafe(uint256 safe) public view returns (bytes32 orgSafe) {
         if ((safe == 0) || (safe > indexId)) revert Errors.InvalidSafeId();
-        for (uint256 i = 0; i < orgHash.length; ++i) {
+        for (uint256 i; i < orgHash.length; ++i) {
             if (safes[orgHash[i]][safe].safe != address(0)) {
                 orgSafe = orgHash[i];
             }
@@ -1084,7 +1084,7 @@ contract PalmeraModule is Auth, Helpers {
     /// @param org ID's of the organisation
     /// @param safe uint256 of the safe
     function removeIndexSafe(bytes32 org, uint256 safe) private {
-        for (uint256 i = 0; i < indexSafe[org].length; ++i) {
+        for (uint256 i; i < indexSafe[org].length; ++i) {
             if (indexSafe[org][i] == safe) {
                 indexSafe[org][i] = indexSafe[org][indexSafe[org].length - 1];
                 indexSafe[org].pop();
@@ -1096,7 +1096,7 @@ contract PalmeraModule is Auth, Helpers {
     /// @notice Private method to remove Org from Array of Hashes of organisations
     /// @param org ID's of the organisation
     function removeOrg(bytes32 org) private {
-        for (uint256 i = 0; i < orgHash.length; ++i) {
+        for (uint256 i; i < orgHash.length; ++i) {
             if (orgHash[i] == org) {
                 orgHash[i] = orgHash[orgHash.length - 1];
                 orgHash.pop();
@@ -1154,7 +1154,7 @@ contract PalmeraModule is Auth, Helpers {
         returns (uint256[] memory indexTree)
     {
         uint256 index;
-        for (uint256 i = 0; i < indexSafeByOrg.length; ++i) {
+        for (uint256 i; i < indexSafeByOrg.length; ++i) {
             if (
                 (getRootSafe(indexSafeByOrg[i]) == rootSafe)
                     && (indexSafeByOrg[i] != rootSafe)
@@ -1164,7 +1164,7 @@ contract PalmeraModule is Auth, Helpers {
         }
         indexTree = new uint256[](index);
         index = 0;
-        for (uint256 i = 0; i < indexSafeByOrg.length; ++i) {
+        for (uint256 i; i < indexSafeByOrg.length; ++i) {
             if (
                 (getRootSafe(indexSafeByOrg[i]) == rootSafe)
                     && (indexSafeByOrg[i] != rootSafe)

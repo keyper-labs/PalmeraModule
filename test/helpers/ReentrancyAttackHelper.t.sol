@@ -64,7 +64,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         address[] memory sortedOwners = sortAddresses(owners);
 
         uint256[] memory ownersPKFromAttacker = new uint256[](threshold);
-        for (uint256 i = 0; i < threshold; i++) {
+        for (uint256 i; i < threshold; ++i) {
             ownersPKFromAttacker[i] = ownersPK[sortedOwners[i]];
         }
 

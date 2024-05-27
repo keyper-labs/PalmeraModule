@@ -127,7 +127,7 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
         /// Check if the address is a Safe Multisig Wallet
         if (safe.isContract()) {
             /// Check if the address is a Safe Multisig Wallet
-            bytes memory payload = abi.encodeWithSignature("getThreshold()");
+            bytes memory payload = abi.encodeCall(ISafe.getThreshold, ());
             (bool success, bytes memory returnData) = safe.staticcall(payload);
             if (!success) return false;
             /// Check if the address is a Safe Multisig Wallet
@@ -152,9 +152,9 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
         uint256 count = signatures.length / 65;
         bytes memory concatenatedSignatures;
 
-        for (uint256 j = 0; j < owners.length; ++j) {
+        for (uint256 j; j < owners.length; ++j) {
             address currentOwner = owners[j];
-            for (uint256 i = 0; i < count; ++i) {
+            for (uint256 i; i < count; ++i) {
                 // Inline 'signatureSplit' logic here (r, s, v extraction)
                 (uint8 v, bytes32 r, bytes32 s) = signatureSplit(signatures, i);
 
