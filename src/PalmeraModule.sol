@@ -37,16 +37,16 @@ contract PalmeraModule is Auth, Helpers {
     address public immutable proxyFactory;
     /// @dev RoleAuthority
     address public rolesAuthority;
-    /// @dev Array of Orgs (based on Hash(DAO's name) of the Org)
+    /// @dev Array of Orgs (based on Hash(on-chain Organisation) of the Org)
     bytes32[] private orgHash;
     /// @dev Index of Squad
-    /// bytes32: Hash(DAO's name) -> uint256: ID's Squads
+    /// bytes32: Hash(on-chain Organisation) -> uint256: ID's Squads
     mapping(bytes32 => uint256[]) public indexSquad;
     /// @dev Depth Tree Limit
-    /// bytes32: Hash(DAO's name) -> uint256: Depth Tree Limit
+    /// bytes32: Hash(on-chain Organisation) -> uint256: Depth Tree Limit
     mapping(bytes32 => uint256) public depthTreeLimit;
-    /// @dev Hash(DAO's name) -> Squads
-    /// bytes32: Hash(DAO's name).   uint256:SquadId.   Squad: Squad Info
+    /// @dev Hash(on-chain Organisation) -> Squads
+    /// bytes32: Hash(on-chain Organisation).   uint256:SquadId.   Squad: Squad Info
     mapping(bytes32 => mapping(uint256 => DataTypes.Squad)) public squads;
 
     /// @dev Modifier for Validate if Org/Squad Exist or SuperSafeNotRegistered Not
@@ -62,8 +62,9 @@ contract PalmeraModule is Auth, Helpers {
     /// @param safe Safe address
     modifier SafeRegistered(address safe) {
         if (
-            (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
-                || !isSafe(safe)
+            (safe == address(0)) ||
+            safe == Constants.SENTINEL_ADDRESS ||
+            !isSafe(safe)
         ) {
             revert Errors.InvalidSafe(safe);
         } else if (!isSafeRegistered(safe)) {
@@ -72,20 +73,21 @@ contract PalmeraModule is Auth, Helpers {
         _;
     }
 
-    /// @dev Modifier for Validate if the address is a Safe Multisig Wallet and Root Safe
-    /// @param safe Address of the Safe Multisig Wallet
+    /// @dev Modifier for Validate if the address is a Safe Smart Account Wallet and Root Safe
+    /// @param safe Address of the Safe Smart Account Wallet
     modifier IsRootSafe(address safe) {
         if (
-            (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
-                || !isSafe(safe)
+            (safe == address(0)) ||
+            safe == Constants.SENTINEL_ADDRESS ||
+            !isSafe(safe)
         ) {
             revert Errors.InvalidSafe(safe);
         } else if (!isSafeRegistered(safe)) {
             revert Errors.SafeNotRegistered(safe);
         } else if (
-            squads[getOrgHashBySafe(safe)][getSquadIdBySafe(
-                getOrgHashBySafe(safe), safe
-            )].tier != DataTypes.Tier.ROOT
+            squads[getOrgHashBySafe(safe)][
+                getSquadIdBySafe(getOrgHashBySafe(safe), safe)
+            ].tier != DataTypes.Tier.ROOT
         ) {
             revert Errors.InvalidRootSafe(safe);
         }
@@ -99,8 +101,9 @@ contract PalmeraModule is Auth, Helpers {
         uint256 maxDepthTreeLimitInitial
     ) Auth(address(0), Authority(authorityAddress)) {
         if (
-            (authorityAddress == address(0)) || !masterCopyAddress.isContract()
-                || !proxyFactoryAddress.isContract()
+            (authorityAddress == address(0)) ||
+            !masterCopyAddress.isContract() ||
+            !proxyFactoryAddress.isContract()
         ) revert Errors.InvalidAddressProvided();
 
         masterCopy = masterCopyAddress;
@@ -112,7 +115,7 @@ contract PalmeraModule is Auth, Helpers {
     }
 
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
-    /// @param org ID's Organization
+    /// @param org ID's Organisation
     /// @param superSafe Safe super address
     /// @param targetSafe Safe target address
     /// @param to Address to which the transaction is being sent
@@ -165,7 +168,9 @@ contract PalmeraModule is Auth, Helpers {
 
             ISafe leadSafe = ISafe(superSafe);
             bytes memory sortedSignatures = processAndSortSignatures(
-                signatures, keccak256(palmeraTxHashData), leadSafe.getOwners()
+                signatures,
+                keccak256(palmeraTxHashData),
+                leadSafe.getOwners()
             );
             leadSafe.checkSignatures(
                 keccak256(palmeraTxHashData),
@@ -177,12 +182,20 @@ contract PalmeraModule is Auth, Helpers {
         nonce++;
         /// Execute transaction from target safe
         ISafe safeTarget = ISafe(targetSafe);
-        result =
-            safeTarget.execTransactionFromModule(to, value, data, operation);
+        result = safeTarget.execTransactionFromModule(
+            to,
+            value,
+            data,
+            operation
+        );
 
         if (!result) revert Errors.TxOnBehalfExecutedFailed();
         emit Events.TxOnBehalfExecuted(
-            org, caller, superSafe, targetSafe, result
+            org,
+            caller,
+            superSafe,
+            targetSafe,
+            result
         );
     }
 
@@ -190,9 +203,9 @@ contract PalmeraModule is Auth, Helpers {
     /// @notice to to add owner and set a threshold without passing by normal multisig check
     /// @dev For instance addOwnerWithThreshold can be called by Safe Lead & Safe Lead modify only roles
     /// @param ownerAdded Address of the owner to be added
-    /// @param threshold Threshold of the Safe Multisig Wallet
-    /// @param targetSafe Address of the Safe Multisig Wallet
-    /// @param org Hash(DAO's name)
+    /// @param threshold Threshold of the Safe Smart Account Wallet
+    /// @param targetSafe Address of the Safe Smart Account Wallet
+    /// @param org Hash(on-chain Organisation)
     function addOwnerWithThreshold(
         address ownerAdded,
         uint256 threshold,
@@ -216,7 +229,9 @@ contract PalmeraModule is Auth, Helpers {
         }
 
         bytes memory data = abi.encodeWithSelector(
-            ISafe.addOwnerWithThreshold.selector, ownerAdded, threshold
+            ISafe.addOwnerWithThreshold.selector,
+            ownerAdded,
+            threshold
         );
         /// Execute transaction from target safe
         _executeModuleTransaction(targetSafe, data);
@@ -226,9 +241,9 @@ contract PalmeraModule is Auth, Helpers {
     /// @dev For instance of Remove Owner of Safe, the user lead/super/root can remove an owner without passing by normal multisig check signature
     /// @param prevOwner Address of the previous owner
     /// @param ownerRemoved Address of the owner to be removed
-    /// @param threshold Threshold of the Safe Multisig Wallet
-    /// @param targetSafe Address of the Safe Multisig Wallet
-    /// @param org Hash(DAO's name)
+    /// @param threshold Threshold of the Safe Smart Account Wallet
+    /// @param targetSafe Address of the Safe Smart Account Wallet
+    /// @param org Hash(on-chain Organisation)
     function removeOwner(
         address prevOwner,
         address ownerRemoved,
@@ -238,9 +253,10 @@ contract PalmeraModule is Auth, Helpers {
     ) external SafeRegistered(targetSafe) requiresAuth {
         address caller = _msgSender();
         if (
-            prevOwner == address(0) || ownerRemoved == address(0)
-                || prevOwner == Constants.SENTINEL_ADDRESS
-                || ownerRemoved == Constants.SENTINEL_ADDRESS
+            prevOwner == address(0) ||
+            ownerRemoved == address(0) ||
+            prevOwner == Constants.SENTINEL_ADDRESS ||
+            ownerRemoved == Constants.SENTINEL_ADDRESS
         ) {
             revert Errors.ZeroAddressProvided();
         }
@@ -255,7 +271,10 @@ contract PalmeraModule is Auth, Helpers {
         }
 
         bytes memory data = abi.encodeWithSelector(
-            ISafe.removeOwner.selector, prevOwner, ownerRemoved, threshold
+            ISafe.removeOwner.selector,
+            prevOwner,
+            ownerRemoved,
+            threshold
         );
 
         /// Execute transaction from target safe
@@ -276,21 +295,22 @@ contract PalmeraModule is Auth, Helpers {
     ) external validAddress(user) IsRootSafe(_msgSender()) requiresAuth {
         address caller = _msgSender();
         if (
-            role == DataTypes.Role.ROOT_SAFE
-                || role == DataTypes.Role.SUPER_SAFE
+            role == DataTypes.Role.ROOT_SAFE ||
+            role == DataTypes.Role.SUPER_SAFE
         ) {
             revert Errors.SetRoleForbidden(role);
         }
         if (!isRootSafeOf(caller, squad)) {
             revert Errors.NotAuthorizedSetRoleAnotherTree();
         }
-        DataTypes.Squad storage safeSquad =
-            squads[getOrgHashBySafe(caller)][squad];
+        DataTypes.Squad storage safeSquad = squads[getOrgHashBySafe(caller)][
+            squad
+        ];
         // Check if squad is part of the caller org
         if (
-            role == DataTypes.Role.SAFE_LEAD
-                || role == DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
-                || role == DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
+            role == DataTypes.Role.SAFE_LEAD ||
+            role == DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY ||
+            role == DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
         ) {
             // Update squad/org lead
             safeSquad.lead = user;
@@ -299,14 +319,12 @@ contract PalmeraModule is Auth, Helpers {
         _authority.setUserRole(user, uint8(role), enabled);
     }
 
-    /// @notice Register an organization
+    /// @notice Register an organisation
     /// @dev Call has to be done from a safe transaction
     /// @param daoName String with of the org (This name will be hashed into smart contract)
-    function registerOrg(string calldata daoName)
-        external
-        IsSafe(_msgSender())
-        returns (uint256 squadId)
-    {
+    function registerOrg(
+        string calldata daoName
+    ) external IsSafe(_msgSender()) returns (uint256 squadId) {
         bytes32 name = keccak256(abi.encodePacked(daoName));
         address caller = _msgSender();
         squadId = _createOrgOrRoot(daoName, caller, caller);
@@ -314,14 +332,17 @@ contract PalmeraModule is Auth, Helpers {
         // Setting level by Default
         depthTreeLimit[name] = 8;
 
-        emit Events.OrganizationCreated(caller, name, daoName);
+        emit Events.OrganisationCreated(caller, name, daoName);
     }
 
-    /// @notice Call has to be done from another root safe to the organization
+    /// @notice Call has to be done from another root safe to the organisation
     /// @dev Call has to be done from a safe transaction
     /// @param newRootSafe Address of new Root Safe
     /// @param name string name of the squad
-    function createRootSafeSquad(address newRootSafe, string calldata name)
+    function createRootSafeSquad(
+        address newRootSafe,
+        string calldata name
+    )
         external
         IsSafe(newRootSafe)
         IsRootSafe(_msgSender())
@@ -336,15 +357,22 @@ contract PalmeraModule is Auth, Helpers {
         depthTreeLimit[org] = 8;
 
         emit Events.RootSafeSquadCreated(
-            org, newIndex, caller, newRootSafe, name
+            org,
+            newIndex,
+            caller,
+            newRootSafe,
+            name
         );
     }
 
-    /// @notice Add a squad to an organization/squad
+    /// @notice Add a squad to an organisation/squad
     /// @dev Call coming from the squad safe
     /// @param superSafe address of the superSafe
     /// @param name string name of the squad
-    function addSquad(uint256 superSafe, string memory name)
+    function addSquad(
+        uint256 superSafe,
+        string memory name
+    )
         external
         SquadRegistered(superSafe)
         IsSafe(_msgSender())
@@ -383,28 +411,34 @@ contract PalmeraModule is Auth, Helpers {
         if (
             (
                 !_authority.doesUserHaveRole(
-                    superSafeOrgSquad.safe, uint8(DataTypes.Role.SUPER_SAFE)
+                    superSafeOrgSquad.safe,
+                    uint8(DataTypes.Role.SUPER_SAFE)
                 )
             ) && (superSafeOrgSquad.child.length > 0)
         ) {
             _authority.setUserRole(
-                superSafeOrgSquad.safe, uint8(DataTypes.Role.SUPER_SAFE), true
+                superSafeOrgSquad.safe,
+                uint8(DataTypes.Role.SUPER_SAFE),
+                true
             );
         }
 
         emit Events.SquadCreated(
-            org, squadId, newSquad.lead, caller, superSafe, name
+            org,
+            squadId,
+            newSquad.lead,
+            caller,
+            superSafe,
+            name
         );
     }
 
     /// @notice Remove squad and reasign all child to the superSafe
     /// @dev All actions will be driven based on the caller of the method, and args
     /// @param squad address of the squad to be removed
-    function removeSquad(uint256 squad)
-        public
-        SafeRegistered(_msgSender())
-        requiresAuth
-    {
+    function removeSquad(
+        uint256 squad
+    ) public SafeRegistered(_msgSender()) requiresAuth {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 callerSafe = getSquadIdBySafe(org, caller);
@@ -414,15 +448,16 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.SquadAlreadyRemoved();
         }
         // SuperSafe usecase : Check caller is superSafe of the squad
-        if ((!isRootSafeOf(caller, squad)) && (!isSuperSafe(callerSafe, squad)))
-        {
+        if (
+            (!isRootSafeOf(caller, squad)) && (!isSuperSafe(callerSafe, squad))
+        ) {
             revert Errors.NotAuthorizedAsNotRootOrSuperSafe();
         }
         DataTypes.Squad storage _squad = squads[org][squad];
         // Check if the squad is Root Safe and has child
         if (
-            ((_squad.tier == DataTypes.Tier.ROOT) || (_squad.superSafe == 0))
-                && (_squad.child.length > 0)
+            ((_squad.tier == DataTypes.Tier.ROOT) || (_squad.superSafe == 0)) &&
+            (_squad.child.length > 0)
         ) {
             revert Errors.CannotRemoveSquadBeforeRemoveChild(
                 _squad.child.length
@@ -435,7 +470,9 @@ contract PalmeraModule is Auth, Helpers {
         /// Remove child from superSafe
         for (uint256 i = 0; i < superSafe.child.length; ++i) {
             if (superSafe.child[i] == squad) {
-                superSafe.child[i] = superSafe.child[superSafe.child.length - 1];
+                superSafe.child[i] = superSafe.child[
+                    superSafe.child.length - 1
+                ];
                 superSafe.child.pop();
                 break;
             }
@@ -444,7 +481,9 @@ contract PalmeraModule is Auth, Helpers {
         for (uint256 i = 0; i < _squad.child.length; ++i) {
             // Add removed squad child to superSafe
             superSafe.child.push(_squad.child[i]);
-            DataTypes.Squad storage childrenSquad = squads[org][_squad.child[i]];
+            DataTypes.Squad storage childrenSquad = squads[org][
+                _squad.child[i]
+            ];
             // Update children squad superSafe reference
             childrenSquad.superSafe = _squad.superSafe;
         }
@@ -455,14 +494,21 @@ contract PalmeraModule is Auth, Helpers {
         // Revoke roles to squad
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         _authority.setUserRole(
-            _squad.safe, uint8(DataTypes.Role.SUPER_SAFE), false
+            _squad.safe,
+            uint8(DataTypes.Role.SUPER_SAFE),
+            false
         );
         // Disable safe lead role
         disableSafeLeadRoles(_squad.safe);
 
         // Store the name before to delete the Squad
         emit Events.SquadRemoved(
-            org, squad, superSafe.lead, caller, _squad.superSafe, _squad.name
+            org,
+            squad,
+            superSafe.lead,
+            caller,
+            _squad.superSafe,
+            _squad.name
         );
         // Assign the with Root Safe (because is not part of the Tree)
         // If the Squad is not Root Safe, pass to depend on Root Safe directly
@@ -475,26 +521,19 @@ contract PalmeraModule is Auth, Helpers {
     /// @notice Disconnect Safe of a squad
     /// @dev Disconnect Safe of a squad, Call must come from the root safe
     /// @param squad address of the squad to be updated
-    function disconnectSafe(uint256 squad)
-        external
-        IsRootSafe(_msgSender())
-        SquadRegistered(squad)
-        requiresAuth
-    {
+    function disconnectSafe(
+        uint256 squad
+    ) external IsRootSafe(_msgSender()) SquadRegistered(squad) requiresAuth {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 rootSafe = getSquadIdBySafe(org, caller);
         DataTypes.Squad memory disconnectSquad = squads[org][squad];
         /// RootSafe usecase : Check if the squad is Member of the Tree of the caller (rootSafe)
         if (
-            (
-                (!isRootSafeOf(caller, squad))
-                    && (disconnectSquad.tier != DataTypes.Tier.REMOVED)
-            )
-                || (
-                    (!isPendingRemove(rootSafe, squad))
-                        && (disconnectSquad.tier == DataTypes.Tier.REMOVED)
-                )
+            ((!isRootSafeOf(caller, squad)) &&
+                (disconnectSquad.tier != DataTypes.Tier.REMOVED)) ||
+            ((!isPendingRemove(rootSafe, squad)) &&
+                (disconnectSquad.tier == DataTypes.Tier.REMOVED))
         ) {
             revert Errors.NotAuthorizedDisconnectChildrenSquad();
         }
@@ -520,7 +559,9 @@ contract PalmeraModule is Auth, Helpers {
             DataTypes.Squad memory _squad = squads[org][squad];
             // Revoke roles to squad
             _authority.setUserRole(
-                _squad.safe, uint8(DataTypes.Role.SUPER_SAFE), false
+                _squad.safe,
+                uint8(DataTypes.Role.SUPER_SAFE),
+                false
             );
             // Disable safe lead role
             disableSafeLeadRoles(squads[org][squad].safe);
@@ -528,7 +569,10 @@ contract PalmeraModule is Auth, Helpers {
         }
         // After Disconnect Root Safe
         emit Events.WholeTreeRemoved(
-            org, rootSafe, caller, squads[org][rootSafe].name
+            org,
+            rootSafe,
+            caller,
+            squads[org][rootSafe].name
         );
         _exitSafe(rootSafe);
         if (indexSquad[org].length == 0) removeOrg(org);
@@ -537,12 +581,9 @@ contract PalmeraModule is Auth, Helpers {
     /// @notice Method to Promete a squad to Root Safe of an Org to Root Safe
     /// @dev Method to Promete a squad to Root Safe of an Org to Root Safe
     /// @param squad address of the squad to be updated
-    function promoteRoot(uint256 squad)
-        external
-        IsRootSafe(_msgSender())
-        SquadRegistered(squad)
-        requiresAuth
-    {
+    function promoteRoot(
+        uint256 squad
+    ) external IsRootSafe(_msgSender()) SquadRegistered(squad) requiresAuth {
         bytes32 org = getOrgBySquad(squad);
         address caller = _msgSender();
         /// RootSafe usecase : Check if the squad is Member of the Tree of the caller (rootSafe)
@@ -552,15 +593,17 @@ contract PalmeraModule is Auth, Helpers {
         DataTypes.Squad storage newRootSafe = squads[org][squad];
         /// Check if the squad is a Super Safe, and an Direct Children of thr Root Safe
         if (
-            (newRootSafe.child.length <= 0)
-                || (!isSuperSafe(getSquadIdBySafe(org, caller), squad))
+            (newRootSafe.child.length <= 0) ||
+            (!isSuperSafe(getSquadIdBySafe(org, caller), squad))
         ) {
             revert Errors.NotAuthorizedUpdateNonSuperSafe();
         }
         /// Give Role RootSafe if not have it
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         _authority.setUserRole(
-            newRootSafe.safe, uint8(DataTypes.Role.ROOT_SAFE), true
+            newRootSafe.safe,
+            uint8(DataTypes.Role.ROOT_SAFE),
+            true
         );
         // Update Tier
         newRootSafe.tier = DataTypes.Tier.ROOT;
@@ -568,7 +611,11 @@ contract PalmeraModule is Auth, Helpers {
         newRootSafe.lead = address(0);
         newRootSafe.superSafe = 0;
         emit Events.RootSafePromoted(
-            org, squad, caller, newRootSafe.safe, newRootSafe.name
+            org,
+            squad,
+            caller,
+            newRootSafe.safe,
+            newRootSafe.name
         );
     }
 
@@ -576,12 +623,10 @@ contract PalmeraModule is Auth, Helpers {
     /// @dev Update the superSafe of a squad with a new superSafe, Call must come from the root safe
     /// @param squad address of the squad to be updated
     /// @param newSuper address of the new superSafe
-    function updateSuper(uint256 squad, uint256 newSuper)
-        external
-        IsRootSafe(_msgSender())
-        SquadRegistered(newSuper)
-        requiresAuth
-    {
+    function updateSuper(
+        uint256 squad,
+        uint256 newSuper
+    ) external IsRootSafe(_msgSender()) SquadRegistered(newSuper) requiresAuth {
         bytes32 org = getOrgBySquad(squad);
         address caller = _msgSender();
         /// RootSafe usecase : Check if the squad is Member of the Tree of the caller (rootSafe)
@@ -609,10 +654,12 @@ contract PalmeraModule is Auth, Helpers {
             }
         }
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        /// Revoke SuperSafe and SafeLead if don't have any child, and is not organization
+        /// Revoke SuperSafe and SafeLead if don't have any child, and is not organisation
         if (oldSuper.child.length == 0) {
             _authority.setUserRole(
-                oldSuper.safe, uint8(DataTypes.Role.SUPER_SAFE), false
+                oldSuper.safe,
+                uint8(DataTypes.Role.SUPER_SAFE),
+                false
             );
             /// TODO: verify if the oldSuper need or not the Safe Lead role (after MVP)
         }
@@ -624,11 +671,14 @@ contract PalmeraModule is Auth, Helpers {
         /// Give Role SuperSafe if not have it
         if (
             !_authority.doesUserHaveRole(
-                newSuperSquad.safe, uint8(DataTypes.Role.SUPER_SAFE)
+                newSuperSquad.safe,
+                uint8(DataTypes.Role.SUPER_SAFE)
             )
         ) {
             _authority.setUserRole(
-                newSuperSquad.safe, uint8(DataTypes.Role.SUPER_SAFE), true
+                newSuperSquad.safe,
+                uint8(DataTypes.Role.SUPER_SAFE),
+                true
             );
         }
         newSuperSquad.child.push(squad);
@@ -644,20 +694,23 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @dev Method to update Depth Tree Limit
     /// @param newLimit new Depth Tree Limit
-    function updateDepthTreeLimit(uint256 newLimit)
-        external
-        IsRootSafe(_msgSender())
-        requiresAuth
-    {
+    function updateDepthTreeLimit(
+        uint256 newLimit
+    ) external IsRootSafe(_msgSender()) requiresAuth {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 rootSafe = getSquadIdBySafe(org, caller);
-        if ((newLimit > maxDepthTreeLimit) || (newLimit <= depthTreeLimit[org]))
-        {
+        if (
+            (newLimit > maxDepthTreeLimit) || (newLimit <= depthTreeLimit[org])
+        ) {
             revert Errors.InvalidLimit();
         }
         emit Events.NewLimitLevel(
-            org, rootSafe, caller, depthTreeLimit[org], newLimit
+            org,
+            rootSafe,
+            caller,
+            depthTreeLimit[org],
+            newLimit
         );
         depthTreeLimit[org] = newLimit;
     }
@@ -667,11 +720,9 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @dev Funtion to Add Wallet to the List based on Approach of Safe Contract - Owner Manager
     /// @param users Array of Address of the Wallet to be added to the List
-    function addToList(address[] memory users)
-        external
-        IsRootSafe(_msgSender())
-        requiresAuth
-    {
+    function addToList(
+        address[] memory users
+    ) external IsRootSafe(_msgSender()) requiresAuth {
         if (users.length == 0) revert Errors.ZeroAddressProvided();
         bytes32 org = getOrgHashBySafe(_msgSender());
         if (!allowFeature[org] && !denyFeature[org]) {
@@ -681,8 +732,10 @@ contract PalmeraModule is Auth, Helpers {
         for (uint256 i = 0; i < users.length; ++i) {
             address wallet = users[i];
             if (
-                wallet == address(0) || wallet == Constants.SENTINEL_ADDRESS
-                    || wallet == address(this) || currentWallet == wallet
+                wallet == address(0) ||
+                wallet == Constants.SENTINEL_ADDRESS ||
+                wallet == address(this) ||
+                currentWallet == wallet
             ) revert Errors.InvalidAddressProvided();
             // Avoid duplicate wallet
             if (listed[org][wallet] != address(0)) {
@@ -699,12 +752,9 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @dev Function to Drop Wallet from the List  based on Approach of Safe Contract - Owner Manager
     /// @param user Array of Address of the Wallet to be dropped of the List
-    function dropFromList(address user)
-        external
-        validAddress(user)
-        IsRootSafe(_msgSender())
-        requiresAuth
-    {
+    function dropFromList(
+        address user
+    ) external validAddress(user) IsRootSafe(_msgSender()) requiresAuth {
         bytes32 org = getOrgHashBySafe(_msgSender());
         if (!allowFeature[org] && !denyFeature[org]) {
             revert Errors.DenyHelpersDisabled();
@@ -749,7 +799,9 @@ contract PalmeraModule is Auth, Helpers {
     /// @dev Method for getting all info of a squad
     /// @param squad uint256 of the squad
     /// @return all the information about a squad
-    function getSquadInfo(uint256 squad)
+    function getSquadInfo(
+        uint256 squad
+    )
         public
         view
         SquadRegistered(squad)
@@ -775,21 +827,24 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice This function checks that caller has permission (as Root/Super/Lead safe) of the target safe
     /// @param caller Caller's address
-    /// @param org Hash(DAO's name)
-    /// @param targetSafe Address of the target Safe Multisig Wallet
+    /// @param org Hash(on-chain Organisation)
+    /// @param targetSafe Address of the target Safe Smart Account Wallet
     function hasNotPermissionOverTarget(
         address caller,
         bytes32 org,
         address targetSafe
     ) public view returns (bool hasPermission) {
-        hasPermission = !isRootSafeOf(caller, getSquadIdBySafe(org, targetSafe))
-            && !isSuperSafe(
-                getSquadIdBySafe(org, caller), getSquadIdBySafe(org, targetSafe)
-            ) && !isSafeLead(getSquadIdBySafe(org, targetSafe), caller);
+        hasPermission =
+            !isRootSafeOf(caller, getSquadIdBySafe(org, targetSafe)) &&
+            !isSuperSafe(
+                getSquadIdBySafe(org, caller),
+                getSquadIdBySafe(org, targetSafe)
+            ) &&
+            !isSafeLead(getSquadIdBySafe(org, targetSafe), caller);
         return hasPermission;
     }
 
-    /// @notice check if the organisation is registered
+    /// @notice check if the Organisation is registered
     /// @param org address
     /// @return bool
     function isOrgRegistered(bytes32 org) public view returns (bool) {
@@ -797,41 +852,36 @@ contract PalmeraModule is Auth, Helpers {
         return true;
     }
 
-    /// @notice Check if the address, is a rootSafe of the squad within an organization
+    /// @notice Check if the address, is a rootSafe of the squad within an organisation
     /// @param squad ID's of the child squad/safe
     /// @param root address of Root Safe of the squad
     /// @return bool
-    function isRootSafeOf(address root, uint256 squad)
-        public
-        view
-        SquadRegistered(squad)
-        returns (bool)
-    {
+    function isRootSafeOf(
+        address root,
+        uint256 squad
+    ) public view SquadRegistered(squad) returns (bool) {
         if (root == address(0) || squad == 0) return false;
         bytes32 org = getOrgBySquad(squad);
         uint256 rootSafe = getSquadIdBySafe(org, root);
         if (rootSafe == 0) return false;
-        return (
-            (squads[org][rootSafe].tier == DataTypes.Tier.ROOT)
-                && (isTreeMember(rootSafe, squad))
-        );
+        return ((squads[org][rootSafe].tier == DataTypes.Tier.ROOT) &&
+            (isTreeMember(rootSafe, squad)));
     }
 
     /// @notice Check if the squad is a Is Tree Member of another squad
     /// @param superSafe ID's of the superSafe
     /// @param squad ID's of the squad
     /// @return isMember
-    function isTreeMember(uint256 superSafe, uint256 squad)
-        public
-        view
-        returns (bool isMember)
-    {
+    function isTreeMember(
+        uint256 superSafe,
+        uint256 squad
+    ) public view returns (bool isMember) {
         if (superSafe == 0 || squad == 0) return false;
         bytes32 org = getOrgBySquad(superSafe);
         DataTypes.Squad memory childSquad = squads[org][squad];
         if (childSquad.safe == address(0)) return false;
         if (superSafe == squad) return true;
-        (isMember,,) = _seekMember(superSafe, squad);
+        (isMember, , ) = _seekMember(superSafe, squad);
     }
 
     /// @dev Method to validate if is Depth Tree Limit
@@ -840,7 +890,7 @@ contract PalmeraModule is Auth, Helpers {
     function isLimitLevel(uint256 superSafe) public view returns (bool) {
         if ((superSafe == 0) || (superSafe > indexId)) return false;
         bytes32 org = getOrgBySquad(superSafe);
-        (, uint256 level,) = _seekMember(indexId + 1, superSafe);
+        (, uint256 level, ) = _seekMember(indexId + 1, superSafe);
         return level >= depthTreeLimit[org];
     }
 
@@ -848,19 +898,18 @@ contract PalmeraModule is Auth, Helpers {
     /// @param squad ID's of the squad
     /// @param superSafe ID's of the Safe
     /// @return bool
-    function isSuperSafe(uint256 superSafe, uint256 squad)
-        public
-        view
-        returns (bool)
-    {
+    function isSuperSafe(
+        uint256 superSafe,
+        uint256 squad
+    ) public view returns (bool) {
         if (superSafe == 0 || squad == 0) return false;
         bytes32 org = getOrgBySquad(superSafe);
         DataTypes.Squad memory childSquad = squads[org][squad];
         // Check if the Child Squad is was removed or not Exist and Return False
         if (
-            (childSquad.safe == address(0))
-                || (childSquad.tier == DataTypes.Tier.REMOVED)
-                || (childSquad.tier == DataTypes.Tier.ROOT)
+            (childSquad.safe == address(0)) ||
+            (childSquad.tier == DataTypes.Tier.REMOVED) ||
+            (childSquad.tier == DataTypes.Tier.ROOT)
         ) {
             return false;
         }
@@ -871,17 +920,16 @@ contract PalmeraModule is Auth, Helpers {
     /// @param squad ID's of the squad
     /// @param rootSafe ID's of Root Safe
     /// @return bool
-    function isPendingRemove(uint256 rootSafe, uint256 squad)
-        public
-        view
-        returns (bool)
-    {
+    function isPendingRemove(
+        uint256 rootSafe,
+        uint256 squad
+    ) public view returns (bool) {
         DataTypes.Squad memory childSquad = squads[getOrgBySquad(squad)][squad];
         // Check if the Child Squad is was removed or not Exist and Return False
         if (
-            (childSquad.safe == address(0))
-                || (childSquad.tier == DataTypes.Tier.SQUAD)
-                || (childSquad.tier == DataTypes.Tier.ROOT)
+            (childSquad.safe == address(0)) ||
+            (childSquad.tier == DataTypes.Tier.SQUAD) ||
+            (childSquad.tier == DataTypes.Tier.ROOT)
         ) {
             return false;
         }
@@ -900,27 +948,22 @@ contract PalmeraModule is Auth, Helpers {
     /// @dev Method to get Root Safe of a Squad
     /// @param squadId ID's of the squad
     /// @return rootSafeId uint256 Root Safe Id's
-    function getRootSafe(uint256 squadId)
-        public
-        view
-        returns (uint256 rootSafeId)
-    {
+    function getRootSafe(
+        uint256 squadId
+    ) public view returns (uint256 rootSafeId) {
         bytes32 org = getOrgBySquad(squadId);
         DataTypes.Squad memory childSquad = squads[org][squadId];
         if (childSquad.superSafe == 0) return squadId;
-        (,, rootSafeId) = _seekMember(indexId + 1, squadId);
+        (, , rootSafeId) = _seekMember(indexId + 1, squadId);
     }
 
     /// @notice Get the safe address of a squad
     /// @dev Method for getting the safe address of a squad
     /// @param squad uint256 of the squad
     /// @return safe address
-    function getSquadSafeAddress(uint256 squad)
-        public
-        view
-        SquadRegistered(squad)
-        returns (address)
-    {
+    function getSquadSafeAddress(
+        uint256 squad
+    ) public view SquadRegistered(squad) returns (address) {
         bytes32 org = getOrgBySquad(squad);
         return squads[org][squad].safe;
     }
@@ -938,14 +981,13 @@ contract PalmeraModule is Auth, Helpers {
     }
 
     /// @dev Method to get Squad ID by safe address
-    /// @param org bytes32 hashed name of the Organization
+    /// @param org bytes32 hashed name of the Organisation
     /// @param safe Safe address
     /// @return Squad ID
-    function getSquadIdBySafe(bytes32 org, address safe)
-        public
-        view
-        returns (uint256)
-    {
+    function getSquadIdBySafe(
+        bytes32 org,
+        address safe
+    ) public view returns (uint256) {
         if (!isOrgRegistered(org)) {
             revert Errors.OrgNotRegistered(org);
         }
@@ -961,12 +1003,10 @@ contract PalmeraModule is Auth, Helpers {
     /// @notice call to get the orgHash based on squad id
     /// @dev Method to get the hashed orgHash based on squad id
     /// @param squad uint256 of the squad
-    /// @return orgSquad Hash (Dao's Name)
-    function getOrgBySquad(uint256 squad)
-        public
-        view
-        returns (bytes32 orgSquad)
-    {
+    /// @return orgSquad Hash (On-chain Organisation)
+    function getOrgBySquad(
+        uint256 squad
+    ) public view returns (bytes32 orgSquad) {
         if ((squad == 0) || (squad > indexId)) revert Errors.InvalidSquadId();
         for (uint256 i = 0; i < orgHash.length; ++i) {
             if (squads[orgHash[i]][squad].safe != address(0)) {
@@ -980,11 +1020,10 @@ contract PalmeraModule is Auth, Helpers {
     /// @param squad address of the squad
     /// @param user address of the user that is a lead or not
     /// @return bool
-    function isSafeLead(uint256 squad, address user)
-        public
-        view
-        returns (bool)
-    {
+    function isSafeLead(
+        uint256 squad,
+        address user
+    ) public view returns (bool) {
         bytes32 org = getOrgBySquad(squad);
         DataTypes.Squad memory _squad = squads[org][squad];
         if (_squad.safe == address(0)) return false;
@@ -996,7 +1035,7 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Refactoring method for Create Org or RootSafe
     /// @dev Method Private for Create Org or RootSafe
-    /// @param name String Name of the Organization
+    /// @param name String Name of the Organisation
     /// @param caller Safe Caller to Create Org or RootSafe
     /// @param newRootSafe Safe Address to Create Org or RootSafe
     function _createOrgOrRoot(
@@ -1031,15 +1070,19 @@ contract PalmeraModule is Auth, Helpers {
         /// Assign SUPER_SAFE Role + SAFE_ROOT Role
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         _authority.setUserRole(
-            newRootSafe, uint8(DataTypes.Role.ROOT_SAFE), true
+            newRootSafe,
+            uint8(DataTypes.Role.ROOT_SAFE),
+            true
         );
         _authority.setUserRole(
-            newRootSafe, uint8(DataTypes.Role.SUPER_SAFE), true
+            newRootSafe,
+            uint8(DataTypes.Role.SUPER_SAFE),
+            true
         );
     }
 
     /// @dev Function for refactoring DisconnectSafe Method, and RemoveWholeTree in one Method
-    /// @param squad ID's of the organization
+    /// @param squad ID's of the organisation
     function _exitSafe(uint256 squad) private {
         bytes32 org = getOrgBySquad(squad);
         address _squad = squads[org][squad].safe;
@@ -1049,8 +1092,10 @@ contract PalmeraModule is Auth, Helpers {
         delete squads[org][squad];
 
         /// Disable Guard
-        bytes memory data =
-            abi.encodeWithSelector(ISafe.setGuard.selector, address(0));
+        bytes memory data = abi.encodeWithSelector(
+            ISafe.setGuard.selector,
+            address(0)
+        );
         /// Execute transaction from target safe
         _executeModuleTransaction(_squad, data);
 
@@ -1060,7 +1105,9 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.PreviewModuleNotFound(_squad);
         }
         data = abi.encodeWithSelector(
-            ISafe.disableModule.selector, prevModule, address(this)
+            ISafe.disableModule.selector,
+            prevModule,
+            address(this)
         );
         /// Execute transaction from target safe
         _executeModuleTransaction(_squad, data);
@@ -1073,43 +1120,56 @@ contract PalmeraModule is Auth, Helpers {
     /// @param user Address of the user to disable roles
     function disableSafeLeadRoles(address user) private {
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        if (_authority.doesUserHaveRole(user, uint8(DataTypes.Role.SAFE_LEAD)))
-        {
-            _authority.setUserRole(user, uint8(DataTypes.Role.SAFE_LEAD), false);
-        } else if (
-            _authority.doesUserHaveRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
-            )
+        if (
+            _authority.doesUserHaveRole(user, uint8(DataTypes.Role.SAFE_LEAD))
         ) {
             _authority.setUserRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY), false
+                user,
+                uint8(DataTypes.Role.SAFE_LEAD),
+                false
             );
         } else if (
             _authority.doesUserHaveRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+                user,
+                uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
             )
         ) {
             _authority.setUserRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY), false
+                user,
+                uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY),
+                false
+            );
+        } else if (
+            _authority.doesUserHaveRole(
+                user,
+                uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            )
+        ) {
+            _authority.setUserRole(
+                user,
+                uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
+                false
             );
         }
     }
 
-    /// @notice Private method to remove indexId from mapping of indexes into organizations
-    /// @param org ID's of the organization
+    /// @notice Private method to remove indexId from mapping of indexes into organisations
+    /// @param org ID's of the organisation
     /// @param squad uint256 of the squad
     function removeIndexSquad(bytes32 org, uint256 squad) private {
         for (uint256 i = 0; i < indexSquad[org].length; ++i) {
             if (indexSquad[org][i] == squad) {
-                indexSquad[org][i] = indexSquad[org][indexSquad[org].length - 1];
+                indexSquad[org][i] = indexSquad[org][
+                    indexSquad[org].length - 1
+                ];
                 indexSquad[org].pop();
                 break;
             }
         }
     }
 
-    /// @notice Private method to remove Org from Array of Hashes of organizations
-    /// @param org ID's of the organization
+    /// @notice Private method to remove Org from Array of Hashes of organisations
+    /// @param org ID's of the organisation
     function removeOrg(bytes32 org) private {
         for (uint256 i = 0; i < orgHash.length; ++i) {
             if (orgHash[i] == org) {
@@ -1124,17 +1184,16 @@ contract PalmeraModule is Auth, Helpers {
     /// @dev Method to Getting if is Member, the  Level and Root Safe
     /// @param superSafe ID's of the Super Safe squad
     /// @param childSafe ID's of the Child Safe
-    function _seekMember(uint256 superSafe, uint256 childSafe)
-        private
-        view
-        returns (bool isMember, uint256 level, uint256 rootSafeId)
-    {
+    function _seekMember(
+        uint256 superSafe,
+        uint256 childSafe
+    ) private view returns (bool isMember, uint256 level, uint256 rootSafeId) {
         bytes32 org = getOrgBySquad(childSafe);
         DataTypes.Squad memory childSquad = squads[org][childSafe];
         // Check if the Child Squad is was removed or not Exist and Return False
         if (
-            (childSquad.safe == address(0))
-                || (childSquad.tier == DataTypes.Tier.REMOVED)
+            (childSquad.safe == address(0)) ||
+            (childSquad.tier == DataTypes.Tier.REMOVED)
         ) {
             return (isMember, level, rootSafeId);
         }
@@ -1145,8 +1204,9 @@ contract PalmeraModule is Auth, Helpers {
         while (currentSuperSafe != 0) {
             childSquad = squads[org][currentSuperSafe];
             // Validate if the Current Super Safe is Equal the SuperSafe try to Found, in case is True, storage True in isMember
-            isMember =
-                !isMember && currentSuperSafe == superSafe ? true : isMember;
+            isMember = !isMember && currentSuperSafe == superSafe
+                ? true
+                : isMember;
             // Validate if the Current Super Safe of the Chield Squad is Equal Zero
             // Return the isMember, level and rootSafeId with actual value
             if (childSquad.superSafe == 0) return (isMember, level, rootSafeId);
@@ -1163,16 +1223,15 @@ contract PalmeraModule is Auth, Helpers {
     /// @param rootSafe Gorup ID's of the root safe
     /// @param indexSquadByOrg Array of the Squad ID's of the Org
     /// @return indexTree Array of the Squad ID's of the Tree
-    function getTreeMember(uint256 rootSafe, uint256[] memory indexSquadByOrg)
-        private
-        view
-        returns (uint256[] memory indexTree)
-    {
+    function getTreeMember(
+        uint256 rootSafe,
+        uint256[] memory indexSquadByOrg
+    ) private view returns (uint256[] memory indexTree) {
         uint256 index;
         for (uint256 i = 0; i < indexSquadByOrg.length; ++i) {
             if (
-                (getRootSafe(indexSquadByOrg[i]) == rootSafe)
-                    && (indexSquadByOrg[i] != rootSafe)
+                (getRootSafe(indexSquadByOrg[i]) == rootSafe) &&
+                (indexSquadByOrg[i] != rootSafe)
             ) {
                 index++;
             }
@@ -1181,8 +1240,8 @@ contract PalmeraModule is Auth, Helpers {
         index = 0;
         for (uint256 i = 0; i < indexSquadByOrg.length; ++i) {
             if (
-                (getRootSafe(indexSquadByOrg[i]) == rootSafe)
-                    && (indexSquadByOrg[i] != rootSafe)
+                (getRootSafe(indexSquadByOrg[i]) == rootSafe) &&
+                (indexSquadByOrg[i] != rootSafe)
             ) {
                 indexTree[index] = indexSquadByOrg[i];
                 index++;
