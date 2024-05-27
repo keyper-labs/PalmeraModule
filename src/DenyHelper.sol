@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";

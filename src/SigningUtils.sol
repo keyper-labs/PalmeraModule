@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import {ECDSA} from "@openzeppelin/utils/cryptography/ECDSA.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";

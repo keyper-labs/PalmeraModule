@@ -14,19 +14,19 @@ install :; forge install
 update:; forge update
 
 # Builds
-build:; forge clean && forge build
+build:; forge clean && forge fmt && forge build
 
-build-size-report :; forge clean && forge build --sizes
+build-size-report :; forge clean && forge fmt && forge build --sizes
 
 # chmod scripts
 scripts :; chmod +x ./scripts/*
 
 # Tests
-test :; forge test -vvv --no-match-contract='Skip*'
+test :; forge fmt && forge test -vvv --no-match-contract='Skip*'
 
 coverage :; forge coverage -vvv --no-match-contract='Skip*'
 
-test-gas-report :; forge test --gas-report -vvv
+test-gas-report :; forge fmt && forge test --gas-report -vvv
 
 # Forge Formatter
 check :; forge fmt --check

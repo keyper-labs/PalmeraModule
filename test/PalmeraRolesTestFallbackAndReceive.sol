@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "./helpers/DeployHelper.t.sol";
 
@@ -8,6 +8,7 @@ contract PalmeraRolesTestFallbackAndReceive is DeployHelper {
     function setUp() public {
         deployAllContracts(60);
     }
+
     /// @notice Calling a non-existent function
 
     function testFallbackFunctionNonExistentFunction() public {
