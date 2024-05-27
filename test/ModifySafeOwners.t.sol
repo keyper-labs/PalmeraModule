@@ -5,6 +5,8 @@ import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./helpers/DeployHelper.t.sol";
 
+/// @title ModifySafeOwners
+/// @custom:security-contact general@palmeradao.xyz
 contract ModifySafeOwners is DeployHelper, SigningUtils {
     function setUp() public {
         DeployHelper.deployAllContracts(90);

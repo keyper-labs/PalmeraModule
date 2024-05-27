@@ -13,7 +13,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
     function setUp() public {
         // Set up env
         run();
-        testRevertInvalidGnosisSafeExecTransactionOnBehalf();
+        testRevertInvalidSignatureExecOnBehalf();
         // These are different chain test scenarios, specifically for the execTransactionOnBehalf function in Polygon and Sepolia.
         // We test each scenario independently manually and get the results on the Live Mainnet on Polygon and Sepolia.
         // testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(); // ✅
@@ -424,7 +424,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
 
     // // ! ********************** REVERT ********************
 
-    // Revert: "GS026" execTransactionOnBehalf when is Any EOA, passing the wrong signature of the Root/Super Safe of Target Safe
+    // Revert: "GS020" execTransactionOnBehalf when is Any EOA, passing the wrong signature of the Root/Super Safe of Target Safe
     // Caller: callerEOA
     // Caller Type: EOA
     // Caller Role: nothing
@@ -481,7 +481,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         vm.stopBroadcast();
     }
 
-    // Revert: "GS013" execTransactionOnBehalf when is Any EOA, (invalid signatures provided)
+    // Revert: "GS026" execTransactionOnBehalf when is Any EOA, (invalid signatures provided)
     // Caller: callerEOA
     // Caller Type: EOA
     // Caller Role: nothing
@@ -596,7 +596,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
         vm.stopBroadcast();
     }
 
-    // Revert "GS013" execTransactionOnBehalf (invalid signatures provided)
+    // Revert "GS026" execTransactionOnBehalf (invalid signatures provided)
     // Caller: rootAddr
     // Caller Type: rootSafe
     // Caller Role: ROOT_SAFE

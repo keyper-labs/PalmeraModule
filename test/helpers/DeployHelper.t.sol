@@ -16,6 +16,8 @@ import {KeyperGuard} from "../../src/KeyperGuard.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
+/// @title Deploy Helper
+/// @custom:security-contact general@palmeradao.xyz
 contract DeployHelper is Test {
     using SafeMath for uint256;
 
@@ -53,7 +55,7 @@ contract DeployHelper is Test {
     function deployAllContracts(uint256 initOwners) public {
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
-
+        /// get address of deployed libraries
         (
             address constantsAddr,
             address dataTypesAddr,

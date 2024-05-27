@@ -13,6 +13,8 @@ contract KeyperRolesHarness is KeyperRoles(address(0xAAAA)) {
     }
 }
 
+/// @title KeyperRolesTest
+/// @custom:security-contact general@palmeradao.xyz
 contract KeyperRoleDeployTest is Test {
     KeyperRolesHarness keyperRolesHarness;
     address keyperModule = address(0xAAAA);
@@ -21,6 +23,7 @@ contract KeyperRoleDeployTest is Test {
         keyperRolesHarness = new KeyperRolesHarness();
     }
 
+    /// @notice Test setupRoles Capabilities
     function testSetupRolesCapabilities() public {
         vm.startPrank(keyperModule);
         keyperRolesHarness.exposed_setupRoles(keyperModule);
@@ -178,6 +181,7 @@ contract KeyperRoleDeployTest is Test {
         assertTrue(hasROOT_SAFECapabilityRemoveWholeTree);
     }
 
+    /// @notice Test Set User Roles
     function testSetUserRoles() public {
         vm.startPrank(keyperModule);
         keyperRolesHarness.setUserRole(

@@ -15,6 +15,7 @@ contract TestEnableGuard is Test {
     GnosisSafeHelper gnosisHelper;
     address gnosisSafeAddr;
 
+    /// @notice Set up the environment for testing
     function setUp() public {
         // Init new safe
         gnosisHelper = new GnosisSafeHelper();
@@ -32,6 +33,7 @@ contract TestEnableGuard is Test {
         gnosisHelper.setKeyperGuard(address(keyperGuard));
     }
 
+    /// @notice Test enabling the KeyperModule
     function testEnableKeyperModule() public {
         bool result = gnosisHelper.enableModuleTx(gnosisSafeAddr);
         assertEq(result, true);
@@ -41,6 +43,7 @@ contract TestEnableGuard is Test {
         assertEq(isKeyperModuleEnabled, true);
     }
 
+    /// @notice Test enabling the KeyperGuard
     function testEnableKeyperGuard() public {
         bool result = gnosisHelper.enableGuardTx(gnosisSafeAddr);
         assertEq(result, true);

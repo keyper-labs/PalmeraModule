@@ -18,11 +18,15 @@ contract SignersHelper is Test {
     // CountUsed
     uint256 public countUsed;
 
+    /// function to initialize the owners
+    /// @param numberOwners number of owners to initialize
     function initOnwers(uint256 numberOwners) public {
         initValidOnwers(numberOwners);
         initInvalidOnwers(30);
     }
 
+    /// function to initialize the valid owners
+    /// @param numberOwners number of valid owners to initialize
     function initValidOnwers(uint256 numberOwners) internal {
         privateKeyOwners = new uint256[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
@@ -37,6 +41,8 @@ contract SignersHelper is Test {
         }
     }
 
+    /// function to initialize the invalid owners
+    /// @param numberOwners number of invalid owners to initialize
     function initInvalidOnwers(uint256 numberOwners) internal {
         invalidPrivateKeyOwners = new uint256[](numberOwners);
         for (uint256 i = 0; i < numberOwners; i++) {
@@ -48,10 +54,14 @@ contract SignersHelper is Test {
         }
     }
 
+    /// function to get the owners
+    /// @return amount of owners initialized
     function getOwnersUsed() public view returns (uint256) {
         return countUsed;
     }
 
+    /// function to update the count of owners
+    /// @param used amount of owners used
     function updateCount(uint256 used) public {
         countUsed = used;
     }

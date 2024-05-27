@@ -3,11 +3,14 @@ pragma solidity ^0.8.15;
 
 import "./helpers/DeployHelper.t.sol";
 
+/// @title KeyperRolesTest
+/// @custom:security-contact general@palmeradao.xyz
 contract KeyperRolesTest is DeployHelper {
     function setUp() public {
         DeployHelper.deployAllContracts(90);
     }
 
+    /// @notice Auxiliary function to deploy KeyperRoles contract
     function testCan_KeyperModule_Setup_RoleContract() public {
         // Check KeyperModule has role capabilites
         assertEq(
@@ -168,7 +171,7 @@ contract KeyperRolesTest is DeployHelper {
         keyperModule.setRole(DataTypes.Role.SUPER_SAFE, user, safeSquadA1, true);
     }
 
-    //  Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     // Target Info: Type-> EOA, Name -> SquadA, Hierarchy related to caller -> N/A
     function testCannot_ROOT_SAFE_SetRole_ROOT_SAFE_to_EOA_DifferentTree_Safe()
         public

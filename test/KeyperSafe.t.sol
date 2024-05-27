@@ -4,6 +4,8 @@ pragma solidity ^0.8.15;
 import "../src/SigningUtils.sol";
 import "./helpers/DeployHelper.t.sol";
 
+/// @title TestKeyperSafe
+/// @custom:security-contact general@palmeradao.xyz
 contract TestKeyperSafe is SigningUtils, DeployHelper {
     function setUp() public {
         DeployHelper.deployAllContracts(90);

@@ -10,6 +10,8 @@ import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {Enum} from "@safe-contracts/common/Enum.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 
+/// @notice Helper contract handling ReentrancyAttack
+/// @custom:security-contact general@palmeradao.xyz
 contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
     KeyperModule public keyper;
     GnosisSafeHelper public gnosisHelper;
@@ -17,6 +19,11 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
 
     mapping(string => address) public keyperSafes;
 
+    /// function to initialize the helper
+    /// @param keyperArg instance of KeyperModule
+    /// @param attackerArg instance of Attacker
+    /// @param gnosisHelperArg instance of GnosisSafeHelper
+    /// @param numberOwners number of owners to initialize
     function initHelper(
         KeyperModule keyperArg,
         Attacker attackerArg,
@@ -29,6 +36,15 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         initOnwers(numberOwners);
     }
 
+    /// function to encode signatures for Attack KeyperTx
+    /// @param org Organization address
+    /// @param superSafe Super Safe address
+    /// @param targetSafe Target Safe address
+    /// @param to Address to send the transaction
+    /// @param value Value to send
+    /// @param data Data payload
+    /// @param operation Operation type
+    /// @return signatures Packed signatures data (v, r, s)
     function encodeSignaturesForAttackKeyperTx(
         bytes32 org,
         address superSafe,
@@ -57,6 +73,9 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         return signatures;
     }
 
+    /// function to set Attacker Tree for the organization
+    /// @param _orgName Name of the organization
+    /// @return orgHash, orgAddr, attackerSafe, victim
     function setAttackerTree(string memory _orgName)
         public
         returns (bytes32, address, address, address)
