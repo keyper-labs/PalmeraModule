@@ -21,10 +21,11 @@ contract DeployKeyperEnv is Script {
         // The address https://sepolia.etherscan.io/address/0x93FEC2C00BfE902F733B57c5a6CeeD7CD1384AE1#code, is the address of the CREATE3Factory in Sepolia
         CREATE3Factory factory =
             CREATE3Factory(0x93FEC2C00BfE902F733B57c5a6CeeD7CD1384AE1);
+        // Salt is a random number that is used to predict the deployment address
         bytes32 salt = keccak256(abi.encode(0xddff)); // need to be unique to avoid collision
         address keyperModulePredicted = factory.getDeployed(msg.sender, salt);
 
-        // Deploy Safe contracts in goerli
+        // Deploy Safe contracts in any network
         Solenv.config();
         address masterCopy = vm.envAddress("MASTER_COPY_ADDRESS");
         address proxyFactory = vm.envAddress("PROXY_FACTORY_ADDRESS");

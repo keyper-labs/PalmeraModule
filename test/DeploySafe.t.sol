@@ -18,6 +18,7 @@ contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
         gnosisSafeAddr = gnosisHelper.setupSafeEnv();
     }
 
+    /// @notice Test to transfer funds to safe
     function testTransferFundsSafe() public {
         bytes memory emptyData;
 

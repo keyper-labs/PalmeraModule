@@ -6,11 +6,14 @@ import "../src/SigningUtils.sol";
 import "./helpers/DeployHelper.t.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 
+/// @title KeyperGuardTest
+/// @custom:security-contact general@palmeradao.xyz
 contract KeyperGuardTest is DeployHelper, SigningUtils {
     function setUp() public {
         DeployHelper.deployAllContracts(90);
     }
 
+    /// @notice Test to check if the guard is disabled
     function testDisableKeyperGuard() public {
         // Check guard is disabled
         bool result = gnosisHelper.disableGuardTx(gnosisSafeAddr);
@@ -29,6 +32,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(ZeroAddress, zeroAddress);
     }
 
+    /// @notice Test to check if the module is disabled
     function testDisableKeyperModule() public {
         bool isKeyperModuleEnabled =
             gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
@@ -44,6 +48,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(isKeyperModuleEnabled, false);
     }
 
+    /// @notice Test Cannot Replay Attack Test to Remove Squad
     function testCannotReplayAttackRemoveSquad() public {
         (uint256 rootId, uint256 squadA1Id) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -61,6 +66,7 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
+    /// @notice Test Cannot Replay Attack Test to Disconnect Safe
     function testCannotReplayAttackDisconnectedSafe() public {
         (uint256 rootId, uint256 squadA1Id) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -82,6 +88,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
+    // Target Info: Type-> SUPER_SAFE, Name -> SquadA, Hierarchy related to caller -> SAME_TREE
     function testDisconnectSafe_As_ROOTSAFE_TARGET_SUPERSAFE_SAME_TREE()
         public
     {
@@ -112,6 +120,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(ZeroAddress, zeroAddress);
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
+    // Target Info: Type-> SQUAD_SAFE, Name -> SubSquadA, Hierarchy related to caller -> SAME_TREE
     function testCannotDisconnectSafe_As_ROOTSAFE_TARGET_ROOTSAFE_SAME_TREE()
         public
     {
@@ -142,6 +152,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(ZeroAddress, zeroAddress);
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
+    // Target Info: Type-> ROOT_SAFE, Name -> root, Hierarchy related to caller -> N/A
     function testCannotDisconnectSafe_As_ROOTSAFE_TARGET_ITSELF_If_Have_children(
     ) public {
         (uint256 rootId,) =
@@ -175,6 +187,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(guardAddress, address(keyperGuard));
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
+    // Target Info: Type-> ROOT_SAFE, Name -> root, Hierarchy related to caller -> N/A
     function testDisconnectSafe_As_ROOTSAFE_TARGET_ITSELF_If_Not_Have_children()
         public
     {
@@ -210,6 +224,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(ZeroAddress, zeroAddress);
     }
 
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> squadA
+    // Target Info: Type-> SAFE, Name -> subSquadA, Hierarchy related to caller -> SAME_TREE
     function testCannotDisconnectSafe_As_SuperSafe_As_SameTree() public {
         (, uint256 squadIdA1, uint256 subSquadA1Id,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
@@ -247,6 +263,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(guardAddress, address(keyperGuard));
     }
 
+    // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> squadA
+    // Target Info: Type-> SAFE, Name -> subSquadA, Hierarchy related to caller -> DIFFERENT_TREE
     function testCannotDisconnectSafe_As_SuperSafe_As_DifferentTree() public {
         (, uint256 squadIdA1,, uint256 squadIdB1, uint256 subSquadA1Id,) =
         keyperSafeBuilder.setupTwoOrgWithOneRootOneSquadAndOneChildEach(
@@ -292,6 +310,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(guardAddress, address(keyperGuard));
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Squad, Name -> rootB
+    // Target Info: Type-> SQUAD_SAFE, Name -> subSquadA1Id, Hierarchy related to caller -> DIFFERENT_TREE
     function testCannotDisconnectSafe_As_RootSafe_As_DifferentTree() public {
         (uint256 rootIdA,, uint256 rootIdB,, uint256 subSquadA1Id,) =
         keyperSafeBuilder.setupTwoOrgWithOneRootOneSquadAndOneChildEach(
@@ -333,6 +353,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(guardAddress, address(keyperGuard));
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
+    // Target Info: Type-> SAFE, Name -> squadA1Id, Hierarchy related to caller -> SAME_TREE
     function testDisconnectSafeBeforeToRemoveSquad_One_Level() public {
         (uint256 rootId, uint256 squadIdA1,,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
@@ -360,6 +382,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(ZeroAddress, zeroAddress);
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
+    // Target Info: Type-> SQUAD_SAFE, Name -> subSquadIdA1, Hierarchy related to caller -> SAME_TREE
     function testDisconnectSafeBeforeToRemoveSquad_Two_Level() public {
         (uint256 rootId,, uint256 subSquadIdA1,) = keyperSafeBuilder
             .setupOrgFourTiersTree(
@@ -390,6 +414,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(ZeroAddress, zeroAddress);
     }
 
+    // Caller Info: Role-> EOA, Type -> SAFE, Hierarchy -> SAFE_LEAD, Name -> fakerCaller
+    // Target Info: Type-> SQUAD_SAFE, Name -> childSquadA1, Hierarchy related to caller -> N/A
     function testCannotDisconnectSafe_As_SafeLead_As_EOA() public {
         (uint256 rootId,, uint256 childSquadA1,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
@@ -427,6 +453,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
+    // Caller Info: Role-> SAFE, Type -> SAFE, Hierarchy -> SAFE_LEAD, Name -> fakerCaller
+    // Target Info: Type-> SQUAD_SAFE, Name -> childSquadA1, Hierarchy related to caller -> N/A
     function testCannotDisconnectSafe_As_SafeLead_As_SAFE() public {
         (uint256 rootId,, uint256 childSquadA1,,) = keyperSafeBuilder
             .setupOrgThreeTiersTree(orgName, squadA1Name, subSquadA1Name);
@@ -464,6 +492,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
+    // Target Info: Type-> SQUAD_SAFE, Name -> squadIdA1, Hierarchy related to caller -> SAME_TREE
     function testCannotDisableKeyperModuleIfGuardEnabled() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -505,6 +535,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(isKeyperModuleEnabled, true);
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
+    // Target Info: Type-> SQUAD_SAFE, Name -> squadIdA1, Hierarchy related to caller -> SAME_TREE
     function testCannotDisableKeyperModuleAfterRemoveSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -535,6 +567,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(isKeyperModuleEnabled, true);
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
+    // Target Info: Type-> SQUAD_SAFE, Name -> squadIdA1, Hierarchy related to caller -> SAME_TREE
     function testCannotDisableKeyperGuardIfGuardEnabled() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -581,6 +615,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(keyperGuardAddrTest, keyperGuardAddr);
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
+    // Target Info: Type-> SQUAD_SAFE, Name -> squadIdA1, Hierarchy related to caller -> SAME_TREE
     function testCannotDisableKeyperGuardAfterRemoveSquad() public {
         (uint256 rootId, uint256 squadIdA1) =
             keyperSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
@@ -618,9 +654,11 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
             ),
             (address)
         );
-        assertEq(GuardAddress, address(keyperGuard)); // If disable Guard, the address storage will be ZeroAddress (0x0)
+        assertEq(GuardAddress, address(keyperGuard)); // If Guard is disabled, the address storage will be ZeroAddress (0x0)
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootId
+    // Target Info: Type-> SQUAD_SAFE, Name -> childSquadA1, Hierarchy related to caller -> SAME_TREE
     function testDisconnectSafe_As_ROOTSAFE_TARGET_ROOT_SAFE() public {
         (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1,,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
@@ -660,6 +698,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
     // ! **************** List of Promote to Root *******************************
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
+    // Target Info: Type-> SQUAD_SAFE, Name -> childSquadA1, Hierarchy related to caller -> SAME_TREE
     function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SQUAD_SAFE() public {
         (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1,,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
@@ -689,6 +729,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(keyperModule.isTreeMember(squadA1Id, childSquadA1), true);
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
+    // Target Info: Type-> SUPER_SAFE, Name -> squadA1, Hierarchy related to caller -> SAME_TREE
     function testCanPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE() public {
         (uint256 rootId, uint256 squadA1Id, uint256 childSquadA1,,) =
         keyperSafeBuilder.setupOrgThreeTiersTree(
@@ -734,6 +776,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(superSafe, 0);
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootB
+    // Target Info: Type-> SUPER_SAFE, Name -> squadA1, Hierarchy related to caller -> SAME_TREE
     function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE_ANOTHER_TREE(
     ) public {
         (
@@ -773,6 +817,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(keyperModule.isTreeMember(squadA1Id, childSquadA1), true);
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootB
+    // Target Info: Type-> SUPER_SAFE, Name -> squadA1, Hierarchy related to caller -> SAME_TREE
     function testCannotPromoteToRoot_As_ROOTSAFE_TARGET_SUPER_SAFE_ANOTHER_ORG()
         public
     {
@@ -815,6 +861,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
 
     // ! **************** List of Remove Whole Tree *******************************
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root1,root2
+    // Target Info: Type-> ROOT_SAFE, Name -> root1,root2 Hierarchy related to caller -> SAME_TREE
     function testCanRemoveWholeTree() public {
         (
             uint256 rootId,
@@ -865,6 +913,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         assertEq(keyperModule.isSafeRegistered(childSquadB1Addr), false);
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
+    // Target Info: Type-> ROOT_SAFE, Name -> root, Hierarchy related to caller -> SAME_TREE
     function testCanRemoveWholeTreeFourthLevel() public {
         (
             uint256 rootId,
@@ -914,6 +964,8 @@ contract KeyperGuardTest is DeployHelper, SigningUtils {
         vm.stopPrank();
     }
 
+    // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> root
+    // Target Info: Type-> ROOT_SAFE, Name -> root, Hierarchy related to caller -> SAME_TREE
     function testCannotReplayAttackRemoveWholeTree() public {
         (
             uint256 rootId,

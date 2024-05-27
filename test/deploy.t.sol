@@ -10,10 +10,12 @@ import "./helpers/DeployHelper.t.sol";
 contract TestDeploy is DeployHelper {
     DeployModuleWithMockedSafe deploy;
 
+    /// @notice Deploy Libraries
     function setUp() public {
         deploy = new DeployModuleWithMockedSafe();
     }
 
+    /// @notice Deploy Libraries
     function testDeploy() public {
         // Deplot Libraries
         (
