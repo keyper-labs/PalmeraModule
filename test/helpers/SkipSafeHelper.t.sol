@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.15;
 
-import "./GnosisSafeHelper.t.sol";
+import "./SafeHelper.t.sol";
 import "./KeyperModuleHelper.t.sol";
 import {KeyperModule} from "../../src/KeyperModule.sol";
 
-/// @notice Helper contract handling deployment Gnosis Safe contracts
+/// @notice Helper contract handling deployment Safe contracts
 /// @custom:security-contact general@palmeradao.xyz
-contract SkipGnosisSafeHelper is GnosisSafeHelper, KeyperModuleHelper {
+contract SkipSafeHelper is SafeHelper, KeyperModuleHelper {
     GnosisSafeProxyFactory public proxyFactory;
-    GnosisSafe public gnosisSafeContract;
+    GnosisSafe public safeContract;
     GnosisSafeProxy safeProxy;
     uint256 nonce;
 
-    // Create new gnosis safe test environment
+    // Create new safe test environment
     // Deploy main safe contracts (GnosisSafeProxyFactory, GnosisSafe mastercopy)
     // Init signers
     // Permit create a specific numbers of owners
@@ -24,14 +24,14 @@ contract SkipGnosisSafeHelper is GnosisSafeHelper, KeyperModuleHelper {
         returns (address)
     {
         start();
-        gnosisMasterCopy = address(gnosisSafeContract);
+        safeMasterCopy = address(safeContract);
         salt = Random.randint();
         bytes memory emptyData = abi.encodePacked(salt);
-        address gnosisSafeProxy = newSafeProxy(emptyData);
-        gnosisSafe = GnosisSafe(payable(gnosisSafeProxy));
+        address safeWalletProxy = newSafeProxy(emptyData);
+        safeWallet = GnosisSafe(payable(safeWalletProxy));
         initOnwers(initOwners);
 
-        // Setup gnosis safe with 3 owners, 1 threshold
+        // Setup safe with 3 owners, 1 threshold
         address[] memory owners = new address[](3);
         owners[0] = vm.addr(privateKeyOwners[0]);
         owners[1] = vm.addr(privateKeyOwners[1]);
@@ -39,7 +39,7 @@ contract SkipGnosisSafeHelper is GnosisSafeHelper, KeyperModuleHelper {
         // Update privateKeyOwners used
         updateCount(3);
 
-        gnosisSafe.setup(
+        safeWallet.setup(
             owners,
             uint256(1),
             address(0x0),
@@ -50,15 +50,14 @@ contract SkipGnosisSafeHelper is GnosisSafeHelper, KeyperModuleHelper {
             payable(address(0x0))
         );
 
-        return address(gnosisSafe);
+        return address(safeWallet);
     }
 
     /// @notice Setup the environment for the test
     function start() public {
         proxyFactory =
             GnosisSafeProxyFactory(vm.envAddress("PROXY_FACTORY_ADDRESS"));
-        gnosisSafeContract =
-            GnosisSafe(payable(vm.envAddress("MASTER_COPY_ADDRESS")));
+        safeContract = GnosisSafe(payable(vm.envAddress("MASTER_COPY_ADDRESS")));
     }
 
     /// function to set the KeyperModule address
@@ -104,17 +103,17 @@ contract SkipGnosisSafeHelper is GnosisSafeHelper, KeyperModuleHelper {
             payable(address(0x0))
         );
 
-        address gnosisSafeProxy = newSafeProxy(initializer);
-        gnosisSafe = GnosisSafe(payable(address(gnosisSafeProxy)));
+        address safeWalletProxy = newSafeProxy(initializer);
+        safeWallet = GnosisSafe(payable(address(safeWalletProxy)));
 
         // Enable module
-        bool result = enableModuleTx(address(gnosisSafe));
+        bool result = enableModuleTx(address(safeWallet));
         require(result == true, "failed enable module");
 
         // Enable Guard
-        result = enableGuardTx(address(gnosisSafe));
+        result = enableGuardTx(address(safeWallet));
         require(result == true, "failed enable guard");
-        return address(gnosisSafe);
+        return address(safeWallet);
     }
 
     /// function to create a new Safe Proxy
@@ -122,7 +121,7 @@ contract SkipGnosisSafeHelper is GnosisSafeHelper, KeyperModuleHelper {
     /// @return address of the new Safe Proxy
     function newSafeProxy(bytes memory initializer) public returns (address) {
         safeProxy = proxyFactory.createProxyWithNonce(
-            address(gnosisSafeContract), initializer, nonce
+            address(safeContract), initializer, nonce
         );
         nonce++;
         return address(safeProxy);

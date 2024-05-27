@@ -11,7 +11,7 @@ import {GnosisSafeProxyFactory} from
     "@safe-contracts/proxies/GnosisSafeProxyFactory.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 
-/// Deployement of Gnosis Safe contracts, KeyperRoles and KeyperModule
+/// Deployement of Safe contracts, KeyperRoles and KeyperModule
 /// @custom:security-contact general@palmeradao.xyz
 contract DeployKeyperEnv is Script {
     function run() public {

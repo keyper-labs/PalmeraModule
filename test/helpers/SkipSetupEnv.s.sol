@@ -3,7 +3,7 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Script.sol";
 import "../../src/SigningUtils.sol";
-import "./SkipGnosisSafeHelper.t.sol";
+import "./SkipSafeHelper.t.sol";
 import "@solenv/Solenv.sol";
 import {KeyperModule} from "../../src/KeyperModule.sol";
 import {KeyperRoles} from "../../src/KeyperRoles.sol";
@@ -12,14 +12,14 @@ import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
 /// @notice Script to setup the environment
 /// @custom:security-contact general@palmeradao.xyz
-contract SkipSetupEnv is Script, SkipGnosisSafeHelper {
+contract SkipSetupEnv is Script, SkipSafeHelper {
     using SafeMath for uint256;
 
     KeyperModule keyperModule;
     KeyperGuard keyperGuard;
     KeyperRoles keyperRolesContract;
 
-    address gnosisSafeAddr;
+    address safeAddr;
     address keyperRolesDeployed;
     address receiver = address(0xABC123);
     address zeroAddress = address(0x0);
@@ -46,18 +46,18 @@ contract SkipSetupEnv is Script, SkipGnosisSafeHelper {
         keyperModule = KeyperModule(vm.envAddress("KEYPER_MODULE_ADDRESS"));
         keyperGuard = KeyperGuard(vm.envAddress("KEYPER_GUARD_ADDRESS"));
         receiver = vm.envAddress("RECEIVER_ADDRESS");
-        // Init a new safe as main organization (3 owners, 1 threshold)
-        gnosisSafeAddr = setupSeveralSafeEnv(30);
+        // Init a new safe as main organisation (3 owners, 1 threshold)
+        safeAddr = setupSeveralSafeEnv(30);
         // setting keyperRoles Address
         setKeyperRoles(address(keyperRolesContract));
-        // Update gnosisHelper
+        // Update safeHelper
         setKeyperModule(address(keyperModule));
-        // Update gnosisHelper
+        // Update safeHelper
         setKeyperGuard(address(keyperGuard));
         // Enable keyper module
-        enableModuleTx(gnosisSafeAddr);
+        enableModuleTx(safeAddr);
         // Enable keyper Guard
-        enableGuardTx(gnosisSafeAddr);
+        enableGuardTx(safeAddr);
         console.log("Finalize Config Environment... ");
         vm.stopBroadcast();
     }

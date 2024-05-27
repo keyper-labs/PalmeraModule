@@ -4,18 +4,18 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
 import "./helpers/SignDigestHelper.t.sol";
-import "./helpers/GnosisSafeHelper.t.sol";
+import "./helpers/SafeHelper.t.sol";
 
 /// @title TestDeploySafe
 /// @custom:security-contact general@palmeradao.xyz
 contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
-    GnosisSafeHelper gnosisHelper;
-    address gnosisSafeAddr;
+    SafeHelper safeHelper;
+    address safeAddr;
 
     // Init new safe
     function setUp() public {
-        gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
+        safeHelper = new SafeHelper();
+        safeAddr = safeHelper.setupSafeEnv();
     }
 
     /// @notice Test to transfer funds to safe
@@ -36,17 +36,17 @@ contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
         );
 
         // Send funds to safe
-        vm.deal(gnosisSafeAddr, 2 ether);
+        vm.deal(safeAddr, 2 ether);
         // Create encoded tx to be signed
-        uint256 nonce = gnosisHelper.gnosisSafe().nonce();
-        bytes32 transferSafeTx = gnosisHelper.createSafeTxHash(mockTx, nonce);
+        uint256 nonce = safeHelper.safeWallet().nonce();
+        bytes32 transferSafeTx = safeHelper.createSafeTxHash(mockTx, nonce);
         // Sign encoded tx with 1 owner
         uint256[] memory privateKeyOwner = new uint256[](1);
-        privateKeyOwner[0] = gnosisHelper.privateKeyOwners(0);
+        privateKeyOwner[0] = safeHelper.privateKeyOwners(0);
 
         bytes memory signatures = signDigestTx(privateKeyOwner, transferSafeTx);
         // Exec tx
-        bool result = gnosisHelper.gnosisSafe().execTransaction(
+        bool result = safeHelper.safeWallet().execTransaction(
             mockTx.to,
             mockTx.value,
             mockTx.data,
@@ -59,6 +59,6 @@ contract TestDeploySafe is Test, SigningUtils, SignDigestHelper {
             signatures
         );
         assertEq(result, true);
-        assertEq(gnosisSafeAddr.balance, 1.5 ether);
+        assertEq(safeAddr.balance, 1.5 ether);
     }
 }

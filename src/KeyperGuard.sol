@@ -8,8 +8,8 @@ import {
     Context,
     Errors,
     Constants,
-    IGnosisSafe,
-    IGnosisSafeProxy,
+    ISafe,
+    ISafeProxy,
     Enum
 } from "./KeyperModule.sol";
 
@@ -45,7 +45,7 @@ contract KeyperGuard is BaseGuard, Context {
         // if it does, check if try to disable guard and revert if it does.
         // if it does, check if try to disable the Keyper Module and revert if it does.
         if (keyperModule.isSafeRegistered(caller)) {
-            if (!IGnosisSafe(caller).isModuleEnabled(address(keyperModule))) {
+            if (!ISafe(caller).isModuleEnabled(address(keyperModule))) {
                 revert Errors.CannotDisableKeyperModule(address(keyperModule));
             }
             if (

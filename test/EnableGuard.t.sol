@@ -2,7 +2,7 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
-import "./helpers/GnosisSafeHelper.t.sol";
+import "./helpers/SafeHelper.t.sol";
 import {KeyperModule, Errors, Constants} from "../src/KeyperModule.sol";
 import {KeyperGuard} from "../src/KeyperGuard.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
@@ -12,44 +12,44 @@ import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 contract TestEnableGuard is Test {
     KeyperModule keyperModule;
     KeyperGuard keyperGuard;
-    GnosisSafeHelper gnosisHelper;
-    address gnosisSafeAddr;
+    SafeHelper safeHelper;
+    address safeAddr;
 
     /// @notice Set up the environment for testing
     function setUp() public {
         // Init new safe
-        gnosisHelper = new GnosisSafeHelper();
-        gnosisSafeAddr = gnosisHelper.setupSafeEnv();
+        safeHelper = new SafeHelper();
+        safeAddr = safeHelper.setupSafeEnv();
         // Init KeyperModule
-        address masterCopy = gnosisHelper.gnosisMasterCopy();
-        address safeFactory = address(gnosisHelper.safeFactory());
+        address masterCopy = safeHelper.safeMasterCopy();
+        address safeFactory = address(safeHelper.safeFactory());
         address rolesAuthority = address(0xBEEF);
         uint256 maxTreeDepth = 50;
         keyperModule = new KeyperModule(
             masterCopy, safeFactory, rolesAuthority, maxTreeDepth
         );
         keyperGuard = new KeyperGuard(address(keyperModule));
-        gnosisHelper.setKeyperModule(address(keyperModule));
-        gnosisHelper.setKeyperGuard(address(keyperGuard));
+        safeHelper.setKeyperModule(address(keyperModule));
+        safeHelper.setKeyperGuard(address(keyperGuard));
     }
 
     /// @notice Test enabling the KeyperModule
     function testEnableKeyperModule() public {
-        bool result = gnosisHelper.enableModuleTx(gnosisSafeAddr);
+        bool result = safeHelper.enableModuleTx(safeAddr);
         assertEq(result, true);
         // Verify module has been enabled
         bool isKeyperModuleEnabled =
-            gnosisHelper.gnosisSafe().isModuleEnabled(address(keyperModule));
+            safeHelper.safeWallet().isModuleEnabled(address(keyperModule));
         assertEq(isKeyperModuleEnabled, true);
     }
 
     /// @notice Test enabling the KeyperGuard
     function testEnableKeyperGuard() public {
-        bool result = gnosisHelper.enableGuardTx(gnosisSafeAddr);
+        bool result = safeHelper.enableGuardTx(safeAddr);
         assertEq(result, true);
         // Verify guard has been enabled
         address guardAddress = abi.decode(
-            StorageAccessible(gnosisSafeAddr).getStorageAt(
+            StorageAccessible(safeAddr).getStorageAt(
                 uint256(Constants.GUARD_STORAGE_SLOT), 2
             ),
             (address)

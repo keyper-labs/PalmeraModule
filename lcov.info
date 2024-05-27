@@ -974,8 +974,8 @@ FN:25,KeyperModuleHelper.initHelper
 FNDA:0,KeyperModuleHelper.initHelper
 DA:26,0
 DA:27,0
-FN:30,KeyperModuleHelper.setGnosisSafe
-FNDA:21,KeyperModuleHelper.setGnosisSafe
+FN:30,KeyperModuleHelper.setSafe
+FNDA:21,KeyperModuleHelper.setSafe
 DA:31,21
 FN:35,KeyperModuleHelper.encodeSignaturesKeyperTx
 FNDA:17,KeyperModuleHelper.encodeSignaturesKeyperTx
