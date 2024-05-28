@@ -165,7 +165,10 @@ contract PalmeraModule is Auth, Helpers {
 
             ISafe leadSafe = ISafe(superSafe);
             bytes memory sortedSignatures = processAndSortSignatures(
-                signatures, keccak256(palmeraTxHashData), leadSafe.getOwners()
+                keccak256(palmeraTxHashData),
+                palmeraTxHashData,
+                signatures,
+                leadSafe.getOwners()
             );
             leadSafe.checkSignatures(
                 keccak256(palmeraTxHashData),

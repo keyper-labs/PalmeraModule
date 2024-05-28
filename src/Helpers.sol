@@ -14,6 +14,8 @@ import {
     Errors,
     Events
 } from "./DenyHelper.sol";
+import {ISignatureValidator} from
+    "@safe-contracts/interfaces/ISignatureValidator.sol";
 import {SignatureDecoder} from "@safe-contracts/common/SignatureDecoder.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
@@ -140,29 +142,49 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
     }
 
     /// @dev Method to get signatures order
-    /// @param signatures Signature of the transaction
     /// @param dataHash Hash of the transaction data to sign
+    /// @param data Data of the transaction
+    /// @param signatures Signature of the transaction
     /// @param owners Array of owners of the  Safe Multisig Wallet
     /// @return address of the Safe Proxy
     function processAndSortSignatures(
-        bytes memory signatures,
         bytes32 dataHash,
+        bytes memory data,
+        bytes memory signatures,
         address[] memory owners
-    ) internal pure returns (bytes memory) {
+    ) internal view returns (bytes memory) {
         uint256 count = signatures.length / 65;
         bytes memory concatenatedSignatures;
 
-        for (uint256 j; j < owners.length; ++j) {
+        for (uint256 j = 0; j < owners.length; ++j) {
             address currentOwner = owners[j];
-            for (uint256 i; i < count; ++i) {
-                // Inline 'signatureSplit' logic here (r, s, v extraction)
+            for (uint256 i = 0; i < count; ++i) {
                 (uint8 v, bytes32 r, bytes32 s) = signatureSplit(signatures, i);
 
-                // Recover signer from the signature
-                address signer = ecrecover(dataHash, v, r, s);
-                // Combine r, s, v into a signature
-                bytes memory signature = abi.encodePacked(r, s, v);
+                address signer;
+                if (v == 0) {
+                    // If v is 0 then it is a contract signature
+                    // When handling contract signatures the address of the contract is encoded into r
+                    signer = address(uint160(uint256(r)));
+                } else if (v > 30) {
+                    // If v > 30 then default va (27,28) has been adjusted for eth_sign flow
+                    // To support eth_sign and similar we adjust v and hash the messageHash with the Ethereum message prefix before applying ecrecover
+                    signer = ecrecover(
+                        keccak256(
+                            abi.encodePacked(
+                                "\x19Ethereum Signed Message:\n32", dataHash
+                            )
+                        ),
+                        v - 4,
+                        r,
+                        s
+                    );
+                } else {
+                    // EOA signature
+                    signer = ecrecover(dataHash, v, r, s);
+                }
 
+                bytes memory signature = abi.encodePacked(r, s, v);
                 if (signer == currentOwner) {
                     concatenatedSignatures =
                         abi.encodePacked(concatenatedSignatures, signature);
