@@ -143,16 +143,14 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
 
     /// @dev Method to get signatures order
     /// @param dataHash Hash of the transaction data to sign
-    /// @param data Data of the transaction
     /// @param signatures Signature of the transaction
     /// @param owners Array of owners of the  Safe Multisig Wallet
     /// @return address of the Safe Proxy
     function processAndSortSignatures(
         bytes32 dataHash,
-        bytes memory data,
         bytes memory signatures,
         address[] memory owners
-    ) internal view returns (bytes memory) {
+    ) internal pure returns (bytes memory) {
         uint256 count = signatures.length / 65;
         bytes memory concatenatedSignatures;
 
