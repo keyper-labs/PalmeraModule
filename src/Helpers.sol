@@ -164,19 +164,6 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
                     // If v is 0 then it is a contract signature
                     // When handling contract signatures the address of the contract is encoded into r
                     signer = address(uint160(uint256(r)));
-                } else if (v > 30) {
-                    // If v > 30 then default va (27,28) has been adjusted for eth_sign flow
-                    // To support eth_sign and similar we adjust v and hash the messageHash with the Ethereum message prefix before applying ecrecover
-                    signer = ecrecover(
-                        keccak256(
-                            abi.encodePacked(
-                                "\x19Ethereum Signed Message:\n32", dataHash
-                            )
-                        ),
-                        v - 4,
-                        r,
-                        s
-                    );
                 } else {
                     // EOA signature
                     signer = ecrecover(dataHash, v, r, s);
