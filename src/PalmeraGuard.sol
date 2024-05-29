@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import {Guard, BaseGuard} from "@safe-contracts/base/GuardManager.sol";
+import {BaseTransactionGuard} from "@safe-contracts/base/GuardManager.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
 import {
     PalmeraModule,
@@ -14,7 +14,7 @@ import {
 
 /// @title Palmera Guard
 /// @custom:security-contact general@palmeradao.xyz
-contract PalmeraGuard is BaseGuard, Context {
+contract PalmeraGuard is BaseTransactionGuard, Context {
     PalmeraModule immutable palmeraModule;
     /// @notice Name of the Guard
     string public constant NAME = "Palmera Guard";

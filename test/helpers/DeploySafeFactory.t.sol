@@ -3,25 +3,24 @@ pragma solidity 0.8.23;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import {GnosisSafeProxyFactory} from
-    "@safe-contracts/proxies/GnosisSafeProxyFactory.sol";
-import {GnosisSafeProxy} from "@safe-contracts/proxies/GnosisSafeProxy.sol";
-import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
+import {SafeProxyFactory} from "@safe-contracts/proxies/SafeProxyFactory.sol";
+import {SafeProxy} from "@safe-contracts/proxies/SafeProxy.sol";
+import {Safe} from "@safe-contracts/Safe.sol";
 import {IProxyCreationCallback} from
     "@safe-contracts/proxies/IProxyCreationCallback.sol";
 
 /// @title DeploySafeFactory
 /// @custom:security-contact general@palmeradao.xyz
 contract DeploySafeFactory is Script {
-    GnosisSafeProxyFactory public proxyFactory;
-    GnosisSafe public safeContract;
-    GnosisSafeProxy safeProxy;
+    SafeProxyFactory public proxyFactory;
+    Safe public safeContract;
+    SafeProxy safeProxy;
 
-    // Deploys a GnosisSafeProxyFactory & GnosisSafe contract
+    // Deploys a SafeProxyFactory & Safe contract
     function run() public {
         vm.startBroadcast();
-        proxyFactory = new GnosisSafeProxyFactory();
-        safeContract = new GnosisSafe();
+        proxyFactory = new SafeProxyFactory();
+        safeContract = new Safe();
         vm.stopBroadcast();
     }
 

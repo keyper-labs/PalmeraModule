@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import {Enum} from "@safe-contracts/common/Enum.sol";
+import {Enum} from "@safe-contracts/libraries/Enum.sol";
 
 /// @title Safe Interface
 /// @custom:security-contact general@palmeradao.xyz

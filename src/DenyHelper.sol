@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 import {Context} from "@openzeppelin/utils/Context.sol";
 import {Constants} from "../libraries/Constants.sol";
@@ -25,7 +24,6 @@ abstract contract ValidAddress is Context {
 /// @title DenyHelper
 /// @custom:security-contact general@palmeradao.xyz
 abstract contract DenyHelper is ValidAddress {
-    using GnosisSafeMath for uint256;
     using Address for address;
 
     /// @dev Deny/Allowlist Flags by Org

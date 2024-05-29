@@ -7,9 +7,8 @@ import "../src/PalmeraRoles.sol";
 import "../src/PalmeraModule.sol";
 import {PalmeraGuard} from "../src/PalmeraGuard.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
-import {GnosisSafeProxyFactory} from
-    "@safe-contracts/proxies/GnosisSafeProxyFactory.sol";
-import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
+import {SafeProxyFactory} from "@safe-contracts/proxies/SafeProxyFactory.sol";
+import {Safe} from "@safe-contracts/Safe.sol";
 
 /// Deployement of Safe contracts, PalmeraRoles and PalmeraModule
 /// @custom:security-contact general@palmeradao.xyz

@@ -243,7 +243,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         address callerEOA = address(0xFED);
 
         // get safe from rootAddr
-        GnosisSafe rootSafe = GnosisSafe(payable(rootAddr));
+        Safe rootSafe = Safe(payable(rootAddr));
 
         // get owners of the root safe
         address[] memory owners = rootSafe.getOwners();
@@ -327,7 +327,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         address callerEOA = address(0xFED);
 
         // get safe from rootAddr
-        GnosisSafe rootSafe = GnosisSafe(payable(rootAddr));
+        Safe rootSafe = Safe(payable(rootAddr));
 
         // get owners of the root safe
         address[] memory owners = rootSafe.getOwners();
@@ -533,7 +533,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         address callerEOA = address(0xFED);
 
         // get safe from safeA1NAddr
-        GnosisSafe superSafe = GnosisSafe(payable(safeA1NAddr));
+        Safe superSafe = Safe(payable(safeA1NAddr));
 
         // get owners of the root safe
         address[] memory owners = superSafe.getOwners();
@@ -726,7 +726,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         address callerEOA = address(0xFED);
 
         // get safe from rootAddr
-        GnosisSafe rootSafe = GnosisSafe(payable(rootAddr));
+        Safe rootSafe = Safe(payable(rootAddr));
 
         // get owners of the root safe
         address[] memory owners = rootSafe.getOwners();
@@ -810,7 +810,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         address callerEOA = address(0xFED);
 
         // get safe from rootAddr
-        GnosisSafe rootSafe = GnosisSafe(payable(rootAddr));
+        Safe rootSafe = Safe(payable(rootAddr));
 
         // get owners of the root safe
         address[] memory owners = rootSafe.getOwners();

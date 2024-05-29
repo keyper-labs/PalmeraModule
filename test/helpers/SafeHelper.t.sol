@@ -5,15 +5,15 @@ import "forge-std/Test.sol";
 import "../../src/SigningUtils.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
-import "../../script/DeploySafeFactory.t.sol";
-import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
+import "./DeploySafeFactory.t.sol";
+import {Safe} from "@safe-contracts/Safe.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 import {Random} from "../../libraries/Random.sol";
 
 /// @notice Helper contract handling deployment Safe contracts
 /// @custom:security-contact general@palmeradao.xyz
 contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
-    GnosisSafe public safeWallet;
+    Safe public safeWallet;
     DeploySafeFactory public safeFactory;
 
     address public palmeraRolesAddr;
@@ -34,7 +34,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         safeMasterCopy = address(safeFactory.safeContract());
         bytes memory emptyData;
         address safeWalletProxy = safeFactory.newSafeProxy(emptyData);
-        safeWallet = GnosisSafe(payable(safeWalletProxy));
+        safeWallet = Safe(payable(safeWalletProxy));
         initOnwers(30);
 
         /// Setup safe with 3 owners, 1 threshold
@@ -77,7 +77,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         salt++;
         bytes memory emptyData = abi.encodePacked(salt);
         address safeWalletProxy = safeFactory.newSafeProxy(emptyData);
-        safeWallet = GnosisSafe(payable(safeWalletProxy));
+        safeWallet = Safe(payable(safeWalletProxy));
         initOnwers(initOwners);
 
         /// Setup safe with 3 owners, 1 threshold
@@ -157,7 +157,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         );
 
         address safeWalletProxy = safeFactory.newSafeProxy(initializer);
-        safeWallet = GnosisSafe(payable(address(safeWalletProxy)));
+        safeWallet = Safe(payable(address(safeWalletProxy)));
 
         /// Enable module
         bool result = enableModuleTx(address(safeWallet));
@@ -208,7 +208,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         );
 
         address safeWalletProxy = safeFactory.newSafeProxy(initializer);
-        safeWallet = GnosisSafe(payable(address(safeWalletProxy)));
+        safeWallet = Safe(payable(address(safeWalletProxy)));
 
         /// Enable module
         bool result = enableModuleTx(address(safeWallet));
@@ -223,7 +223,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     /// function to update Safe Interface
     /// @param safe address of the Safe
     function updateSafeInterface(address safe) public {
-        safeWallet = GnosisSafe(payable(address(safe)));
+        safeWallet = Safe(payable(address(safe)));
     }
 
     /// function to get transaction hash of a Safe transaction

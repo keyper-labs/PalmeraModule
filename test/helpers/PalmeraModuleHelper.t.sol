@@ -5,9 +5,9 @@ import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import {PalmeraModule} from "../../src/PalmeraModule.sol";
-import {Enum} from "@safe-contracts/common/Enum.sol";
-import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
-import {DeploySafeFactory} from "../../script/DeploySafeFactory.t.sol";
+import {Enum} from "@safe-contracts/libraries/Enum.sol";
+import {Safe} from "@safe-contracts/Safe.sol";
+import {DeploySafeFactory} from "./DeploySafeFactory.t.sol";
 
 /// @notice Helper contract handling PalmeraModule
 /// @custom:security-contact general@palmeradao.xyz
@@ -22,7 +22,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
     }
 
     PalmeraModule public palmera;
-    GnosisSafe public safeHelper;
+    Safe public safeHelper;
 
     /// function to initialize the helper
     /// @param _palmera instance of PalmeraModule
@@ -35,7 +35,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
     /// fucntion to set the Safe instance
     /// @param safe address of the Safe instance
     function setSafe(address safe) public {
-        safeHelper = GnosisSafe(payable(safe));
+        safeHelper = Safe(payable(safe));
     }
 
     /// function Encode signatures for a palmeratx

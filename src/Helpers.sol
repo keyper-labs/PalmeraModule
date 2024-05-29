@@ -3,12 +3,11 @@ pragma solidity 0.8.23;
 
 import {ISafe} from "./SafeInterfaces.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
-import {Enum} from "@safe-contracts/common/Enum.sol";
+import {Enum} from "@safe-contracts/libraries/Enum.sol";
 import {
     DenyHelper,
     Address,
     Context,
-    GnosisSafeMath,
     Constants,
     DataTypes,
     Errors,
@@ -22,7 +21,6 @@ import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 /// @title Helpers
 /// @custom:security-contact general@palmeradao.xyz
 abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
-    using GnosisSafeMath for uint256;
     using Address for address;
 
     /// @dev Modifier for Validate if the address is a Safe Multisig Wallet

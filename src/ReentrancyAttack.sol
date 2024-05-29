@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {PalmeraModule} from "../src/PalmeraModule.sol";
-import {Enum} from "@safe-contracts/common/Enum.sol";
+import {Enum} from "@safe-contracts/libraries/Enum.sol";
 
 /// @title Attacker
 /// @custom:security-contact general@palmeradao.xyz

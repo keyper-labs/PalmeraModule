@@ -3,7 +3,6 @@ pragma solidity 0.8.23;
 
 import "forge-std/Script.sol";
 import "src/PalmeraModule.sol";
-import "test/mocks/MockedContract.t.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import "@solenv/Solenv.sol";
 

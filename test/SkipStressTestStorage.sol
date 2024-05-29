@@ -3,7 +3,6 @@ pragma solidity 0.8.23;
 
 import {SigningUtils} from "../src/SigningUtils.sol";
 import {DeployHelper} from "./helpers/DeployHelper.t.sol";
-import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {console} from "forge-std/console.sol";
 import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
@@ -229,7 +228,7 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
         level[indexLevel] = 0;
         indexSafe = members.sub(1);
         uint256 structLevel = 1;
-        for (uint256 i; i < safeWallets.div(members); ++i) {
+        for (uint256 i; i < (safeWallets / members); ++i) {
             // SuperSafe of Iteration
             uint256 superSafe = subSafeAid[level[i]];
             for (uint256 j; j < members; ++j) {

@@ -8,9 +8,9 @@ import {PalmeraModule} from "../../src/PalmeraModule.sol";
 /// @notice Helper contract handling deployment Safe contracts
 /// @custom:security-contact general@palmeradao.xyz
 contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
-    GnosisSafeProxyFactory public proxyFactory;
-    GnosisSafe public safeContract;
-    GnosisSafeProxy safeProxy;
+    SafeProxyFactory public proxyFactory;
+    Safe public safeContract;
+    SafeProxy safeProxy;
     uint256 nonce;
 
     // Create new safe test environment
@@ -28,7 +28,7 @@ contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
         salt = Random.randint();
         bytes memory emptyData = abi.encodePacked(salt);
         address safeWalletProxy = newSafeProxy(emptyData);
-        safeWallet = GnosisSafe(payable(safeWalletProxy));
+        safeWallet = Safe(payable(safeWalletProxy));
         initOnwers(initOwners);
 
         // Setup safe with 3 owners, 1 threshold
@@ -55,9 +55,8 @@ contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
 
     /// @notice Setup the environment for the test
     function start() public {
-        proxyFactory =
-            GnosisSafeProxyFactory(vm.envAddress("PROXY_FACTORY_ADDRESS"));
-        safeContract = GnosisSafe(payable(vm.envAddress("MASTER_COPY_ADDRESS")));
+        proxyFactory = SafeProxyFactory(vm.envAddress("PROXY_FACTORY_ADDRESS"));
+        safeContract = Safe(payable(vm.envAddress("MASTER_COPY_ADDRESS")));
     }
 
     /// function to set the PalmeraModule address
@@ -104,7 +103,7 @@ contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
         );
 
         address safeWalletProxy = newSafeProxy(initializer);
-        safeWallet = GnosisSafe(payable(address(safeWalletProxy)));
+        safeWallet = Safe(payable(address(safeWalletProxy)));
 
         // Enable module
         bool result = enableModuleTx(address(safeWallet));
