@@ -154,9 +154,9 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
         uint256 count = signatures.length / 65;
         bytes memory concatenatedSignatures;
 
-        for (uint256 j = 0; j < owners.length; ++j) {
+        for (uint256 j = 0; j < owners.length;) {
             address currentOwner = owners[j];
-            for (uint256 i = 0; i < count; ++i) {
+            for (uint256 i = 0; i < count;) {
                 (uint8 v, bytes32 r, bytes32 s) = signatureSplit(signatures, i);
 
                 address signer;
@@ -165,8 +165,19 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
                     // When handling contract signatures the address of the contract is encoded into r
                     signer = address(uint160(uint256(r)));
                 } else {
-                    // EOA signature
-                    signer = ecrecover(dataHash, v, r, s);
+                    // "eth_sign_flow" signatures are specified as v > 30 and are handled differently
+                    // if not handle like EOA signature
+                    (uint8 v1, bytes32 hashData) = v > 30
+                        ? (
+                            v - 4,
+                            keccak256(
+                                abi.encodePacked(
+                                    "\x19Ethereum Signed Message:\n32", dataHash
+                                )
+                                )
+                        )
+                        : (v, dataHash);
+                    signer = ecrecover(hashData, v1, r, s);
                 }
 
                 bytes memory signature = abi.encodePacked(r, s, v);
@@ -175,6 +186,12 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
                         abi.encodePacked(concatenatedSignatures, signature);
                     break;
                 }
+                unchecked {
+                    ++i;
+                }
+            }
+            unchecked {
+                ++j;
             }
         }
         return concatenatedSignatures;
@@ -193,9 +210,12 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
         {
             return Constants.SENTINEL_ADDRESS;
         } else {
-            for (uint256 i = 1; i < modules.length; ++i) {
+            for (uint256 i = 1; i < modules.length;) {
                 if (modules[i] == address(this)) {
                     return modules[i - 1];
+                }
+                unchecked {
+                    ++i;
                 }
             }
         }

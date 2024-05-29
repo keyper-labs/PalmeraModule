@@ -426,11 +426,14 @@ contract PalmeraModule is Auth, Helpers {
         DataTypes.Safe storage superSafe = safes[org][_safe.superSafe];
 
         /// Remove child from superSafe
-        for (uint256 i; i < superSafe.child.length; ++i) {
+        for (uint256 i; i < superSafe.child.length;) {
             if (superSafe.child[i] == safe) {
                 superSafe.child[i] = superSafe.child[superSafe.child.length - 1];
                 superSafe.child.pop();
                 break;
+            }
+            unchecked {
+                ++i;
             }
         }
         // Handle child from removed safe
@@ -594,11 +597,14 @@ contract PalmeraModule is Auth, Helpers {
         DataTypes.Safe storage oldSuper = safes[org][_safe.superSafe];
 
         /// Remove child from superSafe
-        for (uint256 i; i < oldSuper.child.length; ++i) {
+        for (uint256 i; i < oldSuper.child.length;) {
             if (oldSuper.child[i] == safe) {
                 oldSuper.child[i] = oldSuper.child[oldSuper.child.length - 1];
                 oldSuper.child.pop();
                 break;
+            }
+            unchecked {
+                ++i;
             }
         }
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
@@ -923,9 +929,12 @@ contract PalmeraModule is Auth, Helpers {
     /// @param safe address of Safe
     /// @return Org Hashed Name
     function getOrgHashBySafe(address safe) public view returns (bytes32) {
-        for (uint256 i; i < orgHash.length; ++i) {
+        for (uint256 i; i < orgHash.length;) {
             if (getSafeIdBySafe(orgHash[i], safe) != 0) {
                 return orgHash[i];
+            }
+            unchecked {
+                ++i;
             }
         }
         return bytes32(0);
@@ -944,9 +953,12 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.OrgNotRegistered(org);
         }
         /// Check if the Safe address is into an Safe mapping
-        for (uint256 i; i < indexSafe[org].length; ++i) {
+        for (uint256 i; i < indexSafe[org].length;) {
             if (safes[org][indexSafe[org][i]].safe == safe) {
                 return indexSafe[org][i];
+            }
+            unchecked {
+                ++i;
             }
         }
         return 0;
@@ -958,9 +970,12 @@ contract PalmeraModule is Auth, Helpers {
     /// @return orgSafe Hash (On-chain Organisation)
     function getOrgBySafe(uint256 safe) public view returns (bytes32 orgSafe) {
         if ((safe == 0) || (safe > indexId)) revert Errors.InvalidSafeId();
-        for (uint256 i; i < orgHash.length; ++i) {
+        for (uint256 i; i < orgHash.length;) {
             if (safes[orgHash[i]][safe].safe != address(0)) {
                 orgSafe = orgHash[i];
+            }
+            unchecked {
+                ++i;
             }
         }
         if (orgSafe == bytes32(0)) revert Errors.SafeIdNotRegistered(safe);
@@ -1085,11 +1100,14 @@ contract PalmeraModule is Auth, Helpers {
     /// @param org ID's of the organisation
     /// @param safe uint256 of the safe
     function removeIndexSafe(bytes32 org, uint256 safe) private {
-        for (uint256 i; i < indexSafe[org].length; ++i) {
+        for (uint256 i; i < indexSafe[org].length;) {
             if (indexSafe[org][i] == safe) {
                 indexSafe[org][i] = indexSafe[org][indexSafe[org].length - 1];
                 indexSafe[org].pop();
                 break;
+            }
+            unchecked {
+                ++i;
             }
         }
     }
@@ -1097,11 +1115,14 @@ contract PalmeraModule is Auth, Helpers {
     /// @notice Private method to remove Org from Array of Hashes of organisations
     /// @param org ID's of the organisation
     function removeOrg(bytes32 org) private {
-        for (uint256 i; i < orgHash.length; ++i) {
+        for (uint256 i; i < orgHash.length;) {
             if (orgHash[i] == org) {
                 orgHash[i] = orgHash[orgHash.length - 1];
                 orgHash.pop();
                 break;
+            }
+            unchecked {
+                ++i;
             }
         }
     }
@@ -1141,11 +1162,13 @@ contract PalmeraModule is Auth, Helpers {
             // Update the Current Super Safe with the Super Safe of the Child Safe
             currentSuperSafe = _childSafe.superSafe;
             // Update the Level for the next iteration
-            level++;
+            unchecked {
+                ++level;
+            }
         }
     }
 
-    /// @dev Method to getting the All Gorup Member for the Tree of the Root Safe/Org indicate in the args
+    /// @dev Method to getting the All Group Member for the Tree of the Root Safe/Org indicate in the args
     /// @param rootSafe Gorup ID's of the root safe
     /// @param indexSafeByOrg Array of the Safe ID's of the Org
     /// @return indexTree Array of the Safe ID's of the Tree
@@ -1155,23 +1178,29 @@ contract PalmeraModule is Auth, Helpers {
         returns (uint256[] memory indexTree)
     {
         uint256 index;
-        for (uint256 i; i < indexSafeByOrg.length; ++i) {
+        for (uint256 i; i < indexSafeByOrg.length;) {
             if (
                 (getRootSafe(indexSafeByOrg[i]) == rootSafe)
                     && (indexSafeByOrg[i] != rootSafe)
             ) {
                 ++index;
             }
+            unchecked {
+                ++i;
+            }
         }
         indexTree = new uint256[](index);
         index = 0;
-        for (uint256 i; i < indexSafeByOrg.length; ++i) {
+        for (uint256 i; i < indexSafeByOrg.length;) {
             if (
                 (getRootSafe(indexSafeByOrg[i]) == rootSafe)
                     && (indexSafeByOrg[i] != rootSafe)
             ) {
                 indexTree[index] = indexSafeByOrg[i];
-                index++;
+                ++index;
+            }
+            unchecked {
+                ++i;
             }
         }
     }

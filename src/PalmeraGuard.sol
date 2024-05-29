@@ -77,10 +77,13 @@ contract PalmeraGuard is BaseGuard, Context {
             if (!palmeraModule.isSafe(caller)) {
                 bool isSafeLead;
                 // Caller is EAO (lead) : check if it has the rights over the target safe
-                for (uint256 i = 1; i < palmeraModule.indexId(); ++i) {
+                for (uint256 i = 1; i < palmeraModule.indexId();) {
                     if (palmeraModule.isSafeLead(i, caller)) {
                         isSafeLead = true;
                         break;
+                    }
+                    unchecked {
+                        ++i;
                     }
                 }
                 if (!isSafeLead) {
