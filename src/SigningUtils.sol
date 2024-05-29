@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {ECDSA} from "@openzeppelin/utils/cryptography/ECDSA.sol";
-import {Enum} from "@safe-contracts/libraries/Enum.sol";
+import {Enum} from "@safe-contracts/base/Executor.sol";
 
 /// @title SigningUtils
 /// @custom:security-contact general@palmeradao.xyz

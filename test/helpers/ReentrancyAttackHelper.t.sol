@@ -7,7 +7,7 @@ import "./SignersHelper.t.sol";
 import "./SafeHelper.t.sol";
 import {PalmeraModule} from "../../src/PalmeraModule.sol";
 import {Attacker} from "../../src/ReentrancyAttack.sol";
-import {Enum} from "@safe-contracts/libraries/Enum.sol";
+import {Enum} from "@safe-contracts/base/Executor.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 
 /// @notice Helper contract handling ReentrancyAttack

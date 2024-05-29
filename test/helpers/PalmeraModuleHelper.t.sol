@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import {PalmeraModule} from "../../src/PalmeraModule.sol";
-import {Enum} from "@safe-contracts/libraries/Enum.sol";
+import {Enum} from "@safe-contracts/base/Executor.sol";
 import {Safe} from "@safe-contracts/Safe.sol";
 import {DeploySafeFactory} from "./DeploySafeFactory.t.sol";
 
