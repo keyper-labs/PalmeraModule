@@ -29,7 +29,7 @@ contract SignersHelper is Test {
     /// @param numberOwners number of valid owners to initialize
     function initValidOnwers(uint256 numberOwners) internal {
         privateKeyOwners = new uint256[](numberOwners);
-        for (uint256 i; i < numberOwners; ++i) {
+        for (uint256 i; i < numberOwners;) {
             uint256 pk = i;
             // Avoid deriving public key from 0x address
             if (i == 0) {
@@ -38,6 +38,9 @@ contract SignersHelper is Test {
             address publicKey = vm.addr(pk);
             ownersPK[publicKey] = pk;
             privateKeyOwners[i] = pk;
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -45,12 +48,15 @@ contract SignersHelper is Test {
     /// @param numberOwners number of invalid owners to initialize
     function initInvalidOnwers(uint256 numberOwners) internal {
         invalidPrivateKeyOwners = new uint256[](numberOwners);
-        for (uint256 i; i < numberOwners; ++i) {
+        for (uint256 i; i < numberOwners;) {
             // Start derivation after correct ones
             uint256 pk = i + numberOwners;
             address publicKey = vm.addr(pk);
             invalidOwnersPK[publicKey] = pk;
             invalidPrivateKeyOwners[i] = pk;
+            unchecked {
+                ++i;
+            }
         }
     }
 

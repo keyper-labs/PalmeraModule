@@ -154,9 +154,9 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
         uint256 count = signatures.length / 65;
         bytes memory concatenatedSignatures;
 
-        for (uint256 j = 0; j < owners.length;) {
+        for (uint256 j; j < owners.length;) {
             address currentOwner = owners[j];
-            for (uint256 i = 0; i < count;) {
+            for (uint256 i; i < count;) {
                 (uint8 v, bytes32 r, bytes32 s) = signatureSplit(signatures, i);
 
                 address signer;

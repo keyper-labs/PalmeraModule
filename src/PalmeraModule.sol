@@ -108,7 +108,7 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Receive function: called when someone sends ETH to the contract without data
     receive() external payable {
-        revert("This contract does not accept ETH");
+        revert Errors.NotPermittedReceiveEther();
     }
 
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
@@ -174,7 +174,7 @@ contract PalmeraModule is Auth, Helpers {
             );
         }
         /// Increase nonce and execute transaction.
-        nonce++;
+        ++nonce;
         /// Execute transaction from target safe
         ISafe safeTarget = ISafe(targetSafe);
         result =
@@ -437,12 +437,15 @@ contract PalmeraModule is Auth, Helpers {
             }
         }
         // Handle child from removed safe
-        for (uint256 i; i < _safe.child.length; ++i) {
+        for (uint256 i; i < _safe.child.length;) {
             // Add removed safe child to superSafe
             superSafe.child.push(_safe.child[i]);
             DataTypes.Safe storage childrenSafe = safes[org][_safe.child[i]];
             // Update children safe superSafe reference
             childrenSafe.superSafe = _safe.superSafe;
+            unchecked {
+                ++i;
+            }
         }
         /// we guarantee the child was moving to another SuperSafe in the Org
         /// and validate after in the Disconnect Safe method
@@ -511,7 +514,7 @@ contract PalmeraModule is Auth, Helpers {
         uint256 rootSafe = getSafeIdBySafe(org, caller);
         uint256[] memory _indexSafe = getTreeMember(rootSafe, indexSafe[org]);
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        for (uint256 j; j < _indexSafe.length; ++j) {
+        for (uint256 j; j < _indexSafe.length;) {
             uint256 safe = _indexSafe[j];
             DataTypes.Safe memory _safe = safes[org][safe];
             // Revoke roles to safe
@@ -521,6 +524,9 @@ contract PalmeraModule is Auth, Helpers {
             // Disable safe lead role
             disableSafeLeadRoles(safes[org][safe].safe);
             _exitSafe(safe);
+            unchecked {
+                ++j;
+            }
         }
         // After Disconnect Root Safe
         emit Events.WholeTreeRemoved(
@@ -676,7 +682,7 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.DenyHelpersDisabled();
         }
         address currentWallet = Constants.SENTINEL_ADDRESS;
-        for (uint256 i; i < users.length; ++i) {
+        for (uint256 i; i < users.length;) {
             address wallet = users[i];
             if (
                 wallet == address(0) || wallet == Constants.SENTINEL_ADDRESS
@@ -689,6 +695,9 @@ contract PalmeraModule is Auth, Helpers {
             // Add wallet to List
             listed[org][currentWallet] = wallet;
             currentWallet = wallet;
+            unchecked {
+                ++i;
+            }
         }
         listed[org][currentWallet] = Constants.SENTINEL_ADDRESS;
         listCount[org] += users.length;

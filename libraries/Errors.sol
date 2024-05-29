@@ -24,6 +24,8 @@ library Errors {
     error NotAuthorizedRemoveOwner();
     error NotAuthorizedExecOnBehalf();
     error NotAuthorizedUpdateSafeToOtherOrg();
+    /// @dev Not Permitted to Receive Ether
+    error NotPermittedReceiveEther();
     /// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's children Safe Id's
     error CannotDisconnectedSafeBeforeRemoveChild(uint256 children);
     /// @dev Error messages when try to remove Safe before remove it's children, and show the Safe's children Safe Id's

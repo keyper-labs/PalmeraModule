@@ -5,6 +5,7 @@ import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Authority} from "@solmate/auth/Auth.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
+import {Errors} from "../libraries/Errors.sol";
 import {ValidAddress} from "./DenyHelper.sol";
 import {Events} from "../libraries/Events.sol";
 
@@ -24,12 +25,12 @@ contract PalmeraRoles is RolesAuthority, ValidAddress {
 
     /// @notice Fallback function: called when someone sends ETH or calls a function that does not exist
     fallback() external {
-        revert("Fallback function called");
+        revert Errors.NotPermittedReceiveEther();
     }
 
     /// @notice Receive function: called when someone sends ETH to the contract without data
     receive() external payable {
-        revert("This contract does not accept ETH");
+        revert Errors.NotPermittedReceiveEther();
     }
 
     /// Configure roles access control on Authority

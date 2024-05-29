@@ -30,12 +30,12 @@ contract PalmeraGuard is BaseGuard, Context {
 
     /// @notice Fallback function: called when someone sends ETH or calls a function that does not exist
     fallback() external {
-        revert("Fallback function called");
+        revert Errors.NotPermittedReceiveEther();
     }
 
     /// @notice Receive function: called when someone sends ETH to the contract without data
     receive() external payable {
-        revert("This contract does not accept ETH");
+        revert Errors.NotPermittedReceiveEther();
     }
 
     /// @notice Instance of Base Guard Safe Interface

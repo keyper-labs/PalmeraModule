@@ -86,9 +86,12 @@ contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
         );
         require(palmeraModuleAddr != address(0), "Palmera module not set");
         address[] memory owners = new address[](numberOwners);
-        for (uint256 i; i < numberOwners; ++i) {
+        for (uint256 i; i < numberOwners;) {
             owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
-            countUsed++;
+            ++countUsed;
+            unchecked {
+                ++i;
+            }
         }
         bytes memory emptyData = abi.encodePacked(Random.randint());
         bytes memory initializer = abi.encodeWithSignature(
@@ -123,7 +126,7 @@ contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
         safeProxy = proxyFactory.createProxyWithNonce(
             address(safeContract), initializer, nonce
         );
-        nonce++;
+        ++nonce;
         return address(safeProxy);
     }
 }
