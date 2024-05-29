@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {ISafe} from "./SafeInterfaces.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
-import {Enum} from "@safe-contracts/common/Enum.sol";
+import {Enum} from "@safe-contracts/base/Executor.sol";
 import {
     DenyHelper,
     Address,
