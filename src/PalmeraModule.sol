@@ -1192,7 +1192,9 @@ contract PalmeraModule is Auth, Helpers {
                 (getRootSafe(indexSafeByOrg[i]) == rootSafe)
                     && (indexSafeByOrg[i] != rootSafe)
             ) {
-                ++index;
+                unchecked {
+                    ++index;
+                }
             }
             unchecked {
                 ++i;
@@ -1206,7 +1208,9 @@ contract PalmeraModule is Auth, Helpers {
                     && (indexSafeByOrg[i] != rootSafe)
             ) {
                 indexTree[index] = indexSafeByOrg[i];
-                ++index;
+                unchecked {
+                    ++index;
+                }
             }
             unchecked {
                 ++i;
