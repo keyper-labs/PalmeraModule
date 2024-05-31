@@ -1,15 +1,42 @@
-import { ENTRYPOINT_ADDRESS_V07, createSmartAccountClient } from "permissionless";
-import { SafeSmartAccount, signerToSafeSmartAccount } from "permissionless/accounts";
-import { createPimlicoBundlerClient, createPimlicoPaymasterClient } from "permissionless/clients/pimlico";
-import { CallReturnType, Hex, HttpTransport, createPublicClient, http, parseEther } from "viem";
+import {
+    ENTRYPOINT_ADDRESS_V07,
+    createSmartAccountClient,
+} from "permissionless";
+import {
+    SafeSmartAccount,
+    signerToSafeSmartAccount,
+} from "permissionless/accounts";
+import {
+    createPimlicoBundlerClient,
+    createPimlicoPaymasterClient,
+} from "permissionless/clients/pimlico";
+import {
+    Hex,
+    HttpTransport,
+    createPublicClient,
+    http,
+    encodeFunctionData,
+    CallReturnType,
+    parseEther,
+} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { config } from "dotenv";
 import { polygon } from "viem/chains";
+import { palmeraModuleAbi, safeAbi } from "./abi/palmeraModule";
+import { MetaTransactionData, SafeSignature } from '@safe-global/safe-core-sdk-types';
+import { ENTRYPOINT_ADDRESS_V07_TYPE } from "permissionless/types";
+import Safe from '@safe-global/protocol-kit';
 
 // Load environment variables
 config();
 
-const { PK, API_KEY, RPC_URL } = process.env;
+const {
+    PK,
+    API_KEY,
+    RPC_URL,
+    PALMERA_MODULE_ADDRESS,
+    PALMERA_GUARD_ADDRESS,
+} = process.env;
 
 if (!PK || !API_KEY || !RPC_URL) {
     console.error("One or more environment variables are missing.");
@@ -17,25 +44,230 @@ if (!PK || !API_KEY || !RPC_URL) {
 }
 
 const PRIVATE_KEY: Hex = `0x${PK}`;
+const PALMERA_MODULE: Hex = `0x${PALMERA_MODULE_ADDRESS?.slice(2)}`;
+const PALMERA_GUARD: Hex = `0x${PALMERA_GUARD_ADDRESS?.slice(2)}`;
 
-const snooze = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const snooze = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+// Create the public client
+const publicClient = createPublicClient({ transport: http(RPC_URL) });
+
+// Create the Paymaster and Bundler clients using the same API key
+const apiUrl = `https://api.pimlico.io/v2/polygon/rpc?apikey=${API_KEY}`;
+
+// Create the Paymaster clients
+const paymasterClient = createPimlicoPaymasterClient({
+    transport: http(apiUrl),
+    entryPoint: ENTRYPOINT_ADDRESS_V07,
+});
+
+// Create the Bundler clients
+const pimlicoBundlerClient = createPimlicoBundlerClient({
+    transport: http(apiUrl),
+    entryPoint: ENTRYPOINT_ADDRESS_V07,
+});
+
+// Create the Smart Account client
+const smartAccountClient = (
+    safe: SafeSmartAccount<ENTRYPOINT_ADDRESS_V07_TYPE, HttpTransport, undefined>) => {
+    return createSmartAccountClient({
+        account: safe,
+        entryPoint: ENTRYPOINT_ADDRESS_V07,
+        chain: polygon,
+        bundlerTransport: http(apiUrl),
+        middleware: {
+            sponsorUserOperation: paymasterClient.sponsorUserOperation,
+            gasPrice: async () =>
+                (await pimlicoBundlerClient.getUserOperationGasPrice()).fast,
+        },
+    });
+};
+
+// Activate Palmera Module and Guard
+const activateModuleAndGuard = async (safeAccount: SafeSmartAccount<ENTRYPOINT_ADDRESS_V07_TYPE, HttpTransport, undefined>, moduleAddress: string, guardAddress: string) => {
+    const enableModuleData: Hex = encodeFunctionData({
+        abi: safeAbi,
+        functionName: "enableModule",
+        args: [moduleAddress]
+    });
+    const enableGuardData: Hex = encodeFunctionData({
+        abi: safeAbi,
+        functionName: "setGuard",
+        args: [guardAddress]
+    });
+
+    // Create the smart account client
+    const SmartAccountClient = smartAccountClient(safeAccount);
+
+    try {
+        const txHash3 = await SmartAccountClient.sendTransaction({
+            to: safeAccount.address,
+            data: enableModuleData,
+            value: BigInt(0),
+        });
+
+        console.log(`Transaction hash Enable Module in Safe ${safeAccount.address}: https://polygonscan.com/tx/${txHash3}`);
+    } catch (error) {
+        console.error("Error enabling module:", error);
+        return;
+    }
+
+    await snooze(5000);
+
+    try {
+        const txHash4 = await SmartAccountClient.sendTransaction({
+            to: safeAccount.address,
+            data: enableGuardData,
+            value: BigInt(0),
+        });
+
+        console.log(`Transaction hash Enable Guard in Safe ${safeAccount.address}: https://polygonscan.com/tx/${txHash4}`);
+    } catch (error) {
+        console.error("Error enabling guard:", error);
+    }
+};
+
+// Register organization and create additional Safes
+const registerOrg = async (safe: SafeSmartAccount<ENTRYPOINT_ADDRESS_V07_TYPE, HttpTransport, undefined>, orgName: string) => {
+    const data: Hex = encodeFunctionData({
+        abi: palmeraModuleAbi,
+        functionName: "registerOrg",
+        args: [orgName]
+    });
+    // Create the smart account client
+    const SmartAccountClient = smartAccountClient(safe);
+    const txHash = await SmartAccountClient.sendTransaction({
+        to: PALMERA_MODULE,
+        data: data,
+        value: BigInt(0)
+    });
+    console.log(`Transaction hash Register Organization of Safe ${safe.address}: https://polygonscan.com/tx/${txHash}`);
+};
+
+// Add Safe to an On-chain Organization or SuperSafe into Palmera Module
+const createAddSafe = async (safe: SafeSmartAccount<ENTRYPOINT_ADDRESS_V07_TYPE, HttpTransport, undefined>, superSafe: number, name: string) => {
+    const data: Hex = encodeFunctionData({
+        abi: palmeraModuleAbi,
+        functionName: "addSafe",
+        args: [superSafe, name]
+    });
+    // Create the smart account client
+    const SmartAccountClient = smartAccountClient(safe);
+    const txHash = await SmartAccountClient.sendTransaction({
+        to: "0xace3fdef3ad94fba51d2393138367c6f012a7aa1",
+        data: data,
+        value: BigInt(0)
+    });
+    console.log(`Transaction hash Add Safe Address ${safe.address} to SuperSafe Id ${superSafe} with name ${name}: https://polygonscan.com/tx/${txHash}`);
+};
+
+// Method to get Org hash by Safe address
+const getOrgHashBySafe = async (safeAddress: Hex) => {
+    const data: Hex = encodeFunctionData({
+        abi: palmeraModuleAbi,
+        functionName: "getOrgHashBySafe",
+        args: [safeAddress],
+    });
+    const result = await publicClient.call({
+        to: PALMERA_MODULE,
+        data: data,
+        value: BigInt(0),
+    });
+    return result;
+};
+
+// get nonce from Palmera Module
+const getNonce = async () => {
+    const internalData: Hex = encodeFunctionData({
+        abi: palmeraModuleAbi,
+        functionName: "nonce",
+        args: [],
+    });
+    const result = await publicClient.call({
+        to: PALMERA_MODULE,
+        data: internalData,
+        value: BigInt(0),
+    });
+    return result;
+};
+
+// getTransactionHash from Palmera Module
+const getTransactionHash = async (
+    org: Hex,
+    superSafe: SafeSmartAccount<
+        `${ENTRYPOINT_ADDRESS_V07_TYPE}`,
+        HttpTransport,
+        undefined
+    >,
+    targetSafe: string,
+    to: string,
+    value: BigInt,
+    data: Hex,
+    operation: number,
+    nonce: number,
+) => {
+    const internalData: Hex = encodeFunctionData({
+        abi: palmeraModuleAbi,
+        functionName: "getTransactionHash",
+        args: [
+            org,
+            superSafe.address,
+            targetSafe,
+            to,
+            value,
+            data,
+            operation,
+            nonce,
+        ],
+    });
+    const result = await publicClient.call({
+        to: PALMERA_MODULE,
+        data: internalData,
+        value: BigInt(0),
+    });
+    return result;
+};
+
+
+// Execute transaction on behalf of the lowest-level Safe
+const execTransactionOnBehalf = async (
+    org: Hex,
+    superSafe: SafeSmartAccount<ENTRYPOINT_ADDRESS_V07_TYPE, HttpTransport, undefined>,
+    targetSafe: string,
+    to: string,
+    value: BigInt,
+    data: Hex,
+    operation: number,
+    signaturesExec: SafeSignature["data"],
+) => {
+    const internalData: Hex = encodeFunctionData({
+        abi: palmeraModuleAbi,
+        functionName: "execTransactionOnBehalf",
+        args: [
+            org,
+            superSafe.address,
+            targetSafe,
+            to,
+            value,
+            data,
+            operation,
+            signaturesExec,
+        ],
+    });
+    const SmartAccountClient = smartAccountClient(superSafe);
+    const txHash = await SmartAccountClient.sendTransaction({
+        to: PALMERA_MODULE,
+        data: internalData,
+        value: BigInt(0),
+    });
+    console.log(
+        `Transaction hash Execute Transaction on Behalf of Root/Super Safe ${superSafe.address} over Target Safe ${targetSafe}: https://polygonscan.com/tx/${txHash}`,
+    );
+};
 
 async function main() {
-    // Create the public client
-    const publicClient = createPublicClient({ transport: http(RPC_URL) });
-
-    // Create the Paymaster and Bundler clients using the same API key
-    const apiUrl = `https://api.pimlico.io/v2/polygon/rpc?apikey=${API_KEY}`;
-
-    const paymasterClient = createPimlicoPaymasterClient({
-        transport: http(apiUrl),
-        entryPoint: ENTRYPOINT_ADDRESS_V07,
-    });
-
-    const pimlicoBundlerClient = createPimlicoBundlerClient({
-        transport: http(apiUrl),
-        entryPoint: ENTRYPOINT_ADDRESS_V07,
-    });
+    console.log("entrypoint", ENTRYPOINT_ADDRESS_V07);
 
     // Create the signer
     const signer = privateKeyToAccount(PRIVATE_KEY);
@@ -45,156 +277,95 @@ async function main() {
         entryPoint: ENTRYPOINT_ADDRESS_V07,
         signer: signer,
         safeVersion: "1.4.1",
-        address: "0x62f1d978361c39b42DBdb2Bb3f68A5Bb587e5eAa"
+        address: "0x62f1d978361c39b42DBdb2Bb3f68A5Bb587e5eAa",
     });
 
-    // Create the smart account client
-    const smartAccountClient = createSmartAccountClient({
-        account: RootSafe,
-        entryPoint: ENTRYPOINT_ADDRESS_V07,
-        chain: polygon,
-        bundlerTransport: http(apiUrl),
-        middleware: {
-            sponsorUserOperation: paymasterClient.sponsorUserOperation,
-            gasPrice: async () => (await pimlicoBundlerClient.getUserOperationGasPrice()).fast,
-        },
+    const RootSafeProcolKit = await Safe.init({
+        provider: RPC_URL!!,
+        signer: PRIVATE_KEY,
+        isL1SafeSingleton: false,
+        safeAddress: "0x62f1d978361c39b42DBdb2Bb3f68A5Bb587e5eAa",
     });
 
-    console.log(`Safe Address: ${RootSafe.address}`);
-    console.log(`Smart Account Client: ${smartAccountClient.account.address}`);
+    console.log("Smart Account Client, Account Address: ", smartAccountClient(RootSafe).account.address);
 
-    await snooze(5000);
-
-    const safe1 = await signerToSafeSmartAccount(publicClient, {
+    const superSafe = await signerToSafeSmartAccount(publicClient, {
         entryPoint: ENTRYPOINT_ADDRESS_V07,
         signer: signer,
         safeVersion: "1.4.1",
-        address: "0xEF08f146bFbA20f7216c4f0C20B31A66E788Ad59"
+        address: "0xEF08f146bFbA20f7216c4f0C20B31A66E788Ad59",
     });
-    const safe2 = await signerToSafeSmartAccount(publicClient, {
+    const childSafe = await signerToSafeSmartAccount(publicClient, {
         entryPoint: ENTRYPOINT_ADDRESS_V07,
         signer: signer,
         safeVersion: "1.4.1",
-        address: "0xd994CBeeBD1020BbF4A48E8BeC8d803e988E562f"
+        address: "0xd994CBeeBD1020BbF4A48E8BeC8d803e988E562f",
     });
-
-    // Activate Palmera Module and Guard
-    // TODO: add Safe Transaction Data / Interface
-    const activateModuleAndGuard = async (safeAccount: SafeSmartAccount<"0x0000000071727De22E5E9d8BAf0edAc6f37da032", HttpTransport, undefined>, moduleAddress: string, guardAddress: string) => {
-        const enableModuleData: Hex = `0x${Buffer.from("enableModule(address)").toString("hex")}${moduleAddress.slice(2).padStart(64, '0')}`;
-        const enableGuardData: Hex = `0x${Buffer.from("setGuard(address)").toString("hex")}${guardAddress.slice(2).padStart(64, '0')}`;
-
-        console.log(`Enable Module Data: ${enableModuleData}`);
-        console.log(`Enable Guard Data: ${enableGuardData}`);
-
-        try {
-            const txHash3 = await smartAccountClient.sendTransaction({
-                to: safeAccount.address,
-                data: enableModuleData,
-                value: BigInt(0),
-            });
-
-            console.log(`Transaction hash Enable Module: ${txHash3}`);
-        } catch (error) {
-            console.error("Error enabling module:", error);
-            return;
-        }
-
-        await snooze(5000);
-
-        try {
-            const txHash4 = await smartAccountClient.sendTransaction({
-                to: safeAccount.address,
-                data: enableGuardData,
-                value: BigInt(0),
-            });
-
-            console.log(`Transaction hash Enable Guard: ${txHash4}`);
-        } catch (error) {
-            console.error("Error enabling guard:", error);
-        }
-    };
-
-    await activateModuleAndGuard(RootSafe, "0xace3fdef3ad94fba51d2393138367c6f012a7aa1", "0x03a1405d58a9606ec57ac7d6e15f62bb66bfb3d8");
-    await snooze(5000);
-    await activateModuleAndGuard(safe1, "0xace3fdef3ad94fba51d2393138367c6f012a7aa1", "0x03a1405d58a9606ec57ac7d6e15f62bb66bfb3d8");
-    await snooze(5000);
-    await activateModuleAndGuard(safe2, "0xace3fdef3ad94fba51d2393138367c6f012a7aa1", "0x03a1405d58a9606ec57ac7d6e15f62bb66bfb3d8");
-
-    // Register organization and create additional Safes
-    const registerOrg = async (orgName: string) => {
-        const data: Hex = `0x${Buffer.from("registerOrg(string)").toString("hex")}${Buffer.from(orgName).toString("hex").padEnd(64, '0')}`;
-        const txHash = await smartAccountClient.sendTransaction({
-            to: "0xad0211cb2c3bad9b211b46f49dab65ce2d1357f3",
-            data: data,
-            value: BigInt(0)
-        });
-        console.log(`Transaction hash Register Organization: ${txHash}`);
-    };
-
-    const createAddSafe = async (safe: SafeSmartAccount<"0x0000000071727De22E5E9d8BAf0edAc6f37da032", HttpTransport, undefined>, superSafe: number, name: string) => {
-        const data: Hex = `0x${Buffer.from("addSafe(uint256,string)").toString("hex")}${superSafe.toString(16).padStart(64, '0')}${Buffer.from(name).toString("hex").padEnd(64, '0')}`;
-        // Create the smart account client
-        const SmartAccountClient = createSmartAccountClient({
-            account: safe,
-            entryPoint: ENTRYPOINT_ADDRESS_V07,
-            chain: polygon,
-            bundlerTransport: http(apiUrl),
-            middleware: {
-                sponsorUserOperation: paymasterClient.sponsorUserOperation,
-                gasPrice: async () => (await pimlicoBundlerClient.getUserOperationGasPrice()).fast,
-            },
-        });
-        const txHash = await SmartAccountClient.sendTransaction({
-            to: "0xace3fdef3ad94fba51d2393138367c6f012a7aa1",
-            data: data,
-            value: BigInt(0)
-        });
-        console.log(`Transaction hash Add Safe to SuperSafe Id ${superSafe} with name ${name}: ${txHash}`);
-    };
-
-    await registerOrg("MyOrg");
-    await snooze(5000);
-    await createAddSafe(safe1, 1, "Level 1 Safe");
-    await snooze(5000);
-    await createAddSafe(safe2, 2, "Level 2 Safe");
-    await snooze(5000);
-
-    // Method to get Org hash by Safe address
-    const getOrgHashBySafe = async (safeAddress: Hex) => {
-        const data: Hex = `0x${Buffer.from("getOrgHashBySafe(address)").toString("hex")}${safeAddress.slice(2).padStart(64, '0')}`;
-        const result = await publicClient.call({
-            to: "0xace3fdef3ad94fba51d2393138367c6f012a7aa1",
-            data: data,
-        });
-        return result;
-    };
-
-    const orgHash: CallReturnType = await getOrgHashBySafe(safe2.address);
-
-    console.log(`Organization Hash: ${orgHash.data}`);
-
-    // Execute transaction on behalf of the lowest-level Safe
-    const execTransactionOnBehalf = async (org: Hex, superSafe: string, targetSafe: string, to: string, value: BigInt, data: Hex, operation: number, signaturesExec: Hex) => {
-        const internalData: Hex = `0x${Buffer.from("execTransactionOnBehalf(bytes32,address,address,address,uint256,bytes,uint8,bytes)").toString("hex")}${Buffer.from(org).toString("hex").padEnd(64, '0')}${superSafe.slice(2).padStart(64, '0')}${targetSafe.slice(2).padStart(64, '0')}${to.slice(2).padStart(64, '0')}${value.toString(16).padStart(64, '0')}${Buffer.from(data).toString("hex").padEnd(64, '0')}${operation.toString(16).padStart(2, '0')}${Buffer.from(signaturesExec).toString("hex").padEnd(64, '0')}`;
-        const txHash = await smartAccountClient.sendTransaction({
-            to: "0xace3fdef3ad94fba51d2393138367c6f012a7aa1",
-            data: internalData,
-            value: BigInt(0)
-        });
-        console.log(`Transaction hash Execute Transaction on Behalf of Safe: ${txHash}`);
-    };
-
-    await execTransactionOnBehalf(orgHash.data!!, RootSafe.address, safe2.address, "0xd41014BDA7680abE19034CbDA78b3807e51Ff2e8", parseEther("0.1"), "0x", 0, "0x");
-    await snooze(5000);
 
     console.log(`Root Safe Address: ${RootSafe.address}`);
-    console.log(`Second Safe Address: ${safe1.address}`);
-    console.log(`Third Safe Address: ${safe2.address}`);
+    console.log(`Second Safe Address: ${superSafe.address}`);
+    console.log(`Third Safe Address: ${childSafe.address}`);
+
+    // Enable Palmera Module and Guard in Root Safe, superSafe and childSafe
+    await activateModuleAndGuard(RootSafe, PALMERA_MODULE, PALMERA_GUARD);
+    await snooze(5000);
+    await activateModuleAndGuard(superSafe, PALMERA_MODULE, PALMERA_GUARD);
+    await snooze(5000);
+    await activateModuleAndGuard(childSafe, PALMERA_MODULE, PALMERA_GUARD);
+
+    // Register organization
+    await registerOrg(RootSafe, "MyOrg");
+    await snooze(5000);
+    // Add Safes to the organization Under Root Safe id: 1
+    await createAddSafe(superSafe, 1, "Level 1 Safe");
+    await snooze(5000);
+    // Add Safes to the organization Under SuperSafe Safe id: 2
+    await createAddSafe(childSafe, 2, "Level 2 Safe");
+    await snooze(5000);
+
+    const orgHash: CallReturnType = await getOrgHashBySafe(RootSafe.address);
+    const orgHash1: CallReturnType = await getOrgHashBySafe(superSafe.address);
+    const orgHash2: CallReturnType = await getOrgHashBySafe(childSafe.address);
+
+    console.log(`Organization Hash of RootSafe: ${orgHash.data}`);
+    console.log(`Organization Hash of superSafe: ${orgHash1.data}`);
+    console.log(`Organization Hash of childSafe: ${orgHash2.data}`);
+
+    // Get nonce from Palmera Module
+    const nonce: CallReturnType = await getNonce();
+    console.log(`Nonce: ${nonce.data}`);
+
+
+    const txHash: CallReturnType = await getTransactionHash(
+        orgHash.data!!,
+        RootSafe,
+        childSafe.address,
+        "0xd41014BDA7680abE19034CbDA78b3807e51Ff2e8",
+        parseEther("0.1"),
+        "0x",
+        0,
+        parseInt(nonce.data!!),
+    );
+    console.log(`Transaction hash by ExecutionOnBeHalf: ${txHash.data}`);
+
+    // Sign the transaction hash
+    const sign = await RootSafeProcolKit.signHash(txHash.data!!);
+    console.log(`Sign: ${sign.data}`);
+    // Execute transaction on behalf of RooSafe over childSafe
+    await execTransactionOnBehalf(
+        orgHash.data!!,
+        RootSafe,
+        childSafe.address,
+        "0xd41014BDA7680abE19034CbDA78b3807e51Ff2e8",
+        parseEther("0.1"),
+        "0x",
+        0,
+        sign.data,
+    );
 }
 
 // Execute the main function
-main().catch(error => {
+main().catch((error) => {
     console.error("Error in main function:", error);
     process.exit(1);
 });
