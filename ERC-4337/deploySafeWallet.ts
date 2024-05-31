@@ -9,14 +9,14 @@ import { polygon } from "viem/chains";
 // Load environment variables
 config();
 
-const { PK, API_KEY, RPC_URL } = process.env;
+const { PRIVATE_KEY, API_KEY, RPC_URL } = process.env;
 
-if (!PK || !API_KEY || !RPC_URL) {
+if (!PRIVATE_KEY || !API_KEY || !RPC_URL) {
     console.error("One or more environment variables are missing.");
     process.exit(1);
 }
 
-const PRIVATE_KEY: Hex = `0x${PK}`;
+const PRIVATEKEY: Hex = `0x${PRIVATE_KEY}`;
 
 async function main() {
     // Create the public client
@@ -40,7 +40,7 @@ async function main() {
     });
 
     // Create the signer
-    const signer = privateKeyToAccount(PRIVATE_KEY);
+    const signer = privateKeyToAccount(PRIVATEKEY);
 
     // Create the Safe account
     const safeAccount = await signerToSafeSmartAccount(publicClient, {

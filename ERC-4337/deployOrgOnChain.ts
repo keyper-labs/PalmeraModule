@@ -31,19 +31,19 @@ import Safe from '@safe-global/protocol-kit';
 config();
 
 const {
-    PK,
+    PRIVATE_KEY,
     API_KEY,
     RPC_URL,
     PALMERA_MODULE_ADDRESS,
     PALMERA_GUARD_ADDRESS,
 } = process.env;
 
-if (!PK || !API_KEY || !RPC_URL) {
+if (!PRIVATE_KEY || !API_KEY || !RPC_URL) {
     console.error("One or more environment variables are missing.");
     process.exit(1);
 }
 
-const PRIVATE_KEY: Hex = `0x${PK}`;
+const PRIVATEKEY: Hex = `0x${PRIVATE_KEY}`;
 const PALMERA_MODULE: Hex = `0x${PALMERA_MODULE_ADDRESS?.slice(2)}`;
 const PALMERA_GUARD: Hex = `0x${PALMERA_GUARD_ADDRESS?.slice(2)}`;
 
@@ -270,7 +270,7 @@ async function main() {
     console.log("entrypoint", ENTRYPOINT_ADDRESS_V07);
 
     // Create the signer
-    const signer = privateKeyToAccount(PRIVATE_KEY);
+    const signer = privateKeyToAccount(PRIVATEKEY);
 
     // Create the Safe account
     const RootSafe = await signerToSafeSmartAccount(publicClient, {
@@ -282,7 +282,7 @@ async function main() {
 
     const RootSafeProcolKit = await Safe.init({
         provider: RPC_URL!!,
-        signer: PRIVATE_KEY,
+        signer: PRIVATEKEY,
         isL1SafeSingleton: false,
         safeAddress: "0x62f1d978361c39b42DBdb2Bb3f68A5Bb587e5eAa",
     });
