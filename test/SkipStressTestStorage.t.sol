@@ -5,15 +5,12 @@ import {SigningUtils} from "../src/SigningUtils.sol";
 import {DeployHelper} from "./helpers/DeployHelper.t.sol";
 import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {console} from "forge-std/console.sol";
-import {SafeMath} from "@openzeppelin/utils/math/SafeMath.sol";
 
 /// @title SkipStressTestStorage
 /// @custom:security-contact general@palmeradao.xyz
 contract SkipStressTestStorage is DeployHelper, SigningUtils {
-    using SafeMath for uint256;
-
     function setUp() public {
-        deployAllContracts(500000);
+        deployAllContractsStressTest(500000);
     }
 
     // ! ********************* Stress Test Storage ***********************
@@ -40,6 +37,14 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
         // Array of Address for the subSafes
         address[] memory subSafeAaddr = new address[](8100);
         uint256[] memory subSafeAid = new uint256[](8100);
+
+        // get orgHash of root safe
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+
+        // update Deep limit
+        vm.startPrank(address(rootAddr));
+        palmeraModule.updateDepthTreeLimit(8102);
+        vm.stopPrank();
 
         // Assig the Address to first two subSafes
         subSafeAaddr[0] = palmeraModule.getSafeAddress(rootId);
@@ -214,10 +219,14 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
             assertEq(result, true);
             rootId = palmeraModule.getSafeIdBySafe(org, orgSafe);
         }
+        // update Deep limit
+        vm.startPrank(orgSafe);
+        palmeraModule.updateDepthTreeLimit(8100);
+        vm.stopPrank();
 
         // Array of Address for the subSafes
-        address[] memory subSafeAaddr = new address[](safeWallets.mul(members));
-        uint256[] memory subSafeAid = new uint256[](safeWallets.mul(members));
+        address[] memory subSafeAaddr = new address[](safeWallets * members);
+        uint256[] memory subSafeAid = new uint256[](safeWallets * members);
         uint256[] memory level = new uint256[](safeWallets);
         uint256 indexLevel;
         uint256 indexSafe;
@@ -227,9 +236,10 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
 
         // Assign first level
         level[indexLevel] = 0;
-        indexSafe = members.sub(1);
+        indexSafe = members - 1;
         uint256 structLevel = 1;
-        for (uint256 i; i < safeWallets.div(members); ++i) {
+        uint256 lenght = safeWallets / members;
+        for (uint256 i; i < lenght; ++i) {
             // SuperSafe of Iteration
             uint256 superSafe = subSafeAid[level[i]];
             for (uint256 j; j < members; ++j) {
@@ -275,11 +285,11 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
 
                 uint256 subOldlevel = subOldlevels(members, structLevel);
                 uint256 safeLevel = pod(members, structLevel);
+                bool isLevel = indexLevel - 1 > subOldlevel;
+                bool isSafe =
+                    (((indexLevel - 1) - subOldlevel) % safeLevel) == 0;
                 // Show in consola the level of the new Safe
-                if (
-                    (indexLevel.sub(1) > subOldlevel)
-                        && (indexLevel.sub(1).sub(subOldlevel).mod(safeLevel) == 0)
-                ) {
+                if (isLevel && isSafe) {
                     console.log("Level: ", structLevel + 2);
                     console.log("indexSafe / Amount of Safe: ", indexSafe + 1);
                     console.log("indexLevel: ", indexLevel);
