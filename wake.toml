@@ -1,5 +1,6 @@
 
 [compiler.solc]
+via_IR = true
 remappings = [
   "forge-std/=lib/forge-std/src/",
   "ds-test/=lib/forge-std/lib/ds-test/src/",
@@ -9,3 +10,6 @@ remappings = [
   "solenv=lib/solenv/src",
   "@create3=lib/create3-factory/src/"
 ]
+[compiler.solc.optimizer]
+# enabled (unset - let the compiler decide)
+runs = 200
