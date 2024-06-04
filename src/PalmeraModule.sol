@@ -3,12 +3,23 @@ pragma solidity ^0.8.15;
 
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
-import {Helpers, Context, Errors, Constants, DataTypes, Events, Address, GnosisSafeMath, Enum, ISafe, ISafeProxy} from "./Helpers.sol";
-import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
+import {
+    Helpers,
+    Context,
+    Errors,
+    Constants,
+    DataTypes,
+    Events,
+    Address,
+    GnosisSafeMath,
+    Enum,
+    ISafe,
+    ISafeProxy
+} from "./Helpers.sol";
 
 /// @title Palmera Module
 /// @custom:security-contact general@palmeradao.xyz
-contract PalmeraModule is Auth, ReentrancyGuard, Helpers {
+contract PalmeraModule is Auth, Helpers {
     using GnosisSafeMath for uint256;
     using Address for address;
 
