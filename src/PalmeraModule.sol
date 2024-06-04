@@ -104,7 +104,9 @@ contract PalmeraModule is Auth, Helpers {
     }
 
     /// @notice Fallback function: called when someone sends ETH or calls a function that does not exist
-    fallback() external {}
+    fallback() external {
+        revert Errors.NotPermittedReceiveEther();
+    }
 
     /// @notice Receive function: called when someone sends ETH to the contract without data
     receive() external payable {
