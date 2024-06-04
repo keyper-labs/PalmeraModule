@@ -6,7 +6,7 @@ pragma solidity ^0.8.15;
 library Events {
     /// @dev Event Fire when create a new Organisation
     /// @param creator Address of the creator
-    /// @param org Hash (On-chain Organisation)
+    /// @param org Hash(on-chain Organisation)
     /// @param name String name of the organisation
     event OrganisationCreated(
         address indexed creator,

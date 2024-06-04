@@ -214,7 +214,7 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
-        // ttry to encode the end of the signature, from EOA random the internal data to the Wrapper of
+        // try to encode the end of the signature, from EOA random the internal data to the Wrapper of
         // Execution On Behalf, with a rogue caller and that is secondary safe A1 over Root Safe
         bytes memory internalData = abi.encodeWithSignature(
             "execTransactionOnBehalf(bytes32,address,address,address,uint256,bytes,uint8,bytes)",

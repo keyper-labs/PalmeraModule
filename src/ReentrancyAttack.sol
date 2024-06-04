@@ -67,16 +67,16 @@ contract Attacker {
         return true;
     }
 
-    /// function to set the owners of the Safe Multisig Wallet
-    /// @param _owners Array of owners of the Safe Multisig Wallet
+    /// function to set the owners of the Safe Smart Account Wallet
+    /// @param _owners Array of owners of the Safe Smart Account Wallet
     function setOwners(address[] memory _owners) public {
         for (uint256 i = 0; i < owners.length; ++i) {
             owners[i] = _owners[i];
         }
     }
 
-    /// function to get the balance of the Safe Multisig Wallet
-    /// @param _safe Address of the Safe Multisig Wallet
+    /// function to get the balance of the Safe Smart Account Wallet
+    /// @param _safe Address of the Safe Smart Account Wallet
     function getBalanceFromSafe(address _safe)
         external
         view
@@ -101,14 +101,14 @@ contract Attacker {
         bytes memory signatures
     ) external view {}
 
-    /// function to get the owners of the Safe Multisig Wallet
-    /// @return Array of owners of the Safe Multisig Wallet
+    /// function to get the owners of the Safe Smart Account Wallet
+    /// @return Array of owners of the Safe Smart Account Wallet
     function getOwners() public view returns (address[] memory) {
         return owners;
     }
 
-    /// function to get the threshold of the Safe Multisig Wallet
-    /// @return threshold of the Safe Multisig Wallet
+    /// function to get the threshold of the Safe Smart Account Wallet
+    /// @return threshold of the Safe Smart Account Wallet
     function getThreshold() public pure returns (uint256) {
         return uint256(1);
     }
