@@ -59,14 +59,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = palmera.nonce();
         bytes32 txHashed = palmera.getTransactionHash(
-            org,
-            superSafe,
-            targetSafe,
-            to,
-            value,
-            data,
-            operation,
-            nonce
+            org, superSafe, targetSafe, to, value, data, operation, nonce
         );
 
         address[] memory owners = safeHelper.getOwners();
@@ -106,14 +99,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
         // Create encoded tx to be signed
         uint256 nonce = palmera.nonce();
         bytes32 txHashed = palmera.getTransactionHash(
-            org,
-            superSafe,
-            targetSafe,
-            to,
-            value,
-            data,
-            operation,
-            nonce
+            org, superSafe, targetSafe, to, value, data, operation, nonce
         );
 
         uint256 threshold = safeHelper.getThreshold();
@@ -149,14 +135,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
         uint256 nonce
     ) public view returns (bytes32) {
         bytes32 txHashed = palmera.getTransactionHash(
-            org,
-            superSafe,
-            targetSafe,
-            to,
-            value,
-            data,
-            operation,
-            nonce
+            org, superSafe, targetSafe, to, value, data, operation, nonce
         );
         return txHashed;
     }
