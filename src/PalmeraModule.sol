@@ -58,8 +58,9 @@ contract PalmeraModule is Auth, Helpers {
     /// @param safe Safe address
     modifier SafeRegistered(address safe) {
         if (
-            (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
-                || !isSafe(safe)
+            (safe == address(0)) ||
+            safe == Constants.SENTINEL_ADDRESS ||
+            !isSafe(safe)
         ) {
             revert Errors.InvalidSafe(safe);
         } else if (!isSafeRegistered(safe)) {
@@ -72,8 +73,9 @@ contract PalmeraModule is Auth, Helpers {
     /// @param safe Address of the Safe Smart Account Wallet
     modifier IsRootSafe(address safe) {
         if (
-            (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
-                || !isSafe(safe)
+            (safe == address(0)) ||
+            safe == Constants.SENTINEL_ADDRESS ||
+            !isSafe(safe)
         ) {
             revert Errors.InvalidSafe(safe);
         } else if (!isSafeRegistered(safe)) {
@@ -175,12 +177,20 @@ contract PalmeraModule is Auth, Helpers {
         nonce++;
         /// Execute transaction from target safe
         ISafe safeTarget = ISafe(targetSafe);
-        result =
-            safeTarget.execTransactionFromModule(to, value, data, operation);
+        result = safeTarget.execTransactionFromModule(
+            to,
+            value,
+            data,
+            operation
+        );
 
         if (!result) revert Errors.TxOnBehalfExecutedFailed();
         emit Events.TxOnBehalfExecuted(
-            org, caller, superSafe, targetSafe, result
+            org,
+            caller,
+            superSafe,
+            targetSafe,
+            result
         );
     }
 
@@ -236,9 +246,10 @@ contract PalmeraModule is Auth, Helpers {
     ) external SafeRegistered(targetSafe) requiresAuth {
         address caller = _msgSender();
         if (
-            prevOwner == address(0) || ownerRemoved == address(0)
-                || prevOwner == Constants.SENTINEL_ADDRESS
-                || ownerRemoved == Constants.SENTINEL_ADDRESS
+            prevOwner == address(0) ||
+            ownerRemoved == address(0) ||
+            prevOwner == Constants.SENTINEL_ADDRESS ||
+            ownerRemoved == Constants.SENTINEL_ADDRESS
         ) {
             revert Errors.ZeroAddressProvided();
         }
@@ -274,8 +285,8 @@ contract PalmeraModule is Auth, Helpers {
     ) external validAddress(user) IsRootSafe(_msgSender()) requiresAuth {
         address caller = _msgSender();
         if (
-            role == DataTypes.Role.ROOT_SAFE
-                || role == DataTypes.Role.SUPER_SAFE
+            role == DataTypes.Role.ROOT_SAFE ||
+            role == DataTypes.Role.SUPER_SAFE
         ) {
             revert Errors.SetRoleForbidden(role);
         }
@@ -285,9 +296,9 @@ contract PalmeraModule is Auth, Helpers {
         DataTypes.Safe storage _safe = safes[getOrgHashBySafe(caller)][safe];
         // Check if safe is part of the caller org
         if (
-            role == DataTypes.Role.SAFE_LEAD
-                || role == DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
-                || role == DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
+            role == DataTypes.Role.SAFE_LEAD ||
+            role == DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY ||
+            role == DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
         ) {
             // Update safe/org lead
             _safe.lead = user;
@@ -554,7 +565,9 @@ contract PalmeraModule is Auth, Helpers {
         /// Give Role RootSafe if not have it
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         _authority.setUserRole(
-            newRootSafe.safe, uint8(DataTypes.Role.ROOT_SAFE), true
+            newRootSafe.safe,
+            uint8(DataTypes.Role.ROOT_SAFE),
+            true
         );
         // Update Tier
         newRootSafe.tier = DataTypes.Tier.ROOT;
@@ -609,7 +622,9 @@ contract PalmeraModule is Auth, Helpers {
         /// Revoke SuperSafe and SafeLead if don't have any child, and is not organisation
         if (oldSuper.child.length == 0) {
             _authority.setUserRole(
-                oldSuper.safe, uint8(DataTypes.Role.SUPER_SAFE), false
+                oldSuper.safe,
+                uint8(DataTypes.Role.SUPER_SAFE),
+                false
             );
         }
 
@@ -640,11 +655,9 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @dev Method to update Depth Tree Limit
     /// @param newLimit new Depth Tree Limit
-    function updateDepthTreeLimit(uint256 newLimit)
-        external
-        IsRootSafe(_msgSender())
-        requiresAuth
-    {
+    function updateDepthTreeLimit(
+        uint256 newLimit
+    ) external IsRootSafe(_msgSender()) requiresAuth {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 rootSafe = getSafeIdBySafe(org, caller);
@@ -653,7 +666,11 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.InvalidLimit();
         }
         emit Events.NewLimitLevel(
-            org, rootSafe, caller, depthTreeLimit[org], newLimit
+            org,
+            rootSafe,
+            caller,
+            depthTreeLimit[org],
+            newLimit
         );
         depthTreeLimit[org] = newLimit;
     }
@@ -663,11 +680,9 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @dev Funtion to Add Wallet to the List based on Approach of Safe Contract - Owner Manager
     /// @param users Array of Address of the Wallet to be added to the List
-    function addToList(address[] memory users)
-        external
-        IsRootSafe(_msgSender())
-        requiresAuth
-    {
+    function addToList(
+        address[] memory users
+    ) external IsRootSafe(_msgSender()) requiresAuth {
         if (users.length == 0) revert Errors.ZeroAddressProvided();
         bytes32 org = getOrgHashBySafe(_msgSender());
         if (!allowFeature[org] && !denyFeature[org]) {
@@ -677,8 +692,10 @@ contract PalmeraModule is Auth, Helpers {
         for (uint256 i; i < users.length; ++i) {
             address wallet = users[i];
             if (
-                wallet == address(0) || wallet == Constants.SENTINEL_ADDRESS
-                    || wallet == address(this) || currentWallet == wallet
+                wallet == address(0) ||
+                wallet == Constants.SENTINEL_ADDRESS ||
+                wallet == address(this) ||
+                currentWallet == wallet
             ) revert Errors.InvalidAddressProvided();
             // Avoid duplicate wallet
             if (listed[org][wallet] != address(0)) {
@@ -695,12 +712,9 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @dev Function to Drop Wallet from the List  based on Approach of Safe Contract - Owner Manager
     /// @param user Array of Address of the Wallet to be dropped of the List
-    function dropFromList(address user)
-        external
-        validAddress(user)
-        IsRootSafe(_msgSender())
-        requiresAuth
-    {
+    function dropFromList(
+        address user
+    ) external validAddress(user) IsRootSafe(_msgSender()) requiresAuth {
         bytes32 org = getOrgHashBySafe(_msgSender());
         if (!allowFeature[org] && !denyFeature[org]) {
             revert Errors.DenyHelpersDisabled();
@@ -1033,10 +1047,14 @@ contract PalmeraModule is Auth, Helpers {
         /// Assign SUPER_SAFE Role + SAFE_ROOT Role
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         _authority.setUserRole(
-            newRootSafe, uint8(DataTypes.Role.ROOT_SAFE), true
+            newRootSafe,
+            uint8(DataTypes.Role.ROOT_SAFE),
+            true
         );
         _authority.setUserRole(
-            newRootSafe, uint8(DataTypes.Role.SUPER_SAFE), true
+            newRootSafe,
+            uint8(DataTypes.Role.SUPER_SAFE),
+            true
         );
     }
 
@@ -1072,24 +1090,35 @@ contract PalmeraModule is Auth, Helpers {
     /// @param user Address of the user to disable roles
     function disableSafeLeadRoles(address user) private {
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        if (_authority.doesUserHaveRole(user, uint8(DataTypes.Role.SAFE_LEAD)))
-        {
-            _authority.setUserRole(user, uint8(DataTypes.Role.SAFE_LEAD), false);
-        } else if (
-            _authority.doesUserHaveRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
-            )
+        if (
+            _authority.doesUserHaveRole(user, uint8(DataTypes.Role.SAFE_LEAD))
         ) {
             _authority.setUserRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY), false
+                user,
+                uint8(DataTypes.Role.SAFE_LEAD),
+                false
             );
         } else if (
             _authority.doesUserHaveRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+                user,
+                uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
             )
         ) {
             _authority.setUserRole(
-                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY), false
+                user,
+                uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY),
+                false
+            );
+        } else if (
+            _authority.doesUserHaveRole(
+                user,
+                uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            )
+        ) {
+            _authority.setUserRole(
+                user,
+                uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY),
+                false
             );
         }
     }
