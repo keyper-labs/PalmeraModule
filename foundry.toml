@@ -14,7 +14,7 @@ ffi=true
 # Goerli Testnet
 # libraries = ['./libraries/Constants.sol:Constants:0xc0f208cD760C472476A4Af93cf889aa79A70bb51', './libraries/DataTypes.sol:DataTypes:0xF2313a501B15Ee53a56a4A252864a7c7d53ced88', './libraries/Errors.sol:Errors:0x056a1258E952A5C9B85404C8cD77Fdea627D0362', './libraries/Events.sol:Events:0xA27939f95b4e8DC298B43ACaef4Fd4E7502FEE76']
 # Polygon Mainnet
-libraries = ['./libraries/Constants.sol:Constants:0x5F9Ae7E3aF99D13B14324b35E9Ed8E34B72f8973', './libraries/DataTypes.sol:DataTypes:0xC25Fd55932406626EE6133c5CD251ede6ef57df1', './libraries/Errors.sol:Errors:0xD5cc19aBa54FC64811D3050a52dbd274e998b916', './libraries/Events.sol:Events:0xBE874E3f8c49C8976Cf8B80f92B7f6Cc844dE032']
+libraries = ['./libraries/Constants.sol:Constants:0x99665c864817A909B3d44623e4971cB505ad6D53', './libraries/DataTypes.sol:DataTypes:0x506169Fa0B817424a85e0Ea973D2D944315432bE', './libraries/Errors.sol:Errors:0x51E6E646495eAE368B59017f12F5aF9Cb720906d', './libraries/Events.sol:Events:0x656A62fFA1D0118f6a7858FA12ef182e5b072b5C']
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 # Gas Report
