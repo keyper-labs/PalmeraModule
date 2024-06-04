@@ -8,39 +8,39 @@ import {DataTypes} from "./DataTypes.sol";
 library Errors {
     /// @notice Error codes for the Palmera module
     /// @dev Errors Palmera Modules
-    /// @dev Error messages when the Org Hash (Dao's name) is not Registered
+    /// @dev Error messages when the Org Hash (On-chain Organisation) is not Registered
     error OrgNotRegistered(bytes32 org);
-    /// @dev Error messages when the Squad(`squad`) is not Registered
-    error SquadNotRegistered(uint256 squad);
-    /// @dev Error messages when the Super safe Squad(`superSafe`) is not Registered
+    /// @dev Error messages when the Safe(`safe`) is not Registered
+    error SafeIdNotRegistered(uint256 safe);
+    /// @dev Error messages when the Super Safe(`superSafe`) is not Registered
     error SuperSafeNotRegistered(uint256 superSafe);
     /// @dev Error messages when the Safe(`safe`) is not Registered
     error SafeNotRegistered(address safe);
     /// @dev Error messages when the Safe is not Autorized to Add Owner like Lead/Super/Root Safe
     error NotAuthorizedAddOwnerWithThreshold();
-    /// @dev Error messages when the Safe is not Autorized to Remove Owner like Lead/Safe/Root Safe
-    error NotAuthorizedRemoveSquadFromOtherTree();
-    error NotAuthorizedRemoveSquadFromOtherOrg();
+    /// @dev Error messages when the Safe is not Autorized to Remove Owner like Lead/Root Safe or Safe itself
+    error NotAuthorizedRemoveSafeFromOtherTree();
+    error NotAuthorizedRemoveSafeFromOtherOrg();
     error NotAuthorizedRemoveOwner();
     error NotAuthorizedExecOnBehalf();
-    error NotAuthorizedUpdateSquadToOtherOrg();
-    /// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's children Squad Id's
+    error NotAuthorizedUpdateSafeToOtherOrg();
+    /// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's children Safe Id's
     error CannotDisconnectedSafeBeforeRemoveChild(uint256 children);
-    /// @dev Error messages when try to remove Squad before remove it's children, and show the Squad's children Squad Id's
-    error CannotRemoveSquadBeforeRemoveChild(uint256 children);
+    /// @dev Error messages when try to remove Safe before remove it's children, and show the Safe's children Safe Id's
+    error CannotRemoveSafeBeforeRemoveChild(uint256 children);
     error CannotDisablePalmeraModule(address module);
     error CannotDisablePalmeraGuard(address guard);
-    error SquadAlreadyRemoved();
+    error SafeAlreadyRemoved();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
     error NotAuthorizedAsNotSafeLead();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Super Safe
     error NotAuthorizedAsNotRootOrSuperSafe();
-    /// @dev Error messages when the Root Safe is not Autorized Update Super Safe for a Squad in Another Tree
-    error NotAuthorizedUpdateNonChildrenSquad();
+    /// @dev Error messages when the Root Safe is not Autorized Update Super Safe for a Safe in Another Tree
+    error NotAuthorizedUpdateNonChildrenSafe();
     error NotAuthorizedUpdateNonSuperSafe();
     /// @dev Error messages when the Root Safe is not Autorized to Disconnect an Safe in Another Tree
-    error NotAuthorizedDisconnectChildrenSquad();
-    /// @dev Error messages when the Root Safe is not Autorized to Update a Role in a Squad in Another Tree
+    error NotAuthorizedDisconnectChildrenSafe();
+    /// @dev Error messages when the Root Safe is not Autorized to Update a Role in a Safe in Another Tree
     error NotAuthorizedSetRoleAnotherTree();
     /// @dev Error messages the Owner is not Found into the Safe Owners
     error OwnerNotFound();
@@ -52,21 +52,19 @@ library Errors {
     error InvalidThreshold();
     /// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
     error TxExecutionModuleFailed();
-    error PreviewModuleNotFound(address squad);
+    error PreviewModuleNotFound(address safe);
     /// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
     error TxOnBehalfExecutedFailed();
     /// @dev Error messages when the caller is an Invalid Safe
     error InvalidSafe(address safe);
     /// @dev Error messages when the caller is an Invalid Root Safe
     error InvalidRootSafe(address safe);
-    /// @dev Error messages when the Squad is an Invalid ID's
-    error InvalidSquadId();
+    /// @dev Error messages when the Safe is an Invalid ID's
+    error InvalidSafeId();
     /// @dev Error messages when the Try to Modify a Role Not Permitted
     error SetRoleForbidden(DataTypes.Role role);
     /// @dev Error messages when Org Already Registered
     error OrgAlreadyRegistered(bytes32 safe);
-    /// @dev Error messages when Squad Already Registered
-    error SquadAlreadyRegistered();
     /// @dev Error messages when Safe Already Registered
     error SafeAlreadyRegistered(address safe);
     /// @dev Error messages when the String Name is Empty

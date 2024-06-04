@@ -106,11 +106,11 @@ contract PalmeraRoles is RolesAuthority, ValidAddress {
             true
         );
         /// Target contract: PalmeraModule
-        /// Auth function removeSquad
+        /// Auth function removeSafe
         setRoleCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
             palmeraModule,
-            Constants.REMOVE_SQUAD,
+            Constants.REMOVE_SAFE,
             true
         );
 
@@ -172,7 +172,7 @@ contract PalmeraRoles is RolesAuthority, ValidAddress {
             true
         );
         /// Target contract: PalmeraModule
-        /// Auth function createRootSafeSquad
+        /// Auth function createRootSafe
         setRoleCapability(
             uint8(DataTypes.Role.ROOT_SAFE),
             palmeraModule,

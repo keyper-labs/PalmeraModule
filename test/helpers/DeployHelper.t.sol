@@ -36,16 +36,16 @@ contract DeployHelper is Test {
     address zeroAddress = address(0x0);
     address sentinel = address(0x1);
 
-    // Org, Squad and subSquad String names
+    // Org, Safe and subSafe String names
     string orgName = "Main Org";
     string org2Name = "Second Org";
     string root2Name = "Second Root";
-    string squadA1Name = "SquadA1";
-    string squadA2Name = "SquadA2";
-    string squadBName = "SquadB";
-    string subSquadA1Name = "subSquadA1";
-    string subSquadB1Name = "subSquadB1";
-    string subSubSquadA1Name = "SubSubSquadA";
+    string safeA1Name = "SafeA1";
+    string safeA2Name = "SafeA2";
+    string safeBName = "SafeB";
+    string subSafeA1Name = "subSafeA1";
+    string subSafeB1Name = "subSafeB1";
+    string subSubSafeA1Name = "SubSubSafeA";
 
     bytes32 orgHash;
 

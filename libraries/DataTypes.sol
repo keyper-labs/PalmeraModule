@@ -12,20 +12,20 @@ library DataTypes {
         SUPER_SAFE,
         ROOT_SAFE
     }
-    /// @dev typos of squads into Palmera Modules
+    /// @dev typos of safes into Palmera Modules
     enum Tier {
-        SQUAD, // 0
+        safe, // 0
         ROOT, // 1
         REMOVED // 2
     }
-    /// @devStruct for Squad
-    /// @param tier Kind of the squad (at the momento only squad or ROOT)
-    /// @param name String name of the squad (any tier of squad)
-    /// @param lead Address of Safe Lead of the squad (Safe Lead Role)
-    /// @param safe Address of Safe of the squad (Safe Role)
-    /// @param child Array of ID's members of the squad
-    /// @param superSafe ID of Superior Squad (superSafe Role)
-    struct Squad {
+    /// @devStruct for Safe
+    /// @param tier Kind of the safe (at the momento only safe or ROOT)
+    /// @param name String name of the safe (any tier of safe)
+    /// @param lead Address of Safe Lead of the safe (Safe Lead Role)
+    /// @param safe Address of Safe Wallet (Safe Role)
+    /// @param child Array of ID's members of the safe
+    /// @param superSafe ID of Superior Safe (superSafe Role)
+    struct Safe {
         Tier tier;
         string name;
         address lead;

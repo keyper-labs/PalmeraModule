@@ -95,13 +95,13 @@ contract PalmeraRoleDeployTest is Test {
             Constants.EXEC_ON_BEHALF
         );
         assertTrue(hasSUPER_SAFECapabilityExecOnBehalf);
-        bool hasSUPER_SAFECapabilityRemoveSquad = palmeraRolesHarness
+        bool hasSUPER_SAFECapabilityRemoveSafe = palmeraRolesHarness
             .doesRoleHaveCapability(
             uint8(DataTypes.Role.SUPER_SAFE),
             palmeraModule,
-            Constants.REMOVE_SQUAD
+            Constants.REMOVE_SAFE
         );
-        assertTrue(hasSUPER_SAFECapabilityRemoveSquad);
+        assertTrue(hasSUPER_SAFECapabilityRemoveSafe);
 
         // Check ROOT_SAFE capabilities
         bool hasROOT_SAFECapabilityEnableAllowlist = palmeraRolesHarness

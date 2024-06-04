@@ -1,6 +1,6 @@
 # PalmeraModule - Safe module for Palmera
 
-This contract is a registry of palmera organisation/squads setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
+This contract is a registry of palmera organisation/safes setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
 
 ## Tech requirements
 
@@ -58,31 +58,32 @@ All the following calls have to be executed from a safe using safe execTransatio
 
 The address of the calling safe is going to be registered with the input name
 
-# Add Subsquads to main Organisation
+# Add Subsafes to main organisation
 
-`function addSquad(address org, address superSafe, string memory name)`
+`function addSafe(address org, address superSafe, string memory name)`
 
-Need to specify to which Organisation the new squad will belong
+Need to specify to which organisation the new safe will belong
 
 ## Requirements (not finalized)
 
-Organisation=Safe Root has multiple squads
-Squads/Safe relationship
+Organisation=Safe Root has multiple safes
+Safes/Safe relationship
 
--   Each squad is associated to a safe
--   Each squad has a superSafe (superSafe has ownership over the squad)
--   Each squad has set of child
+
+-   Each safe is associated to a safe
+-   Each safe has a superSafe (superSafe has ownership over the safe)
+-   Each safe has set of child
 
 Validate transfer rules - execTransactionFromModule:
 
 -   Safe signers can execute transactions if threshold met (normal safe verification)
--   Safe squad signers can execute transactions in behalf of any child safe
-    -   Squad threshold kept
+-   Safe safe signers can execute transactions in behalf of any child safe
+    -   Safe threshold kept
 
-Setup squads rules:
+Setup safes rules:
 
--   Root lead has full control over all squads (or over all squads that he is a designed lead?)
-    => Remove/Add squads.
+-   Root lead has full control over all safes (or over all safes that he is a designed lead?)
+    => Remove/Add safes.
     => Remove/Add signers of any child safe
--   Each squad has a designed lead (full ownership of the safe)
+-   Each safe has a designed lead (full ownership of the safe)
 -   Can an lead be something different than a Safe contract?

@@ -90,28 +90,27 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
 
         address attackerSafe = palmeraSafes[nameAttacker];
         bytes32 orgHash = keccak256(abi.encodePacked(_orgName));
-        uint256 rootOrgId = palmera.getSquadIdBySafe(orgHash, orgAddr);
+        uint256 rootOrgId = palmera.getSafeIdBySafe(orgHash, orgAddr);
 
         vm.startPrank(attackerSafe);
-        palmera.addSquad(rootOrgId, nameAttacker);
+        palmera.addSafe(rootOrgId, nameAttacker);
         vm.stopPrank();
 
         address victim = safeHelper.newPalmeraSafe(2, 1);
         string memory nameVictim = "Victim";
         palmeraSafes[nameVictim] = address(victim);
-        uint256 attackerSquadId =
-            palmera.getSquadIdBySafe(orgHash, attackerSafe);
+        uint256 attackerSafeId = palmera.getSafeIdBySafe(orgHash, attackerSafe);
 
         vm.startPrank(victim);
-        palmera.addSquad(attackerSquadId, nameVictim);
+        palmera.addSafe(attackerSafeId, nameVictim);
         vm.stopPrank();
-        uint256 victimSquadId = palmera.getSquadIdBySafe(orgHash, victim);
+        uint256 victimSafeId = palmera.getSafeIdBySafe(orgHash, victim);
 
         vm.deal(victim, 100 gwei);
 
         vm.startPrank(orgAddr);
         palmera.setRole(
-            DataTypes.Role.SAFE_LEAD, address(attackerSafe), victimSquadId, true
+            DataTypes.Role.SAFE_LEAD, address(attackerSafe), victimSafeId, true
         );
         vm.stopPrank();
 
