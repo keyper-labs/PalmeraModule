@@ -444,7 +444,10 @@ contract EventsChekers is DeployHelper {
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
         emit WholeTreeRemoved(
-            keccak256(abi.encodePacked(orgName)), rootId, rootAddr, orgName
+            keccak256(abi.encodePacked(orgName)),
+            rootId,
+            rootAddr,
+            orgName
         );
         palmeraModule.removeWholeTree();
     }
@@ -481,7 +484,11 @@ contract EventsChekers is DeployHelper {
         vm.startPrank(rootAddr);
         vm.expectEmit(true, true, true, true);
         emit NewLimitLevel(
-            keccak256(abi.encodePacked(orgName)), rootId, rootAddr, 8, 49
+            keccak256(abi.encodePacked(orgName)),
+            rootId,
+            rootAddr,
+            8,
+            49
         );
         palmeraModule.updateDepthTreeLimit(49);
     }
