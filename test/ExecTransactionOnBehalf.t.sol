@@ -702,19 +702,188 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         );
     }
 
-    // Revert NotAuthorizedExecOnBehalf() execTransactionOnBehalf (safeSubSquadA1 is attempting to execute on its superSafe)
-    // Caller: safeSubSquadA1
-    // Caller Type: safe
-    // Caller Role: SUPER_SAFE
-    // TargerSafe: safeSquadA1
-    // TargetSafe Type: safe as lead
-    //   rootSafe
-    //      |
-    //  safeSquadA1 <----
-    //      |            |
-    // safeSubSquadA1 ---
-    //      |
-    // safeSubSubSquadA1
+    // Revert: GS020 (Signatures data too short), execTransactionOnBehalf when is Any EOA, passing the signature of owners of the Root/Super Safe of Target Safe Incomplete
+    // Caller: callerEOA
+    // Caller Type: EOA
+    // Caller Role: nothing
+    // SuperSafe: rootAddr
+    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
+    //            rootSafe -----------
+    //               |                |
+    //           safeSquadA1          |
+    //              |                 |
+    //           safeSubSquadA1 <-----
+    function testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Straight_way_incomplete(
+    ) public {
+        (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK,)
+        = palmeraSafeBuilder.setupOrgThreeTiersTree(
+            orgName, squadA1Name, subSquadA1Name
+        );
+
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSubSquadA1Addr =
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+
+        vm.deal(rootAddr, 100 gwei);
+        vm.deal(safeSubSquadA1Addr, 100 gwei);
+
+        // Random wallet instead of a safe (EOA)
+        address callerEOA = address(0xFED);
+
+        // get safe from rootAddr
+        GnosisSafe rootSafe = GnosisSafe(payable(rootAddr));
+
+        // get owners of the root safe
+        address[] memory owners = rootSafe.getOwners();
+        // reduce threshold by 1, and use incomplete signatures
+        uint256 threshold = rootSafe.getThreshold() - 1;
+        uint256 nonce = palmeraModule.nonce();
+
+        // Init Valid Owners
+        initValidOnwers(4);
+
+        bytes memory concatenatedSignatures;
+        bytes memory emptyData;
+
+        for (uint256 j = 0; j < threshold; j++) {
+            address currentOwner = owners[j];
+            vm.startPrank(currentOwner);
+            bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
+                orgHash,
+                rootAddr,
+                safeSubSquadA1Addr,
+                receiver,
+                37 gwei,
+                emptyData,
+                Enum.Operation(0),
+                nonce
+            );
+            bytes32 digest = keccak256(palmeraTxHashData);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownersPK[j], digest);
+            // verify signer
+            address signer = ecrecover(digest, v, r, s);
+            assertEq(signer, currentOwner);
+            bytes memory signature = abi.encodePacked(r, s, v);
+            concatenatedSignatures =
+                abi.encodePacked(concatenatedSignatures, signature);
+            vm.stopPrank();
+        }
+        // verify signature length
+        assertEq(concatenatedSignatures.length, threshold * 65);
+
+        vm.startPrank(callerEOA);
+        vm.expectRevert("GS020");
+        palmeraModule.execTransactionOnBehalf(
+            orgHash,
+            rootAddr,
+            safeSubSquadA1Addr,
+            receiver,
+            37 gwei,
+            emptyData,
+            Enum.Operation(0),
+            concatenatedSignatures
+        );
+        vm.stopPrank();
+    }
+
+    // Revert: GS020 (Signatures data too short), execTransactionOnBehalf when is Any EOA, passing the signature of owners of the Root/Super Safe of Target Safe Incomplete
+    // Caller: callerEOA
+    // Caller Type: EOA
+    // Caller Role: nothing
+    // SuperSafe: rootAddr
+    // TargerSafe: safeSubSquadA1, same hierachical tree with 2 levels diff
+    //            rootSafe -----------
+    //               |                |
+    //           safeSquadA1          |
+    //              |                 |
+    //           safeSubSquadA1 <-----
+    function testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHTS_SIGNATURES_signed_one_by_one_Inverse_WAY_incomplete(
+    ) public {
+        (uint256 rootId,, uint256 safeSubSquadA1Id, uint256[] memory ownersPK,)
+        = palmeraSafeBuilder.setupOrgThreeTiersTree(
+            orgName, squadA1Name, subSquadA1Name
+        );
+
+        address rootAddr = palmeraModule.getSquadSafeAddress(rootId);
+        address safeSubSquadA1Addr =
+            palmeraModule.getSquadSafeAddress(safeSubSquadA1Id);
+
+        vm.deal(rootAddr, 100 gwei);
+        vm.deal(safeSubSquadA1Addr, 100 gwei);
+
+        // Random wallet instead of a safe (EOA)
+        address callerEOA = address(0xFED);
+
+        // get safe from rootAddr
+        GnosisSafe rootSafe = GnosisSafe(payable(rootAddr));
+
+        // get owners of the root safe
+        address[] memory owners = rootSafe.getOwners();
+        // reduce threshold by 1, and use incomplete signatures
+        uint256 threshold = rootSafe.getThreshold() - 1;
+        uint256 nonce = palmeraModule.nonce();
+
+        // Init Valid Owners
+        initValidOnwers(4);
+
+        bytes memory concatenatedSignatures;
+        bytes memory emptyData;
+
+        for (uint256 i = 0; i < threshold; i++) {
+            uint256 j = threshold - 1 - i; // reverse order
+            address currentOwner = owners[j];
+            vm.startPrank(currentOwner);
+            bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
+                orgHash,
+                rootAddr,
+                safeSubSquadA1Addr,
+                receiver,
+                26 gwei,
+                emptyData,
+                Enum.Operation(0),
+                nonce
+            );
+            bytes32 digest = keccak256(palmeraTxHashData);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownersPK[j], digest);
+            // verify signer
+            address signer = ecrecover(digest, v, r, s);
+            assertEq(signer, currentOwner);
+            bytes memory signature = abi.encodePacked(r, s, v);
+            concatenatedSignatures =
+                abi.encodePacked(concatenatedSignatures, signature);
+            vm.stopPrank();
+        }
+        // verify signature length
+        assertEq(concatenatedSignatures.length, threshold * 65);
+
+        vm.startPrank(callerEOA);
+        vm.expectRevert("GS020");
+        palmeraModule.execTransactionOnBehalf(
+            orgHash,
+            rootAddr,
+            safeSubSquadA1Addr,
+            receiver,
+            26 gwei,
+            emptyData,
+            Enum.Operation(0),
+            concatenatedSignatures
+        );
+        vm.stopPrank();
+    }
+
+    // // Revert NotAuthorizedExecOnBehalf() execTransactionOnBehalf (safeSubSquadA1 is attempting to execute on its superSafe)
+    // // Caller: safeSubSquadA1
+    // // Caller Type: safe
+    // // Caller Role: SUPER_SAFE
+    // // TargerSafe: safeSquadA1
+    // // TargetSafe Type: safe as lead
+    // //   rootSafe
+    // //      |
+    // //  safeSquadA1 <----
+    // //      |            |
+    // // safeSubSquadA1 ---
+    // //      |
+    // // safeSubSubSquadA1
     function testRevertSuperSafeExecOnBehalf() public {
         (uint256 rootId, uint256 squadIdA1, uint256 subSquadIdA1,) =
         palmeraSafeBuilder.setupOrgFourTiersTree(
@@ -897,16 +1066,16 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         );
     }
 
-    // Revert ZeroAddressProvided() execTransactionOnBehalf when param "org" is address(0)
-    // Scenario 3
-    // Caller: rootAddr (org)
-    // Caller Type: rootSafe
-    // Caller Role: ROOT_SAFE
-    // TargerSafe: safeSquadA1
-    // TargetSafe Type: safe as a Child
-    //            rootSafe -----------
-    //               |                |
-    //           safeSquadA1 <--------
+    // // Revert ZeroAddressProvided() execTransactionOnBehalf when param "org" is bytes32(0)
+    // // Scenario 3
+    // // Caller: rootAddr (org)
+    // // Caller Type: rootSafe
+    // // Caller Role: ROOT_SAFE
+    // // TargerSafe: safeSquadA1
+    // // TargetSafe Type: safe as a Child
+    // //            rootSafe -----------
+    // //               |                |
+    // //           safeSquadA1 <--------
     function testRevertOrgNotRegisteredExecTransactionOnBehalfScenarioThree()
         public
     {
