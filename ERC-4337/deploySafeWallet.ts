@@ -18,8 +18,11 @@ if (!PRIVATE_KEY || !API_KEY || !RPC_URL) {
 
 const PRIVATEKEY: Hex = `0x${PRIVATE_KEY}`;
 
+// Main function
+// To create a Safe with SDK permissionless, you need to create a Safe account and then use the Safe account to create a Smart Account client
+// The Smart Account client is used to send transactions
+// The Safe account is created using the signerToSafeSmartAccount function 
 async function main() {
-    // Create the public client
 
     // Create the public client
     const publicClient = createPublicClient({
