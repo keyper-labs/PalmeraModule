@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "forge-std/Test.sol";
 import "forge-std/Script.sol";
@@ -256,7 +256,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory concatenatedSignatures;
         bytes memory emptyData;
 
-        for (uint256 j = 0; j < threshold; j++) {
+        for (uint256 j; j < threshold; ++j) {
             address currentOwner = owners[j];
             vm.startPrank(currentOwner);
             bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
@@ -340,7 +340,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory concatenatedSignatures;
         bytes memory emptyData;
 
-        for (uint256 i = 0; i < threshold; i++) {
+        for (uint256 i; i < threshold; ++i) {
             uint256 j = threshold - 1 - i; // reverse order
             address currentOwner = owners[j];
             vm.startPrank(currentOwner);
@@ -546,7 +546,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory concatenatedSignatures;
         bytes memory emptyData;
 
-        for (uint256 j = 0; j < threshold; j++) {
+        for (uint256 j; j < threshold; ++j) {
             address currentOwner = owners[j];
             vm.startPrank(currentOwner);
             bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
@@ -740,7 +740,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory concatenatedSignatures;
         bytes memory emptyData;
 
-        for (uint256 j = 0; j < threshold; j++) {
+        for (uint256 j; j < threshold; ++j) {
             address currentOwner = owners[j];
             vm.startPrank(currentOwner);
             bytes memory palmeraTxHashData = palmeraModule.encodeTransactionData(
@@ -824,7 +824,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         bytes memory concatenatedSignatures;
         bytes memory emptyData;
 
-        for (uint256 i = 0; i < threshold; i++) {
+        for (uint256 i; i < threshold; ++i) {
             uint256 j = threshold - 1 - i; // reverse order
             address currentOwner = owners[j];
             vm.startPrank(currentOwner);
@@ -1244,7 +1244,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // // ! ****************** Reentrancy Attack Test to execOnBehalf ***************
 
     function testReentrancyAttack() public {
-        Attacker attackerContract = new Attacker(address(palmeraModule));
+        Attacker attackerContract =
+            new Attacker(payable(address(palmeraModule)));
         AttackerHelper attackerHelper = new AttackerHelper();
         attackerHelper.initHelper(
             palmeraModule, attackerContract, safeHelper, 30

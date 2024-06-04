@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
-import {ISafe, ISafeProxy} from "./SafeInterfaces.sol";
+import {ISafe} from "./SafeInterfaces.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
-import {Enum} from "@safe-contracts/common/Enum.sol";
+import {Enum} from "@safe-contracts/base/Executor.sol";
 import {
     DenyHelper,
     Address,
@@ -14,6 +14,8 @@ import {
     Errors,
     Events
 } from "./DenyHelper.sol";
+import {ISignatureValidator} from
+    "@safe-contracts/interfaces/ISignatureValidator.sol";
 import {SignatureDecoder} from "@safe-contracts/common/SignatureDecoder.sol";
 import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
@@ -111,7 +113,7 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
         bytes calldata data,
         Enum.Operation operation,
         uint256 _nonce
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
         return keccak256(
             encodeTransactionData(
                 org, superSafe, targetSafe, to, value, data, operation, _nonce
@@ -126,8 +128,8 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
     function isSafe(address safe) public view returns (bool) {
         /// Check if the address is a Safe Smart Account Wallet
         if (safe.isContract()) {
-            /// Check if the address is a Safe Smart Account Wallet
-            bytes memory payload = abi.encodeWithSignature("getThreshold()");
+            /// Check if the address is a Safe Multisig Wallet
+            bytes memory payload = abi.encodeCall(ISafe.getThreshold, ());
             (bool success, bytes memory returnData) = safe.staticcall(payload);
             if (!success) return false;
             /// Check if the address is a Safe Smart Account Wallet
@@ -140,34 +142,56 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
     }
 
     /// @dev Method to get signatures order
-    /// @param signatures Signature of the transaction
     /// @param dataHash Hash of the transaction data to sign
-    /// @param owners Array of owners of the  Safe Smart Account Wallet
+    /// @param signatures Signature of the transaction
+    /// @param owners Array of owners of the  Safe Multisig Wallet
     /// @return address of the Safe Proxy
     function processAndSortSignatures(
-        bytes memory signatures,
         bytes32 dataHash,
+        bytes memory signatures,
         address[] memory owners
     ) internal pure returns (bytes memory) {
         uint256 count = signatures.length / 65;
         bytes memory concatenatedSignatures;
 
-        for (uint256 j = 0; j < owners.length; j++) {
+        for (uint256 j; j < owners.length;) {
             address currentOwner = owners[j];
-            for (uint256 i = 0; i < count; i++) {
-                // Inline 'signatureSplit' logic here (r, s, v extraction)
+            for (uint256 i; i < count;) {
                 (uint8 v, bytes32 r, bytes32 s) = signatureSplit(signatures, i);
 
-                // Recover signer from the signature
-                address signer = ecrecover(dataHash, v, r, s);
-                // Combine r, s, v into a signature
-                bytes memory signature = abi.encodePacked(r, s, v);
+                address signer;
+                if (v == 0) {
+                    // If v is 0 then it is a contract signature
+                    // When handling contract signatures the address of the contract is encoded into r
+                    signer = address(uint160(uint256(r)));
+                } else {
+                    // "eth_sign_flow" signatures are specified as v > 30 and are handled differently
+                    // if not handle like EOA signature
+                    (uint8 v1, bytes32 hashData) = v > 30
+                        ? (
+                            v - 4,
+                            keccak256(
+                                abi.encodePacked(
+                                    "\x19Ethereum Signed Message:\n32", dataHash
+                                )
+                                )
+                        )
+                        : (v, dataHash);
+                    signer = ecrecover(hashData, v1, r, s);
+                }
 
+                bytes memory signature = abi.encodePacked(r, s, v);
                 if (signer == currentOwner) {
                     concatenatedSignatures =
                         abi.encodePacked(concatenatedSignatures, signature);
                     break;
                 }
+                unchecked {
+                    ++i;
+                }
+            }
+            unchecked {
+                ++j;
             }
         }
         return concatenatedSignatures;
@@ -186,9 +210,12 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
         {
             return Constants.SENTINEL_ADDRESS;
         } else {
-            for (uint256 i = 1; i < modules.length; ++i) {
+            for (uint256 i = 1; i < modules.length;) {
                 if (modules[i] == address(this)) {
                     return modules[i - 1];
+                }
+                unchecked {
+                    ++i;
                 }
             }
         }

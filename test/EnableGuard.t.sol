@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "forge-std/Test.sol";
 import "./helpers/SafeHelper.t.sol";
@@ -21,14 +21,10 @@ contract TestEnableGuard is Test {
         safeHelper = new SafeHelper();
         safeAddr = safeHelper.setupSafeEnv();
         // Init PalmeraModule
-        address masterCopy = safeHelper.safeMasterCopy();
-        address safeFactory = address(safeHelper.safeFactory());
         address rolesAuthority = address(0xBEEF);
         uint256 maxTreeDepth = 50;
-        palmeraModule = new PalmeraModule(
-            masterCopy, safeFactory, rolesAuthority, maxTreeDepth
-        );
-        palmeraGuard = new PalmeraGuard(address(palmeraModule));
+        palmeraModule = new PalmeraModule(rolesAuthority, maxTreeDepth);
+        palmeraGuard = new PalmeraGuard(payable(address(palmeraModule)));
         safeHelper.setPalmeraModule(address(palmeraModule));
         safeHelper.setPalmeraGuard(address(palmeraGuard));
     }

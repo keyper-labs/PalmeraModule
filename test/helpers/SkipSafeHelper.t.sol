@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "./SafeHelper.t.sol";
 import "./PalmeraModuleHelper.t.sol";
@@ -64,7 +64,7 @@ contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
     /// @param palmeraModule address of the PalmeraModule
     function setPalmeraModule(address palmeraModule) public override {
         palmeraModuleAddr = palmeraModule;
-        palmera = PalmeraModule(palmeraModuleAddr);
+        palmera = PalmeraModule(payable(palmeraModuleAddr));
     }
 
     /// function to create a new Palmera Safe
@@ -86,9 +86,12 @@ contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
         );
         require(palmeraModuleAddr != address(0), "Palmera module not set");
         address[] memory owners = new address[](numberOwners);
-        for (uint256 i = 0; i < numberOwners; i++) {
+        for (uint256 i; i < numberOwners;) {
             owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
-            countUsed++;
+            ++countUsed;
+            unchecked {
+                ++i;
+            }
         }
         bytes memory emptyData = abi.encodePacked(Random.randint());
         bytes memory initializer = abi.encodeWithSignature(
@@ -123,7 +126,7 @@ contract SkipSafeHelper is SafeHelper, PalmeraModuleHelper {
         safeProxy = proxyFactory.createProxyWithNonce(
             address(safeContract), initializer, nonce
         );
-        nonce++;
+        ++nonce;
         return address(safeProxy);
     }
 }

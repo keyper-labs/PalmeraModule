@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
@@ -7,7 +7,7 @@ import "./SignersHelper.t.sol";
 import "./SafeHelper.t.sol";
 import {PalmeraModule} from "../../src/PalmeraModule.sol";
 import {Attacker} from "../../src/ReentrancyAttack.sol";
-import {Enum} from "@safe-contracts/common/Enum.sol";
+import {Enum} from "@safe-contracts/base/Executor.sol";
 import {DataTypes} from "../../libraries/DataTypes.sol";
 
 /// @notice Helper contract handling ReentrancyAttack
@@ -64,7 +64,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         address[] memory sortedOwners = sortAddresses(owners);
 
         uint256[] memory ownersPKFromAttacker = new uint256[](threshold);
-        for (uint256 i = 0; i < threshold; i++) {
+        for (uint256 i; i < threshold; ++i) {
             ownersPKFromAttacker[i] = ownersPK[sortedOwners[i]];
         }
 

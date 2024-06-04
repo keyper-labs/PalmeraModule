@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 /// @title Library DataTypes
 /// @custom:security-contact general@palmeradao.xyz
@@ -14,7 +14,7 @@ library DataTypes {
     }
     /// @dev typos of safes into Palmera Modules
     enum Tier {
-        safe, // 0
+        SAFE, // 0
         ROOT, // 1
         REMOVED // 2
     }

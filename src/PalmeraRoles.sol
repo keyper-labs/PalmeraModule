@@ -1,23 +1,36 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Authority} from "@solmate/auth/Auth.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
+import {Errors} from "../libraries/Errors.sol";
 import {ValidAddress} from "./DenyHelper.sol";
 import {Events} from "../libraries/Events.sol";
 
 /// @title Palmera Roles
 /// @custom:security-contact general@palmeradao.xyz
 contract PalmeraRoles is RolesAuthority, ValidAddress {
+    /// @notice Name of the Palmera Roles
     string public constant NAME = "Palmera Roles";
+    /// @notice Version of the Palmera Roles
     string public constant VERSION = "0.2.0";
 
     constructor(address palmeraModule)
         RolesAuthority(_msgSender(), Authority(address(0)))
     {
         setupRoles(palmeraModule);
+    }
+
+    /// @notice Fallback function: called when someone sends ETH or calls a function that does not exist
+    fallback() external {
+        revert Errors.NotPermittedReceiveEther();
+    }
+
+    /// @notice Receive function: called when someone sends ETH to the contract without data
+    receive() external payable {
+        revert Errors.NotPermittedReceiveEther();
     }
 
     /// Configure roles access control on Authority

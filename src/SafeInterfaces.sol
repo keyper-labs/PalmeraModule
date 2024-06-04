@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
-import {Enum} from "@safe-contracts/common/Enum.sol";
+import {Enum} from "@safe-contracts/base/Executor.sol";
 
+/// @title Safe Interface
+/// @custom:security-contact general@palmeradao.xyz
 interface ISafe {
     function execTransactionFromModule(
         address to,
@@ -54,6 +56,8 @@ interface ISafe {
     ) external view;
 }
 
+/// @title Safe Proxy Interface
+/// @custom:security-contact general@palmeradao.xyz
 interface ISafeProxy {
     /// @dev Allows to create new proxy contact and execute a message call to the new proxy within one transaction.
     /// @param singleton Address of singleton contract.

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "forge-std/Test.sol";
 import "../src/SigningUtils.sol";
@@ -328,7 +328,7 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
         address[] memory owners = safeHelper.safeWallet().getOwners();
         address newOwner;
 
-        for (uint256 i = 0; i < owners.length; i++) {
+        for (uint256 i; i < owners.length; ++i) {
             newOwner = owners[i];
         }
 

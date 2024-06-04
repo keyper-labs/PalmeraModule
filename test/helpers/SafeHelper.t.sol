@@ -1,5 +1,5 @@
 /// SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "forge-std/Test.sol";
 import "../../src/SigningUtils.sol";
@@ -139,7 +139,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         );
         require(palmeraModuleAddr != address(0), "Palmera module not set");
         address[] memory owners = new address[](numberOwners);
-        for (uint256 i = 0; i < numberOwners; i++) {
+        for (uint256 i; i < numberOwners; ++i) {
             owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
             countUsed++;
         }
@@ -189,7 +189,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
         );
         require(palmeraModuleAddr != address(0), "Palmera module not set");
         address[] memory owners = new address[](numberOwners);
-        for (uint256 i = 0; i < numberOwners; i++) {
+        for (uint256 i; i < numberOwners; ++i) {
             ownersPK[i] = privateKeyOwners[i + countUsed];
             owners[i] = vm.addr(privateKeyOwners[i + countUsed]);
             countUsed++;
@@ -611,7 +611,7 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
 
         /// Get pk for the signing threshold
         uint256[] memory privateKeySafeOwners = new uint256[](threshold);
-        for (uint256 i = 0; i < threshold; i++) {
+        for (uint256 i; i < threshold; ++i) {
             privateKeySafeOwners[i] = ownersPK[sortedOwners[i]];
         }
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
@@ -13,8 +13,7 @@ import {
     Address,
     GnosisSafeMath,
     Enum,
-    ISafe,
-    ISafeProxy
+    ISafe
 } from "./Helpers.sol";
 
 /// @title Palmera Module
@@ -23,20 +22,19 @@ contract PalmeraModule is Auth, Helpers {
     using GnosisSafeMath for uint256;
     using Address for address;
 
-    /// @dev Definition of Safe module
+    /// @dev Definition of Safe Palmera Module
+    /// @notice NAME Name of the Palmera Module
     string public constant NAME = "Palmera Module";
+    /// @notice VERSION Version of the Palmera Module
     string public constant VERSION = "0.2.0";
-    /// @dev Control Nonce of the module
+    /// @dev Control Nonce of the Palmera Module
     uint256 public nonce;
     /// @dev indexId of the safe
     uint256 public indexId;
     /// @dev Max Depth Tree Limit
-    uint256 public maxDepthTreeLimit;
-    /// @dev Safe contracts
-    address public immutable masterCopy;
-    address public immutable proxyFactory;
+    uint256 immutable maxDepthTreeLimit;
     /// @dev RoleAuthority
-    address public rolesAuthority;
+    address immutable rolesAuthority;
     /// @dev Array of Orgs (based on Hash (On-chain Organisation) of the Org)
     bytes32[] private orgHash;
     /// @dev Index of Safe
@@ -94,24 +92,25 @@ contract PalmeraModule is Auth, Helpers {
         _;
     }
 
-    constructor(
-        address masterCopyAddress,
-        address proxyFactoryAddress,
-        address authorityAddress,
-        uint256 maxDepthTreeLimitInitial
-    ) Auth(address(0), Authority(authorityAddress)) {
-        if (
-            (authorityAddress == address(0)) ||
-            !masterCopyAddress.isContract() ||
-            !proxyFactoryAddress.isContract()
-        ) revert Errors.InvalidAddressProvided();
+    constructor(address authorityAddress, uint256 maxDepthTreeLimitInitial)
+        Auth(address(0), Authority(authorityAddress))
+    {
+        if (authorityAddress == address(0)) {
+            revert Errors.InvalidAddressProvided();
+        }
 
-        masterCopy = masterCopyAddress;
-        proxyFactory = proxyFactoryAddress;
         rolesAuthority = authorityAddress;
         /// Index of Safes starts in 1 Always
         indexId = 1;
         maxDepthTreeLimit = maxDepthTreeLimitInitial;
+    }
+
+    /// @notice Fallback function: called when someone sends ETH or calls a function that does not exist
+    fallback() external {}
+
+    /// @notice Receive function: called when someone sends ETH to the contract without data
+    receive() external payable {
+        revert Errors.NotPermittedReceiveEther();
     }
 
     /// @notice Calls execTransaction of the safe with custom checks on owners rights
@@ -168,9 +167,7 @@ contract PalmeraModule is Auth, Helpers {
 
             ISafe leadSafe = ISafe(superSafe);
             bytes memory sortedSignatures = processAndSortSignatures(
-                signatures,
-                keccak256(palmeraTxHashData),
-                leadSafe.getOwners()
+                keccak256(palmeraTxHashData), signatures, leadSafe.getOwners()
             );
             leadSafe.checkSignatures(
                 keccak256(palmeraTxHashData),
@@ -179,7 +176,7 @@ contract PalmeraModule is Auth, Helpers {
             );
         }
         /// Increase nonce and execute transaction.
-        nonce++;
+        ++nonce;
         /// Execute transaction from target safe
         ISafe safeTarget = ISafe(targetSafe);
         result = safeTarget.execTransactionFromModule(
@@ -228,11 +225,9 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.OwnerAlreadyExists();
         }
 
-        bytes memory data = abi.encodeWithSelector(
-            ISafe.addOwnerWithThreshold.selector,
-            ownerAdded,
-            threshold
-        );
+        bytes memory data =
+            abi.encodeCall(ISafe.addOwnerWithThreshold, (ownerAdded, threshold));
+
         /// Execute transaction from target safe
         _executeModuleTransaction(targetSafe, data);
     }
@@ -270,11 +265,8 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.OwnerNotFound();
         }
 
-        bytes memory data = abi.encodeWithSelector(
-            ISafe.removeOwner.selector,
-            prevOwner,
-            ownerRemoved,
-            threshold
+        bytes memory data = abi.encodeCall(
+            ISafe.removeOwner, (prevOwner, ownerRemoved, threshold)
         );
 
         /// Execute transaction from target safe
@@ -386,14 +378,13 @@ contract PalmeraModule is Auth, Helpers {
         /// Add to org root/safe
         DataTypes.Safe storage superSafeOrgSafe = safes[org][superSafe];
         /// Add child to superSafe
-        safeId = indexId;
+        safeId = indexId++;
         superSafeOrgSafe.child.push(safeId);
 
         newSafe.safe = caller;
         newSafe.name = name;
         newSafe.superSafe = superSafe;
         indexSafe[org].push(safeId);
-        indexId++;
         /// Give Role SuperSafe
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         if (
@@ -446,20 +437,26 @@ contract PalmeraModule is Auth, Helpers {
         DataTypes.Safe storage superSafe = safes[org][_safe.superSafe];
 
         /// Remove child from superSafe
-        for (uint256 i = 0; i < superSafe.child.length; ++i) {
+        for (uint256 i; i < superSafe.child.length;) {
             if (superSafe.child[i] == safe) {
                 superSafe.child[i] = superSafe.child[superSafe.child.length - 1];
                 superSafe.child.pop();
                 break;
             }
+            unchecked {
+                ++i;
+            }
         }
         // Handle child from removed safe
-        for (uint256 i = 0; i < _safe.child.length; ++i) {
+        for (uint256 i; i < _safe.child.length;) {
             // Add removed safe child to superSafe
             superSafe.child.push(_safe.child[i]);
             DataTypes.Safe storage childrenSafe = safes[org][_safe.child[i]];
             // Update children safe superSafe reference
             childrenSafe.superSafe = _safe.superSafe;
+            unchecked {
+                ++i;
+            }
         }
         /// we guarantee the child was moving to another SuperSafe in the Org
         /// and validate after in the Disconnect Safe method
@@ -497,22 +494,22 @@ contract PalmeraModule is Auth, Helpers {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 rootSafe = getSafeIdBySafe(org, caller);
-        DataTypes.Safe memory disconnectSafe = safes[org][safe];
+        DataTypes.Safe memory _disconnectSafe = safes[org][safe];
         /// RootSafe usecase : Check if the safe is Member of the Tree of the caller (rootSafe)
         if (
             (
                 (!isRootSafeOf(caller, safe))
-                    && (disconnectSafe.tier != DataTypes.Tier.REMOVED)
+                    && (_disconnectSafe.tier != DataTypes.Tier.REMOVED)
             )
                 || (
                     (!isPendingRemove(rootSafe, safe))
-                        && (disconnectSafe.tier == DataTypes.Tier.REMOVED)
+                        && (_disconnectSafe.tier == DataTypes.Tier.REMOVED)
                 )
         ) {
             revert Errors.NotAuthorizedDisconnectChildrenSafe();
         }
         /// In case Root Safe Disconnect Safe without removeSafe Before
-        if (disconnectSafe.tier != DataTypes.Tier.REMOVED) {
+        if (_disconnectSafe.tier != DataTypes.Tier.REMOVED) {
             removeSafe(safe);
         }
         // Disconnect Safe
@@ -528,7 +525,7 @@ contract PalmeraModule is Auth, Helpers {
         uint256 rootSafe = getSafeIdBySafe(org, caller);
         uint256[] memory _indexSafe = getTreeMember(rootSafe, indexSafe[org]);
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        for (uint256 j = 0; j < _indexSafe.length; j++) {
+        for (uint256 j; j < _indexSafe.length;) {
             uint256 safe = _indexSafe[j];
             DataTypes.Safe memory _safe = safes[org][safe];
             // Revoke roles to safe
@@ -538,6 +535,9 @@ contract PalmeraModule is Auth, Helpers {
             // Disable safe lead role
             disableSafeLeadRoles(safes[org][safe].safe);
             _exitSafe(safe);
+            unchecked {
+                ++j;
+            }
         }
         // After Disconnect Root Safe
         emit Events.WholeTreeRemoved(
@@ -616,11 +616,14 @@ contract PalmeraModule is Auth, Helpers {
         DataTypes.Safe storage oldSuper = safes[org][_safe.superSafe];
 
         /// Remove child from superSafe
-        for (uint256 i = 0; i < oldSuper.child.length; ++i) {
+        for (uint256 i; i < oldSuper.child.length;) {
             if (oldSuper.child[i] == safe) {
                 oldSuper.child[i] = oldSuper.child[oldSuper.child.length - 1];
                 oldSuper.child.pop();
                 break;
+            }
+            unchecked {
+                ++i;
             }
         }
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
@@ -631,7 +634,6 @@ contract PalmeraModule is Auth, Helpers {
                 uint8(DataTypes.Role.SUPER_SAFE),
                 false
             );
-            /// TODO: verify if the oldSuper need or not the Safe Lead role (after MVP)
         }
 
         /// Update safe superSafe
@@ -695,7 +697,7 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.DenyHelpersDisabled();
         }
         address currentWallet = Constants.SENTINEL_ADDRESS;
-        for (uint256 i = 0; i < users.length; ++i) {
+        for (uint256 i; i < users.length;) {
             address wallet = users[i];
             if (
                 wallet == address(0) ||
@@ -710,6 +712,9 @@ contract PalmeraModule is Auth, Helpers {
             // Add wallet to List
             listed[org][currentWallet] = wallet;
             currentWallet = wallet;
+            unchecked {
+                ++i;
+            }
         }
         listed[org][currentWallet] = Constants.SENTINEL_ADDRESS;
         listCount[org] += users.length;
@@ -766,7 +771,7 @@ contract PalmeraModule is Auth, Helpers {
     /// @param safe uint256 of the safe
     /// @return all the information about a safe
     function getSafeInfo(uint256 safe)
-        public
+        external
         view
         SafeIdRegistered(safe)
         returns (
@@ -896,7 +901,7 @@ contract PalmeraModule is Auth, Helpers {
         // Check if the Child Safe is was removed or not Exist and Return False
         if (
             (childSafe.safe == address(0))
-                || (childSafe.tier == DataTypes.Tier.safe)
+                || (childSafe.tier == DataTypes.Tier.SAFE)
                 || (childSafe.tier == DataTypes.Tier.ROOT)
         ) {
             return false;
@@ -904,6 +909,8 @@ contract PalmeraModule is Auth, Helpers {
         return (childSafe.superSafe == rootSafe);
     }
 
+    /// @notice Verify if the Safe is registered in any Org
+    /// @param safe address of the Safe
     function isSafeRegistered(address safe) public view returns (bool) {
         if ((safe == address(0)) || safe == Constants.SENTINEL_ADDRESS) {
             return false;
@@ -932,7 +939,7 @@ contract PalmeraModule is Auth, Helpers {
     /// @param safe uint256 of the safe
     /// @return safe address
     function getSafeAddress(uint256 safe)
-        public
+        external
         view
         SafeIdRegistered(safe)
         returns (address)
@@ -945,9 +952,12 @@ contract PalmeraModule is Auth, Helpers {
     /// @param safe address of Safe
     /// @return Org Hashed Name
     function getOrgHashBySafe(address safe) public view returns (bytes32) {
-        for (uint256 i = 0; i < orgHash.length; ++i) {
+        for (uint256 i; i < orgHash.length;) {
             if (getSafeIdBySafe(orgHash[i], safe) != 0) {
                 return orgHash[i];
+            }
+            unchecked {
+                ++i;
             }
         }
         return bytes32(0);
@@ -966,9 +976,12 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.OrgNotRegistered(org);
         }
         /// Check if the Safe address is into an Safe mapping
-        for (uint256 i = 0; i < indexSafe[org].length; ++i) {
+        for (uint256 i; i < indexSafe[org].length;) {
             if (safes[org][indexSafe[org][i]].safe == safe) {
                 return indexSafe[org][i];
+            }
+            unchecked {
+                ++i;
             }
         }
         return 0;
@@ -980,9 +993,12 @@ contract PalmeraModule is Auth, Helpers {
     /// @return orgSafe Hash (On-chain Organisation)
     function getOrgBySafe(uint256 safe) public view returns (bytes32 orgSafe) {
         if ((safe == 0) || (safe > indexId)) revert Errors.InvalidSafeId();
-        for (uint256 i = 0; i < orgHash.length; ++i) {
+        for (uint256 i; i < orgHash.length;) {
             if (safes[orgHash[i]][safe].safe != address(0)) {
                 orgSafe = orgHash[i];
+            }
+            unchecked {
+                ++i;
             }
         }
         if (orgSafe == bytes32(0)) revert Errors.SafeIdNotRegistered(safe);
@@ -1028,7 +1044,7 @@ contract PalmeraModule is Auth, Helpers {
         if (isSafeRegistered(newRootSafe)) {
             revert Errors.SafeAlreadyRegistered(newRootSafe);
         }
-        safeId = indexId;
+        safeId = indexId++;
         safes[org][safeId] = DataTypes.Safe({
             tier: DataTypes.Tier.ROOT,
             name: name,
@@ -1038,7 +1054,6 @@ contract PalmeraModule is Auth, Helpers {
             superSafe: 0
         });
         indexSafe[org].push(safeId);
-        indexId++;
 
         /// Assign SUPER_SAFE Role + SAFE_ROOT Role
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
@@ -1065,10 +1080,7 @@ contract PalmeraModule is Auth, Helpers {
         delete safes[org][safe];
 
         /// Disable Guard
-        bytes memory data = abi.encodeWithSelector(
-            ISafe.setGuard.selector,
-            address(0)
-        );
+        bytes memory data = abi.encodeCall(ISafe.setGuard, (address(0)));
         /// Execute transaction from target safe
         _executeModuleTransaction(_safe, data);
 
@@ -1077,11 +1089,7 @@ contract PalmeraModule is Auth, Helpers {
         if (prevModule == address(0)) {
             revert Errors.PreviewModuleNotFound(_safe);
         }
-        data = abi.encodeWithSelector(
-            ISafe.disableModule.selector,
-            prevModule,
-            address(this)
-        );
+        data = abi.encodeCall(ISafe.disableModule, (prevModule, address(this)));
         /// Execute transaction from target safe
         _executeModuleTransaction(_safe, data);
 
@@ -1130,11 +1138,14 @@ contract PalmeraModule is Auth, Helpers {
     /// @param org ID's of the organisation
     /// @param safe uint256 of the safe
     function removeIndexSafe(bytes32 org, uint256 safe) private {
-        for (uint256 i = 0; i < indexSafe[org].length; ++i) {
+        for (uint256 i; i < indexSafe[org].length;) {
             if (indexSafe[org][i] == safe) {
                 indexSafe[org][i] = indexSafe[org][indexSafe[org].length - 1];
                 indexSafe[org].pop();
                 break;
+            }
+            unchecked {
+                ++i;
             }
         }
     }
@@ -1142,11 +1153,14 @@ contract PalmeraModule is Auth, Helpers {
     /// @notice Private method to remove Org from Array of Hashes of organisations
     /// @param org ID's of the organisation
     function removeOrg(bytes32 org) private {
-        for (uint256 i = 0; i < orgHash.length; ++i) {
+        for (uint256 i; i < orgHash.length;) {
             if (orgHash[i] == org) {
                 orgHash[i] = orgHash[orgHash.length - 1];
                 orgHash.pop();
                 break;
+            }
+            unchecked {
+                ++i;
             }
         }
     }
@@ -1186,11 +1200,13 @@ contract PalmeraModule is Auth, Helpers {
             // Update the Current Super Safe with the Super Safe of the Child Safe
             currentSuperSafe = _childSafe.superSafe;
             // Update the Level for the next iteration
-            level++;
+            unchecked {
+                ++level;
+            }
         }
     }
 
-    /// @dev Method to getting the All Gorup Member for the Tree of the Root Safe/Org indicate in the args
+    /// @dev Method to getting the All Group Member for the Tree of the Root Safe/Org indicate in the args
     /// @param rootSafe Gorup ID's of the root safe
     /// @param indexSafeByOrg Array of the Safe ID's of the Org
     /// @return indexTree Array of the Safe ID's of the Tree
@@ -1200,23 +1216,33 @@ contract PalmeraModule is Auth, Helpers {
         returns (uint256[] memory indexTree)
     {
         uint256 index;
-        for (uint256 i = 0; i < indexSafeByOrg.length; ++i) {
+        for (uint256 i; i < indexSafeByOrg.length;) {
             if (
                 (getRootSafe(indexSafeByOrg[i]) == rootSafe)
                     && (indexSafeByOrg[i] != rootSafe)
             ) {
-                index++;
+                unchecked {
+                    ++index;
+                }
+            }
+            unchecked {
+                ++i;
             }
         }
         indexTree = new uint256[](index);
         index = 0;
-        for (uint256 i = 0; i < indexSafeByOrg.length; ++i) {
+        for (uint256 i; i < indexSafeByOrg.length;) {
             if (
                 (getRootSafe(indexSafeByOrg[i]) == rootSafe)
                     && (indexSafeByOrg[i] != rootSafe)
             ) {
                 indexTree[index] = indexSafeByOrg[i];
-                index++;
+                unchecked {
+                    ++index;
+                }
+            }
+            unchecked {
+                ++i;
             }
         }
     }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "./helpers/DeployHelper.t.sol";
 
@@ -33,7 +33,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
         palmeraModule.enableAllowlist();
         palmeraModule.addToList(owners);
         assertEq(palmeraModule.listCount(orgHash), owners.length);
-        for (uint256 i = 0; i < owners.length; i++) {
+        for (uint256 i; i < owners.length; ++i) {
             assertEq(palmeraModule.isListed(orgHash, owners[i]), true);
         }
     }
@@ -266,7 +266,7 @@ contract DenyHelperPalmeraModuleTest is DeployHelper {
         palmeraModule.enableAllowlist();
         palmeraModule.addToList(owners);
         assertEq(palmeraModule.listCount(orgHash), owners.length);
-        for (uint256 i = 0; i < owners.length; i++) {
+        for (uint256 i; i < owners.length; ++i) {
             assertEq(palmeraModule.isListed(orgHash, owners[i]), true);
         }
     }

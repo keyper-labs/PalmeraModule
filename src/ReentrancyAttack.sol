@@ -1,26 +1,28 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import {PalmeraModule} from "../src/PalmeraModule.sol";
-import {Enum} from "@safe-contracts/common/Enum.sol";
-import {Errors} from "../libraries/Errors.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Constants} from "../libraries/Constants.sol";
+import {Enum} from "@safe-contracts/base/Executor.sol";
 
 /// @title Attacker
 /// @custom:security-contact general@palmeradao.xyz
 contract Attacker {
+    /// @notice Hash On-chain Organisation to Attack
     bytes32 public orgFromAttacker;
+    /// @notice Safe super address to Attack
     address public superSafeFromAttacker;
+    /// @notice Safe target address to Attack
     address public targetSafeFromAttacker;
+    /// @notice Data payload of the transaction to Attack
     bytes public dataFromAttacker;
+    /// @notice Packed signatures data (v, r, s) to Attack
     bytes public signaturesFromAttacker;
-
+    /// @notice Owners of the Safe Multisig Wallet Attacker
     address[] public owners = new address[](2);
-
+    /// @notice Instance of PalmeraModule
     PalmeraModule public palmeraModule;
 
-    constructor(address _contractToAttackAddress) {
+    constructor(address payable _contractToAttackAddress) {
         palmeraModule = PalmeraModule(_contractToAttackAddress);
     }
 
@@ -70,7 +72,7 @@ contract Attacker {
     /// function to set the owners of the Safe Smart Account Wallet
     /// @param _owners Array of owners of the Safe Smart Account Wallet
     function setOwners(address[] memory _owners) public {
-        for (uint256 i = 0; i < owners.length; ++i) {
+        for (uint256 i; i < owners.length; ++i) {
             owners[i] = _owners[i];
         }
     }
@@ -91,18 +93,8 @@ contract Attacker {
         return address(this).balance;
     }
 
-    /// function to get the balance of the attacker contract
-    /// @param dataHash Hash of the transaction data to sign
-    /// @param data Data payload of the transaction
-    /// @param signatures Packed signatures data (v, r, s)
-    function checkSignatures(
-        bytes32 dataHash,
-        bytes memory data,
-        bytes memory signatures
-    ) external view {}
-
-    /// function to get the owners of the Safe Smart Account Wallet
-    /// @return Array of owners of the Safe Smart Account Wallet
+    /// function to get the owners of the Safe Multisig Wallet
+    /// @return Array of owners of the Safe Multisig Wallet
     function getOwners() public view returns (address[] memory) {
         return owners;
     }

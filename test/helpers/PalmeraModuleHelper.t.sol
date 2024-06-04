@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "forge-std/Test.sol";
 import "./SignDigestHelper.t.sol";
 import "./SignersHelper.t.sol";
 import {PalmeraModule} from "../../src/PalmeraModule.sol";
-import {Enum} from "@safe-contracts/common/Enum.sol";
+import {Enum} from "@safe-contracts/base/Executor.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {DeploySafeFactory} from "../../script/DeploySafeFactory.t.sol";
 
@@ -76,7 +76,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
 
         // Get pk for the signing threshold
         uint256[] memory privateKeySafeOwners = new uint256[](threshold);
-        for (uint256 i = 0; i < threshold; i++) {
+        for (uint256 i; i < threshold; ++i) {
             privateKeySafeOwners[i] = ownersPK[sortedOwners[i]];
         }
 
@@ -119,7 +119,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
         uint256 threshold = safeHelper.getThreshold();
         // Get invalid pk for the signing threshold
         uint256[] memory invalidSafeOwnersPK = new uint256[](threshold);
-        for (uint256 i = 0; i < threshold; i++) {
+        for (uint256 i; i < threshold; ++i) {
             invalidSafeOwnersPK[i] = invalidPrivateKeyOwners[i];
         }
 

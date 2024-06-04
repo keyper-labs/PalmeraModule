@@ -5,7 +5,7 @@ libs = ['lib']
 # Fixed Version
 solc-version = "0.8.23"
 optimizer = true
-optimizer-runs = 150
+optimizer-runs = 200
 via_ir = true
 ffi=true
 
@@ -21,7 +21,7 @@ libraries = ['./libraries/Constants.sol:Constants:0x5F9Ae7E3aF99D13B14324b35E9Ed
 gas_reports = ['PalmeraModule', 'PalmeraRoles', 'PalmeraGuard']
 
 # No match contracts
-no_match_contract = 'Skip*'
+# no_match_contract = 'Skip*'
 
 
 [fmt]

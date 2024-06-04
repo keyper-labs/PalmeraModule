@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "forge-std/Script.sol";
 import "../../src/SigningUtils.sol";
@@ -43,9 +43,11 @@ contract SkipSetupEnv is Script, SkipSafeHelper {
         Solenv.config();
         vm.startBroadcast();
         palmeraRolesContract =
-            PalmeraRoles(vm.envAddress("PALMERA_ROLES_ADDRESS"));
-        palmeraModule = PalmeraModule(vm.envAddress("PALMERA_MODULE_ADDRESS"));
-        palmeraGuard = PalmeraGuard(vm.envAddress("PALMERA_GUARD_ADDRESS"));
+            PalmeraRoles(payable(vm.envAddress("PALMERA_ROLES_ADDRESS")));
+        palmeraModule =
+            PalmeraModule(payable(vm.envAddress("PALMERA_MODULE_ADDRESS")));
+        palmeraGuard =
+            PalmeraGuard(payable(vm.envAddress("PALMERA_GUARD_ADDRESS")));
         receiver = vm.envAddress("RECEIVER_ADDRESS");
         // Init a new safe as main organisation (3 owners, 1 threshold)
         safeAddr = setupSeveralSafeEnv(30);

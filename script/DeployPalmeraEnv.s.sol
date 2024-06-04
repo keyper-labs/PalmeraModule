@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "forge-std/Script.sol";
 import "@solenv/Solenv.sol";
@@ -27,8 +27,6 @@ contract DeployPalmeraEnv is Script {
 
         // Deploy Safe contracts in any network
         Solenv.config();
-        address masterCopy = vm.envAddress("MASTER_COPY_ADDRESS");
-        address proxyFactory = vm.envAddress("PROXY_FACTORY_ADDRESS");
         uint256 maxTreeDepth = 50;
 
         // Deploy PalmeraRoles: PalmeraModule is set as owner of PalmeraRoles authority
@@ -36,12 +34,7 @@ contract DeployPalmeraEnv is Script {
         PalmeraRoles palmeraRoles = new PalmeraRoles(palmeraModulePredicted);
         console.log("PalmeraRoles deployed at: ", address(palmeraRoles));
 
-        bytes memory args = abi.encode(
-            address(masterCopy),
-            address(proxyFactory),
-            address(palmeraRoles),
-            maxTreeDepth
-        );
+        bytes memory args = abi.encode(address(palmeraRoles), maxTreeDepth);
 
         bytes memory bytecode = abi.encodePacked(
             vm.getCode("PalmeraModule.sol:PalmeraModule"), args
@@ -51,7 +44,7 @@ contract DeployPalmeraEnv is Script {
         console.log("PalmeraModule deployed at: ", palmeraModuleAddr);
 
         /// Deploy Guard Contract
-        PalmeraGuard palmeraGuard = new PalmeraGuard(palmeraModuleAddr);
+        PalmeraGuard palmeraGuard = new PalmeraGuard(payable(palmeraModuleAddr));
         console.log("PalmeraGuard deployed at: ", address(palmeraGuard));
 
         vm.stopBroadcast();

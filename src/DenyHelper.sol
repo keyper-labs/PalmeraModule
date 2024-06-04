@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
@@ -9,6 +9,8 @@ import {DataTypes} from "../libraries/DataTypes.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {Events} from "../libraries/Events.sol";
 
+/// @title ValidAddress
+/// @dev Helper contract to check if an address is valid
 abstract contract ValidAddress is Context {
     /// @dev Modifier for Valid if wallet is Zero Address or Not
     /// @param to Address to check

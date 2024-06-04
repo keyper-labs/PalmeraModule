@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.23;
 
 import "forge-std/Script.sol";
 import {PalmeraModule} from "../src/PalmeraModule.sol";
@@ -10,7 +10,8 @@ import "@solenv/Solenv.sol";
 contract DeployPalmeraSafe is Script {
     function run() public {
         Solenv.config();
-        address palmeraModuleAddress = vm.envAddress("PALMERA_MODULE_ADDRESS");
+        address payable palmeraModuleAddress =
+            payable(vm.envAddress("PALMERA_MODULE_ADDRESS"));
         address[] memory owners = new address[](2);
         owners[0] = vm.envAddress("OWNER_1");
         owners[1] = vm.envAddress("OWNER_2");
