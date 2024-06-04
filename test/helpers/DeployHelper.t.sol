@@ -52,7 +52,66 @@ contract DeployHelper is Test {
     // Helper mapping to keep track safes associated with a role
     mapping(string => address) palmeraSafes;
 
-    function deployAllContracts(uint256 initOwners) public {
+    function deployAllContractsStressTest(uint256 initOwners) public {
+        CREATE3Factory factory = new CREATE3Factory();
+        bytes32 salt = keccak256(abi.encode(0xafff));
+        /// get address of deployed libraries
+        (
+            address constantsAddr,
+            address dataTypesAddr,
+            address errorsAddr,
+            address eventsAddr
+        ) = deployLibraries();
+
+        // Predict the future address of palmera roles
+        palmeraRolesDeployed = factory.getDeployed(address(this), salt);
+
+        // Init a new safe as main organisation (3 owners, 1 threshold)
+        safeHelper = new SafeHelper();
+        safeAddr = safeHelper.setupSeveralSafeEnv(initOwners);
+
+        // setting palmeraRoles Address
+        safeHelper.setPalmeraRoles(palmeraRolesDeployed);
+
+        // Init PalmeraModule
+        uint256 maxTreeDepth = 9000;
+
+        palmeraModule =
+            new PalmeraModule(address(palmeraRolesDeployed), maxTreeDepth);
+        palmeraModuleAddr = address(palmeraModule);
+        // Deploy Guard Contract
+        palmeraGuard = new PalmeraGuard(payable(palmeraModuleAddr));
+        palmeraGuardAddr = address(palmeraGuard);
+
+        // Init palmeraModuleHelper
+        palmeraHelper = new PalmeraModuleHelper();
+        palmeraHelper.initHelper(palmeraModule, initOwners.div(3));
+        // Update safeHelper
+        safeHelper.setPalmeraModule(palmeraModuleAddr);
+        // Update safeHelper
+        safeHelper.setPalmeraGuard(palmeraGuardAddr);
+        // Enable palmera module
+        safeHelper.enableModuleTx(safeAddr);
+        // Enable palmera Guard
+        safeHelper.enableGuardTx(safeAddr);
+
+        orgHash = keccak256(abi.encodePacked(orgName));
+
+        bytes memory args = abi.encode(address(palmeraModuleAddr));
+
+        bytes memory bytecode =
+            abi.encodePacked(vm.getCode("PalmeraRoles.sol:PalmeraRoles"), args);
+
+        palmeraRolesContract =
+            PalmeraRoles(payable(factory.deploy(salt, bytecode)));
+
+        palmeraSafeBuilder = new PalmeraSafeBuilder();
+        palmeraSafeBuilder.setUpParams(
+            PalmeraModule(palmeraModule), SafeHelper(safeHelper)
+        );
+    }
+
+        function deployAllContracts(uint256 initOwners) public {
         CREATE3Factory factory = new CREATE3Factory();
         bytes32 salt = keccak256(abi.encode(0xafff));
         /// get address of deployed libraries
@@ -110,6 +169,7 @@ contract DeployHelper is Test {
             PalmeraModule(palmeraModule), SafeHelper(safeHelper)
         );
     }
+
 
     function deployLibraries()
         public
