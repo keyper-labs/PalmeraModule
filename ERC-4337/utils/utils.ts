@@ -15,6 +15,7 @@ import {
     createPublicClient,
     http,
     encodeFunctionData,
+    CallReturnType,
 } from "viem";
 import { config } from "dotenv";
 import { polygon } from "viem/chains";
@@ -170,6 +171,21 @@ export const getOrgHashBySafe = async (safeAddress: Hex) => {
     return result;
 };
 
+// Method to get Safe Id by Safe address
+export const getSafeIdBySafe = async (orgHash: Hex, safeAddress: Hex) => {
+    const data: Hex = encodeFunctionData({
+        abi: palmeraModuleAbi,
+        functionName: "getSafeIdBySafe",
+        args: [orgHash, safeAddress],
+    });
+    const result: CallReturnType  = await publicClient(RPC_URL!!).call({
+        to: PALMERA_MODULE,
+        data: data,
+        value: BigInt(0),
+    });
+    return result;
+};
+
 // get nonce from Palmera Module
 export const getNonce = async () => {
     const internalData: Hex = encodeFunctionData({
@@ -188,11 +204,7 @@ export const getNonce = async () => {
 // getTransactionHash from Palmera Module
 export const getTransactionHash = async (
     org: Hex,
-    superSafe: SafeSmartAccount<
-        `${ENTRYPOINT_ADDRESS_V07_TYPE}`,
-        HttpTransport,
-        undefined
-    >,
+    superSafe: string,
     targetSafe: string,
     to: string,
     value: BigInt,
@@ -200,12 +212,21 @@ export const getTransactionHash = async (
     operation: number,
     nonce: number,
 ) => {
+    console.log("getTransactionHash args: ",
+        org,
+        superSafe,
+        targetSafe,
+        to,
+        value,
+        data,
+        operation,
+        nonce,);
     const internalData: Hex = encodeFunctionData({
         abi: palmeraModuleAbi,
         functionName: "getTransactionHash",
         args: [
             org,
-            superSafe.address,
+            superSafe,
             targetSafe,
             to,
             value,
