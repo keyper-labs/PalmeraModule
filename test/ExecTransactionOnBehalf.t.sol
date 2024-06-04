@@ -441,17 +441,17 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
 
     // // ! ********************** SUPER_SAFE ROLE ********************
 
-    // // execTransactionOnBehalf
-    // // Caller: safeSquadA1
-    // // Caller Type: safe
-    // // Caller Role: SUPER_SAFE of safeSubSquadA1
-    // // TargerSafe: safeSubSquadA1
-    // // TargetSafe Type: safe
-    // //            rootSafe
-    // //               |
-    // //           safeSquadA1 as superSafe ---
-    // //              |                        |
-    // //           safeSubSquadA1 <------------
+    // execTransactionOnBehalf
+    // Caller: safeSquadA1
+    // Caller Type: safe
+    // Caller Role: SUPER_SAFE of safeSubSquadA1
+    // TargerSafe: safeSubSquadA1
+    // TargetSafe Type: safe
+    //            rootSafe
+    //               |
+    //           safeSquadA1 as superSafe ---
+    //              |                        |
+    //           safeSubSquadA1 <------------
     function testCan_ExecTransactionOnBehalf_SUPER_SAFE_as_SAFE_is_TARGETS_LEAD_SameTree(
     ) public {
         (, uint256 safeSquadA1Id, uint256 safeSubSquadA1Id,,) =
@@ -969,16 +969,16 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         );
     }
 
-    // // Revert ZeroAddressProvided() execTransactionOnBehalf when arg "to" is address(0)
-    // // Scenario 1
-    // // Caller: rootAddr (org)
-    // // Caller Type: rootSafe
-    // // Caller Role: ROOT_SAFE
-    // // TargerSafe: safeSquadA1
-    // // TargetSafe Type: safe as a Child
-    // //            rootSafe -----------
-    // //               |                |
-    // //           safeSquadA1 <--------
+    // Revert ZeroAddressProvided() execTransactionOnBehalf when arg "to" is address(0)
+    // Scenario 1
+    // Caller: rootAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeSquadA1
+    // TargetSafe Type: safe as a Child
+    //            rootSafe -----------
+    //               |                |
+    //           safeSquadA1 <--------
     function testRevertInvalidAddressProvidedExecTransactionOnBehalfScenarioOne(
     ) public {
         (uint256 rootId, uint256 safeSquadA1) =
@@ -1017,16 +1017,16 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         );
     }
 
-    // // Revert ZeroAddressProvided() execTransactionOnBehalf when param "targetSafe" is address(0)
-    // // Scenario 2
-    // // Caller: rootAddr (org)
-    // // Caller Type: rootSafe
-    // // Caller Role: ROOT_SAFE
-    // // TargerSafe: safeSquadA1
-    // // TargetSafe Type: safe as a Child
-    // //            rootSafe -----------
-    // //               |                |
-    // //           safeSquadA1 <--------
+    // Revert ZeroAddressProvided() execTransactionOnBehalf when param "targetSafe" is address(0)
+    // Scenario 2
+    // Caller: rootAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE
+    // TargerSafe: safeSquadA1
+    // TargetSafe Type: safe as a Child
+    //            rootSafe -----------
+    //               |                |
+    //           safeSquadA1 <--------
     function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo()
         public
     {
@@ -1114,13 +1114,13 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         );
     }
 
-    // // Revert InvalidSafe() execTransactionOnBehalf : when param "targetSafe" is not a safe
-    // // Caller: rootAddr (org)
-    // // Caller Type: rootSafe
-    // // Caller Role: ROOT_SAFE, SAFE_LEAD
-    // // TargerSafe: fakeTargetSafe
-    // // TargetSafe Type: EOA
-    function testRevertInvalidSafeExecTransactionOnBehalf() public {
+    // Revert InvalidGnosisSafe() execTransactionOnBehalf : when param "targetSafe" is not a safe
+    // Caller: rootAddr (org)
+    // Caller Type: rootSafe
+    // Caller Role: ROOT_SAFE, SAFE_LEAD
+    // TargerSafe: fakeTargetSafe
+    // TargetSafe Type: EOA
+    function testRevertInvalidGnosisSafeExecTransactionOnBehalf() public {
         (uint256 rootId, uint256 safeSquadA1) =
             palmeraSafeBuilder.setupRootOrgAndOneSquad(orgName, squadA1Name);
 
@@ -1162,7 +1162,6 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //    Squad A starts a executeOnBehalf tx for his children B
     //    -> The calldata for the function is another executeOnBehalfTx for children C
     //       -> Verify that this wrapped executeOnBehalf tx does not work
-    // TODO: test this scenario in Live Testnet
     function testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSquad_over_RootSafe_With_SAFE(
     ) public {
         (uint256 rootId, uint256 safeSquadA1, uint256 childSquadA1,,) =

@@ -47,7 +47,7 @@ contract SkipSetupEnv is Script, SkipSafeHelper {
         palmeraModule = PalmeraModule(vm.envAddress("PALMERA_MODULE_ADDRESS"));
         palmeraGuard = PalmeraGuard(vm.envAddress("PALMERA_GUARD_ADDRESS"));
         receiver = vm.envAddress("RECEIVER_ADDRESS");
-        // Init a new safe as main organization (3 owners, 1 threshold)
+        // Init a new safe as main organisation (3 owners, 1 threshold)
         safeAddr = setupSeveralSafeEnv(30);
         // setting palmeraRoles Address
         setPalmeraRoles(address(palmeraRolesContract));
