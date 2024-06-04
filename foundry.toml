@@ -21,7 +21,7 @@ libraries = ['./libraries/Constants.sol:Constants:0x99665c864817A909B3d44623e497
 gas_reports = ['PalmeraModule', 'PalmeraRoles', 'PalmeraGuard']
 
 # No match contracts
-# no_match_contract = 'Skip*'
+no_match_contract = 'Skip*'
 
 
 [fmt]
