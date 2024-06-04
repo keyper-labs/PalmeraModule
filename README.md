@@ -48,11 +48,11 @@ Execute the command `deploy-module` located in the Makefile
 
 Execute the command `deploy-new-safe` located in the Makefile
 
-## Setting up a On-chain Organisation
+## Setting up a On-Chain Organisation
 
 All the following calls have to be executed from a safe using safe execTransation function. Check documentation https://safe-docs.dev.gnosisdev.com/safe/docs/contracts_tx_execution/
 
-# Register main organisation
+# Register main Organisation
 
 `function registerOrg(string memory name)`
 

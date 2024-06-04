@@ -762,7 +762,6 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
-
         // OrgNotRegistered: Org not registered
         palmeraModule.execTransactionOnBehalf(
             bytes32(0),
@@ -806,7 +805,6 @@ contract SkipSeveralScenarios is Script, SkipSetupEnv {
             emptyData,
             Enum.Operation(0)
         );
-
         // InvalidSafe: Invalid Safe
         palmeraModule.execTransactionOnBehalf(
             orgHash,

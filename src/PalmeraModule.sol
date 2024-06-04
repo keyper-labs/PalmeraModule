@@ -68,8 +68,8 @@ contract PalmeraModule is Auth, Helpers {
         _;
     }
 
-    /// @dev Modifier for Validate if the address is a Safe Multisig Wallet and Root Safe
-    /// @param safe Address of the Safe Multisig Wallet
+    /// @dev Modifier for Validate if the address is a Safe Smart Account Wallet and Root Safe
+    /// @param safe Address of the Safe Smart Account Wallet
     modifier IsRootSafe(address safe) {
         if (
             (safe == address(0)) || safe == Constants.SENTINEL_ADDRESS
@@ -785,7 +785,7 @@ contract PalmeraModule is Auth, Helpers {
         return hasPermission;
     }
 
-    /// @notice check if the organisation is registered
+    /// @notice check if the Organisation is registered
     /// @param org address
     /// @return bool
     function isOrgRegistered(bytes32 org) public view returns (bool) {
