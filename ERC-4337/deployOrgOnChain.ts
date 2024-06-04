@@ -161,7 +161,7 @@ async function main() {
     console.log(`Organization Hash of RootSafe: ${orgHash.data}`);
     const rootSafeId = await getSafeIdBySafe(orgHash.data!!, RootSafe.address);
     console.log(`Root Safe Id: ${parseInt(rootSafeId.data!!) }`);
-    // Add Safes to the organization Under Root Safe id: 1
+    // Add Safes to the organization Under Root Safe id
     await createAddSafe(superSafe, parseInt(rootSafeId.data!!), "Level 1 Safe v5");
     await snooze(5000);
     const orgHash1: CallReturnType = await getOrgHashBySafe(superSafe.address);
@@ -169,7 +169,7 @@ async function main() {
     const superSafeId = await getSafeIdBySafe(orgHash1.data!!, superSafe.address);
     console.log(`Super Safe Id: ${parseInt(superSafeId.data!!) }`);
 
-    // Add Safes to the organization Under SuperSafe Safe id: 2
+    // Add Safes to the organization Under SuperSafe Safe id
     await createAddSafe(childSafe, parseInt(superSafeId.data!!), "Level 2 Safe v5");
     await snooze(5000);
     const orgHash2: CallReturnType = await getOrgHashBySafe(childSafe.address);
