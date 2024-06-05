@@ -1,0 +1,124 @@
+# Contract {{name}}
+**Title:** {{natspec.title}}
+**Author:** {{natspec.custom.a}}
+
+**Description:** {{natspec.devdoc}}
+
+---
+### Globals Variables and Mappings
+
+{{#each ownVariables}}
+#### Variable
+| Type | Name | Visibility | Description |
+| ---- | ---- | ---------- | ----------- |
+| {{type}} | {{name}} | {{visibility}} | {{description}} |
+
+{{/each}}
+---
+### Functions
+{{#each ownFunctions}}
+
+#### Methods `{{name}}({{args}}){{#if outputs}} → {{outputs}}{{/if}}`  Visibility:  {{visibility}}
+
+**Description**: {{natspec.devdoc}}
+
+{{#if args}}
+**Arguments:**
+| Type | Name |
+| ---- | ---- |
+{{#each args}}
+| {{type}} | {{name}} |
+{{/each}}
+{{/if}}
+
+{{#if outputs}}
+**Outputs:**
+| Type | Name |
+| ---- | ---- |
+{{#each outputs}}
+| {{type}} | {{#if name}}{{name}}{{else}}Variable{{/if}} |
+{{/each}}
+{{/if}}
+
+{{#if natspec.params}}
+**Descriptions of Arguments:**
+{{#each natspec.params}} **{{param}}**: {{description}} {{/each}}
+{{/if}}
+
+{{#if natspec.returns}}
+**Returns:**
+{{#each natspec.returns}} {{#if name}}{{name}}{{else}}[Details]{{/if}}: {{description}} {{/each}}
+{{/if}}
+
+{{/each}}
+
+---
+### Modifiers
+{{#each ownModifiers}}
+
+#### Modifier `{{name}}({{args}})`
+
+**Description:** {{natspec.devdoc}}
+{{#if args}}
+**Arguments:**
+| Type | Name |
+| ---- | ---- |
+{{#each args}}
+| {{type}} | {{name}} |
+{{/each}}
+{{/if}}
+
+{{#if natspec.params}}
+**Descriptions of Arguments:**
+{{#each natspec.params}} **{{param}}**: {{description}} {{/each}}
+{{/if}}
+
+{{/each}}
+
+---
+### Events
+{{#each ownEvents}}
+
+#### Event `{{name}}({{args}})`
+
+**Description:** {{natspec.devdoc}}
+{{#if args}}
+**Arguments:**
+| Type | Name |
+| ---- | ---- |
+{{#each args}}
+| {{type}} | {{name}} |
+{{/each}}
+{{/if}}
+
+{{#if natspec.params}}
+**Descriptions of Arguments:**
+{{#each natspec.params}} **{{param}}**: {{description}} {{/each}}
+{{/if}}
+
+{{/each}}
+
+---
+### Structs
+{{#each ownStructs}}
+
+```solidity
+struct {{name}} {
+{{#each members}}
+    {{type}} {{name}}
+{{/each}}
+}
+```
+{{/each}}
+
+---
+### Enums
+{{#each ownEnums}}
+```solidity
+enum {{name}} {
+{{#each members}}
+    {{name}}{{#unless @last}},{{/unless}}
+{{/each}}
+}
+```
+{{/each}}
