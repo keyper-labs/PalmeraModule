@@ -5,9 +5,9 @@ import {DataTypes} from "./DataTypes.sol";
 
 /// @title Library DataTypes
 /// @custom:security-contact general@palmeradao.xyz
+/// @notice Error codes for the Palmera module
+/// @dev Errors Palmera Modules
 library Errors {
-    /// @notice Error codes for the Palmera module
-    /// @dev Errors Palmera Modules
     /// @dev Error messages when the Org Hash (On-chain Organisation) is not Registered
     error OrgNotRegistered(bytes32 org);
     /// @dev Error messages when the Safe(`safe`) is not Registered

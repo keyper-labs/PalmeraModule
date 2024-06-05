@@ -8,7 +8,7 @@ import "./SafeHelper.t.sol";
 import {PalmeraModule} from "../../src/PalmeraModule.sol";
 import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {Enum} from "@safe-contracts/base/Executor.sol";
-import {DataTypes} from "../../libraries/DataTypes.sol";
+import {DataTypes} from "../../src/libraries/DataTypes.sol";
 
 /// @notice Helper contract handling ReentrancyAttack
 /// @custom:security-contact general@palmeradao.xyz

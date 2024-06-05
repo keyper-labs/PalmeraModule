@@ -1,0 +1,45 @@
+{{#if name}}
+{{h}} {{name}}
+{{/if}}
+
+{{#if natspec.title}}
+**Title:** {{natspec.title}}
+{{/if}}
+
+{{#if natspec.custom}}
+**Author:** {{natspec.custom.security-contact}}
+{{/if}}
+
+{{#if signature}}
+```solidity
+{{{signature}}}
+```
+{{/if}}
+
+{{#if natspec.dev}}
+_{{{natspec.dev}}}_
+{{/if}}
+
+{{#if natspec.notice}}
+**{{natspec.notice}}**
+{{/if}}
+
+{{#if natspec.params}}
+{{h 2}} Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+{{#each params}}
+| {{name}} | {{type}} | {{{joinLines natspec}}} |
+{{/each}}
+{{/if}}
+
+{{#if natspec.returns}}
+{{h 2}} Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+{{#each returns}}
+| {{#if name}}{{name}}{{else}}[{{@index}}]{{/if}} | {{type}} | {{{joinLines natspec}}} |
+{{/each}}
+{{/if}}

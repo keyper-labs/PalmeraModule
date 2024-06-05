@@ -21,18 +21,14 @@ library Constants {
     address internal constant FALLBACK_HANDLER =
         0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4;
 
-    bytes4 internal constant ADD_OWNER =
-        bytes4(
-            keccak256(
-                bytes("addOwnerWithThreshold(address,uint256,address,bytes32)")
-            )
-        );
-    bytes4 internal constant REMOVE_OWNER =
-        bytes4(
-            keccak256(
-                bytes("removeOwner(address,address,uint256,address,bytes32)")
-            )
-        );
+    bytes4 internal constant ADD_OWNER = bytes4(
+        keccak256(
+            bytes("addOwnerWithThreshold(address,uint256,address,bytes32)")
+        )
+    );
+    bytes4 internal constant REMOVE_OWNER = bytes4(
+        keccak256(bytes("removeOwner(address,address,uint256,address,bytes32)"))
+    );
 
     bytes4 internal constant ROLE_ASSIGMENT =
         bytes4(keccak256(bytes("setRole(uint8,address,uint256,bool)")));
@@ -64,14 +60,13 @@ library Constants {
     bytes4 internal constant UPDATE_DEPTH_TREE_LIMIT =
         bytes4(keccak256(bytes("updateDepthTreeLimit(uint256)")));
 
-    bytes4 internal constant EXEC_ON_BEHALF =
-        bytes4(
-            keccak256(
-                bytes(
-                    "execTransactionOnBehalf(bytes32,address,address,address,uint256,bytes,uint8,bytes)"
-                )
+    bytes4 internal constant EXEC_ON_BEHALF = bytes4(
+        keccak256(
+            bytes(
+                "execTransactionOnBehalf(bytes32,address,address,address,uint256,bytes,uint8,bytes)"
             )
-        );
+        )
+    );
 
     bytes4 internal constant REMOVE_SAFE =
         bytes4(keccak256(bytes("removeSafe(uint256)")));
@@ -86,6 +81,6 @@ library Constants {
     bytes32 internal constant GUARD_STORAGE_SLOT =
         0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8;
 
-        // bytes4(keccak256("isValidSignature(bytes,bytes)")
+    // bytes4(keccak256("isValidSignature(bytes,bytes)")
     bytes4 internal constant EIP1271_MAGIC_VALUE = 0x20c13b0b;
 }

@@ -3,8 +3,8 @@ pragma solidity 0.8.23;
 
 import "forge-std/Test.sol";
 import {PalmeraRoles} from "../src/PalmeraRoles.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
+import {Constants} from "../src/libraries/Constants.sol";
+import {DataTypes} from "../src/libraries/DataTypes.sol";
 
 // Helper contract to test internal method of PalmeraRoles
 contract PalmeraRolesHarness is PalmeraRoles(address(0xAAAA)) {

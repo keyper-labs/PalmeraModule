@@ -19,15 +19,15 @@ library Random {
         uint256 seed = uint256(
             keccak256(
                 abi.encodePacked(
-                    block.timestamp +
-                        block.prevrandao +
-                        ((
-                            uint256(keccak256(abi.encodePacked(block.coinbase)))
-                        ) / (_seed)) +
-                        block.gaslimit +
-                        ((uint256(keccak256(abi.encodePacked(msg.sender)))) /
-                            (_seed)) +
-                        block.number
+                    block.timestamp + block.prevrandao
+                        + (
+                            (uint256(keccak256(abi.encodePacked(block.coinbase))))
+                                / (_seed)
+                        ) + block.gaslimit
+                        + (
+                            (uint256(keccak256(abi.encodePacked(msg.sender))))
+                                / (_seed)
+                        ) + block.number
                 )
             )
         );

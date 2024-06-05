@@ -3,11 +3,11 @@ pragma solidity 0.8.23;
 
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Authority} from "@solmate/auth/Auth.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Errors} from "../libraries/Errors.sol";
+import {Constants} from "./libraries/Constants.sol";
+import {DataTypes} from "./libraries/DataTypes.sol";
+import {Errors} from "./libraries/Errors.sol";
 import {ValidAddress} from "./DenyHelper.sol";
-import {Events} from "../libraries/Events.sol";
+import {Events} from "./libraries/Events.sol";
 
 /// @title Palmera Roles
 /// @custom:security-contact general@palmeradao.xyz
