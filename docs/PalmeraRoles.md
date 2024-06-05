@@ -2,7 +2,7 @@
 
 # Contract PalmeraRoles
 **Title:** Palmera Roles
-**Author:** 
+**Author:** general@palmeradao.xyz
 
 **Description:** 
 

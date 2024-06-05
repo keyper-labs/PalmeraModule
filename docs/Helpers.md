@@ -2,9 +2,9 @@
 
 # Contract Helpers
 **Title:** Helpers
-**Author:** 
+**Author:** general@palmeradao.xyz
 
-**Description:** 
+**Description:** This contract is a helper contract for the Palmera Module
 
 ---
 ### Globals Variables and Mappings

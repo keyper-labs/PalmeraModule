@@ -2,7 +2,7 @@
 
 # Contract PalmeraModule
 **Title:** Palmera Module
-**Author:** 
+**Author:** general@palmeradao.xyz
 
 **Description:** 
 

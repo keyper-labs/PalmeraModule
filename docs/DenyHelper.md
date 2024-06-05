@@ -4,7 +4,7 @@
 **Title:** ValidAddress
 **Author:** 
 
-**Description:** 
+**Description:** Helper contract to check if an address is valid
 
 ---
 ### Globals Variables and Mappings
@@ -26,7 +26,7 @@
 
 # Contract DenyHelper
 **Title:** DenyHelper
-**Author:** 
+**Author:** general@palmeradao.xyz
 
 **Description:** 
 

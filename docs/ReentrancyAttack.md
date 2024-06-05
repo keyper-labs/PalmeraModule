@@ -2,7 +2,7 @@
 
 # Contract Attacker
 **Title:** Attacker
-**Author:** 
+**Author:** general@palmeradao.xyz
 
 **Description:** 
 

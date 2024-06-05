@@ -2,7 +2,7 @@
 
 # Contract PalmeraGuard
 **Title:** Palmera Guard
-**Author:** 
+**Author:** general@palmeradao.xyz
 
 **Description:** 
 

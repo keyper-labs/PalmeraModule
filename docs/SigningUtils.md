@@ -2,7 +2,7 @@
 
 # Contract SigningUtils
 **Title:** SigningUtils
-**Author:** 
+**Author:** general@palmeradao.xyz
 
 **Description:** 
 

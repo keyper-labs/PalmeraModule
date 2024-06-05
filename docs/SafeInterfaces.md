@@ -2,7 +2,7 @@
 
 # Contract ISafe
 **Title:** Safe Interface
-**Author:** 
+**Author:** general@palmeradao.xyz
 
 **Description:** 
 
@@ -26,7 +26,7 @@
 
 # Contract ISafeProxy
 **Title:** Safe Proxy Interface
-**Author:** 
+**Author:** general@palmeradao.xyz
 
 **Description:** 
 

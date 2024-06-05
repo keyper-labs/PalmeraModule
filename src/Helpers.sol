@@ -21,6 +21,7 @@ import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 
 /// @title Helpers
 /// @custom:security-contact general@palmeradao.xyz
+/// @dev This contract is a helper contract for the Palmera Module
 abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
     using GnosisSafeMath for uint256;
     using Address for address;
