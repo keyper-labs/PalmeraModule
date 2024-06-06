@@ -32,6 +32,9 @@ _{{{natspec.dev}}}_
 {{#each params}}
 | {{name}} | {{type}} | {{{joinLines natspec}}} |
 {{/each}}
+{{#each members}}
+| {{name}} | {{{typeName.typeDescriptions.typeString}}} | {{{joinLines natspec}}} |
+{{/each}}
 {{/if}}
 
 {{#if natspec.returns}}

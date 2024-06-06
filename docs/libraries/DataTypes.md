@@ -42,6 +42,12 @@ _Struct for Safe_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| tier | enum DataTypes.Tier |  |
+| name | string |  |
+| lead | address |  |
+| safe | address |  |
+| child | uint256[] |  |
+| superSafe | uint256 |  |
 
 ```solidity
 struct Safe {
