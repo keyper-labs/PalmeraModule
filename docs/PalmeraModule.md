@@ -280,7 +280,7 @@ _Call coming from the safe_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| superSafe | uint256 | address of the superSafe |
+| superSafe | uint256 | Id of the superSafe |
 | name | string | string name of the safe |
 
 ### removeSafe
@@ -297,7 +297,7 @@ _All actions will be driven based on the caller of the method, and args_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | address of the safe to be removed |
+| safe | uint256 | Id of the safe to be removed |
 
 ### disconnectSafe
 
@@ -313,7 +313,7 @@ _Disconnect Safe of a Org, Call must come from the root safe_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | address of the safe to be updated |
+| safe | uint256 | Id of the safe to be updated |
 
 ### removeWholeTree
 
@@ -339,7 +339,7 @@ _Method to Promete a safe to Root Safe of an Org to Root Safe_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | address of the safe to be updated |
+| safe | uint256 | Id of the safe to be updated |
 
 ### updateSuper
 
@@ -355,8 +355,8 @@ _Update the superSafe of a safe with a new superSafe, Call must come from the ro
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | address of the safe to be updated |
-| newSuper | uint256 | address of the new superSafe |
+| safe | uint256 | Id of the safe to be updated |
+| newSuper | uint256 | Id of the new superSafe |
 
 ### updateDepthTreeLimit
 

@@ -341,7 +341,7 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Add a safe to an organisation/safe
     /// @dev Call coming from the safe
-    /// @param superSafe address of the superSafe
+    /// @param superSafe Id of the superSafe
     /// @param name string name of the safe
     function addSafe(uint256 superSafe, string memory name)
         external
@@ -397,7 +397,7 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Remove safe and reasign all child to the superSafe
     /// @dev All actions will be driven based on the caller of the method, and args
-    /// @param safe address of the safe to be removed
+    /// @param safe Id of the safe to be removed
     function removeSafe(uint256 safe)
         public
         SafeRegistered(_msgSender())
@@ -475,7 +475,7 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Disconnect Safe of a Org
     /// @dev Disconnect Safe of a Org, Call must come from the root safe
-    /// @param safe address of the safe to be updated
+    /// @param safe Id of the safe to be updated
     function disconnectSafe(uint256 safe)
         external
         IsRootSafe(_msgSender())
@@ -540,7 +540,7 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Method to Promete a safe to Root Safe of an Org to Root Safe
     /// @dev Method to Promete a safe to Root Safe of an Org to Root Safe
-    /// @param safe address of the safe to be updated
+    /// @param safe Id of the safe to be updated
     function promoteRoot(uint256 safe)
         external
         IsRootSafe(_msgSender())
@@ -578,8 +578,8 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice update superSafe of a safe
     /// @dev Update the superSafe of a safe with a new superSafe, Call must come from the root safe
-    /// @param safe address of the safe to be updated
-    /// @param newSuper address of the new superSafe
+    /// @param safe Id of the safe to be updated
+    /// @param newSuper Id of the new superSafe
     function updateSuper(uint256 safe, uint256 newSuper)
         external
         IsRootSafe(_msgSender())

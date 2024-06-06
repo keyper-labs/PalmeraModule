@@ -1,5 +1,4 @@
 /* eslint-disable node/no-unpublished-import */
-import type { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-foundry";
 import "@nomicfoundation/hardhat-chai-matchers";
@@ -11,7 +10,6 @@ import "solidity-docgen";
 import { relative } from "path";
 import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
-import { libraries } from "./typechain-types/src";
 
 dotenv.config();
 
@@ -142,11 +140,19 @@ module.exports = {
     },
     gasReporter: {
         currency: "USD",
-        token: "ETH",
+        token: "MATIC",
+        L1: "polygon",
+        darkMode: true,
+        showTimeSpent: true,
+        reportPureAndViewMethods: true,
+        includeIntrinsicGas: false,
+        excludeContracts: ["Attacker", "ValidAddress", "DenyHelper", "Helpers", "ReentrancyAttack", "SafeInterface", "SigningUtils"],
+        // showUncalledMethods: true,
+        currencyDisplayPrecision: 5,
         coinmarketcap:
             process.env.COINMARKETCAP_API_KEY,
         enabled: true,
-        gasPriceApi: `https://api.arbiscan.io/api?module=proxy&action=eth_gasPrice&apikey=${process.env.ARBITRUM_API_KEY}`,
+        gasPriceApi: `https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice&apikey=${process.env.POLYGONSCAN_KEY}`,
         // gasPrice: 35
     },
     etherscan: {
