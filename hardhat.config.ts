@@ -3,19 +3,21 @@ import type { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-foundry";
 import "@nomicfoundation/hardhat-chai-matchers";
-import "@nomiclabs/hardhat-ethers";
+import "@nomicfoundation/hardhat-ethers";
+import '@nomicfoundation/hardhat-verify';
 import "hardhat-gas-reporter";
 import "hardhat-contract-sizer";
 import "solidity-docgen";
 import { relative } from "path";
 import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
+import { libraries } from "./typechain-types/src";
 
 dotenv.config();
 
 const MNEMONIC =
-    process.env.MNEMONIC!!
-const API_KEY = process.env.INFURAKEY || "ffc8f8f8f8f8f8f8f8f8f8f8f8f8f8f8";
+    process.env.MNEMONIC!! || "test test test test test test test test test test test junk";
+const API_KEY = process.env.INFURA_KEY || "ffc8f8f8f8f8f8f8f8f8f8f8f8f8f8f8";
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "ffc8f8f8f8f8f8f8f8f8f8f8f8f8f8";
 const ACCOUNTS = parseInt(process.env.ACCOUNTS!) || 20;
 const PRIVATE_KEY = process.env.PRIVATE_KEY!;
@@ -30,18 +32,18 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     }
 });
 
-const config: HardhatUserConfig = {
+module.exports = {
     networks: {
         hardhat: {
             chainId: 137,
             throwOnTransactionFailures: true,
             throwOnCallFailures: true,
             forking: {
-                url: `https://polygon-mainnet.infura.io/v3/${API_KEY}`,
+                url: `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
             },
             accounts: {
-                mnemonic: MNEMONIC,
-                count: ACCOUNTS,
+                mnemonic: `${MNEMONIC}`,
+                count: ACCOUNTS!!,
             },
         },
         local: {
@@ -117,7 +119,8 @@ const config: HardhatUserConfig = {
     defaultNetwork: "hardhat",
     paths: {
         sources: './src', // Ajusta según tu estructura de carpetas
-        tests: './test',
+        libraries: './lib',
+        tests: './test/hardhat',
         cache: './cache',
         artifacts: './artifacts',
     },
@@ -174,6 +177,11 @@ const config: HardhatUserConfig = {
                 }
             }
         ]
+    },
+    sourcify: {
+        // Disabled by default
+        // Doesn't need an API key
+        enabled: true
     },
     solidity: {
         compilers: [
@@ -240,5 +248,3 @@ const config: HardhatUserConfig = {
         ],
     },
 };
-
-export default config;

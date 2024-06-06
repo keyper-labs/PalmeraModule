@@ -197,43 +197,6 @@
         "Events"
       ]
     },
-    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/openzeppelin-contracts/contracts/utils/Context.sol": {
-      "lastModificationDate": 1665412293763,
-      "contentHash": "5f2c5c4b6af2dd4551027144797bc8be",
-      "sourceName": "@openzeppelin/utils/Context.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "viaIR": true,
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Context"
-      ]
-    },
     "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/safe-contracts/contracts/external/GnosisSafeMath.sol": {
       "lastModificationDate": 1717501512582,
       "contentHash": "0b98e5ff6cd364731017082744cf5706",
@@ -306,6 +269,43 @@
       ],
       "artifacts": [
         "Address"
+      ]
+    },
+    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/openzeppelin-contracts/contracts/utils/Context.sol": {
+      "lastModificationDate": 1665412293763,
+      "contentHash": "5f2c5c4b6af2dd4551027144797bc8be",
+      "sourceName": "@openzeppelin/utils/Context.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Context"
       ]
     },
     "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/src/PalmeraRoles.sol": {
@@ -556,6 +556,82 @@
         "ISafeProxy"
       ]
     },
+    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/openzeppelin-contracts/contracts/security/ReentrancyGuard.sol": {
+      "lastModificationDate": 1673381624693,
+      "contentHash": "ee1cd296e049da9a26bdb08e23a9036a",
+      "sourceName": "@openzeppelin/security/ReentrancyGuard.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ReentrancyGuard"
+      ]
+    },
+    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/safe-contracts/contracts/base/Executor.sol": {
+      "lastModificationDate": 1717501512579,
+      "contentHash": "b6affba1af2ea2c821fd1b7c6f02e6f1",
+      "sourceName": "@safe-contracts/base/Executor.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../common/Enum.sol"
+      ],
+      "versionPragmas": [
+        ">=0.7.0 <0.9.0"
+      ],
+      "artifacts": [
+        "Executor"
+      ]
+    },
     "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/safe-contracts/contracts/common/SignatureDecoder.sol": {
       "lastModificationDate": 1717501512581,
       "contentHash": "2284c5df4444ca9b2cf4a38a45d85650",
@@ -629,82 +705,6 @@
       "artifacts": [
         "ISignatureValidator",
         "ISignatureValidatorConstants"
-      ]
-    },
-    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/safe-contracts/contracts/base/Executor.sol": {
-      "lastModificationDate": 1717501512579,
-      "contentHash": "b6affba1af2ea2c821fd1b7c6f02e6f1",
-      "sourceName": "@safe-contracts/base/Executor.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "viaIR": true,
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../common/Enum.sol"
-      ],
-      "versionPragmas": [
-        ">=0.7.0 <0.9.0"
-      ],
-      "artifacts": [
-        "Executor"
-      ]
-    },
-    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/openzeppelin-contracts/contracts/security/ReentrancyGuard.sol": {
-      "lastModificationDate": 1673381624693,
-      "contentHash": "ee1cd296e049da9a26bdb08e23a9036a",
-      "sourceName": "@openzeppelin/security/ReentrancyGuard.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "viaIR": true,
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "ReentrancyGuard"
       ]
     },
     "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/safe-contracts/contracts/common/Enum.sol": {
@@ -827,43 +827,6 @@
         "GuardManager"
       ]
     },
-    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/safe-contracts/contracts/common/SelfAuthorized.sol": {
-      "lastModificationDate": 1717501512581,
-      "contentHash": "4c773e803298d5521ba60d7fc06df0b3",
-      "sourceName": "@safe-contracts/common/SelfAuthorized.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "viaIR": true,
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.7.0 <0.9.0"
-      ],
-      "artifacts": [
-        "SelfAuthorized"
-      ]
-    },
     "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/safe-contracts/contracts/interfaces/IERC165.sol": {
       "lastModificationDate": 1717501512585,
       "contentHash": "2d418698dff7323e4f199ff8633d1a3a",
@@ -899,6 +862,43 @@
       ],
       "artifacts": [
         "IERC165"
+      ]
+    },
+    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/safe-contracts/contracts/common/SelfAuthorized.sol": {
+      "lastModificationDate": 1717501512581,
+      "contentHash": "4c773e803298d5521ba60d7fc06df0b3",
+      "sourceName": "@safe-contracts/common/SelfAuthorized.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.7.0 <0.9.0"
+      ],
+      "artifacts": [
+        "SelfAuthorized"
       ]
     },
     "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/src/PalmeraGuard.sol": {
@@ -1207,6 +1207,159 @@
       ],
       "artifacts": [
         "Random"
+      ]
+    },
+    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/src/test/CREATE3Factory.sol": {
+      "lastModificationDate": 1717683630945,
+      "contentHash": "49ca00b4edd6335bfedf14e0487a33b5",
+      "sourceName": "src/test/CREATE3Factory.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@solmate/utils/CREATE3.sol",
+        "./ICREATE3Factory.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.13"
+      ],
+      "artifacts": [
+        "CREATE3Factory"
+      ]
+    },
+    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/src/test/ICREATE3Factory.sol": {
+      "lastModificationDate": 1717683600318,
+      "contentHash": "a5cd4f33b2ed811482859fa546c32a50",
+      "sourceName": "src/test/ICREATE3Factory.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.0"
+      ],
+      "artifacts": [
+        "ICREATE3Factory"
+      ]
+    },
+    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/solmate/src/utils/CREATE3.sol": {
+      "lastModificationDate": 1673381792487,
+      "contentHash": "0714614c146b2eeb737405c770da9f8a",
+      "sourceName": "@solmate/utils/CREATE3.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Bytes32AddressLib.sol"
+      ],
+      "versionPragmas": [
+        ">=0.8.0"
+      ],
+      "artifacts": [
+        "CREATE3"
+      ]
+    },
+    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/solmate/src/utils/Bytes32AddressLib.sol": {
+      "lastModificationDate": 1666353850618,
+      "contentHash": "8a05c8576a41e44d3e96a6e169162327",
+      "sourceName": "@solmate/utils/Bytes32AddressLib.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.8.0"
+      ],
+      "artifacts": [
+        "Bytes32AddressLib"
       ]
     }
   }
