@@ -3,6 +3,8 @@ pragma solidity 0.8.23;
 
 /// @title Library DataTypes
 /// @custom:security-contact general@palmeradao.xyz
+/// @notice Data Types for the Palmera module
+/// @dev Definition of the Data Types for the Palmera Module
 library DataTypes {
     /// @dev typos of Roles into Palmera Modules
     enum Role {

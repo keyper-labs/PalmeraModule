@@ -6,6 +6,10 @@
 
 **Author:** general@palmeradao.xyz
 
+_Events Palmera Modules_
+
+**Events for the Palmera module**
+
 ### OrganisationCreated
 
 ```solidity

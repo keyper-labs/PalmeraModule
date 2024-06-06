@@ -6,7 +6,9 @@
 
 **Author:** general@palmeradao.xyz
 
-_This contract is a helper contract for the Palmera Module_
+_Helper Methods for the Palmera module_
+
+**This contract is a helper contract for the Palmera Module**
 
 ### IsSafe
 

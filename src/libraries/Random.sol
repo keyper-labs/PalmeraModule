@@ -9,6 +9,8 @@ pragma solidity 0.8.23;
 
 /// @title Library Random
 /// @custom:security-contact general@palmeradao.xyz
+/// @notice Random Funtions for the Palmera module
+/// @dev Random Funtions Palmera Modules
 library Random {
     /**
      * @dev Generate random uint256 <= 256^2

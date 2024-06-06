@@ -24,6 +24,8 @@ abstract contract ValidAddress is Context {
 
 /// @title DenyHelper
 /// @custom:security-contact general@palmeradao.xyz
+/// @notice Deny Helpers Methods for the Palmera module
+/// @dev RDeny Helper Palmera Modules
 abstract contract DenyHelper is ValidAddress {
     using GnosisSafeMath for uint256;
     using Address for address;

@@ -26,6 +26,10 @@ _Modifier for Valid if wallet is Zero Address or Not_
 
 **Author:** general@palmeradao.xyz
 
+_RDeny Helper Palmera Modules_
+
+**Deny Helpers Methods for the Palmera module**
+
 ### allowFeature
 
 ```solidity

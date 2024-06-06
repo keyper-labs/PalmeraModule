@@ -3,6 +3,8 @@ pragma solidity 0.8.23;
 
 /// @title Library Events
 /// @custom:security-contact general@palmeradao.xyz
+/// @notice Events for the Palmera module
+/// @dev Events Palmera Modules
 library Events {
     /// @dev Event Fire when create a new Organisation
     /// @param creator Address of the creator

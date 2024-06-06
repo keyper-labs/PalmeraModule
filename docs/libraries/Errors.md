@@ -64,11 +64,15 @@ _Error messages when the Safe is not Autorized to Remove Owner like Lead/Root Sa
 error NotAuthorizedRemoveSafeFromOtherOrg()
 ```
 
+_Error messages when the Safe try to Remove Safe from Other Tree_
+
 ### NotAuthorizedRemoveOwner
 
 ```solidity
 error NotAuthorizedRemoveOwner()
 ```
+
+_Error messages when the Safe is not Autorized to Remove Owner like Lead/Root Safe or Safe itself_
 
 ### NotAuthorizedExecOnBehalf
 
@@ -76,11 +80,15 @@ error NotAuthorizedRemoveOwner()
 error NotAuthorizedExecOnBehalf()
 ```
 
+_Error messages when the Safe is not Autorized to Execute Transaction On Behalf of Other Owner or Safe_
+
 ### NotAuthorizedUpdateSafeToOtherOrg
 
 ```solidity
 error NotAuthorizedUpdateSafeToOtherOrg()
 ```
+
+_Error messages when the Safe try to Update Safe to Other Tree_
 
 ### NotPermittedReceiveEther
 
@@ -96,7 +104,7 @@ _Not Permitted to Receive Ether_
 error CannotDisconnectedSafeBeforeRemoveChild(uint256 children)
 ```
 
-_Error messages when try to disconnect Safe before remove it, and show the Safe's children Safe Id's_
+_Error messages when try to disconnect Safe before remove it, and show the Safe's (`children`) Safe Id's_
 
 ### CannotRemoveSafeBeforeRemoveChild
 
@@ -104,7 +112,7 @@ _Error messages when try to disconnect Safe before remove it, and show the Safe'
 error CannotRemoveSafeBeforeRemoveChild(uint256 children)
 ```
 
-_Error messages when try to remove Safe before remove it's children, and show the Safe's children Safe Id's_
+_Error messages when try to remove Safe before remove it's (`children`), and show the Safe's (`children`) Safe Id's_
 
 ### CannotDisablePalmeraModule
 
@@ -112,17 +120,23 @@ _Error messages when try to remove Safe before remove it's children, and show th
 error CannotDisablePalmeraModule(address module)
 ```
 
+_Error messages when the User try to Disable Palmera Module and not have the Permission_
+
 ### CannotDisablePalmeraGuard
 
 ```solidity
 error CannotDisablePalmeraGuard(address guard)
 ```
 
+_Error messages when the User try to Disable Palmera Guard and not have the Permission_
+
 ### SafeAlreadyRemoved
 
 ```solidity
 error SafeAlreadyRemoved()
 ```
+
+_Error messages when the Safe is already Removed_
 
 ### NotAuthorizedAsNotSafeLead
 
@@ -153,6 +167,8 @@ _Error messages when the Root Safe is not Autorized Update Super Safe for a Safe
 ```solidity
 error NotAuthorizedUpdateNonSuperSafe()
 ```
+
+_Error messages when the Root Safe is not Autorized Update Safe for a SuperSafe in Another Tree_
 
 ### NotAuthorizedDisconnectChildrenSafe
 
@@ -215,6 +231,8 @@ _Error messages when Try to Execute a Transaction On Behalf and Fail_
 ```solidity
 error PreviewModuleNotFound(address safe)
 ```
+
+_Error messages when not exist the Preview Module in the Arrais of Modules of the Safe_
 
 ### TxOnBehalfExecutedFailed
 
@@ -302,8 +320,9 @@ _Errors messages when New Limit is more than Max Limit or less than or Equal to 
 error ZeroAddressProvided()
 ```
 
-_Errors Module DenyHelpers
-Error messages when the Address is a Zero Address_
+_Error messages when the Address is a Zero Address_
+
+**Errors Module DenyHelpers**
 
 ### InvalidAddressProvided
 

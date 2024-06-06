@@ -6,6 +6,10 @@
 
 **Author:** general@palmeradao.xyz
 
+_Definition of the Data Types for the Palmera Module_
+
+**Data Types for the Palmera module**
+
 ### Role
 
 _typos of Roles into Palmera Modules_

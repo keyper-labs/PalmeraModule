@@ -6,6 +6,10 @@
 
 **Author:** general@palmeradao.xyz
 
+_Random Funtions Palmera Modules_
+
+**Random Funtions for the Palmera module**
+
 ### rand
 
 ```solidity
