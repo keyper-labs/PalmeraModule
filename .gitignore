@@ -1,11 +1,14 @@
 out/
+artifacts/
 cache/
+cache_hardhat/
 node_modules/
 broadcast/
 .env
 .vscode/
 package-lock.json
 types/
+typechain-types/
 .lcov.info
 .atcrc
 .wake
