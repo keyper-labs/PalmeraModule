@@ -398,7 +398,7 @@ contract Hierarchies is DeployHelper {
     /// @dev The fuzzing range is set to ensure iterations is between 8 and 49
     function testRevertifExceedMaxDepthTreeLimit(uint256 iterations) public {
         // Set up the fuzzing constraint
-        iterations = 9 + (iterations % 41);  // This ensures iterations is between 9 and 49 (inclusive)
+        iterations = 9 + (iterations % 41); // This ensures iterations is between 9 and 49 (inclusive)
         (
             uint256 rootId,
             uint256 safeIdA1,
@@ -442,7 +442,8 @@ contract Hierarchies is DeployHelper {
             vm.startPrank(subSafeAaddr[i]);
             // Add the new Safe as a subSafe
             if (i != (depthTreeLimit - 1)) {
-                subSafeAid[i] = palmeraModule.addSafe(subSafeAid[i - 1], safeBName);
+                subSafeAid[i] =
+                    palmeraModule.addSafe(subSafeAid[i - 1], safeBName);
             } else {
                 vm.expectRevert(
                     abi.encodeWithSelector(

@@ -54,7 +54,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         bytes memory data,
         Enum.Operation operation
     ) public view returns (bytes memory) {
-        uint256 nonce = palmera.nonce();
+        uint256 nonce = palmera.nonce(org);
         bytes32 txHashed = palmera.getTransactionHash(
             org, superSafe, targetSafe, to, value, data, operation, nonce
         );

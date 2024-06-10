@@ -57,7 +57,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
         Enum.Operation operation
     ) public view returns (bytes memory) {
         // Create encoded tx to be signed
-        uint256 nonce = palmera.nonce();
+        uint256 nonce = palmera.nonce(org);
         bytes32 txHashed = palmera.getTransactionHash(
             org, superSafe, targetSafe, to, value, data, operation, nonce
         );
@@ -97,7 +97,7 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
         Enum.Operation operation
     ) public view returns (bytes memory) {
         // Create encoded tx to be signed
-        uint256 nonce = palmera.nonce();
+        uint256 nonce = palmera.nonce(org);
         bytes32 txHashed = palmera.getTransactionHash(
             org, superSafe, targetSafe, to, value, data, operation, nonce
         );

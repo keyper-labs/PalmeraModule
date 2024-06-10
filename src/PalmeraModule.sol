@@ -27,8 +27,6 @@ contract PalmeraModule is Auth, Helpers {
     string public constant NAME = "Palmera Module";
     /// @notice VERSION Version of the Palmera Module
     string public constant VERSION = "0.2.0";
-    /// @dev Control Nonce of the Palmera Module
-    uint256 public nonce;
     /// @dev indexId of the safe
     uint256 public indexId;
     /// @dev Max Depth Tree Limit
@@ -38,13 +36,16 @@ contract PalmeraModule is Auth, Helpers {
     /// @dev Array of Orgs (based on Hash (On-chain Organisation) of the Org)
     bytes32[] private orgHash;
     /// @dev Index of Safe
-    /// bytes32: Hash (On-chain Organisation) -> uint256: ID's Safes
+    /// @dev bytes32: Hash (On-chain Organisation) -> uint256: ID's Safes
     mapping(bytes32 => uint256[]) public indexSafe;
     /// @dev Depth Tree Limit
-    /// bytes32: Hash (On-chain Organisation) -> uint256: Depth Tree Limit
+    /// @dev bytes32: Hash (On-chain Organisation) -> uint256: Depth Tree Limit
     mapping(bytes32 => uint256) public depthTreeLimit;
+    /// @dev Control Nonce of the Palmera Module per Org
+    /// @dev bytes32: Hash (On-chain Organisation) -> uint256: Nonce by Orgt
+    mapping(bytes32 => uint256) public nonce;
     /// @dev Hash (On-chain Organisation) -> Safes
-    /// bytes32: Hash (On-chain Organisation).   uint256:SafeId.   Safe: Safe Info
+    /// @dev bytes32: Hash (On-chain Organisation).   uint256:SafeId of Safe Info
     mapping(bytes32 => mapping(uint256 => DataTypes.Safe)) public safes;
 
     /// @dev Modifier for Validate if Org/Safe Exist or SuperSafeNotRegistered Not
@@ -161,7 +162,7 @@ contract PalmeraModule is Auth, Helpers {
                 data,
                 operation,
                 /// Signature info
-                nonce
+                nonce[org]
             );
             /// Verify Collision of Nonce with multiple txs in the same range of time, study to use a nonce per org
 
@@ -176,7 +177,7 @@ contract PalmeraModule is Auth, Helpers {
             );
         }
         /// Increase nonce and execute transaction.
-        ++nonce;
+        nonce[org]++;
         /// Execute transaction from target safe
         ISafe safeTarget = ISafe(targetSafe);
         result =

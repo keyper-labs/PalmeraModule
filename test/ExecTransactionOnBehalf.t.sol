@@ -248,7 +248,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         // get owners of the root safe
         address[] memory owners = rootSafe.getOwners();
         uint256 threshold = rootSafe.getThreshold();
-        uint256 nonce = palmeraModule.nonce();
+        bytes32 orgHash = palmeraModule.getOrgHashBySafe(rootAddr);
+        uint256 nonce = palmeraModule.nonce(orgHash);
 
         // Init Valid Owners
         initValidOnwers(4);
@@ -332,7 +333,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         // get owners of the root safe
         address[] memory owners = rootSafe.getOwners();
         uint256 threshold = rootSafe.getThreshold();
-        uint256 nonce = palmeraModule.nonce();
+        bytes32 orgHash = palmeraModule.getOrgHashBySafe(rootAddr);
+        uint256 nonce = palmeraModule.nonce(orgHash);
 
         // Init Valid Owners
         initValidOnwers(4);
@@ -538,7 +540,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         // get owners of the root safe
         address[] memory owners = superSafe.getOwners();
         uint256 threshold = superSafe.getThreshold();
-        uint256 nonce = palmeraModule.nonce();
+        bytes32 orgHash = palmeraModule.getOrgHashBySafe(safeA1NAddr);
+        uint256 nonce = palmeraModule.nonce(orgHash);
 
         // Init Valid Owners
         initValidOnwers(4);
@@ -732,7 +735,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         address[] memory owners = rootSafe.getOwners();
         // reduce threshold by 1, and use incomplete signatures
         uint256 threshold = rootSafe.getThreshold() - 1;
-        uint256 nonce = palmeraModule.nonce();
+        bytes32 orgHash = palmeraModule.getOrgHashBySafe(rootAddr);
+        uint256 nonce = palmeraModule.nonce(orgHash);
 
         // Init Valid Owners
         initValidOnwers(4);
@@ -816,7 +820,8 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         address[] memory owners = rootSafe.getOwners();
         // reduce threshold by 1, and use incomplete signatures
         uint256 threshold = rootSafe.getThreshold() - 1;
-        uint256 nonce = palmeraModule.nonce();
+        bytes32 orgHash = palmeraModule.getOrgHashBySafe(rootAddr);
+        uint256 nonce = palmeraModule.nonce(orgHash);
 
         // Init Valid Owners
         initValidOnwers(4);
