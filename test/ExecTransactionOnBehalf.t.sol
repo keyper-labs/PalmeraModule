@@ -591,7 +591,186 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
         vm.stopPrank();
     }
 
+    // // ! ********************** Multiples Org Send Execution On Behalf ********************
+    // Caller: callerEOA
+    // Caller Type: EOA
+    // Caller Role: nothing
+    // SuperSafe: rootAddr, rootAddr2
+    // TargerSafe: safeSubSafeA1, safeSubSafeA2 two hierachical tree Org's with 2 levels diff
+    function test_Multiples_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_RIGHT_NONCE(
+    ) public {
+        (uint256 rootId,, uint256 safeSubSafeA1Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
+        (uint256 rootId2,, uint256 safeSubSafeA2Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(org2Name, safeA2Name, subSafeB1Name);
+
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address rootAddr2 = palmeraModule.getSafeAddress(rootId2);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
+        address safeSubSafeA2Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA2Id);
+
+        vm.deal(rootAddr, 100 gwei);
+        vm.deal(rootAddr2, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
+        vm.deal(safeSubSafeA2Addr, 100 gwei);
+
+        // Random wallet instead of a safe (EOA)
+        address callerEOA = address(0xFED);
+
+        // Owner of Target Safe signed args and of Root/Super Safe
+        palmeraHelper.setSafe(rootAddr);
+        bytes memory emptyData;
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
+            orgHash,
+            rootAddr,
+            safeSubSafeA1Addr,
+            receiver,
+            25 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        // get nonce from org before to execute
+        uint256 nonce = palmeraModule.nonce(orgHash);
+        vm.startPrank(callerEOA);
+        palmeraModule.execTransactionOnBehalf(
+            orgHash,
+            rootAddr,
+            safeSubSafeA1Addr,
+            receiver,
+            25 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        vm.stopPrank();
+        assertEq(palmeraModule.nonce(orgHash), nonce + 1);
+        assertEq(receiver.balance, 25 gwei);
+        // get nonce from org Another Org to execute
+        bytes32 orgHash2 = palmeraModule.getOrgHashBySafe(rootAddr2);
+        uint256 nonce2 = palmeraModule.nonce(orgHash2);
+        assertEq(nonce2, 0);
+        palmeraHelper.setSafe(rootAddr2);
+        bytes memory signatures2 = palmeraHelper
+            .encodeSignaturesPalmeraTxWithNonce(
+            orgHash2,
+            rootAddr2,
+            safeSubSafeA2Addr,
+            receiver,
+            25 gwei,
+            emptyData,
+            Enum.Operation(0),
+            nonce2 // send the right nonce
+        );
+        vm.startPrank(callerEOA);
+        palmeraModule.execTransactionOnBehalf(
+            orgHash2,
+            rootAddr2,
+            safeSubSafeA2Addr,
+            receiver,
+            25 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures2
+        );
+        vm.stopPrank();
+        assertEq(palmeraModule.nonce(orgHash2), nonce2 + 1);
+        assertEq(receiver.balance, 50 gwei);
+    }
+
     // // ! ********************** REVERT ********************
+
+    // // ! ********************** Multiples Org Send Execution On Behalf ********************
+    // Revert: "GS020" execTransactionOnBehalf when is Any EOA, passing the wrong nonce. because is invalid signature
+    // Caller: callerEOA
+    // Caller Type: EOA
+    // Caller Role: nothing
+    // SuperSafe: rootAddr
+    // TargerSafe: safeSubSafeA1, same hierachical tree with 2 levels diff
+    function testRevert_ExecTransactionOnBehalf_as_EOA_is_NOT_ROLE_with_WRONG_NONCE(
+    ) public {
+        (uint256 rootId,, uint256 safeSubSafeA1Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(orgName, safeA1Name, subSafeA1Name);
+        (uint256 rootId2,, uint256 safeSubSafeA2Id,,) = palmeraSafeBuilder
+            .setupOrgThreeTiersTree(org2Name, safeA2Name, subSafeB1Name);
+
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        address rootAddr2 = palmeraModule.getSafeAddress(rootId2);
+        address safeSubSafeA1Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA1Id);
+        address safeSubSafeA2Addr =
+            palmeraModule.getSafeAddress(safeSubSafeA2Id);
+
+        vm.deal(rootAddr, 100 gwei);
+        vm.deal(rootAddr2, 100 gwei);
+        vm.deal(safeSubSafeA1Addr, 100 gwei);
+        vm.deal(safeSubSafeA2Addr, 100 gwei);
+
+        // Random wallet instead of a safe (EOA)
+        address callerEOA = address(0xFED);
+
+        // Owner of Target Safe signed args and of Root/Super Safe
+        palmeraHelper.setSafe(rootAddr);
+        bytes memory emptyData;
+        bytes memory signatures = palmeraHelper.encodeSignaturesPalmeraTx(
+            orgHash,
+            rootAddr,
+            safeSubSafeA1Addr,
+            receiver,
+            25 gwei,
+            emptyData,
+            Enum.Operation(0)
+        );
+        // get nonce from org before to execute
+        uint256 nonce = palmeraModule.nonce(orgHash);
+        vm.startPrank(callerEOA);
+        palmeraModule.execTransactionOnBehalf(
+            orgHash,
+            rootAddr,
+            safeSubSafeA1Addr,
+            receiver,
+            25 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        vm.stopPrank();
+        assertEq(palmeraModule.nonce(orgHash), nonce + 1);
+
+        // get nonce from org Another Org to execute
+        bytes32 orgHash2 = palmeraModule.getOrgHashBySafe(rootAddr2);
+        uint256 nonce2 = palmeraModule.nonce(orgHash2);
+        assertEq(nonce2, 0);
+        nonce = palmeraModule.nonce(orgHash);
+        assertEq(nonce, 1);
+        palmeraHelper.setSafe(rootAddr2);
+        bytes memory signatures2 = palmeraHelper
+            .encodeSignaturesPalmeraTxWithNonce(
+            orgHash2,
+            rootAddr2,
+            safeSubSafeA2Addr,
+            receiver,
+            25 gwei,
+            emptyData,
+            Enum.Operation(0),
+            nonce // wrong nonce from another org
+        );
+        vm.startPrank(callerEOA);
+        // Revert: "GS020" execTransactionOnBehalf when is Any EOA, passing the wrong nonce. because is invalid signature
+        vm.expectRevert("GS020");
+        palmeraModule.execTransactionOnBehalf(
+            orgHash2,
+            rootAddr2,
+            safeSubSafeA2Addr,
+            receiver,
+            25 gwei,
+            emptyData,
+            Enum.Operation(0),
+            signatures
+        );
+        vm.stopPrank();
+    }
 
     // Revert: "GS026" execTransactionOnBehalf when is Any EOA, passing the wrong signature of the Root/Super Safe of Target Safe
     // Caller: callerEOA

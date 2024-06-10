@@ -78,6 +78,46 @@ contract PalmeraModuleHelper is Test, SignDigestHelper, SignersHelper {
         return signatures;
     }
 
+    /// function Encode signatures for a palmeratx
+    /// @param org Organisation address
+    /// @param superSafe Super Safe address
+    /// @param targetSafe Target Safe address
+    /// @param to Address to send the transaction
+    /// @param value Value to send
+    /// @param data Data payload
+    /// @param operation Operation type
+    /// @return signatures Packed signatures data (v, r, s)
+    function encodeSignaturesPalmeraTxWithNonce(
+        bytes32 org,
+        address superSafe,
+        address targetSafe,
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation,
+        uint256 nonce
+    ) public view returns (bytes memory) {
+        // Create encoded tx to be signed
+        bytes32 txHashed = palmera.getTransactionHash(
+            org, superSafe, targetSafe, to, value, data, operation, nonce
+        );
+
+        address[] memory owners = safeHelper.getOwners();
+        // Order owners
+        address[] memory sortedOwners = sortAddresses(owners);
+        uint256 threshold = safeHelper.getThreshold();
+
+        // Get pk for the signing threshold
+        uint256[] memory privateKeySafeOwners = new uint256[](threshold);
+        for (uint256 i; i < threshold; ++i) {
+            privateKeySafeOwners[i] = ownersPK[sortedOwners[i]];
+        }
+
+        bytes memory signatures = signDigestTx(privateKeySafeOwners, txHashed);
+
+        return signatures;
+    }
+
     /// function Sign palmeraTx with invalid signatures (do not belong to any safe owner)
     /// @param org Organisation address
     /// @param superSafe Super Safe address
