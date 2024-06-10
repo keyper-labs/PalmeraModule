@@ -1,5 +1,7 @@
 out/
+artifacts/
 cache/
+cache_hardhat/
 node_modules/
 broadcast/
 .env
@@ -13,8 +15,6 @@ node_modules
 .env
 
 # Hardhat files
-/cache
-/cache_hardhat
 /artifacts
 
 # TypeChain files
