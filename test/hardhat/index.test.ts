@@ -285,7 +285,7 @@ describe("Basic Deployment of Palmera Environment", function () {
                     to: await PalmeraModuleContract.getAddress(),
                     value: "0x0",
                     data: PalmeraModuleContract.interface.encodeFunctionData("addSafe", [
-                        i,
+                        rootId,
                         `Safe ${i}`,
                     ]),
                 },
@@ -302,7 +302,7 @@ describe("Basic Deployment of Palmera Environment", function () {
                 await safes[i].getAddress(),
             );
             // Validate the Safe Account is added to the Org
-            expect(await PalmeraModuleContract.isTreeMember(i, safeId)).to.equal(
+            expect(await PalmeraModuleContract.isTreeMember(rootId, safeId)).to.equal(
                 true,
             );
             // Get Org Hash by Safe Account
@@ -313,7 +313,7 @@ describe("Basic Deployment of Palmera Environment", function () {
             expect(orgHash).to.equal(orgHashBySafe);
             console.log(`Safe Account Id associate to Org: ${safeId}`);
         }
-        console.log("All Safe Accounts Added to the Org");
+        console.log("All Safe Accounts Added to the Lineal Tree Org");
         return orgHash;
     };
     /** 5. Deploy Org 1-to-3 Tree in Palmera Module */
@@ -966,13 +966,13 @@ describe("Basic Deployment of Palmera Environment", function () {
         // Slice to @nd Group of Safe Accounts
         const safesSlice2 = safes.slice(15, 34);
         // verify the length of the slice
-        expect(safesSlice.length).to.equal(19);
+        expect(safesSlice2.length).to.equal(19);
         // Create 5 1-to-3 Org's
         for (let i = 0; i < 5; ++i) {
             // Register a Basic Org in Palmera Module
             orgName = `Basic 1-to-3 Org ${i + 1}`;
             // Get the Org Hash, and Verify if the Safe Account is the Root of the Org, with the Org Name
-            await deploy1to3TreeOrg(safesSlice.slice(i * 3 + (i > 0 ? 1 : 0), i * 3 + 4), orgName);
+            await deploy1to3TreeOrg(safesSlice2.slice(i * 3 + (i > 0 ? 1 : 0), i * 3 + 4), orgName);
         }
         console.log("All Org's Created");
         // Get last Account
