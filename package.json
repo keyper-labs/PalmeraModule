@@ -10,7 +10,8 @@
         "build": "rm -rf docs/ && npx hardhat clean && npx hardhat compile && npx hardhat docgen",
         "hardhat": "npx hardhat",
         "test": "yarn build && npx hardhat test ./test/hardhat/index.test.ts --network hardhat",
-        "test-local": "npx hardhat test --network local"
+        "test-local": "npx hardhat test --network local",
+        "test-multiorg": "npx mocha -r ts-node/register 'test/**/*.ts' --grep 'Create 5 Basic Lineal Org and 5 1-to-3 Org, and After send a Arries of Promesies of Execution OnBehalf'"
     },
     "importSort": {
         ".js, .jsx, .ts, .tsx": {

@@ -146,7 +146,7 @@ module.exports = {
         showTimeSpent: true,
         reportPureAndViewMethods: true,
         includeIntrinsicGas: false,
-        excludeContracts: ["Attacker", "ValidAddress", "DenyHelper", "Helpers", "ReentrancyAttack", "SafeInterface", "SigningUtils"],
+        excludeContracts: ["Attacker", "ReentrancyAttack", "SafeInterface", "SigningUtils"],
         // showUncalledMethods: true,
         currencyDisplayPrecision: 5,
         coinmarketcap:
