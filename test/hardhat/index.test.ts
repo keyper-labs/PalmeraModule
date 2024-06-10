@@ -245,7 +245,7 @@ describe("Basic Deployment of Palmera Environment", function () {
         );
     }
     /** 4. Deploy Org Lineal Tree in Palmera Module */
-    const DeployLinealTreeOrg = async (safes: Safe[], orgName: string): Promise<any> => {
+    const deployLinealTreeOrg = async (safes: Safe[], orgName: string): Promise<any> => {
         // Register a Basic Org in Palmera Module
         const tx: MetaTransactionData[] = [
             {
@@ -326,6 +326,209 @@ describe("Basic Deployment of Palmera Environment", function () {
         console.log("All Safe Accounts Added to the Org");
         return orgHash;
     };
+    /** 5. Deploy Org 1-to-3 Tree in Palmera Module */
+    const deploy1to3TreeOrg = async (safes: Safe[], orgName: string): Promise<any> => {
+        if (safes.length % 3 !== 1) {
+            throw new Error("The number of Safe Accounts must be 3n + 1");
+        }
+        if (safes.length < 4) {
+            throw new Error("The number of Safe Accounts must be greater than 3");
+        }
+        // Register a Basic Org in Palmera Module
+        const tx: MetaTransactionData[] = [
+            {
+                to: await PalmeraModuleContract.getAddress(),
+                value: "0x0",
+                data: PalmeraModuleContract.interface.encodeFunctionData(
+                    "registerOrg",
+                    [orgName],
+                ),
+            },
+        ];
+        const safeTx = await safes[0].createTransaction({ transactions: tx });
+        const txResponse = await safes[0].executeTransaction(safeTx);
+        await txResponse.transactionResponse?.wait();
+        // Get the Org Hash, and Verify if the Safe Account is the Root of the Org, with the Org Name
+        const orgHash = await PalmeraModuleContract.getOrgHashBySafe(
+            await safes[0].getAddress(),
+        );
+        console.log(`Org Hash: ${orgHash}`);
+        // Validate the Org Hash, is the Keccak256 Hash of the Org Name
+        expect(orgHash).to.equal(
+            ethers.solidityPackedKeccak256(["string"], [orgName]),
+        );
+        // Validate the Org Hash, is an Organization Registered in Palmera Module
+        expect(await PalmeraModuleContract.isOrgRegistered(orgHash)).to.equal(true);
+        // Get the Root Id of the Org, and Verify if the Safe Account is the Root of the Org
+        const rootId: number = await PalmeraModuleContract.getSafeIdBySafe(
+            orgHash,
+            await safes[0].getAddress(),
+        );
+        // Validate the Root Id, is 1 because is the first Safe Account Registered in Palmera Module
+        expect(rootId).to.equal(1);
+        // Validate the Safe Account is the Root of the Org
+        expect(
+            await PalmeraModuleContract.isRootSafeOf(
+                await safes[0].getAddress(),
+                rootId,
+            ),
+        ).to.equal(true);
+        console.log(`Root Safe Account Id: ${rootId}`);
+        // Add Safe Accounts to the Org
+        for (let i = 1; i < 4; ++i) {
+            const tx2: MetaTransactionData[] = [
+                {
+                    to: await PalmeraModuleContract.getAddress(),
+                    value: "0x0",
+                    data: PalmeraModuleContract.interface.encodeFunctionData("addSafe", [
+                        rootId,
+                        `Safe ${i}`,
+                    ]),
+                },
+            ];
+            const safeTx2 = await safes[i].createTransaction({
+                transactions: tx2,
+            });
+            const txResponse2 = await safes[i].executeTransaction(safeTx2);
+            //
+            await txResponse2.transactionResponse?.wait();
+            // Get the Safe Id, and Verify if the Safe Account is added to the Org
+            const safeId: number = await PalmeraModuleContract.getSafeIdBySafe(
+                orgHash,
+                await safes[i].getAddress(),
+            );
+            // Validate the Safe Id, is the Safe Account Number in the Org
+            expect(safeId).to.equal(i + 1);
+            // Validate the Safe Account is added to the Org
+            expect(await PalmeraModuleContract.isTreeMember(rootId, safeId)).to.equal(
+                true,
+            );
+            // Get Org Hash by Safe Account
+            const orgHashBySafe = await PalmeraModuleContract.getOrgHashBySafe(
+                await safes[i].getAddress(),
+            );
+            // Validate the Org Hash by Root Safe Account is the same as the Org Hash by Safe Account
+            expect(orgHash).to.equal(orgHashBySafe);
+            console.log(`Safe Account Id associate to Org: ${safeId}`);
+        }
+        if (safes.length >= 7) {
+            for (let i = 4; i < 7; ++i) {
+                const tx2: MetaTransactionData[] = [
+                    {
+                        to: await PalmeraModuleContract.getAddress(),
+                        value: "0x0",
+                        data: PalmeraModuleContract.interface.encodeFunctionData("addSafe", [
+                            2,
+                            `Safe ${i}`,
+                        ]),
+                    },
+                ];
+                const safeTx2 = await safes[i].createTransaction({
+                    transactions: tx2,
+                });
+                const txResponse2 = await safes[i].executeTransaction(safeTx2);
+                //
+                await txResponse2.transactionResponse?.wait();
+                // Get the Safe Id, and Verify if the Safe Account is added to the Org
+                const safeId: number = await PalmeraModuleContract.getSafeIdBySafe(
+                    orgHash,
+                    await safes[i].getAddress(),
+                );
+                // Validate the Safe Id, is the Safe Account Number in the Org
+                expect(safeId).to.equal(i + 1);
+                // Validate the Safe Account is added to the Org
+                expect(await PalmeraModuleContract.isTreeMember(2, safeId)).to.equal(
+                    true,
+                );
+                // Get Org Hash by Safe Account
+                const orgHashBySafe = await PalmeraModuleContract.getOrgHashBySafe(
+                    await safes[i].getAddress(),
+                );
+                // Validate the Org Hash by Root Safe Account is the same as the Org Hash by Safe Account
+                expect(orgHash).to.equal(orgHashBySafe);
+                console.log(`Safe Account Id associate to Org: ${safeId}`);
+            }
+        }
+        if (safes.length >= 10) {
+            for (let i = 7; i < 10; ++i) {
+                const tx2: MetaTransactionData[] = [
+                    {
+                        to: await PalmeraModuleContract.getAddress(),
+                        value: "0x0",
+                        data: PalmeraModuleContract.interface.encodeFunctionData("addSafe", [
+                            3,
+                            `Safe ${i}`,
+                        ]),
+                    },
+                ];
+                const safeTx2 = await safes[i].createTransaction({
+                    transactions: tx2,
+                });
+                const txResponse2 = await safes[i].executeTransaction(safeTx2);
+                //
+                await txResponse2.transactionResponse?.wait();
+                // Get the Safe Id, and Verify if the Safe Account is added to the Org
+                const safeId: number = await PalmeraModuleContract.getSafeIdBySafe(
+                    orgHash,
+                    await safes[i].getAddress(),
+                );
+                // Validate the Safe Id, is the Safe Account Number in the Org
+                expect(safeId).to.equal(i + 1);
+                // Validate the Safe Account is added to the Org
+                expect(await PalmeraModuleContract.isTreeMember(3, safeId)).to.equal(
+                    true,
+                );
+                // Get Org Hash by Safe Account
+                const orgHashBySafe = await PalmeraModuleContract.getOrgHashBySafe(
+                    await safes[i].getAddress(),
+                );
+                // Validate the Org Hash by Root Safe Account is the same as the Org Hash by Safe Account
+                expect(orgHash).to.equal(orgHashBySafe);
+                console.log(`Safe Account Id associate to Org: ${safeId}`);
+            }
+        }
+        if (safes.length >= 13) {
+            for (let i = 10; i < 13; ++i) {
+                const tx2: MetaTransactionData[] = [
+                    {
+                        to: await PalmeraModuleContract.getAddress(),
+                        value: "0x0",
+                        data: PalmeraModuleContract.interface.encodeFunctionData("addSafe", [
+                            4,
+                            `Safe ${i}`,
+                        ]),
+                    },
+                ];
+                const safeTx2 = await safes[i].createTransaction({
+                    transactions: tx2,
+                });
+                const txResponse2 = await safes[i].executeTransaction(safeTx2);
+                //
+                await txResponse2.transactionResponse?.wait();
+                // Get the Safe Id, and Verify if the Safe Account is added to the Org
+                const safeId: number = await PalmeraModuleContract.getSafeIdBySafe(
+                    orgHash,
+                    await safes[i].getAddress(),
+                );
+                // Validate the Safe Id, is the Safe Account Number in the Org
+                expect(safeId).to.equal(i + 1);
+                // Validate the Safe Account is added to the Org
+                expect(await PalmeraModuleContract.isTreeMember(4, safeId)).to.equal(
+                    true,
+                );
+                // Get Org Hash by Safe Account
+                const orgHashBySafe = await PalmeraModuleContract.getOrgHashBySafe(
+                    await safes[i].getAddress(),
+                );
+                // Validate the Org Hash by Root Safe Account is the same as the Org Hash by Safe Account
+                expect(orgHash).to.equal(orgHashBySafe);
+                console.log(`Safe Account Id associate to Org: ${safeId}`);
+            }
+        }
+        console.log("All Safe Accounts Added to the Org 1-to-3 Tree");
+        return orgHash;
+    };
+    // Inicializate Safe Factory, Deploy X Safe Accounts and Setup Palmera Module and Palmera Guard
     beforeEach(async () => {
         // Get Signers
         accounts = await ethers.getSigners();
@@ -340,11 +543,11 @@ describe("Basic Deployment of Palmera Environment", function () {
         await deployPalmeraEnvironment(salt, deployer);
     });
 
-    //** Create a Basic Org with a Linear Structura and After Test ExecuteOnBehalf of Root Safe over last Child Safe */
-    //** 1. Create a Basic Org in Palmera Module */
-    //** 2. Add Safe Accounts to the Org */
-    //** 3. ExecuteOnBehalf of Root Safe over last Child Safe, and the Caller is Another Account EOA */
-    it("Create a Basic Org in Palmera Module, and Test ExecuteOnBehalf with EOA", async () => {
+    /** Create a Basic Org with a Linear Structura and After Test ExecuteOnBehalf of Root Safe over last Child Safe */
+    /** 1. Create a Basic Org in Palmera Module */
+    /** 2. Add Safe Accounts to the Org */
+    /** 3. ExecuteOnBehalf of Root Safe over last Child Safe, and the Caller is Another Account EOA */
+    it("Create a Basic Lineal Org in Palmera Module, and Test ExecuteOnBehalf with EOA", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
         await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 4, "1.4.1", accounts);
         // slice the Safe Accounts to get the firsth four Safe Accounts
@@ -352,9 +555,9 @@ describe("Basic Deployment of Palmera Environment", function () {
         // verify the length of the slice
         expect(safesSlice.length).to.equal(4);
         // Register a Basic Org in Palmera Module
-        orgName = "Basic Org";
+        orgName = "Basic Lineal Org";
         // Get the Org Hash, and Verify if the Safe Account is the Root of the Org, with the Org Name
-        const orgHash = await DeployLinealTreeOrg(safesSlice, orgName);
+        const orgHash = await deployLinealTreeOrg(safesSlice, orgName);
         // Get last Account
         const lastAccount = accounts[accounts.length - 1];
         // Get last Safe Account
@@ -445,11 +648,11 @@ describe("Basic Deployment of Palmera Environment", function () {
         expect(balance3).to.equal(balance1 + ethers.parseEther("0.153"));
     });
 
-    //** Create a Basic Org with a Linear Structura and After Test ExecuteOnBehalf of Root Safe over last Child Safe */
-    //** 1. Create a Basic Org in Palmera Module */
-    //** 2. Add Safe Accounts to the Org */
-    //** 3. ExecuteOnBehalf of Root Safe over last Child Safe, and the Caller is Another Safe Account */
-    it("Create a Basic Org in Palmera Module, and Test ExecuteOnBehalf with Another Safe", async () => {
+    /** Create a Basic Org with a Linear Structura and After Test ExecuteOnBehalf of Root Safe over last Child Safe */
+    /** 1. Create a Basic Org in Palmera Module */
+    /** 2. Add Safe Accounts to the Org */
+    /** 3. ExecuteOnBehalf of Root Safe over last Child Safe, and the Caller is Another Safe Account */
+    it("Create a Basic Lineal Org in Palmera Module, and Test ExecuteOnBehalf with Another Safe", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
         await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 3, "1.4.1", accounts);
         // Slice to small org
@@ -457,9 +660,219 @@ describe("Basic Deployment of Palmera Environment", function () {
         // Verify the length of the slice
         expect(safesSlice.length).to.equal(3);
         // Register a Basic Org in Palmera Module
-        orgName = "Basic Org";
+        orgName = "Basic Lineal Org";
         // Get the Org Hash, and Verify if the Safe Account is the Root of the Org, with the Org Name
-        const orgHash = await DeployLinealTreeOrg(safesSlice, orgName);
+        const orgHash = await deployLinealTreeOrg(safesSlice, orgName);
+        // Get last Account
+        const lastAccount = accounts[accounts.length - 1];
+        // Get last Safe Account
+        const lastSafe = safesSlice[safesSlice.length - 1];
+        // Transfer 0.1 ETH  from last account to last Safe Account
+        await lastAccount.sendTransaction({
+            to: await lastSafe.getAddress(),
+            value: ethers.parseEther("0.153"),
+        });
+        // Verify the Balance of the Safe Account
+        const balance = await lastAccount.provider.getBalance(
+            await lastSafe.getAddress(),
+        );
+        expect(balance).to.equal(ethers.parseEther("0.153"));
+        console.log(
+            `Balance of Last Safe Account Before ExecuteOnBehalf: ${balance}`,
+        );
+        // Get Nonce of Palmera Module
+        const nonce: number = await PalmeraModuleContract.nonce();
+        console.log(`Nonce: ${nonce}`);
+        // Get getTransactionHash of Palmera Module
+        const txHash: string = await PalmeraModuleContract.getTransactionHash(
+            orgHash,
+            await safesSlice[0].getAddress(),
+            await lastSafe.getAddress(),
+            await lastAccount.getAddress(),
+            ethers.parseEther("0.153"),
+            "0x",
+            0,
+            nonce,
+        );
+        console.log(`Transaction Hash: ${txHash}`);
+        // get Signature of the Transaction Hash signed by the Root Safe Account
+        const signature = await safesSlice[0].signHash(txHash);
+        console.log(`Signature: ${signature.data}`);
+        // Get Balance of Last Account before Execute Transaction OnBehalf
+        const balance1 = await lastAccount.provider.getBalance(
+            await lastAccount.getAddress(),
+        );
+        console.log(
+            `Balance of Last Account Before Execute Transaction OnBehalf: ${balance1}`,
+        );
+        // Execute Transaction OnBehalf of Root Safe Account over last Safe Account
+        // Get another Safe Account
+        const anotherSafeAccount = safesSlice[safesSlice.length - 2];
+        // send tx from Another Account to pay gas for Execute Transaction OnBehalf of Root Safe Account over last Safe Account
+        const safeTx3 = await anotherSafeAccount.createTransaction({
+            transactions: [
+                {
+                    to: await PalmeraModuleContract.getAddress(),
+                    value: "0x0",
+                    data: PalmeraModuleContract.interface.encodeFunctionData(
+                        "execTransactionOnBehalf",
+                        [
+                            orgHash,
+                            await safesSlice[0].getAddress(),
+                            await lastSafe.getAddress(),
+                            await lastAccount.getAddress(),
+                            ethers.parseEther("0.153"),
+                            "0x",
+                            0,
+                            signature.data,
+                        ],
+                    ),
+                },
+            ],
+        });
+        // execute safe transaction
+        const txResponse3 = await anotherSafeAccount.executeTransaction(safeTx3);
+        // wait for the transaction to be mined
+        await txResponse3.transactionResponse?.wait();
+        // Verify the Balance of the Safe Account
+        const balance2 = await lastAccount.provider.getBalance(
+            await lastSafe.getAddress(),
+        );
+        expect(balance2).to.equal(0);
+        console.log(
+            `Balance of Last Safe Account After Execute Transaction OnBehalf: ${balance2}`,
+        );
+        // Get Balance of ETH of Last Account after Execute Transaction OnBehalf
+        const balance3 = await lastAccount.provider.getBalance(
+            await lastAccount.getAddress(),
+        );
+        // Verify the Balance of the Last Account
+        console.log(
+            `Balance of Last Account After Execute Transaction OnBehalf: ${balance3}`,
+        );
+        expect(balance3).to.equal(balance1 + ethers.parseEther("0.153"));
+    });
+
+    /** Create a Basic Org with a 1-to-3 Structura and After Test ExecuteOnBehalf of Root Safe over last Child Safe */
+    /** 1. Create a Basic Org in Palmera Module */
+    /** 2. Add Safe Accounts to the Org */
+    /** 3. ExecuteOnBehalf of Root Safe over last Child Safe, and the Caller is Another Account EOA */
+    it("Create a Basic 1-to-3 Org in Palmera Module, and Test ExecuteOnBehalf with EOA", async () => {
+        // Get Safe Accounts with Palmera Module and Guard Enabled
+        await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 4, "1.4.1", accounts);
+        // slice the Safe Accounts to get the firsth four Safe Accounts
+        const safesSlice = safes.slice(0, 4);
+        // verify the length of the slice
+        expect(safesSlice.length).to.equal(4);
+        // Register a Basic Org in Palmera Module
+        orgName = "Basic 1-to-3 Org";
+        // Get the Org Hash, and Verify if the Safe Account is the Root of the Org, with the Org Name
+        const orgHash = await deploy1to3TreeOrg(safesSlice, orgName);
+        // Get last Account
+        const lastAccount = accounts[accounts.length - 1];
+        // Get last Safe Account
+        const lastSafe = safesSlice[safesSlice.length - 1];
+        // Transfer 0.1 ETH  from last account to last Safe Account
+        await lastAccount.sendTransaction({
+            to: await lastSafe.getAddress(),
+            value: ethers.parseEther("0.153"),
+        });
+        // Verify the Balance of the Safe Account
+        const balance = await lastAccount.provider.getBalance(
+            await lastSafe.getAddress(),
+        );
+        expect(balance).to.equal(ethers.parseEther("0.153"));
+        console.log(
+            `Balance of Last Safe Account Before ExecuteOnBehalf: ${balance}`,
+        );
+        // Get Nonce of Palmera Module
+        const nonce: number = await PalmeraModuleContract.nonce();
+        console.log(`Nonce: ${nonce}`);
+        // Get getTransactionHash of Palmera Module
+        const txHash: string = await PalmeraModuleContract.getTransactionHash(
+            orgHash,
+            await safesSlice[0].getAddress(),
+            await lastSafe.getAddress(),
+            await lastAccount.getAddress(),
+            ethers.parseEther("0.153"),
+            "0x",
+            0,
+            nonce,
+        );
+        console.log(`Transaction Hash: ${txHash}`);
+        // get Signature of the Transaction Hash signed by the Root Safe Account
+        const signature = await safesSlice[0].signHash(txHash);
+        console.log(`Signature: ${signature.data}`);
+        // Get Balance of Last Account before Execute Transaction OnBehalf
+        const balance1 = await lastAccount.provider.getBalance(
+            await lastAccount.getAddress(),
+        );
+        console.log(
+            `Balance of Last Account Before Execute Transaction OnBehalf: ${balance1}`,
+        );
+        // Execute Transaction OnBehalf of Root Safe Account over last Safe Account
+        // Get another Account
+        const anotherAccount = accounts[accounts.length - 2];
+        // send tx from Another Account to pay gas for Execute Transaction OnBehalf of Root Safe Account over last Safe Account
+        const safeTx3 = await anotherAccount.sendTransaction({
+            to: await PalmeraModuleContract.getAddress(),
+            value: "0x0",
+            data: PalmeraModuleContract.interface.encodeFunctionData(
+                "execTransactionOnBehalf",
+                [
+                    orgHash,
+                    await safesSlice[0].getAddress(),
+                    await lastSafe.getAddress(),
+                    await lastAccount.getAddress(),
+                    ethers.parseEther("0.153"),
+                    "0x",
+                    0,
+                    signature.data,
+                ],
+            ),
+        });
+        // wait for the transaction to be mined
+        const receipt = await lastAccount.provider.getTransactionReceipt(
+            safeTx3.hash,
+        );
+        // Verify the Transaction was executed
+        expect(receipt).to.not.equal(null);
+        // Verify the Transaction was successful
+        expect(receipt?.status).to.equal(1);
+        // Verify the Balance of the Safe Account
+        const balance2 = await lastAccount.provider.getBalance(
+            await lastSafe.getAddress(),
+        );
+        expect(balance2).to.equal(0);
+        console.log(
+            `Balance of Last Safe Account After Execute Transaction OnBehalf: ${balance2}`,
+        );
+        // Get Balance of ETH of Last Account after Execute Transaction OnBehalf
+        const balance3 = await lastAccount.provider.getBalance(
+            await lastAccount.getAddress(),
+        );
+        // Verify the Balance of the Last Account
+        console.log(
+            `Balance of Last Account After Execute Transaction OnBehalf: ${balance3}`,
+        );
+        expect(balance3).to.equal(balance1 + ethers.parseEther("0.153"));
+    });
+
+    /** Create a Basic Org with a 1-to-3 Structura and After Test ExecuteOnBehalf of Root Safe over last Child Safe */
+    /** 1. Create a Basic Org in Palmera Module */
+    /** 2. Add Safe Accounts to the Org */
+    /** 3. ExecuteOnBehalf of Root Safe over last Child Safe, and the Caller is Another Safe Account */
+    it("Create a Basic 1-to-3 Org in Palmera Module, and Test ExecuteOnBehalf with Another Safe", async () => {
+        // Get Safe Accounts with Palmera Module and Guard Enabled
+        await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 13, "1.4.1", accounts);
+        // Slice to small org
+        const safesSlice = safes.slice(0, 13);
+        // Verify the length of the slice
+        expect(safesSlice.length).to.equal(13);
+        // Register a Basic Org in Palmera Module
+        orgName = "Basic 1-to-3 Org";
+        // Get the Org Hash, and Verify if the Safe Account is the Root of the Org, with the Org Name
+        const orgHash = await deploy1to3TreeOrg(safesSlice, orgName);
         // Get last Account
         const lastAccount = accounts[accounts.length - 1];
         // Get last Safe Account

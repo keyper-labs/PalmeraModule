@@ -353,44 +353,6 @@
         "PalmeraRoles"
       ]
     },
-    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/solmate/src/auth/Auth.sol": {
-      "lastModificationDate": 1673381792486,
-      "contentHash": "887e3e561eb8d01f57d1f801af86fd98",
-      "sourceName": "@solmate/auth/Auth.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "viaIR": true,
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.8.0"
-      ],
-      "artifacts": [
-        "Auth",
-        "Authority"
-      ]
-    },
     "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/solmate/src/auth/authorities/RolesAuthority.sol": {
       "lastModificationDate": 1666353850615,
       "contentHash": "f581263577686317a9618869f1a9652a",
@@ -428,6 +390,44 @@
       ],
       "artifacts": [
         "RolesAuthority"
+      ]
+    },
+    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/solmate/src/auth/Auth.sol": {
+      "lastModificationDate": 1673381792486,
+      "contentHash": "887e3e561eb8d01f57d1f801af86fd98",
+      "sourceName": "@solmate/auth/Auth.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.8.0"
+      ],
+      "artifacts": [
+        "Auth",
+        "Authority"
       ]
     },
     "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/src/PalmeraModule.sol": {
@@ -593,6 +593,43 @@
         "SignatureDecoder"
       ]
     },
+    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/openzeppelin-contracts/contracts/security/ReentrancyGuard.sol": {
+      "lastModificationDate": 1673381624693,
+      "contentHash": "ee1cd296e049da9a26bdb08e23a9036a",
+      "sourceName": "@openzeppelin/security/ReentrancyGuard.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ReentrancyGuard"
+      ]
+    },
     "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/safe-contracts/contracts/interfaces/ISignatureValidator.sol": {
       "lastModificationDate": 1717501512588,
       "contentHash": "45be433b79d00dd9f3b8047489c3ff80",
@@ -629,43 +666,6 @@
       "artifacts": [
         "ISignatureValidator",
         "ISignatureValidatorConstants"
-      ]
-    },
-    "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/openzeppelin-contracts/contracts/security/ReentrancyGuard.sol": {
-      "lastModificationDate": 1673381624693,
-      "contentHash": "ee1cd296e049da9a26bdb08e23a9036a",
-      "sourceName": "@openzeppelin/security/ReentrancyGuard.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "viaIR": true,
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "ReentrancyGuard"
       ]
     },
     "/Users/alfredolopez/Documents/GitHub/PalmeraDAO/KeyperModule/lib/safe-contracts/contracts/base/Executor.sol": {
