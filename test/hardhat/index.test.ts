@@ -99,17 +99,6 @@ describe("Basic Deployment of Palmera Environment", function () {
         console.log(
             `Events Library deployed at: ${await EventsLibrary.getAddress()}`,
         );
-        // Deploy Random Library
-        const RandomFactory = (await ethers.getContractFactory(
-            "Random",
-            deployer,
-        )) as unknown as Random__factory;
-        const RandomLibrary = await RandomFactory.deploy();
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        expect(await RandomLibrary.getAddress()).to.properAddress;
-        console.log(
-            `Random Library deployed at: ${await RandomLibrary.getAddress()}`,
-        );
     };
     /** 2. Deploy Palmera Environment */
     const deployPalmeraEnvironment = async (salt: string, deployer: SignerWithAddress) => {

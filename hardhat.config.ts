@@ -37,7 +37,7 @@ module.exports = {
             throwOnTransactionFailures: true,
             throwOnCallFailures: true,
             forking: {
-                url: `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+                url: `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
             },
             accounts: {
                 mnemonic: `${MNEMONIC}`,
