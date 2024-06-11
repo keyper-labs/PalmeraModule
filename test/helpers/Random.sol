@@ -9,6 +9,8 @@ pragma solidity 0.8.23;
 
 /// @title Library Random
 /// @custom:security-contact general@palmeradao.xyz
+/// @notice Random Funtions for the Palmera module
+/// @dev Random Funtions Palmera Modules
 library Random {
     /**
      * @dev Generate random uint256 <= 256^2
@@ -19,15 +21,15 @@ library Random {
         uint256 seed = uint256(
             keccak256(
                 abi.encodePacked(
-                    block.timestamp +
-                        block.prevrandao +
-                        ((
-                            uint256(keccak256(abi.encodePacked(block.coinbase)))
-                        ) / (_seed)) +
-                        block.gaslimit +
-                        ((uint256(keccak256(abi.encodePacked(msg.sender)))) /
-                            (_seed)) +
-                        block.number
+                    block.timestamp + block.prevrandao
+                        + (
+                            (uint256(keccak256(abi.encodePacked(block.coinbase))))
+                                / (_seed)
+                        ) + block.gaslimit
+                        + (
+                            (uint256(keccak256(abi.encodePacked(msg.sender))))
+                                / (_seed)
+                        ) + block.number
                 )
             )
         );

@@ -4,11 +4,20 @@
         "module": "commonjs",
         "strict": true,
         "esModuleInterop": true,
-        "skipLibCheck": true,
+        "outDir": "./dist",
+        "declaration": true,
+        "resolveJsonModule": true,
         "forceConsistentCasingInFileNames": true,
-        "outDir": "./dist"
+        "skipLibCheck": true,
     },
     "include": [
-        "*.ts"
+        "*.ts",
+        "./scripts",
+        "./tasks",
+        "./test",
+        "./typechain-types"
+    ],
+    "files": [
+        "./hardhat.config.ts"
     ]
 }

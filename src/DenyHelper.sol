@@ -4,10 +4,10 @@ pragma solidity 0.8.23;
 import {GnosisSafeMath} from "@safe-contracts/external/GnosisSafeMath.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 import {Context} from "@openzeppelin/utils/Context.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Errors} from "../libraries/Errors.sol";
-import {Events} from "../libraries/Events.sol";
+import {Constants} from "./libraries/Constants.sol";
+import {DataTypes} from "./libraries/DataTypes.sol";
+import {Errors} from "./libraries/Errors.sol";
+import {Events} from "./libraries/Events.sol";
 
 /// @title ValidAddress
 /// @dev Helper contract to check if an address is valid
@@ -24,6 +24,8 @@ abstract contract ValidAddress is Context {
 
 /// @title DenyHelper
 /// @custom:security-contact general@palmeradao.xyz
+/// @notice Deny Helpers Methods for the Palmera module
+/// @dev RDeny Helper Palmera Modules
 abstract contract DenyHelper is ValidAddress {
     using GnosisSafeMath for uint256;
     using Address for address;

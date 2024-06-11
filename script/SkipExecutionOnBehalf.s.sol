@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import "forge-std/Script.sol";
 import "../src/SigningUtils.sol";
 import "../test/helpers/SkipSetupEnv.s.sol";
-import {Errors} from "../libraries/Errors.sol";
+import {Errors} from "../src/libraries/Errors.sol";
 
 /// @title Several Scenarios of Execution On Behalf in live Mainnet/Testnet (Polygon and Sepolia)
 /// @custom:security-contact general@palmeradao.xyz

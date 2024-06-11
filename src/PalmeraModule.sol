@@ -27,8 +27,6 @@ contract PalmeraModule is Auth, Helpers {
     string public constant NAME = "Palmera Module";
     /// @notice VERSION Version of the Palmera Module
     string public constant VERSION = "0.2.0";
-    /// @dev Control Nonce of the Palmera Module
-    uint256 public nonce;
     /// @dev indexId of the safe
     uint256 public indexId;
     /// @dev Max Depth Tree Limit
@@ -38,13 +36,16 @@ contract PalmeraModule is Auth, Helpers {
     /// @dev Array of Orgs (based on Hash (On-chain Organisation) of the Org)
     bytes32[] private orgHash;
     /// @dev Index of Safe
-    /// bytes32: Hash (On-chain Organisation) -> uint256: ID's Safes
+    /// @dev bytes32: Hash (On-chain Organisation) -> uint256: ID's Safes
     mapping(bytes32 => uint256[]) public indexSafe;
     /// @dev Depth Tree Limit
-    /// bytes32: Hash (On-chain Organisation) -> uint256: Depth Tree Limit
+    /// @dev bytes32: Hash (On-chain Organisation) -> uint256: Depth Tree Limit
     mapping(bytes32 => uint256) public depthTreeLimit;
+    /// @dev Control Nonce of the Palmera Module per Org
+    /// @dev bytes32: Hash (On-chain Organisation) -> uint256: Nonce by Orgt
+    mapping(bytes32 => uint256) public nonce;
     /// @dev Hash (On-chain Organisation) -> Safes
-    /// bytes32: Hash (On-chain Organisation).   uint256:SafeId.   Safe: Safe Info
+    /// @dev bytes32: Hash (On-chain Organisation).   uint256:SafeId of Safe Info
     mapping(bytes32 => mapping(uint256 => DataTypes.Safe)) public safes;
 
     /// @dev Modifier for Validate if Org/Safe Exist or SuperSafeNotRegistered Not
@@ -161,7 +162,7 @@ contract PalmeraModule is Auth, Helpers {
                 data,
                 operation,
                 /// Signature info
-                nonce
+                nonce[org]
             );
             /// Verify Collision of Nonce with multiple txs in the same range of time, study to use a nonce per org
 
@@ -176,7 +177,7 @@ contract PalmeraModule is Auth, Helpers {
             );
         }
         /// Increase nonce and execute transaction.
-        ++nonce;
+        nonce[org]++;
         /// Execute transaction from target safe
         ISafe safeTarget = ISafe(targetSafe);
         result =
@@ -341,7 +342,7 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Add a safe to an organisation/safe
     /// @dev Call coming from the safe
-    /// @param superSafe address of the superSafe
+    /// @param superSafe Id of the superSafe
     /// @param name string name of the safe
     function addSafe(uint256 superSafe, string memory name)
         external
@@ -397,7 +398,7 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Remove safe and reasign all child to the superSafe
     /// @dev All actions will be driven based on the caller of the method, and args
-    /// @param safe address of the safe to be removed
+    /// @param safe Id of the safe to be removed
     function removeSafe(uint256 safe)
         public
         SafeRegistered(_msgSender())
@@ -475,7 +476,7 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Disconnect Safe of a Org
     /// @dev Disconnect Safe of a Org, Call must come from the root safe
-    /// @param safe address of the safe to be updated
+    /// @param safe Id of the safe to be updated
     function disconnectSafe(uint256 safe)
         external
         IsRootSafe(_msgSender())
@@ -540,7 +541,7 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Method to Promete a safe to Root Safe of an Org to Root Safe
     /// @dev Method to Promete a safe to Root Safe of an Org to Root Safe
-    /// @param safe address of the safe to be updated
+    /// @param safe Id of the safe to be updated
     function promoteRoot(uint256 safe)
         external
         IsRootSafe(_msgSender())
@@ -578,8 +579,8 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice update superSafe of a safe
     /// @dev Update the superSafe of a safe with a new superSafe, Call must come from the root safe
-    /// @param safe address of the safe to be updated
-    /// @param newSuper address of the new superSafe
+    /// @param safe Id of the safe to be updated
+    /// @param newSuper Id of the new superSafe
     function updateSuper(uint256 safe, uint256 newSuper)
         external
         IsRootSafe(_msgSender())

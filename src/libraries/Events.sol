@@ -3,15 +3,15 @@ pragma solidity 0.8.23;
 
 /// @title Library Events
 /// @custom:security-contact general@palmeradao.xyz
+/// @notice Events for the Palmera module
+/// @dev Events Palmera Modules
 library Events {
     /// @dev Event Fire when create a new Organisation
     /// @param creator Address of the creator
     /// @param org Hash(on-chain Organisation)
     /// @param name String name of the organisation
     event OrganisationCreated(
-        address indexed creator,
-        bytes32 indexed org,
-        string name
+        address indexed creator, bytes32 indexed org, string name
     );
 
     /// @dev Event Fire when create a New Safe (Tier 0) into the organisation

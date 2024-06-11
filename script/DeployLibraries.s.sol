@@ -3,10 +3,10 @@ pragma solidity 0.8.23;
 
 import "forge-std/Script.sol";
 import "@solenv/Solenv.sol";
-import {Constants} from "../libraries/Constants.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Errors} from "../libraries/Errors.sol";
-import {Events} from "../libraries/Events.sol";
+import {Constants} from "../src/libraries/Constants.sol";
+import {DataTypes} from "../src/libraries/DataTypes.sol";
+import {Errors} from "../src/libraries/Errors.sol";
+import {Events} from "../src/libraries/Events.sol";
 
 /// @title Deploy Libraries
 /// @custom:security-contact general@palmeradao.xyz

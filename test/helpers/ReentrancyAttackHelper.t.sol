@@ -8,7 +8,7 @@ import "./SafeHelper.t.sol";
 import {PalmeraModule} from "../../src/PalmeraModule.sol";
 import {Attacker} from "../../src/ReentrancyAttack.sol";
 import {Enum} from "@safe-contracts/base/Executor.sol";
-import {DataTypes} from "../../libraries/DataTypes.sol";
+import {DataTypes} from "../../src/libraries/DataTypes.sol";
 
 /// @notice Helper contract handling ReentrancyAttack
 /// @custom:security-contact general@palmeradao.xyz
@@ -54,7 +54,7 @@ contract AttackerHelper is Test, SignDigestHelper, SignersHelper {
         bytes memory data,
         Enum.Operation operation
     ) public view returns (bytes memory) {
-        uint256 nonce = palmera.nonce();
+        uint256 nonce = palmera.nonce(org);
         bytes32 txHashed = palmera.getTransactionHash(
             org, superSafe, targetSafe, to, value, data, operation, nonce
         );

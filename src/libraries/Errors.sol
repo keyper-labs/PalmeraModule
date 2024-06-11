@@ -5,9 +5,9 @@ import {DataTypes} from "./DataTypes.sol";
 
 /// @title Library DataTypes
 /// @custom:security-contact general@palmeradao.xyz
+/// @notice Error codes for the Palmera module
+/// @dev Errors Palmera Modules
 library Errors {
-    /// @notice Error codes for the Palmera module
-    /// @dev Errors Palmera Modules
     /// @dev Error messages when the Org Hash (On-chain Organisation) is not Registered
     error OrgNotRegistered(bytes32 org);
     /// @dev Error messages when the Safe(`safe`) is not Registered
@@ -20,18 +20,25 @@ library Errors {
     error NotAuthorizedAddOwnerWithThreshold();
     /// @dev Error messages when the Safe is not Autorized to Remove Owner like Lead/Root Safe or Safe itself
     error NotAuthorizedRemoveSafeFromOtherTree();
+    /// @dev Error messages when the Safe try to Remove Safe from Other Tree
     error NotAuthorizedRemoveSafeFromOtherOrg();
+    /// @dev Error messages when the Safe is not Autorized to Remove Owner like Lead/Root Safe or Safe itself
     error NotAuthorizedRemoveOwner();
+    /// @dev Error messages when the Safe is not Autorized to Execute Transaction On Behalf of Other Owner or Safe
     error NotAuthorizedExecOnBehalf();
+    /// @dev Error messages when the Safe try to Update Safe to Other Tree
     error NotAuthorizedUpdateSafeToOtherOrg();
     /// @dev Not Permitted to Receive Ether
     error NotPermittedReceiveEther();
-    /// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's children Safe Id's
+    /// @dev Error messages when try to disconnect Safe before remove it, and show the Safe's (`children`) Safe Id's
     error CannotDisconnectedSafeBeforeRemoveChild(uint256 children);
-    /// @dev Error messages when try to remove Safe before remove it's children, and show the Safe's children Safe Id's
+    /// @dev Error messages when try to remove Safe before remove it's (`children`), and show the Safe's (`children`) Safe Id's
     error CannotRemoveSafeBeforeRemoveChild(uint256 children);
+    /// @dev Error messages when the User try to Disable Palmera Module and not have the Permission
     error CannotDisablePalmeraModule(address module);
+    /// @dev Error messages when the User try to Disable Palmera Guard and not have the Permission
     error CannotDisablePalmeraGuard(address guard);
+    /// @dev Error messages when the Safe is already Removed
     error SafeAlreadyRemoved();
     /// @dev Error messages when the Caller is not Autorized to execute any action like Lead Safe
     error NotAuthorizedAsNotSafeLead();
@@ -39,6 +46,7 @@ library Errors {
     error NotAuthorizedAsNotRootOrSuperSafe();
     /// @dev Error messages when the Root Safe is not Autorized Update Super Safe for a Safe in Another Tree
     error NotAuthorizedUpdateNonChildrenSafe();
+    /// @dev Error messages when the Root Safe is not Autorized Update Safe for a SuperSafe in Another Tree
     error NotAuthorizedUpdateNonSuperSafe();
     /// @dev Error messages when the Root Safe is not Autorized to Disconnect an Safe in Another Tree
     error NotAuthorizedDisconnectChildrenSafe();
@@ -54,6 +62,7 @@ library Errors {
     error InvalidThreshold();
     /// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
     error TxExecutionModuleFailed();
+    /// @dev Error messages when not exist the Preview Module in the Arrais of Modules of the Safe
     error PreviewModuleNotFound(address safe);
     /// @dev Error messages when Try to Execute a Transaction On Behalf and Fail
     error TxOnBehalfExecutedFailed();
@@ -75,7 +84,7 @@ library Errors {
     error TreeDepthLimitReached(uint256 limit);
     /// @dev Errors messages when New Limit is more than Max Limit or less than or Equal to actual value
     error InvalidLimit();
-    /// @dev Errors Module DenyHelpers
+    /// @notice Errors Module DenyHelpers
     /// @dev Error messages when the Address is a Zero Address
     error ZeroAddressProvided();
     /// @dev Error messages when the Address is Invalid Address
