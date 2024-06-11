@@ -22,18 +22,22 @@ contract PalmeraGuardTestFallbackAndReceive is DeployHelper {
     }
 
     /// @notice Sending ETH without data
-    function testReceiveFunctionSendETHWithoutData() public {
-        vm.deal(address(this), 1 ether); // Give this contract 1 ether to work with
-        (bool success,) = address(palmeraGuard).call{value: 1 ether}("");
+    function testReceiveFunctionSendETHWithoutData(uint256 iterations) public {
+        iterations = (iterations % 1000) * 1 gwei;
+        vm.deal(address(this), iterations); // Give this contract x gwei to work with
+        (bool success,) = address(palmeraGuard).call{value: iterations}("");
         assertFalse(
             success, "Receive function should revert on ETH send without data"
         );
     }
 
     /// @notice Sending ETH with data that does not match any function
-    function testFallbackFunctionSendETHWithInvalidData() public {
-        vm.deal(address(this), 1 ether); // Give this contract 1 ether to work with
-        (bool success,) = address(palmeraGuard).call{value: 1 ether}(
+    function testFallbackFunctionSendETHWithInvalidData(uint256 iterations)
+        public
+    {
+        iterations = (iterations % 1000) * 1 gwei;
+        vm.deal(address(this), iterations); // Give this contract x gwei to work with
+        (bool success,) = address(palmeraGuard).call{value: iterations}(
             abi.encodeWithSignature("checkTransaction()")
         );
         assertFalse(

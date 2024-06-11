@@ -8,7 +8,7 @@ import "./helpers/DeployHelper.t.sol";
 contract Hierarchies is DeployHelper {
     /// Function called before each test is run
     function setUp() public {
-        DeployHelper.deployAllContracts(90);
+        DeployHelper.deployAllContracts(210);
     }
 
     /// @notice Test Register Root Organisation
@@ -394,7 +394,11 @@ contract Hierarchies is DeployHelper {
     }
 
     /// @notice Test Reverted Expected if Try to Update Depth Tree Limit with a Value to Exceed the Max Limit
-    function testRevertifExceedMaxDepthTreeLimit() public {
+    /// @param iterations The new depth limit to test
+    /// @dev The fuzzing range is set to ensure iterations is between 8 and 49
+    function testRevertifExceedMaxDepthTreeLimit(uint256 iterations) public {
+        // Set up the fuzzing constraint
+        iterations = 9 + (iterations % 41);  // This ensures iterations is between 9 and 49 (inclusive)
         (
             uint256 rootId,
             uint256 safeIdA1,
@@ -403,25 +407,33 @@ contract Hierarchies is DeployHelper {
         ) = palmeraSafeBuilder.setupOrgFourTiersTree(
             org2Name, safeA2Name, subSafeA1Name, subSubSafeA1Name
         );
-        // Array of Address for the subSafes
-        address[] memory subSafeAaddr = new address[](9);
-        uint256[] memory subSafeAid = new uint256[](9);
 
-        // Assig the Address to first two subSafes
+        // Array of Address for the subSafes
+        address[] memory subSafeAaddr = new address[](iterations + 1);
+        uint256[] memory subSafeAid = new uint256[](iterations + 1);
+
+        // Assign the Address to first four subSafes
         subSafeAaddr[0] = palmeraModule.getSafeAddress(rootId);
         subSafeAaddr[1] = palmeraModule.getSafeAddress(safeIdA1);
         subSafeAaddr[2] = palmeraModule.getSafeAddress(subSafeA);
         subSafeAaddr[3] = palmeraModule.getSafeAddress(subSubSafeA);
 
-        // Assig the Id to first two subSafes
+        // Assign the Id to first four subSafes
         subSafeAid[0] = rootId;
         subSafeAid[1] = safeIdA1;
         subSafeAid[2] = subSafeA;
         subSafeAid[3] = subSubSafeA;
 
-        /// depth Tree Lmit by org
+        // Update depth Tree Limit by org
+        address rootAddr = palmeraModule.getSafeAddress(rootId);
+        vm.startPrank(rootAddr);
+        palmeraModule.updateDepthTreeLimit(iterations);
+        vm.stopPrank();
+
+        // Depth Tree Limit by org
         bytes32 org = palmeraModule.getOrgHashBySafe(subSafeAaddr[0]);
         uint256 depthTreeLimit = palmeraModule.depthTreeLimit(org) + 1;
+        console.log("depthTreeLimit: ", depthTreeLimit);
 
         for (uint256 i = 4; i < depthTreeLimit; ++i) {
             // Create a new Safe
@@ -429,9 +441,8 @@ contract Hierarchies is DeployHelper {
             // Start Prank
             vm.startPrank(subSafeAaddr[i]);
             // Add the new Safe as a subSafe
-            if (i != 8) {
-                subSafeAid[i] =
-                    palmeraModule.addSafe(subSafeAid[i - 1], safeBName);
+            if (i != (depthTreeLimit - 1)) {
+                subSafeAid[i] = palmeraModule.addSafe(subSafeAid[i - 1], safeBName);
             } else {
                 vm.expectRevert(
                     abi.encodeWithSelector(
@@ -440,7 +451,7 @@ contract Hierarchies is DeployHelper {
                 );
                 palmeraModule.addSafe(subSafeAid[i - 1], safeBName);
                 assertEq(palmeraModule.isLimitLevel(subSafeAid[i - 1]), true);
-                console.log("i: ", i);
+                console.log("Final i: ", i);
                 console.log("Max Depth Limit Reached");
             }
             vm.stopPrank();
