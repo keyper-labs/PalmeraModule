@@ -131,7 +131,7 @@ module.exports = {
                 : undefined,
     },
     mocha: {
-        timeout: 1500000,
+        timeout: 2000000,
     },
     contractSizer: {
         alphaSort: true,
