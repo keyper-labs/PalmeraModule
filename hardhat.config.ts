@@ -17,7 +17,7 @@ const MNEMONIC =
     process.env.MNEMONIC!! || "test test test test test test test test test test test junk";
 const API_KEY = process.env.INFURA_KEY || "ffc8f8f8f8f8f8f8f8f8f8f8f8f8f8f8";
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "ffc8f8f8f8f8f8f8f8f8f8f8f8f8f8";
-const ACCOUNTS = parseInt(process.env.ACCOUNTS!) || 20;
+const ACCOUNTS = parseInt(process.env.ACCOUNTS!) || 300;
 const PRIVATE_KEY = process.env.PRIVATE_KEY!;
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -41,7 +41,7 @@ module.exports = {
             },
             accounts: {
                 mnemonic: `${MNEMONIC}`,
-                count: ACCOUNTS!!,
+                count: ACCOUNTS!!
             },
         },
         local: {
@@ -125,7 +125,7 @@ module.exports = {
     docgen: {
         templates: "./templates",
         outputDir: "./docs",
-        pages: (item, file) =>
+        pages: (item: any, file: any) =>
             file.absolutePath.startsWith("src")
                 ? relative("src", file.absolutePath).replace(".sol", ".md")
                 : undefined,

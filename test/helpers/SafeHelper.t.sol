@@ -8,7 +8,7 @@ import "./SignersHelper.t.sol";
 import "../../script/DeploySafeFactory.t.sol";
 import {GnosisSafe} from "@safe-contracts/GnosisSafe.sol";
 import {DataTypes} from "../../src/libraries/DataTypes.sol";
-import {Random} from "../../src/libraries/Random.sol";
+import {Random} from "./Random.sol";
 
 /// @notice Helper contract handling deployment Safe contracts
 /// @custom:security-contact general@palmeradao.xyz

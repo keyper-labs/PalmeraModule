@@ -675,6 +675,13 @@
   dependencies:
     ethereumjs-util "^7.1.4"
 
+"@nomicfoundation/hardhat-toolbox-viem@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-toolbox-viem/-/hardhat-toolbox-viem-3.0.0.tgz#d50b6e2e3be220ccf6557c5072e999fbb4958aee"
+  integrity sha512-cr+aRozCtTwaRz5qc9OVY1kegWrnVwyhHZonICmlcm21cvJ31uvJnuPG688tMbjUvwRDw8tpZYZK0kI5M+4CKg==
+  dependencies:
+    chai-as-promised "^7.1.1"
+
 "@nomicfoundation/hardhat-toolbox@^5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-toolbox/-/hardhat-toolbox-5.0.0.tgz#165b47f8a3d2bf668cc5d453ce7f496a1156948d"
