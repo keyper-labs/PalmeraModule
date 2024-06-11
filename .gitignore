@@ -1,7 +1,8 @@
 out/
-artifacts/
 cache/
+artifacts/
 cache_hardhat/
+typechain-types/
 node_modules/
 broadcast/
 .env
