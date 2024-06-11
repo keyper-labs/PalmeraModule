@@ -8,6 +8,7 @@ broadcast/
 .vscode/
 package-lock.json
 types/
+typechain-types/
 .lcov.info
 .atcrc
 .wake
