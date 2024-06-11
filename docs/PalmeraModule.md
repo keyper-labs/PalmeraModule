@@ -24,14 +24,6 @@ string VERSION
 
 **VERSION Version of the Palmera Module**
 
-### nonce
-
-```solidity
-uint256 nonce
-```
-
-_Control Nonce of the Palmera Module_
-
 ### indexId
 
 ```solidity
@@ -74,6 +66,15 @@ mapping(bytes32 => uint256) depthTreeLimit
 _Depth Tree Limit
 bytes32: Hash (On-chain Organisation) -> uint256: Depth Tree Limit_
 
+### nonce
+
+```solidity
+mapping(bytes32 => uint256) nonce
+```
+
+_Control Nonce of the Palmera Module per Org
+bytes32: Hash (On-chain Organisation) -> uint256: Nonce by Orgt_
+
 ### safes
 
 ```solidity
@@ -81,7 +82,7 @@ mapping(bytes32 => mapping(uint256 => struct DataTypes.Safe)) safes
 ```
 
 _Hash (On-chain Organisation) -> Safes
-bytes32: Hash (On-chain Organisation).   uint256:SafeId.   Safe: Safe Info_
+bytes32: Hash (On-chain Organisation).   uint256:SafeId of Safe Info_
 
 ### SafeIdRegistered
 
