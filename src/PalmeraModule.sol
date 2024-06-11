@@ -791,12 +791,11 @@ contract PalmeraModule is Auth, Helpers {
         address caller,
         bytes32 org,
         address targetSafe
-    ) public view returns (bool hasPermission) {
-        hasPermission = !isRootSafeOf(caller, getSafeIdBySafe(org, targetSafe))
+    ) public view returns (bool hasNotPermission) {
+        hasNotPermission = !isRootSafeOf(caller, getSafeIdBySafe(org, targetSafe))
             && !isSuperSafe(
                 getSafeIdBySafe(org, caller), getSafeIdBySafe(org, targetSafe)
             ) && !isSafeLead(getSafeIdBySafe(org, targetSafe), caller);
-        return hasPermission;
     }
 
     /// @notice check if the Organisation is registered

@@ -455,7 +455,7 @@ _Method for getting all info of a safe_
 ### hasNotPermissionOverTarget
 
 ```solidity
-function hasNotPermissionOverTarget(address caller, bytes32 org, address targetSafe) public view returns (bool hasPermission)
+function hasNotPermissionOverTarget(address caller, bytes32 org, address targetSafe) public view returns (bool hasNotPermission)
 ```
 
 **This function checks that caller has permission (as Root/Super/Lead safe) of the target safe**
