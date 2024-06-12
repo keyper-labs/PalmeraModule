@@ -26,7 +26,7 @@ test :; forge fmt && forge test -vvv --no-match-contract='Skip*'
 
 coverage :; forge coverage -vvv --no-match-contract='Skip*'
 
-test-gas-report :; forge fmt && forge test --gas-report -vvv
+test-gas-report : build-size-report ; forge fmt && forge test --gas-report -vvv
 
 # Forge Formatter
 check :; forge fmt --check

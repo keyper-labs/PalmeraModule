@@ -383,15 +383,16 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     }
 
     /// function to create a new safe
-    /// @param superSafe super safe
+    /// @param superSafeId super safe
     /// @param name name of the Organisation
     /// @return bool
-    function createAddSafeTx(uint256 superSafe, string memory name)
+    function createAddSafeTx(uint256 superSafeId, string memory name)
         public
         returns (bool)
     {
-        bytes memory data =
-            abi.encodeWithSignature("addSafe(uint256,string)", superSafe, name);
+        bytes memory data = abi.encodeWithSignature(
+            "addSafe(uint256,string)", superSafeId, name
+        );
         /// Create module safe tx
         Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
