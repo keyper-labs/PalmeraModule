@@ -53,7 +53,7 @@ contract PalmeraRolesTest is DeployHelper {
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     // Target Info: Type-> EOA, Name -> EAO, Hierarchy related to caller -> N/A
     function testCan_ROOT_SAFE_SetRole_SAFE_LEAD_to_EAO() public {
-        (uint256 rootId, uint256 safeA1) =
+        (uint256 rootId, uint256 safeA1Id) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         address rootAddr = palmeraModule.getSafeAddress(rootId);
@@ -61,7 +61,7 @@ contract PalmeraRolesTest is DeployHelper {
 
         vm.startPrank(rootAddr);
         palmeraModule.setRole(
-            DataTypes.Role.SAFE_LEAD, userEOALead, safeA1, true
+            DataTypes.Role.SAFE_LEAD, userEOALead, safeA1Id, true
         );
 
         assertEq(
@@ -71,13 +71,13 @@ contract PalmeraRolesTest is DeployHelper {
             true
         );
 
-        assertEq(palmeraModule.isSafeLead(safeA1, userEOALead), true);
+        assertEq(palmeraModule.isSafeLead(safeA1Id, userEOALead), true);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     // Target Info: Type-> SAFE, Name -> SafeA, Hierarchy related to caller -> N/A
     function testCan_ROOT_SAFE_SetRole_SAFE_LEAD_to_SAFE() public {
-        (uint256 rootId, uint256 safeA1) =
+        (uint256 rootId, uint256 safeA1Id) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         address safeLead = safeHelper.newPalmeraSafe(4, 2);
@@ -85,7 +85,9 @@ contract PalmeraRolesTest is DeployHelper {
         address rootAddr = palmeraModule.getSafeAddress(rootId);
         vm.startPrank(rootAddr);
 
-        palmeraModule.setRole(DataTypes.Role.SAFE_LEAD, safeLead, safeA1, true);
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD, safeLead, safeA1Id, true
+        );
 
         assertEq(
             palmeraRolesContract.doesUserHaveRole(
@@ -94,13 +96,13 @@ contract PalmeraRolesTest is DeployHelper {
             true
         );
 
-        assertEq(palmeraModule.isSafeLead(safeA1, safeLead), true);
+        assertEq(palmeraModule.isSafeLead(safeA1Id, safeLead), true);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     // Target Info: Type-> EOA, Name -> SafeA, Hierarchy related to caller -> N/A
     function testCannot_ROOT_SAFE_SetRole_ROOT_SAFE_to_EAO() public {
-        (uint256 rootId, uint256 safeA1) =
+        (uint256 rootId, uint256 safeA1Id) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         address rootAddr = palmeraModule.getSafeAddress(rootId);
@@ -111,7 +113,7 @@ contract PalmeraRolesTest is DeployHelper {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.SetRoleForbidden.selector, 4)
         );
-        palmeraModule.setRole(DataTypes.Role.ROOT_SAFE, user, safeA1, true);
+        palmeraModule.setRole(DataTypes.Role.ROOT_SAFE, user, safeA1Id, true);
     }
 
     // Caller Info: Role-> SUPER_SAFE, Type -> SAFE, Hierarchy -> Safe, Name -> safeA
@@ -154,7 +156,7 @@ contract PalmeraRolesTest is DeployHelper {
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA
     // Target Info: Type-> EOA, Name -> SafeA, Hierarchy related to caller -> N/A
     function testCannot_ROOT_SAFE_SetRole_SUPER_SAFE_to_EAO() public {
-        (uint256 rootId, uint256 safeA1) =
+        (uint256 rootId, uint256 safeA1Id) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         address rootAddr = palmeraModule.getSafeAddress(rootId);
@@ -164,7 +166,7 @@ contract PalmeraRolesTest is DeployHelper {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.SetRoleForbidden.selector, 3)
         );
-        palmeraModule.setRole(DataTypes.Role.SUPER_SAFE, user, safeA1, true);
+        palmeraModule.setRole(DataTypes.Role.SUPER_SAFE, user, safeA1Id, true);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootA

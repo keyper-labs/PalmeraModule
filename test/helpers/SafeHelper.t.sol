@@ -420,10 +420,11 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     }
 
     /// function to remove a safe
-    /// @param safe safe to remove
+    /// @param safeId safe to remove
     /// @return bool
-    function createRemoveSafeTx(uint256 safe) public returns (bool) {
-        bytes memory data = abi.encodeWithSignature("removeSafe(uint256)", safe);
+    function createRemoveSafeTx(uint256 safeId) public returns (bool) {
+        bytes memory data =
+            abi.encodeWithSignature("removeSafe(uint256)", safeId);
         /// Create module safe tx
         Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
@@ -445,11 +446,11 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     }
 
     /// function to promote a safe to root safe
-    /// @param safe safe to promote
+    /// @param safeId safe to promote
     /// @return bool
-    function createPromoteToRootTx(uint256 safe) public returns (bool) {
+    function createPromoteToRootTx(uint256 safeId) public returns (bool) {
         bytes memory data =
-            abi.encodeWithSignature("promoteRoot(uint256)", safe);
+            abi.encodeWithSignature("promoteRoot(uint256)", safeId);
         /// Create module safe tx
         Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
@@ -461,17 +462,17 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     /// function to set role
     /// @param role role to set
     /// @param user user to set role
-    /// @param safe safe to set role
+    /// @param safeId safe to set role
     /// @param enabled enable or disable role
     /// @return bool
     function createSetRoleTx(
         uint8 role,
         address user,
-        uint256 safe,
+        uint256 safeId,
         bool enabled
     ) public returns (bool) {
         bytes memory data = abi.encodeWithSignature(
-            "setRole(uint8,address,uint256,bool)", role, user, safe, enabled
+            "setRole(uint8,address,uint256,bool)", role, user, safeId, enabled
         );
         /// Create module tx
         Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
@@ -482,11 +483,11 @@ contract SafeHelper is Test, SigningUtils, SignDigestHelper, SignersHelper {
     }
 
     /// function to disconnect a safe
-    /// @param safe safe to disconnect
+    /// @param safeId safe to disconnect
     /// @return bool
-    function createDisconnectSafeTx(uint256 safe) public returns (bool) {
+    function createDisconnectSafeTx(uint256 safeId) public returns (bool) {
         bytes memory data =
-            abi.encodeWithSignature("disconnectSafe(uint256)", safe);
+            abi.encodeWithSignature("disconnectSafe(uint256)", safeId);
         /// Create module safe tx
         Transaction memory mockTx = createDefaultTx(palmeraModuleAddr, data);
         /// Sign tx
