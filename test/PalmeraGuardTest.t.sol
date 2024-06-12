@@ -753,7 +753,7 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
             address lead,
             address safe,
             uint256[] memory child,
-            uint256 superSafe
+            uint256 superSafeId
         ) = palmeraModule.getSafeInfo(safeA1Id);
 
         assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
@@ -762,7 +762,7 @@ contract PalmeraGuardTest is DeployHelper, SigningUtils {
         assertEq(safe, safeA1Addr);
         assertEq(child.length, 1);
         assertEq(child[0], childSafeA1);
-        assertEq(superSafe, 0);
+        assertEq(superSafeId, 0);
     }
 
     // Caller Info: Role-> ROOT_SAFE, Type -> SAFE, Hierarchy -> Root, Name -> rootB

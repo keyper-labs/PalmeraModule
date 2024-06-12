@@ -512,11 +512,11 @@ contract ModifySafeOwners is DeployHelper, SigningUtils {
     // Caller Info: Role-> SAFE_LEAD, Type -> EOA, Hierarchy -> ROOT, Name -> safeLead
     // Target Info: Name -> rootAddr, Type -> SAFE, Hierarchy related to caller -> Not Related,
     function testRevertInvalidThresholdRemoveOwner() public {
-        (uint256 rootId, uint256 safeA1) =
+        (uint256 rootId, uint256 safeIdA1) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         address rootAddr = palmeraModule.getSafeAddress(rootId);
-        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeIdA1);
         address safeLead = address(0x123);
 
         vm.startPrank(rootAddr);

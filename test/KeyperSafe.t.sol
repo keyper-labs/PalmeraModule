@@ -349,8 +349,8 @@ contract TestPalmeraSafe is SigningUtils, DeployHelper {
         address rootAddr = palmeraModule.getSafeAddress(rootId);
         address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
 
-        (,,,,, uint256 superSafe) = palmeraModule.getSafeInfo(safeA1Id);
-        (,, address superSafeAddr,,) = palmeraModule.safes(orgHash, superSafe);
+        (,,,,, uint256 superSafeId) = palmeraModule.getSafeInfo(safeA1Id);
+        (,, address superSafeAddr,,) = palmeraModule.safes(orgHash, superSafeId);
 
         safeHelper.updateSafeInterface(rootAddr);
         bool result = safeHelper.createRemoveSafeTx(safeA1Id);
