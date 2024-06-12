@@ -139,8 +139,10 @@ contract Hierarchies is DeployHelper {
             orgName, safeA1Name, subSafeA1Name, subSubSafeA1Name
         );
         assertEq(palmeraModule.isSuperSafe(rootId, safeIdA1), true);
+        assertEq(palmeraModule.isSuperSafe(rootId, subSafeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(safeIdA1, subSafeIdA1), true);
         assertEq(palmeraModule.isSuperSafe(subSafeIdA1, subsubSafeIdA1), true);
+        assertEq(palmeraModule.isSuperSafe(safeIdA1, subsubSafeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(subsubSafeIdA1, subSafeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(subsubSafeIdA1, safeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(subsubSafeIdA1, rootId), false);
@@ -186,11 +188,11 @@ contract Hierarchies is DeployHelper {
         palmeraModule.updateSuper(subSafeIdA1, safeIdB);
         vm.stopPrank();
         assertEq(palmeraModule.isSuperSafe(safeIdB, subSafeIdA1), true);
+        assertEq(palmeraModule.isTreeMember(safeIdB, subsubSafeIdA1), true);
         assertEq(palmeraModule.isSuperSafe(safeIdA1, subSafeIdA1), false);
-        assertEq(palmeraModule.isSuperSafe(safeIdA1, subSafeIdA1), false);
+        assertEq(palmeraModule.isTreeMember(safeIdA1, subSafeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(safeIdA1, subsubSafeIdA1), false);
         assertEq(palmeraModule.isTreeMember(safeIdA1, subsubSafeIdA1), false);
-        assertEq(palmeraModule.isTreeMember(safeIdB, subsubSafeIdA1), true);
         assertEq(
             palmeraRolesContract.doesUserHaveRole(
                 safeA1, uint8(DataTypes.Role.SUPER_SAFE)

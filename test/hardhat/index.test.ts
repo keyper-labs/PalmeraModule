@@ -1085,6 +1085,8 @@ describe("Basic Deployment of Palmera Environment", function () {
         /******************************************************************************************************************** */
         // Get last Account
         const lastAccount = accounts[accounts.length - 1];
+        // Account EOA to Define like Safe Lead Role
+        const safeLead = accounts[accounts.length - 2];
         // Get last Safe Account
         const lastSafe = safesSlice[safesSlice.length - 1];
         // Root Safe Account
@@ -1211,6 +1213,22 @@ describe("Basic Deployment of Palmera Environment", function () {
             ],
         });
         console.log("Fourth Safe Transaction Created");
+        // fifth Safe Transaction is a a Set Safe Lead role to the 1st SuperSafe in the Org
+        // create fifth Safe Transaction
+        safeTx[4] = await RootSafe.createTransaction({
+            transactions: [
+                {
+                    to: await PalmeraModuleContract.getAddress(),
+                    value: "0x0",
+                    data: PalmeraModuleContract.interface.encodeFunctionData("setRole", [
+                        0, // 
+                        await safeLead.getAddress(), // safeLead Account Address
+                        await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[1].getAddress()), // safe Id
+                        true, // isSafeLead
+                    ]),
+                },
+            ],
+        });
         // Execute all Safe Transactions
         const promises = safeTx.map((tx) => {
             return RootSafe.executeTransaction(tx);
@@ -1219,7 +1237,7 @@ describe("Basic Deployment of Palmera Environment", function () {
         await Promise.all(promises);
         console.log("All Safe Transactions Executed");
         // validate all TransactionsResult was executed successfully, and status is 1
-        for (let i = 0; i < 4; ++i) {
+        for (let i = 0; i < 5; ++i) {
             // Get Promise Result
             const receipt = await promises[i];
             // Verify the Transaction was executed
@@ -1249,5 +1267,8 @@ describe("Basic Deployment of Palmera Environment", function () {
         // Verify the deepTreeLimit of the Org
         const deepTreeLimit = await PalmeraModuleContract.depthTreeLimit(orgHash);
         expect(deepTreeLimit).to.equal(15);
+        // verify tx 5
+        // Verify the Safe Lead Role of the Safe 1
+        expect(await PalmeraModuleContract.isSafeLead(await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[1].getAddress()), await safeLead.getAddress())).to.equal(true);
     });
 });
