@@ -1087,11 +1087,11 @@ describe("Basic Deployment of Palmera Environment", function () {
         expect(balance2).to.equal(balance1 + ethers.parseEther("3.06"));
     });
 
-    /** Create 1 Org with 20 Members, and After Promote the 10th Level Safe Account and Test it Execution OnBehalf en both tree */
-    /** 1. Create 1 Org with 20 Members */
-    /** 2. Promote the 10th Level Safe Account */
+    /** Create 1 Org with 13 Members, and After Promote the 1th Level Safe Account and Test it Execution OnBehalf en both leaf */
+    /** 1. Create 1 Org with 13 Members */
+    /** 2. Promote the 1th Level Safe Account */
     /** 3. ExecuteOnBehalf of Root Safe over last Child Safe, and the Caller is Another Account EOA */
-    it("Create 1 Org with 13 Members, and struct 1-to-3, and After Promote the 1th Level Safe Account and Test it Execution OnBehalf en both tree", async () => {
+    it("Create 1 Org with 13 Members, and struct 1-to-3, and After Promote the 1th Level Safe Account and Test it Execution OnBehalf en both leaf", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
         const safes = await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 13, "1.4.1", accounts);
         // verify the length of safes
@@ -1328,10 +1328,10 @@ describe("Basic Deployment of Palmera Environment", function () {
         expect(balance7).to.equal(balance5 + ethers.parseEther("0.153"));
     });
 
-    /** Create 1 Org with 20 Members, and After send a Arrays of Promises  */
-    /** 1. Create 1 Org with 20 Members */
-    /** 2. Send a Arrays of Promises of Multiples Kind of Transactions */
-    it("Create 1 Org with 20 Members, and After send a Arrays of Promises of Multiples Kind of Transactions", async () => {
+    /** Create 1 Org with 17 Members, and After send a Arrays of Promises  */
+    /** 1. Create 1 Org with 17 Members */
+    /** 2. Send a Arrays of 19 Promises of Multiples Kind of Transactions */
+    it("Create 1 Org with 17 Members, and After send a Arrays of 19 Promises of Multiples Kind of Transactions", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
         const safes = await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 17, "1.4.1", accounts);
         // verify the length of safes
@@ -1865,10 +1865,10 @@ describe("Basic Deployment of Palmera Environment", function () {
         expect(await PalmeraModuleContract.isSafeLead(await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[14].getAddress()), await safeLeadAccount.getAddress())).to.equal(true);
     });
 
-    /** Create 1 Org with 20 Members, and After send a Arrays of Promises  */
-    /** 1. Create 1 Org with 20 Members */
+    /** Create 1 Org with 17 Members, and After send a Arrays of Promises  */
+    /** 1. Create 1 Org with 17 Members */
     /** 2. Send a Arrays of Promises of Multiples Kind of Transactions */
-    it("Create 1 Org with 20 Members, and After send a unique Safe Batch Transaction with Arrays of Multiples Kind of Transactions", async () => {
+    it("Create 1 Org with 17 Members, and After send a unique Safe Batch Transaction with Arrays of Multiples Kind of Transactions", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
         const safes = await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 17, "1.4.1", accounts);
         // verify the length of safes
