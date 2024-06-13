@@ -10,6 +10,7 @@ import "solidity-docgen";
 import { relative } from "path";
 import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
+import { chainId } from "permissionless";
 
 dotenv.config();
 
@@ -33,7 +34,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 module.exports = {
     networks: {
         hardhat: {
-            chainId: 137,
+            chainId: 42161,
             throwOnTransactionFailures: true,
             throwOnCallFailures: true,
             forking: {
@@ -71,6 +72,7 @@ module.exports = {
             },
         },
         arbitrumSepolia: {
+            chainId: 421614,
             url: `https://arbitrum-sepolia.infura.io/v3/${API_KEY}`,
             accounts: {
                 mnemonic: `${MNEMONIC}`,

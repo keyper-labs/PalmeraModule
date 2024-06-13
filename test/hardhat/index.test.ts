@@ -34,7 +34,6 @@ const { expect } = chai;
 // General Vars
 let deployer: SignerWithAddress;
 let accounts: SignerWithAddress[];
-const safes: Safe[] = [];
 let salt: string;
 let orgName: string;
 
@@ -177,6 +176,7 @@ describe("Basic Deployment of Palmera Environment", function () {
     };
     /** 3. Inicializate Safe Factory, Deploy X Safe Accounts and Setup Palmera Module and Palmera Guard */
     const deploySafeFactory = async (salt: string, PalmeraModuleAddressDeployed: string, amountsSafes: number, safeVersion: SafeVersion | undefined = "1.4.1", accounts: SignerWithAddress[]) => {
+        const safes: Safe[] = [];
         for (let i = 0, j = 0; j < amountsSafes; ++j, i += 3) {
             const safeFactory = await SafeFactory.init({
                 provider: network.provider,
@@ -223,6 +223,7 @@ describe("Basic Deployment of Palmera Environment", function () {
         console.log(
             "All Safe Accounts Deployed and Enabled with Palmera Module and Guard",
         );
+        return safes;
     }
     /** 4. Deploy Org Lineal Tree in Palmera Module */
     const deployLinealTreeOrg = async (safes: Safe[], orgName: string): Promise<any> => {
@@ -541,7 +542,7 @@ describe("Basic Deployment of Palmera Environment", function () {
     /** 3. ExecuteOnBehalf of Root Safe over last Child Safe, and the Caller is Another Account EOA */
     it("Create a Basic Lineal Org in Palmera Module, and Test ExecuteOnBehalf with EOA", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
-        await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 4, "1.4.1", accounts);
+        const safes = await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 4, "1.4.1", accounts);
         // slice the Safe Accounts to get the firsth four Safe Accounts
         const safesSlice = safes.slice(0, 4);
         // verify the length of the slice
@@ -646,7 +647,7 @@ describe("Basic Deployment of Palmera Environment", function () {
     /** 3. ExecuteOnBehalf of Root Safe over last Child Safe, and the Caller is Another Safe Account */
     it("Create a Basic Lineal Org in Palmera Module, and Test ExecuteOnBehalf with Another Safe", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
-        await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 3, "1.4.1", accounts);
+        const safes = await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 3, "1.4.1", accounts);
         // Slice to small org
         const safesSlice = safes.slice(0, 3);
         // Verify the length of the slice
@@ -752,7 +753,7 @@ describe("Basic Deployment of Palmera Environment", function () {
     /** 3. ExecuteOnBehalf of Root Safe over last Child Safe, and the Caller is Another Account EOA */
     it("Create a Basic 1-to-3 Org in Palmera Module, and Test ExecuteOnBehalf with EOA", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
-        await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 4, "1.4.1", accounts);
+        const safes = await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 4, "1.4.1", accounts);
         // slice the Safe Accounts to get the firsth four Safe Accounts
         const safesSlice = safes.slice(0, 4);
         // verify the length of the slice
@@ -857,7 +858,7 @@ describe("Basic Deployment of Palmera Environment", function () {
     /** 3. ExecuteOnBehalf of Root Safe over last Child Safe, and the Caller is Another Safe Account */
     it("Create a Basic 1-to-3 Org in Palmera Module, and Test ExecuteOnBehalf with Another Safe", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
-        await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 13, "1.4.1", accounts);
+        const safes = await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 13, "1.4.1", accounts);
         // Slice to small org
         const safesSlice = safes.slice(0, 13);
         // Verify the length of the slice
@@ -962,7 +963,7 @@ describe("Basic Deployment of Palmera Environment", function () {
     /** 2. Send a Arrays of Promises of Execution OnBehalf */
     it("Create 20 Basic Lineal Org and After send a Arrays of Promises of Execution OnBehalf", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
-        await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 65, "1.4.1", accounts);
+        const safes = await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 65, "1.4.1", accounts);
         // slice the Safe Accounts to get the firsth four Safe Accounts
         const safesSlice = safes.slice(0, 60);
         // verify the length of the slice
@@ -1089,15 +1090,15 @@ describe("Basic Deployment of Palmera Environment", function () {
     /** Create 1 Org with 30 Members, and After send a Arrays of Promises  */
     /** 1. Create 1 Org with 30 Members */
     /** 2. Send a Arrays of Promises of Execution OnBehalf */
-    it("Create 1 Org with 30 Members, and After send a Arrays of Promises of Multiples Kind of Transactions", async () => {
+    it("Create 1 Org with 20 Members, and After send a Arrays of Promises of Multiples Kind of Transactions", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
-        await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 20, "1.4.1", accounts);
+        const safes = await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 20, "1.4.1", accounts);
         // verify the length of safes
         expect(safes.length).to.equal(20);
         // slice the Safe Accounts to get the firsth four Safe Accounts
-        const safesSlice = safes.slice(0, 15);
+        const safesSlice = safes.slice(0, 17);
         // verify the length of the slice
-        expect(safesSlice.length).to.equal(15);
+        expect(safesSlice.length).to.equal(17);
         // Register a Basic Org in Palmera Module
         orgName = "Basic Lineal Org";
         // Get the Org Hash, and Verify if the Safe Account is the Root of the Org, with the Org Name
@@ -1357,7 +1358,7 @@ describe("Basic Deployment of Palmera Environment", function () {
             ]
         });
         console.log("Tenth Safe Transaction Created");
-        // Eleventh Safe Transaction is a a Set Safe Lead role to the 5th Level in the Org
+        // Eleventh Safe Transaction is a Set Safe Lead role to the 5th Level in the Org
         // create fifth Safe Transaction
         safeTx[10] = await RootSafe.createTransaction({
             transactions: [
@@ -1374,6 +1375,156 @@ describe("Basic Deployment of Palmera Environment", function () {
             ],
         });
         console.log("Eleventh Safe Transaction Created");
+        // Twelfth Safe Transaction is disconnect the last Safe Acccount from the Org
+        // Get safe id from last Safe Account
+        const safeLastId = await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[safesSlice.length - 1].getAddress());
+        // create twelfth Safe Transaction
+        safeTx[11] = await RootSafe.createTransaction({
+            transactions: [
+                {
+                    to: await PalmeraModuleContract.getAddress(),
+                    value: "0x0",
+                    data: PalmeraModuleContract.interface.encodeFunctionData("disconnectSafe", [
+                        safeLastId // safe last Id
+                    ]),
+                },
+            ],
+        });
+        console.log("Twelfth Safe Transaction Created");
+        // Thirteenth Safe Transaction is is disconnect the new last Safe Acccount from the Org
+        // Get safe id from last Safe Account
+        const safeLastId2 = await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[safesSlice.length - 2].getAddress());
+        // create thirteenth Safe Transaction
+        safeTx[12] = await RootSafe.createTransaction({
+            transactions: [
+                {
+                    to: await PalmeraModuleContract.getAddress(),
+                    value: "0x0",
+                    data: PalmeraModuleContract.interface.encodeFunctionData("disconnectSafe", [
+                        safeLastId2 // safe last Id
+                    ]),
+                },
+            ],
+        });
+        console.log("Thirteenth Safe Transaction Created");
+        // Fourteenth Safe Transaction is a add owner to the Org, in the superSafe 3th level under rootSafe used to Palmera Module
+        const amountOwners4 = await safesSlice[9].getOwners();
+        // create second Safe Transaction
+        safeTx[13] = await RootSafe.createTransaction({
+            transactions: [
+                {
+                    to: await PalmeraModuleContract.getAddress(),
+                    value: "0x0",
+                    data: PalmeraModuleContract.interface.encodeFunctionData("addOwnerWithThreshold", [
+                        await accounts[accounts.length - 5].getAddress(), // owner to Add
+                        await safesSlice[9].getThreshold(), // threshold
+                        await safesSlice[9].getAddress(), // safe to add owner
+                        orgHash, // orgHash
+                    ]),
+                },
+            ],
+        });
+        console.log("Fourteenth Safe Transaction Created");
+        // Fifteenth Safe Transaction is a remove owner to the Org, in the next safe in the Tree above the 4th Level of the Org used to Palmera Module
+        // get Owners of the Safe
+        const ownerToRemove4: String[] = await safesSlice[10].getOwners();
+        const ownerToRemoveAddress4: String = ownerToRemove4[ownerToRemove.length - 1];
+        const previewOwnerToRemove4: String = ownerToRemove4[ownerToRemove.length - 2];
+        const threshold4 = await safesSlice[10].getThreshold() > ownerToRemove4.length - 1 ? ownerToRemove4.length - 1 : await safesSlice[10].getThreshold()
+        // create third Safe Transaction
+        safeTx[14] = await RootSafe.createTransaction({
+            transactions: [
+                {
+                    to: await PalmeraModuleContract.getAddress(),
+                    value: "0x0",
+                    // @ts-ignore
+                    data: PalmeraModuleContract.interface.encodeFunctionData("removeOwner", [
+                        previewOwnerToRemove4,
+                        ownerToRemoveAddress4,
+                        threshold4,
+                        await safesSlice[10].getAddress(),
+                        orgHash,
+                    ]),
+                },
+            ]
+        });
+        console.log("Fifteenth Safe Transaction Created");
+        // Sixteenth Safe Transaction is a Set Safe Lead role to the 5th Level in the Org
+        // create Sixteenth Safe Transaction
+        safeTx[15] = await RootSafe.createTransaction({
+            transactions: [
+                {
+                    to: await PalmeraModuleContract.getAddress(),
+                    value: "0x0",
+                    data: PalmeraModuleContract.interface.encodeFunctionData("setRole", [
+                        0, // 
+                        await safeLeadAccount.getAddress(), // safeLead Account Address
+                        await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[11].getAddress()), // safe Id
+                        true, // isSafeLead
+                    ]),
+                },
+            ],
+        });
+        console.log("Sixteenth Safe Transaction Created");
+        // Seventeenth Safe Transaction is a add owner to the Org, in the superSafe 3th level under rootSafe used to Palmera Module
+        const amountOwners5 = await safesSlice[12].getOwners();
+        // create second Safe Transaction
+        safeTx[16] = await RootSafe.createTransaction({
+            transactions: [
+                {
+                    to: await PalmeraModuleContract.getAddress(),
+                    value: "0x0",
+                    data: PalmeraModuleContract.interface.encodeFunctionData("addOwnerWithThreshold", [
+                        await accounts[accounts.length - 6].getAddress(), // owner to Add
+                        await safesSlice[12].getThreshold(), // threshold
+                        await safesSlice[12].getAddress(), // safe to add owner
+                        orgHash, // orgHash
+                    ]),
+                },
+            ],
+        });
+        console.log("Seventeenth Safe Transaction Created");
+        // Eighteenth Safe Transaction is a remove owner to the Org, in the next safe in the Tree above the 4th Level of the Org used to Palmera Module
+        // get Owners of the Safe
+        const ownerToRemove5: String[] = await safesSlice[13].getOwners();
+        const ownerToRemoveAddress5: String = ownerToRemove5[ownerToRemove.length - 1];
+        const previewOwnerToRemove5: String = ownerToRemove5[ownerToRemove.length - 2];
+        const threshold5 = await safesSlice[13].getThreshold() > ownerToRemove5.length - 1 ? ownerToRemove5.length - 1 : await safesSlice[13].getThreshold()
+        // create third Safe Transaction
+        safeTx[17] = await RootSafe.createTransaction({
+            transactions: [
+                {
+                    to: await PalmeraModuleContract.getAddress(),
+                    value: "0x0",
+                    // @ts-ignore
+                    data: PalmeraModuleContract.interface.encodeFunctionData("removeOwner", [
+                        previewOwnerToRemove5,
+                        ownerToRemoveAddress5,
+                        threshold5,
+                        await safesSlice[13].getAddress(),
+                        orgHash,
+                    ]),
+                },
+            ]
+        });
+        console.log("Eighteenth Safe Transaction Created");
+        // Nineteenth Safe Transaction is a Set Safe Lead role to the 5th Level in the Org
+        // create Nineteenth Safe Transaction
+        safeTx[18] = await RootSafe.createTransaction({
+            transactions: [
+                {
+                    to: await PalmeraModuleContract.getAddress(),
+                    value: "0x0",
+                    data: PalmeraModuleContract.interface.encodeFunctionData("setRole", [
+                        0, // 
+                        await safeLeadAccount.getAddress(), // safeLead Account Address
+                        await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[14].getAddress()), // safe Id
+                        true, // isSafeLead
+                    ]),
+                },
+            ],
+        });
+        console.log("Nineteenth Safe Transaction Created");
         // Execute all Safe Transactions
         const promises = safeTx.map((tx) => {
             return RootSafe.executeTransaction(tx);
@@ -1382,7 +1533,7 @@ describe("Basic Deployment of Palmera Environment", function () {
         await Promise.all(promises);
         console.log("All Safe Transactions Executed");
         // validate all TransactionsResult was executed successfully, and status is 1
-        for (let i = 0; i < 11; ++i) {
+        for (let i = 0; i < 19; ++i) {
             // Get Promise Result
             const receipt = await promises[i];
             // Verify the Transaction was executed
@@ -1425,17 +1576,40 @@ describe("Basic Deployment of Palmera Environment", function () {
         expect(amountOwnersAfter4.length).to.equal(ownerToRemove2.length - 1);
         // verify tx 8
         // Verify the Safe Lead Role of the Safe 8th Level
-        expect(await PalmeraModuleContract.isSafeLead(await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[8].getAddress()), await safeLeadAccount.getAddress())).to.equal(true);
+        expect(await PalmeraModuleContract.isSafeLead(await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[5].getAddress()), await safeLeadAccount.getAddress())).to.equal(true);
         // verify tx 9
-        // check amount of owners of the Safe 1
-        const amountOwnersAfter7 = await safesSlice[1].getOwners();
+        // check amount of owners of the Safe 6
+        const amountOwnersAfter7 = await safesSlice[6].getOwners();
         expect(amountOwnersAfter7.length).to.equal(amountOwners3.length + 1);
         // verify tx 10
-        // Verify the amount owner of the Safe 2, one less than the original amount
-        const amountOwnersAfter8 = await safesSlice[2].getOwners();
+        // Verify the amount owner of the Safe 7, one less than the original amount
+        const amountOwnersAfter8 = await safesSlice[7].getOwners();
         expect(amountOwnersAfter8.length).to.equal(ownerToRemove3.length - 1);
         // verify tx 11
         // Verify the Safe Lead Role of the Safe 8th Level
         expect(await PalmeraModuleContract.isSafeLead(await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[8].getAddress()), await safeLeadAccount.getAddress())).to.equal(true);
+        // verify tx 12
+        // Verify the Safe Account was disconnected from the Org
+        const safeId = await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[safesSlice.length - 1].getAddress());
+        expect(safeId).to.equal(0);
+        // Verify the Safe Account is not registered in the Org
+        expect(await PalmeraModuleContract.isSafeRegistered(await safesSlice[safesSlice.length - 1].getAddress())).to.equal(false);
+        // verify tx 13
+        // Verify the Safe Account was disconnected from the Org
+        const safeId2 = await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[safesSlice.length - 2].getAddress());
+        expect(safeId2).to.equal(0);
+        // Verify the Safe Account not registered in the Org
+        expect(await PalmeraModuleContract.isSafeRegistered(await safesSlice[safesSlice.length - 2].getAddress())).to.equal(false);
+        // verify tx 14
+        // check amount of owners of the Safe 9
+        const amountOwnersAfter9 = await safesSlice[9].getOwners();
+        expect(amountOwnersAfter9.length).to.equal(amountOwners4.length + 1);
+        // verify tx 15
+        // Verify the amount owner of the Safe 10, one less than the original amount
+        const amountOwnersAfter10 = await safesSlice[10].getOwners();
+        expect(amountOwnersAfter10.length).to.equal(ownerToRemove4.length - 1);
+        // verify tx 16
+        // Verify the Safe Lead Role of the Safe 11th Level
+        expect(await PalmeraModuleContract.isSafeLead(await PalmeraModuleContract.getSafeIdBySafe(orgHash, await safesSlice[11].getAddress()), await safeLeadAccount.getAddress())).to.equal(true);
     });
 });
