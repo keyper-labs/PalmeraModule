@@ -1087,9 +1087,9 @@ describe("Basic Deployment of Palmera Environment", function () {
         expect(balance2).to.equal(balance1 + ethers.parseEther("3.06"));
     });
 
-    /** Create 1 Org with 30 Members, and After send a Arrays of Promises  */
-    /** 1. Create 1 Org with 30 Members */
-    /** 2. Send a Arrays of Promises of Execution OnBehalf */
+    /** Create 1 Org with 20 Members, and After send a Arrays of Promises  */
+    /** 1. Create 1 Org with 20 Members */
+    /** 2. Send a Arrays of Promises of Multiples Kind of Transactions */
     it("Create 1 Org with 20 Members, and After send a Arrays of Promises of Multiples Kind of Transactions", async () => {
         // Get Safe Accounts with Palmera Module and Guard Enabled
         const safes = await deploySafeFactory(salt, await PalmeraModuleContract.getAddress(), 20, "1.4.1", accounts);
