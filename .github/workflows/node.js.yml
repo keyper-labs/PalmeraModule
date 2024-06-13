@@ -4,6 +4,8 @@ name: test
 
 jobs:
   check:
+    strategy:
+        fail-fast: true
     name: Foundry project
     runs-on: ubuntu-latest
     steps:
@@ -38,3 +40,36 @@ jobs:
 
       - name: Run Coverage
         run: forge test --gas-report --fuzz-runs 1000 -vvv --no-match-contract='Skip*'
+    
+      - name: Install nvm and use Node version from .nvmrc
+        run: |
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+            . ~/.nvm/nvm.sh
+            nvm install
+            nvm use
+
+      - name: Setup Yarn cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+    
+      - name: Install dependencies
+        run: |
+            sudo apt-get update
+            sudo apt-get install -y python3 python3-distutils g++ make
+
+      - name: Install node-gyp
+        run: |
+            npm install -g node-gyp
+
+      - name: Install dependencies using Yarn
+        run: |
+            yarn install
+                
+      - name: Run Hardhat tests with Yarn
+        run: |
+            yarn test
+        id: hardhat-test
