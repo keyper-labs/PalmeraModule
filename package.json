@@ -10,9 +10,7 @@
         "build": "rm -rf docs/ && npx hardhat clean && npx hardhat compile && npx hardhat docgen",
         "hardhat": "npx hardhat",
         "test": "yarn build && npx hardhat test ./test/hardhat/index.test.ts --network hardhat",
-        "test-local": "npx hardhat test --network local",
-        "test-multiOrg": "yarn build && npx mocha -r ts-node/register 'test/**/*.ts' --grep 'Create 20 Basic Lineal Org and After send a Arrays of Promises of Execution OnBehalf' --timeout 2000000 --network hardhat",
-        "test-bigOrg": "yarn build && npx mocha -r ts-node/register 'test/**/*.ts' --grep 'Create 1 Org with 20 Members, and After send a unique Safe Batch Transaction with Arrays of Multiples Kind of Transactions' --timeout 2000000 --network hardhat"
+        "test-local": "npx hardhat test --network local"
     },
     "importSort": {
         ".js, .jsx, .ts, .tsx": {
