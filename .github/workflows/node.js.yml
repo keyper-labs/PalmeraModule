@@ -25,6 +25,9 @@ jobs:
           OWNER_2: "0xEd4AD3605740D6a9232e05F4d8A2b3377f81a8AA"
           THRESHOLD: 1
           FOUNDRY_VIA_IR: true
+          ACCOUNTS: 300
+          INFURA_KEY: ${{ secrets.INFURA_KEY }}
+          ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
         run: |
           touch .env
           echo "MASTER_COPY_ADDRESS=$MASTER_COPY_ADDRESS" >> .env
@@ -34,6 +37,9 @@ jobs:
           echo "OWNER_2=$OWNER_2" >> .env
           echo "THRESHOLD=$THRESHOLD" >> .env
           echo "FOUNDRY_VIA_IR=$FOUNDRY_VIA_IR" >> .env
+          echo "ACCOUNTS=$ACCOUNTS" >> .env
+          echo "INFURA_KEY=$INFURA_KEY" >> .env
+          echo "ALCHEMY_KEY=$ALCHEMY_KEY" >> .env
 
       - name: Run Tests
         run: forge test --no-match-contract 'Skip*'
