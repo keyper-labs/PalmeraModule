@@ -10,7 +10,6 @@ import "solidity-docgen";
 import { relative } from "path";
 import * as dotenv from "dotenv";
 import { task } from "hardhat/config";
-import { chainId } from "permissionless";
 
 dotenv.config();
 
@@ -19,7 +18,6 @@ const MNEMONIC =
 const API_KEY = process.env.INFURA_KEY || "ffc8f8f8f8f8f8f8f8f8f8f8f8f8f8f8";
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "ffc8f8f8f8f8f8f8f8f8f8f8f8f8f8";
 const ACCOUNTS = parseInt(process.env.ACCOUNTS!) || 300;
-const PRIVATE_KEY = process.env.PRIVATE_KEY!;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -85,11 +83,10 @@ module.exports = {
         arbitrumOne: {
             chainId: 42161,
             url: `https://arbitrum-mainnet.infura.io/v3/${API_KEY}`,
-            // accounts: {
-            //     mnemonic: MNEMONIC,
-            //     accounts: ACCOUNTS,
-            // },
-            accounts: [PRIVATE_KEY]
+            accounts: {
+                mnemonic: MNEMONIC,
+                accounts: ACCOUNTS,
+            }
         },
         polygon: {
             chainId: 137,
