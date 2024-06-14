@@ -1,6 +1,6 @@
 # Palmera Module Technical Specification
 
-## Table of Contents
+# Table of Contents
 
 - Project Overview
 - Functional Requirements
@@ -13,21 +13,22 @@
   - 2.2. Architectural Overview
   - 2.3. Contract Information
 
-## Project Overview
+# Project Overview
 
-The Palmera Module is an orchestration framework for DAOs based on the Safe ecosystem, enabling the creation and management of hierarchies and permissions within DAOs. It extends the capabilities of Safe’s multisig wallet to manage assets and treasury in a secure and hierarchical manner.
+The Palmera Module is an orchestration framework for On-Chain Organizations based on the Safe ecosystem, enabling the creation and management of hierarchies and permissions within On-Chain Organizations. It extends the capabilities of Safe’s multisig wallet to manage assets and treasury in a secure and hierarchical manner.
 
-## Functional Requirements
+# Functional Requirements
 
-### 1.1. Roles and Authorizations
+## 1.1. Roles and Authorizations
 
-- **Safe Owner**: Can register new SubSafes and manage organizational settings.
-- **Registered SubSafes**: Can execute specific protected functions in the main Safe.
-- **Safe Users**: Can add or remove members and execute transactions within their authorization.
+- **Safe Owner**: Can register new Org and manage organizational settings.
+- **Safe Lead / EOA**: Can add or remove owners and manage somes roles and permissions within their organization.
+- **Safe Wallets**: Can add or remove members and execute transactions within their authorization.
+- **Root Safe Wallers**: Can manage the entire organization and delegate roles and permissions and execute transactions on behalf of other safes into their organization/tree/leaf.
 
-### 1.2. Features
+## 1.2. Features
 
-#### Enable the Palmera Module
+### Enable the Palmera Module
 
 This is the very first action required to access the features of the Palmera Module. It involves two separate transactions:
 
@@ -35,68 +36,113 @@ This is the very first action required to access the features of the Palmera Mod
     - `enableModule() - ModuleManager.sol`
 2. **Set Guard**:
     - `setGuard() - GuardManager.sol`
-    - Ensures monitoring and restricts unauthorized disconnections.
 
 Both actions need to be called by the safe that will be set as the root safe. They can be bundled into one transaction using a service like [Safe](https://app.safe.global/).
 
-#### Register an Organization
+### Register an Organization
 
 - **Function**: `registerOrg()`
 - **Description**: Registers an organization and sets the calling  safe as the root  safe.
 
-#### Add New Roles
-
-- **Function**: `setRole()`
-- **Description**: Assigns a new role to a user. This must be called by the root  safe.
-
-#### Add a New Root Safe
+### Add a New Safe
 
 - **Function**: `addSafe()`
 - **Description**: Adds a new root  safe. Only an existing root  safe can add another root  safe.
 
-#### Root Safe to Sub safe
+### Add New Roles
 
-- **Description**: A root  safe can become a sub safe of another root  safe.
+- **Function**: `setRole()`
+- **Description**: Assigns a new role to a user. This must be called by the root  safe.
 
-#### Remove a Safe
+### Add a New Root Safe
+
+- **Function**: `createRootSafe()`
+- **Description**: A safe can become a Root Safe into On-chain Organization, and handle a different leaf.
+
+### Remove a Safe
 
 - **Function**: `removeSafe()`
 - **Description**: Removes a  safe. This must be called by the root  safe.
 
-#### Execute a Transaction on Behalf Of
+### Disconnect a Safe
+
+- **Function**: `disconnectSafe()`
+- **Description**: Disconnects a  safe from the organization. This must be called by the root safe.
+
+### Execute a Transaction on Behalf Of
 
 - **Function**: `execTransactionOnBehalf()`
-- **Description**: Allows a super  safe or  safe lead to execute transactions on behalf of a sub safe.
+- **Description**: Allows a root/super safe or safe lead to execute transactions on behalf of a sub/child safe.
 
-### 1.3. Business Logic
+## 1.3. Business Logic
 
-The Palmera Module allows DAOs to efficiently manage their hierarchical structures by extending the  Safe multisig wallet capabilities to support multiple levels of administration and access control. Each Safe can have subsafes and supersafes, creating a tree structure that enforces permissions and roles within the organization.
+The Palmera Module allows On-Chain Organizations to efficiently manage their hierarchical structures by extending the  Safe multisig wallet capabilities to support multiple levels of administration and access control. Each Safe can have subsafes and supersafes, creating a tree structure that enforces permissions and roles within the organization.
 
-#### Detailed Business Logic Explanation
+### Detailed Business Logic Explanation
 
 - **Hierarchical Management**: Each Safe can act as a root or subsafe, creating a dynamic hierarchy. This hierarchy allows organizations to structure their asset management and control systems according to their internal governance models.
 - **Permissions and Roles**: Roles can be dynamically assigned and revoked, ensuring that only authorized entities can perform specific actions. This fine-grained control is crucial for maintaining security and operational integrity within the DAO.
 - **Transaction Authorization**: Transactions can be executed on behalf of other safes, enabling higher-level safes to manage and delegate actions down the hierarchy. This ensures that strategic decisions and actions can be centrally controlled while operational tasks can be delegated.
 
-### 1.4. Use Cases
+## 1.4. Use Cases
 
-- **Hierarchy Creation**: Establishing and managing hierarchical structures within DAOs.
+- **Hierarchy Creation**: Establishing and managing hierarchical structures within On-Chain Organizations.
 - **Permission Management**: Administering roles and permissions across different levels of the organization, Managing and assigning roles, ensuring that only authorized users can perform certain actions.
 - **Transaction Execution**: Securely executing transactions on behalf of other safes, ensuring control and accountability.
 - **Protecting DAO assets from unauthorized disconnection:** Ensuring that safes cannot be disconnected from the Palmera Module without proper authorization, protecting the assets of the DAO.
 
-## Technical Requirements
+# Technical Requirements
 
-### 2.1. Deployment Instructions
+## 2.1. Deployment Instructions
 
-1. **Deploy the main SafeDAO contract** with the following parameters:
-   - `_owner = 0x...` (deployment address)
-   - `_FUNDING_PHASE_DURATION = 604800` (7 days)
-2. **Register SubSafe** by calling `registerSubSafe()`.
+Is important to follow the steps below to deploy the Palmera Module, any way we prepare in foundry a Script to deploy the Palmera Module with all dependencies. Need to introduce the ENV variables in the `.env` file, follow the example in the `.env.example` file.
 
-### 2.2. Architectural Overview
+### **Deploy the Palmera Libraries**
 
-The system consists of a main SafeDAO contract managing multiple SubSafes with configurable permissions and memberships. The architecture includes:
+- **Deploy in Sepolia:**
+
+```bash
+make deploy-palmera-libraries
+```
+or
+
+- **Deploy in Polygon:**
+
+```bash
+make deploy-palmera-libraries-polygon
+```
+
+Is important to deploy the Palmera Libraries before the Palmera Environment, and take a count that in Foundry for linking the Palmera Environment with the Palmera Libraries, we need to introduce the address of the Palmera Libraries in the `foundry.toml` file, into profile default, field `libraries`.
+
+### **Deploy the Palmera Environment**
+
+- **Deploy in Sepolia:**
+
+```bash
+make deploy-palmera-env 
+```
+
+or
+
+- **Deploy in Polygon:**
+
+```bash
+make deploy-palmera-env-polygon
+```
+
+- **Steps into the Script**:
+
+- **Create Instance of the CREATE3 Factory contract**. This contract is used to get deterministic addresses for the Palmera Module contract.
+- **Predict with CREATE3 Factory Palmera Module contract** with use the CREATE3 Factory to get deterministic addresses and use in the Palmera Roles contract constructor.
+- **Deploy the Palmera Roles contract** with the address of the Palmera Module got in the step before.
+- **Deploy the Palmera Module contract** with the following parameters:
+  - `authorityAddress` - Address of the Palmera Roles Deployed.
+  - `maxDepthTreeLimitInitial` - Maximum depth tree limit for All On-Chain Organization.
+- **Deploy the Palmera Guard contract** with the address of the Palmera Module.
+
+## 2.2. Architectural Overview
+
+The system consists of a main Palmera Environment contract managing multiple SubSafes with configurable permissions and memberships. The architecture includes:
 
 - **PalmeraModule**: Core module managing the hierarchy and transaction execution.
 - **PalmeraRoles**: Manages role assignments and permissions.
@@ -104,15 +150,13 @@ The system consists of a main SafeDAO contract managing multiple SubSafes with c
 - **Helpers**: Provides utility functions.
 - **DenyHelper**: Manages allow/deny lists for various operations.
 
-### 2.3. Contract Information
+## 2.3. Contract Information
 
-#### PalmeraModule
+### PalmeraModule
 
 **Title:** Palmera Module
 
-**Author:** <general@palmeradao.xyz>
-
-##### Variables
+#### Variables
 
 - **Module Name**: `string NAME` - Name of the Palmera Module.
 - **Module Version**: `string VERSION` - Version of the Palmera Module.
@@ -124,7 +168,7 @@ The system consists of a main SafeDAO contract managing multiple SubSafes with c
 - **Nonce**: `mapping(bytes32 => uint256) nonce` - Control nonce of the Palmera Module per organization.
 - **Safes**: `mapping(bytes32 => mapping(uint256 => struct DataTypes.Safe)) safes` - Mapping of safes by organization.
 
-##### Modifiers
+#### Modifiers
 
 - **SafeIdRegistered**:
 
@@ -148,7 +192,7 @@ The system consists of a main SafeDAO contract managing multiple SubSafes with c
 
   - Validates if the address is a Root Safe.
 
-##### Key Functions
+#### Key Functions
 
 - **constructor**:
 
@@ -513,18 +557,16 @@ The system consists of a main SafeDAO contract managing multiple SubSafes with c
   - **Returns**:
     - `uint256`: ID of the Safe.
 
-#### PalmeraRoles
+### PalmeraRoles
 
 **Title:** Palmera Roles
 
-**Author:** <general@palmeradao.xyz>
-
-##### Variables
+#### Variables
 
 - **Module Name**: `string NAME` - Name of the Palmera Roles.
 - **Module Version**: `string VERSION` - Version of the Palmera Roles.
 
-##### Key Functions
+#### Key Functions
 
 - **constructor**: `constructor(address palmeraModule) public`
   - Initializes the Palmera Roles contract with the address of the Palmera Module.
@@ -551,19 +593,17 @@ The system consists of a main SafeDAO contract managing multiple SubSafes with c
     - `role`: `uint8` - Role to be assigned.
     - `enabled`: `bool` - Enable or disable the role.
 
-#### PalmeraGuard
+### PalmeraGuard
 
 **Title:** Palmera Guard
 
-**Author:** <general@palmeradao.xyz>
-
-##### Variables
+#### Variables
 
 - **Module Name**: `string NAME` - Name of the Palmera Guard.
 - **Module Version**: `string VERSION` - Version of the Palmera Guard.
 - **Palmera Module**: `contract PalmeraModule palmeraModule` - Reference to the Palmera Module contract.
 
-##### Key Functions
+#### Key Functions
 
 - **constructor**: `constructor(address payable palmeraModuleAddr) public`
   - Initializes the Palmera Guard contract with the address of the Palmera Module.
