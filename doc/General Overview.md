@@ -104,6 +104,7 @@ Is important to follow the steps below to deploy the Palmera Module, any way we 
 ```bash
 make deploy-palmera-libraries
 ```
+
 or
 
 - **Deploy in Polygon:**
@@ -640,3 +641,17 @@ The system consists of a main Palmera Environment contract managing multiple Sub
   - **Parameters**:
     - `txHash`: `bytes32` - Hash of the transaction.
     - `success`: `bool` - Whether the transaction was successful.
+
+## 2.4 Contract Diagram
+
+### Palmera Environment Diagram
+
+  ![Palmera Environment Diagram](./graph/General%20Diagram.png)
+
+### Palmera Roles Diagram
+
+  ![Palmera Roles Diagram](./graph/PalmeraRoles.png)
+
+### Palmera Guard Diagram
+
+  ![Palmera Guard Diagram](./graph/PalmeraGuard.png)
