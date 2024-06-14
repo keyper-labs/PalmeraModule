@@ -4,6 +4,8 @@ name: test
 
 jobs:
   check:
+    strategy:
+        fail-fast: true
     name: Foundry project
     runs-on: ubuntu-latest
     steps:
@@ -23,6 +25,9 @@ jobs:
           OWNER_2: "0xEd4AD3605740D6a9232e05F4d8A2b3377f81a8AA"
           THRESHOLD: 1
           FOUNDRY_VIA_IR: true
+          ACCOUNTS: 300
+          INFURA_KEY: ${{ secrets.INFURA_KEY }}
+          ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
         run: |
           touch .env
           echo "MASTER_COPY_ADDRESS=$MASTER_COPY_ADDRESS" >> .env
@@ -32,9 +37,45 @@ jobs:
           echo "OWNER_2=$OWNER_2" >> .env
           echo "THRESHOLD=$THRESHOLD" >> .env
           echo "FOUNDRY_VIA_IR=$FOUNDRY_VIA_IR" >> .env
+          echo "ACCOUNTS=$ACCOUNTS" >> .env
+          echo "INFURA_KEY=$INFURA_KEY" >> .env
+          echo "ALCHEMY_KEY=$ALCHEMY_KEY" >> .env
 
       - name: Run Tests
         run: forge test --no-match-contract 'Skip*'
 
       - name: Run Coverage
         run: forge test --gas-report --fuzz-runs 1000 -vvv --no-match-contract='Skip*'
+    
+      - name: Install nvm and use Node version from .nvmrc
+        run: |
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+            . ~/.nvm/nvm.sh
+            nvm install
+            nvm use
+
+      - name: Setup Yarn cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+    
+      - name: Install dependencies
+        run: |
+            sudo apt-get update
+            sudo apt-get install -y python3 python3-distutils g++ make
+
+      - name: Install node-gyp
+        run: |
+            npm install -g node-gyp
+
+      - name: Install dependencies using Yarn
+        run: |
+            yarn install
+                
+      - name: Run Hardhat tests with Yarn
+        run: |
+            yarn test
+        id: hardhat-test

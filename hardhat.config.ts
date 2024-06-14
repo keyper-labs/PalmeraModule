@@ -18,7 +18,6 @@ const MNEMONIC =
 const API_KEY = process.env.INFURA_KEY || "ffc8f8f8f8f8f8f8f8f8f8f8f8f8f8f8";
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "ffc8f8f8f8f8f8f8f8f8f8f8f8f8f8";
 const ACCOUNTS = parseInt(process.env.ACCOUNTS!) || 300;
-const PRIVATE_KEY = process.env.PRIVATE_KEY!;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -33,7 +32,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 module.exports = {
     networks: {
         hardhat: {
-            chainId: 137,
+            chainId: 42161,
             throwOnTransactionFailures: true,
             throwOnCallFailures: true,
             forking: {
@@ -71,6 +70,7 @@ module.exports = {
             },
         },
         arbitrumSepolia: {
+            chainId: 421614,
             url: `https://arbitrum-sepolia.infura.io/v3/${API_KEY}`,
             accounts: {
                 mnemonic: `${MNEMONIC}`,
@@ -83,11 +83,10 @@ module.exports = {
         arbitrumOne: {
             chainId: 42161,
             url: `https://arbitrum-mainnet.infura.io/v3/${API_KEY}`,
-            // accounts: {
-            //     mnemonic: MNEMONIC,
-            //     accounts: ACCOUNTS,
-            // },
-            accounts: [PRIVATE_KEY]
+            accounts: {
+                mnemonic: MNEMONIC,
+                accounts: ACCOUNTS,
+            }
         },
         polygon: {
             chainId: 137,
@@ -131,7 +130,7 @@ module.exports = {
                 : undefined,
     },
     mocha: {
-        timeout: 1500000,
+        timeout: 2000000,
     },
     contractSizer: {
         alphaSort: true,

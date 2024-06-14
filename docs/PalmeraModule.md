@@ -218,7 +218,7 @@ _For instance of Remove Owner of Safe, the user lead/super/root can remove an ow
 ### setRole
 
 ```solidity
-function setRole(enum DataTypes.Role role, address user, uint256 safe, bool enabled) external
+function setRole(enum DataTypes.Role role, address user, uint256 safeId, bool enabled) external
 ```
 
 _Call must come from the root safe_
@@ -231,7 +231,7 @@ _Call must come from the root safe_
 | ---- | ---- | ----------- |
 | role | enum DataTypes.Role | Role to be assigned |
 | user | address | User that will have specific role (Can be EAO or safe) |
-| safe | uint256 | Safe safe which will have the user permissions on |
+| safeId | uint256 | Safe Id which will have the user permissions on |
 | enabled | bool | Enable or disable the role |
 
 ### registerOrg
@@ -270,7 +270,7 @@ _Call has to be done from a safe transaction_
 ### addSafe
 
 ```solidity
-function addSafe(uint256 superSafe, string name) external returns (uint256 safeId)
+function addSafe(uint256 superSafeId, string name) external returns (uint256 safeId)
 ```
 
 _Call coming from the safe_
@@ -281,13 +281,13 @@ _Call coming from the safe_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| superSafe | uint256 | Id of the superSafe |
+| superSafeId | uint256 | Id of the superSafe |
 | name | string | string name of the safe |
 
 ### removeSafe
 
 ```solidity
-function removeSafe(uint256 safe) public
+function removeSafe(uint256 safeId) public
 ```
 
 _All actions will be driven based on the caller of the method, and args_
@@ -298,12 +298,12 @@ _All actions will be driven based on the caller of the method, and args_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | Id of the safe to be removed |
+| safeId | uint256 | Id of the safe to be removed |
 
 ### disconnectSafe
 
 ```solidity
-function disconnectSafe(uint256 safe) external
+function disconnectSafe(uint256 safeId) external
 ```
 
 _Disconnect Safe of a Org, Call must come from the root safe_
@@ -314,7 +314,7 @@ _Disconnect Safe of a Org, Call must come from the root safe_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | Id of the safe to be updated |
+| safeId | uint256 | Id of the safe to be updated |
 
 ### removeWholeTree
 
@@ -329,7 +329,7 @@ _Remove whole tree of a RootSafe_
 ### promoteRoot
 
 ```solidity
-function promoteRoot(uint256 safe) external
+function promoteRoot(uint256 safeId) external
 ```
 
 _Method to Promete a safe to Root Safe of an Org to Root Safe_
@@ -340,12 +340,12 @@ _Method to Promete a safe to Root Safe of an Org to Root Safe_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | Id of the safe to be updated |
+| safeId | uint256 | Id of the safe to be updated |
 
 ### updateSuper
 
 ```solidity
-function updateSuper(uint256 safe, uint256 newSuper) external
+function updateSuper(uint256 safeId, uint256 newSuperId) external
 ```
 
 _Update the superSafe of a safe with a new superSafe, Call must come from the root safe_
@@ -356,8 +356,8 @@ _Update the superSafe of a safe with a new superSafe, Call must come from the ro
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | Id of the safe to be updated |
-| newSuper | uint256 | Id of the new superSafe |
+| safeId | uint256 | Id of the safe to be updated |
+| newSuperId | uint256 | Id of the new superSafe |
 
 ### updateDepthTreeLimit
 
@@ -428,7 +428,7 @@ _Method to Disable All_
 ### getSafeInfo
 
 ```solidity
-function getSafeInfo(uint256 safe) external view returns (enum DataTypes.Tier, string, address, address, uint256[], uint256)
+function getSafeInfo(uint256 safeId) external view returns (enum DataTypes.Tier, string, address, address, uint256[], uint256)
 ```
 
 _Method for getting all info of a safe_
@@ -439,7 +439,7 @@ _Method for getting all info of a safe_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | uint256 of the safe |
+| safeId | uint256 | uint256 of the safe |
 
 #### Return Values
 
@@ -455,7 +455,7 @@ _Method for getting all info of a safe_
 ### hasNotPermissionOverTarget
 
 ```solidity
-function hasNotPermissionOverTarget(address caller, bytes32 org, address targetSafe) public view returns (bool hasPermission)
+function hasNotPermissionOverTarget(address caller, bytes32 org, address targetSafe) public view returns (bool hasNotPermission)
 ```
 
 **This function checks that caller has permission (as Root/Super/Lead safe) of the target safe**
@@ -491,7 +491,7 @@ function isOrgRegistered(bytes32 org) public view returns (bool)
 ### isRootSafeOf
 
 ```solidity
-function isRootSafeOf(address root, uint256 safe) public view returns (bool)
+function isRootSafeOf(address root, uint256 safeId) public view returns (bool)
 ```
 
 **Check if the address, is a rootSafe of the safe within an organisation**
@@ -501,7 +501,7 @@ function isRootSafeOf(address root, uint256 safe) public view returns (bool)
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | root | address | address of Root Safe of the safe |
-| safe | uint256 | ID's of the child safe/safe |
+| safeId | uint256 | ID's of the child safe/safe |
 
 #### Return Values
 
@@ -512,7 +512,7 @@ function isRootSafeOf(address root, uint256 safe) public view returns (bool)
 ### isTreeMember
 
 ```solidity
-function isTreeMember(uint256 superSafe, uint256 safe) public view returns (bool isMember)
+function isTreeMember(uint256 superSafeId, uint256 safeId) public view returns (bool isMember)
 ```
 
 **Check if the safe is a Is Tree Member of another safe**
@@ -521,8 +521,8 @@ function isTreeMember(uint256 superSafe, uint256 safe) public view returns (bool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| superSafe | uint256 | ID's of the superSafe |
-| safe | uint256 | ID's of the safe |
+| superSafeId | uint256 | ID's of the superSafe |
+| safeId | uint256 | ID's of the safe |
 
 #### Return Values
 
@@ -533,7 +533,7 @@ function isTreeMember(uint256 superSafe, uint256 safe) public view returns (bool
 ### isLimitLevel
 
 ```solidity
-function isLimitLevel(uint256 superSafe) public view returns (bool)
+function isLimitLevel(uint256 superSafeId) public view returns (bool)
 ```
 
 _Method to validate if is Depth Tree Limit_
@@ -542,7 +542,7 @@ _Method to validate if is Depth Tree Limit_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| superSafe | uint256 | ID's of Safe |
+| superSafeId | uint256 | ID's of Safe |
 
 #### Return Values
 
@@ -553,7 +553,7 @@ _Method to validate if is Depth Tree Limit_
 ### isSuperSafe
 
 ```solidity
-function isSuperSafe(uint256 superSafe, uint256 safe) public view returns (bool)
+function isSuperSafe(uint256 superSafeId, uint256 safeId) public view returns (bool)
 ```
 
 _Method to Validate is ID Safe a SuperSafe of a Safe_
@@ -562,8 +562,8 @@ _Method to Validate is ID Safe a SuperSafe of a Safe_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| superSafe | uint256 | ID's of the Safe |
-| safe | uint256 | ID's of the safe |
+| superSafeId | uint256 | ID's of the Safe |
+| safeId | uint256 | ID's of the safe |
 
 #### Return Values
 
@@ -574,7 +574,7 @@ _Method to Validate is ID Safe a SuperSafe of a Safe_
 ### isPendingRemove
 
 ```solidity
-function isPendingRemove(uint256 rootSafe, uint256 safe) public view returns (bool)
+function isPendingRemove(uint256 rootSafeId, uint256 safeId) public view returns (bool)
 ```
 
 _Method to Validate is ID Safe is Pending to Disconnect (was Removed by SuperSafe)_
@@ -583,8 +583,8 @@ _Method to Validate is ID Safe is Pending to Disconnect (was Removed by SuperSaf
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| rootSafe | uint256 | ID's of Root Safe |
-| safe | uint256 | ID's of the safe |
+| rootSafeId | uint256 | ID's of Root Safe |
+| safeId | uint256 | ID's of the safe |
 
 #### Return Values
 
@@ -629,7 +629,7 @@ _Method to get Root Safe of a Safe_
 ### getSafeAddress
 
 ```solidity
-function getSafeAddress(uint256 safe) external view returns (address)
+function getSafeAddress(uint256 safeId) external view returns (address)
 ```
 
 _Method for getting the safe address of a safe_
@@ -640,7 +640,7 @@ _Method for getting the safe address of a safe_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | uint256 of the safe |
+| safeId | uint256 | uint256 of the safe |
 
 #### Return Values
 
@@ -692,7 +692,7 @@ _Method to get Safe ID by safe address_
 ### getOrgBySafe
 
 ```solidity
-function getOrgBySafe(uint256 safe) public view returns (bytes32 orgSafe)
+function getOrgBySafe(uint256 safeId) public view returns (bytes32 orgSafe)
 ```
 
 _Method to get the hashed orgHash based on safe id_
@@ -703,7 +703,7 @@ _Method to get the hashed orgHash based on safe id_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | uint256 of the safe |
+| safeId | uint256 | uint256 of the safe |
 
 #### Return Values
 
@@ -714,7 +714,7 @@ _Method to get the hashed orgHash based on safe id_
 ### isSafeLead
 
 ```solidity
-function isSafeLead(uint256 safe, address user) public view returns (bool)
+function isSafeLead(uint256 safeId, address user) public view returns (bool)
 ```
 
 **Check if a user is an safe lead of a safe/org**
@@ -723,7 +723,7 @@ function isSafeLead(uint256 safe, address user) public view returns (bool)
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| safe | uint256 | address of the safe |
+| safeId | uint256 | address of the safe |
 | user | address | address of the user that is a lead or not |
 
 #### Return Values

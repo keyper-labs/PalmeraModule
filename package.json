@@ -11,7 +11,9 @@
         "hardhat": "npx hardhat",
         "test": "yarn build && npx hardhat test ./test/hardhat/index.test.ts --network hardhat",
         "test-local": "npx hardhat test --network local",
-        "test-multiorg": "npx mocha -r ts-node/register 'test/**/*.ts' --grep 'Create 5 Basic Lineal Org and 5 1-to-3 Org, and After send a Arries of Promesies of Execution OnBehalf' --timeout 2000000"
+        "test-unique": "yarn build && npx mocha -r ts-node/register 'test/**/*.ts' --grep 'Create a Basic Lineal Org in Palmera Module, and Test ExecuteOnBehalf with EOA, Safe Version 1.3.0' --timeout 2000000 --network hardhat",
+        "script-AA-deployOrgOnChain": "npx ts-node ERC-4337/deployOrgOnChain.ts",
+        "script-AA-deploySafeWallets": "npx ts-node ERC-4337/deploySafeWallets.ts"
     },
     "importSort": {
         ".js, .jsx, .ts, .tsx": {

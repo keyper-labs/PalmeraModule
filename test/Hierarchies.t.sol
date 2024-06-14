@@ -143,6 +143,7 @@ contract Hierarchies is DeployHelper {
         assertEq(palmeraModule.isSuperSafe(safeIdA1, subSafeIdA1), true);
         assertEq(palmeraModule.isSuperSafe(safeIdA1, subsubSafeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(subSafeIdA1, subsubSafeIdA1), true);
+        assertEq(palmeraModule.isSuperSafe(safeIdA1, subsubSafeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(subsubSafeIdA1, subSafeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(subsubSafeIdA1, safeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(subsubSafeIdA1, rootId), false);
