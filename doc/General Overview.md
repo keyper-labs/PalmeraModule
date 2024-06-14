@@ -126,22 +126,58 @@ The system consists of a main SafeDAO contract managing multiple SubSafes with c
 
 ##### Modifiers
 
-- **SafeIdRegistered**: `modifier SafeIdRegistered(uint256 safe)`
+- **SafeIdRegistered**:
+
+    ```solidity
+    modifier SafeIdRegistered(uint256 safe)
+    ```
+
   - Validates if the Safe is registered.
-- **SafeRegistered**: `modifier SafeRegistered(address safe)`
+- **SafeRegistered**:
+
+    ```solidity
+    modifier SafeRegistered(address safe)
+    ```
+
   - Validates if the Safe address is registered.
-- **IsRootSafe**: `modifier IsRootSafe(address safe)`
+- **IsRootSafe**:
+
+    ```solidity
+    modifier IsRootSafe(address safe)
+    ```
+
   - Validates if the address is a Root Safe.
 
 ##### Key Functions
 
-- **constructor**: `constructor(address authorityAddress, uint256 maxDepthTreeLimitInitial) public`
+- **constructor**:
+
+    ```solidity
+    constructor(address authorityAddress, uint256 maxDepthTreeLimitInitial) public
+    ```
+
   - Initializes the Palmera Module with the given authority address and maximum depth tree limit.
-- **fallback**: `fallback() external`
+- **fallback**:
+
+    ```solidity
+    fallback() external
+    ```
+
   - Called when someone sends ETH or calls a non-existent function.
-- **receive**: `receive() external payable`
+- **receive**:
+
+    ```solidity
+    receive() external payable
+    ```
+
   - Called when someone sends ETH to the contract without data.
-- **execTransactionOnBehalf**: `function execTransactionOnBehalf(bytes32 org, address superSafe, address targetSafe, address to, uint256 value, bytes data, enum Enum.Operation operation, bytes signatures) external payable returns (bool result)`
+- **execTransactionOnBehalf**:
+
+    ```solidity
+    function execTransactionOnBehalf(bytes32 org, address superSafe, address targetSafe, address to, uint256 value, bytes data, enum Enum
+    ```
+
+    Operation operation, bytes signatures) external payable returns (bool result)`
   - Executes a transaction on behalf of another Safe with custom owner rights checks.
   - **Parameters**:
     - `org`: ID of the organization.
@@ -154,14 +190,24 @@ The system consists of a main SafeDAO contract managing multiple SubSafes with c
     - `signatures`: Packed signature data (v, r, s).
   - **Returns**:
     - `result`: `true` if the transaction was successful.
-- **addOwnerWithThreshold**: `function addOwnerWithThreshold(address ownerAdded, uint256 threshold, address targetSafe, bytes32 org) external`
+- **addOwnerWithThreshold**:
+
+    ```solidity
+    function addOwnerWithThreshold(address ownerAdded, uint256 threshold, address targetSafe, bytes32 org) external
+    ```
+
   - Adds an owner and sets a threshold without the normal multisig signature check.
   - **Parameters**:
     - `ownerAdded`: Address of the new owner.
     - `threshold`: New threshold for the Safe.
     - `targetSafe`: Address of the target Safe.
     - `org`: ID of the organization.
-- **removeOwner**: `function removeOwner(address prevOwner, address ownerRemoved, uint256 threshold, address targetSafe, bytes32 org) external`
+- **removeOwner**:
+
+    ```solidity
+    function removeOwner(address prevOwner, address ownerRemoved, uint256 threshold, address targetSafe, bytes32 org) external
+    ```
+
   - Removes an owner without the normal multisig signature check.
   - **Parameters**:
     - `prevOwner`: Address of the previous owner.
@@ -169,7 +215,12 @@ The system consists of a main SafeDAO contract managing multiple SubSafes with c
     - `threshold`: New threshold for the Safe.
     - `targetSafe`: Address of the target Safe.
     - `org`: ID of the organization.
-- **setRole**: `function setRole(enum DataTypes.Role role, address user, uint256 safeId, bool enabled) external`
+- **setRole**:
+
+    ```solidity
+    function setRole(enum DataTypes.Role role, address user, uint256 safeId, bool enabled) external
+    ```
+
   - Assigns roles to users.
   - **Parameters**:
     - `role`: Role to be assigned.
@@ -177,144 +228,274 @@ The system consists of a main SafeDAO contract managing multiple SubSafes with c
     - `safeId`: ID of the Safe
     - `safeId`: ID of the Safe.
     - `enabled`: Enable or disable the role.
-- **registerOrg**: `function registerOrg(string orgName) external returns (uint256 safeId)`
+- **registerOrg**:
+
+    ```solidity
+    function registerOrg(string orgName) external returns (uint256 safeId)
+    ```
+
   - Registers an organization.
   - **Parameters**:
     - `orgName`: Name of the organization.
   - **Returns**:
     - `safeId`: ID of the registered Safe.
-- **createRootSafe**: `function createRootSafe(address newRootSafe, string name) external returns (uint256 safeId)`
+- **createRootSafe**:
+
+    ```solidity
+    function createRootSafe(address newRootSafe, string name) external returns (uint256 safeId)
+    ```
+
   - Creates a Root Safe.
   - **Parameters**:
     - `newRootSafe`: Address of the new Root Safe.
     - `name`: Name of the Safe.
   - **Returns**:
     - `safeId`: ID of the created Safe.
-- **addSafe**: `function addSafe(uint256 superSafeId, string name) external returns (uint256 safeId)`
+- **addSafe**:
+
+    ```solidity
+    function addSafe(uint256 superSafeId, string name) external returns (uint256 safeId)
+    ```
+
   - Adds a Safe to an organization.
   - **Parameters**:
     - `superSafeId`: ID of the superSafe.
     - `name`: Name of the Safe.
   - **Returns**:
     - `safeId`: ID of the added Safe.
-- **removeSafe**: `function removeSafe(uint256 safeId) public`
+- **removeSafe**:
+
+    ```solidity
+    function removeSafe(uint256 safeId) public
+    ```
+
   - Removes a Safe and reassigns all children to the superSafe.
   - **Parameters**:
     - `safeId`: ID of the Safe to be removed.
-- **disconnectSafe**: `function disconnectSafe(uint256 safeId) external`
+- **disconnectSafe**:
+
+    ```solidity
+    function disconnectSafe(uint256 safeId) external
+    ```
+
   - Disconnects a Safe from an organization.
   - **Parameters**:
     - `safeId`: ID of the Safe to be disconnected.
-- **removeWholeTree**: `function removeWholeTree(uint256 rootSafeId) external`
+- **removeWholeTree**:
+
+    ```solidity
+    function removeWholeTree(uint256 rootSafeId) external
+    ```
+
   - Removes the entire tree of a Root Safe.
   - **Parameters**:
     - `rootSafeId`: ID of the Root Safe.
-- **promoteRoot**: `function promoteRoot(uint256 safeId) external`
+- **promoteRoot**:
+
+    ```solidity
+    function promoteRoot(uint256 safeId) external
+    ```
+
   - Promotes a Safe to a Root Safe.
   - **Parameters**:
     - `safeId`: ID of the Safe to be promoted.
-- **updateSuper**: `function updateSuper(uint256 safeId, uint256 newSuperSafeId) external`
+- **updateSuper**:
+
+    ```solidity
+    function updateSuper(uint256 safeId, uint256 newSuperSafeId) external
+    ```
+
   - Updates the superSafe of a Safe.
   - **Parameters**:
     - `safeId`: ID of the Safe to be updated.
     - `newSuperSafeId`: ID of the new superSafe.
-- **updateDepthTreeLimit**: `function updateDepthTreeLimit(bytes32 org, uint256 newDepthTreeLimit) external`
+- **updateDepthTreeLimit**:
+
+    ```solidity
+    function updateDepthTreeLimit(bytes32 org, uint256 newDepthTreeLimit) external
+    ```
+
   - Updates the depth tree limit.
   - **Parameters**:
     - `org`: ID of the organization.
     - `newDepthTreeLimit`: New depth tree limit.
-- **addToList**: `function addToList(bytes32 org, address account) external`
+- **addToList**:
+
+    ```solidity
+    function addToList(bytes32 org, address account) external
+    ```
+
   - Adds an address to the list.
   - **Parameters**:
     - `org`: ID of the organization.
     - `account`: Address to be added.
-- **dropFromList**: `function dropFromList(bytes32 org, address account) external`
+- **dropFromList**:
+
+    ```solidity
+    function dropFromList(bytes32 org, address account) external
+    ```
+
   - Removes an address from the list.
   - **Parameters**:
     - `org`: ID of the organization.
     - `account`: Address to be removed.
-- **enableAllowlist**: `function enableAllowlist(bytes32 org) external`
+- **enableAllowlist**:
+
+    ```solidity
+    function enableAllowlist(bytes32 org) external
+    ```
+
   - Enables the allowlist.
   - **Parameters**:
     - `org`: ID of the organization.
-- **enableDenylist**: `function enableDenylist(bytes32 org) external`
+- **enableDenylist**:
+
+    ```solidity
+    function enableDenylist(bytes32 org) external
+    ```
+
   - Enables the denylist.
   - **Parameters**:
     - `org`: ID of the organization.
-- **disableDenyHelper**: `function disableDenyHelper(bytes32 org) external`
+- **disableDenyHelper**:
+
+    ```solidity
+    function disableDenyHelper(bytes32 org) external
+    ```
+
   - Disables all lists.
   - **Parameters**:
     - `org`: ID of the organization.
-- **getSafeInfo**: `function getSafeInfo(uint256 safeId) external view returns (...)`
+- **getSafeInfo**:
+
+    ```solidity
+    function getSafeInfo(uint256 safeId) external view returns (...)
+    ```
+
   - Retrieves all information about a Safe.
   - **Parameters**:
     - `safeId`: ID of the Safe.
-- **hasNotPermissionOverTarget**: `function hasNotPermissionOverTarget(uint256 safeId, address account) public view returns (bool)`
+- **hasNotPermissionOverTarget**:
+
+    ```solidity
+    function hasNotPermissionOverTarget(uint256 safeId, address account) public view returns (bool)
+    ```
+
   - Checks if the caller has permission over the target Safe.
   - **Parameters**:
     - `safeId`: ID of the Safe.
     - `account`: Address to be checked.
   - **Returns**:
     - `bool`: `true` if the caller has no permission.
-- **isOrgRegistered**: `function isOrgRegistered(bytes32 org) public view returns (bool)`
+- **isOrgRegistered**:
+
+    ```solidity
+    function isOrgRegistered(bytes32 org) public view returns (bool)
+    ```
+
   - Checks if the organization is registered.
   - **Parameters**:
     - `org`: ID of the organization.
   - **Returns**:
     - `bool`: `true` if the organization is registered.
-- **isRootSafeOf**: `function isRootSafeOf(uint256 safeId, uint256 potentialRootSafeId) public view returns (bool)`
+- **isRootSafeOf**:
+
+    ```solidity
+    function isRootSafeOf(uint256 safeId, uint256 potentialRootSafeId) public view returns (bool)
+    ```
+
   - Checks if an address is the Root Safe of a Safe.
   - **Parameters**:
     - `safeId`: ID of the Safe.
     - `potentialRootSafeId`: ID of the potential Root Safe.
   - **Returns**:
     - `bool`: `true` if the address is the Root Safe.
-- **isTreeMember**: `function isTreeMember(uint256 safeId, uint256 potentialMemberSafeId) public view returns (bool)`
+- **isTreeMember**:
+
+    ```solidity
+    function isTreeMember(uint256 safeId, uint256 potentialMemberSafeId) public view returns (bool)
+    ```
+
   - Checks if a Safe is a member of the tree of another Safe.
   - **Parameters**:
     - `safeId`: ID of the Safe.
     - `potentialMemberSafeId`: ID of the potential member Safe.
   - **Returns**:
     - `bool`: `true` if the Safe is a member of the tree.
-- **isLimitLevel**: `function isLimitLevel(uint256 safeId, uint256 level) public view returns (bool)`
+- **isLimitLevel**:
+
+    ```solidity
+    function isLimitLevel(uint256 safeId, uint256 level) public view returns (bool)
+    ```
+
   - Validates if the depth tree limit is reached.
   - **Parameters**:
     - `safeId`: ID of the Safe.
     - `level`: Depth level to be checked.
   - **Returns**:
     - `bool`: `true` if the limit is reached.
-- **isSuperSafe**: `function isSuperSafe(uint256 safeId, uint256 potentialSuperSafeId) public view returns (bool)`
+- **isSuperSafe**:
+
+    ```solidity
+    function isSuperSafe(uint256 safeId, uint256 potentialSuperSafeId) public view returns (bool)`
+    ```
+
   - Checks if a Safe is the superSafe of another Safe.
   - **Parameters**:
     - `safeId`: ID of the Safe.
     - `potentialSuperSafeId`: ID of the potential superSafe.
   - **Returns**:
     - `bool`: `true` if the Safe is the superSafe.
-- **isPendingRemove**: `function isPendingRemove(uint256 safeId) public view returns (bool)`
+- **isPendingRemove**:
+
+    ```solidity
+    function isPendingRemove(uint256 safeId) public view returns (bool)
+    ```
+
   - Checks if a Safe is pending disconnection.
   - **Parameters**:
     - `safeId`: ID of the Safe.
   - **Returns**:
     - `bool`: `true` if the Safe is pending disconnection.
-- **isSafeRegistered**: `function isSafeRegistered(uint256 safeId) public view returns (bool)`
+- **isSafeRegistered**:
+
+    ```solidity
+    function isSafeRegistered(uint256 safeId) public view returns (bool)
+    ```
+
   - Verifies if the Safe is registered in any organization.
   - **Parameters**:
     - `safeId`: ID of the Safe.
   - **Returns**:
     - `bool`: `true` if the Safe is registered.
-- **getRootSafe**: `function getRootSafe(uint256 safeId) public view returns (uint256)`
+- **getRootSafe**:
+
+    ```solidity
+    function getRootSafe(uint256 safeId) public view returns (uint256)
+    ```
+
   - Retrieves the Root Safe of a Safe.
   - **Parameters**:
     - `safeId`: ID of the Safe.
   - **Returns**:
     - `uint256`: ID of the Root Safe.
-- **getSafeAddress**: `function getSafeAddress(uint256 safeId) external view returns (address)`
+- **getSafeAddress**:
+
+    ```solidity
+    function getSafeAddress(uint256 safeId) external view returns (address)
+    ```
+
   - Retrieves the address of a Safe.
   - **Parameters**:
     - `safeId`: ID of the Safe.
   - **Returns**:
     - `address`: Address of the Safe.
-- **getOrgHashBySafe**: `function getOrgHashBySafe(uint256 safeId) public view returns (bytes32)`
+- **getOrgHashBySafe**:
+
+    ```solidity
+    function getOrgHashBySafe(uint256 safeId) public view returns (bytes32)
+    ```
+
   - Retrieves the organization hash by Safe.
   - **Parameters**:
     - `safeId`: ID of the Safe.
