@@ -218,6 +218,7 @@ describe("Basic Deployment of Palmera Environment", function () {
             await tx4.transactionResponse?.wait();
             // Verify if the Guard is enabled in Safe Account
             const enabledGuard = await safes[j].getGuard();
+            await snooze(1000);
             expect(enabledGuard).to.equal(await PalmeraGuard.getAddress());
         }
         console.log(
