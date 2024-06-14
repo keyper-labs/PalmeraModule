@@ -26,11 +26,11 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     //           safeA1 <--------
     function testCan_ExecTransactionOnBehalf_ROOT_SAFE_as_SAFE_is_TARGETS_ROOT_SameTree(
     ) public {
-        (uint256 rootId, uint256 safeA1) =
+        (uint256 rootId, uint256 safeA1Id) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         address rootAddr = palmeraModule.getSafeAddress(rootId);
-        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
 
         // Set palmerahelper safe to org
         palmeraHelper.setSafe(rootAddr);
@@ -1112,11 +1112,11 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // TargerSafe: safeA1
     // TargetSafe Type: safe
     function testRevertInvalidSignatureExecOnBehalf() public {
-        (uint256 rootId, uint256 safeA1) =
+        (uint256 rootId, uint256 safeA1Id) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         address rootAddr = palmeraModule.getSafeAddress(rootId);
-        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
         palmeraHelper.setSafe(rootAddr);
 
         // Try onbehalf with incorrect signers
@@ -1159,11 +1159,11 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // //           safeA1 <--------
     function testRevertInvalidAddressProvidedExecTransactionOnBehalfScenarioOne(
     ) public {
-        (uint256 rootId, uint256 safeA1) =
+        (uint256 rootId, uint256 safeA1Id) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         address rootAddr = palmeraModule.getSafeAddress(rootId);
-        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
         // Fake receiver = Zero address
         address fakeReceiver = address(0);
 
@@ -1208,11 +1208,11 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     function testRevertZeroAddressProvidedExecTransactionOnBehalfScenarioTwo()
         public
     {
-        (uint256 rootId, uint256 safeA1) =
+        (uint256 rootId, uint256 safeA1Id) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         address rootAddr = palmeraModule.getSafeAddress(rootId);
-        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
 
         // Set palmerahelper safe to org
         palmeraHelper.setSafe(rootAddr);
@@ -1257,11 +1257,11 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     function testRevertOrgNotRegisteredExecTransactionOnBehalfScenarioThree()
         public
     {
-        (uint256 rootId, uint256 safeA1) =
+        (uint256 rootId, uint256 safeA1Id) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         address rootAddr = palmeraModule.getSafeAddress(rootId);
-        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
 
         // Set palmerahelper safe to org
         palmeraHelper.setSafe(rootAddr);
@@ -1299,11 +1299,11 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // // TargerSafe: fakeTargetSafe
     // // TargetSafe Type: EOA
     function testRevertInvalidSafeExecTransactionOnBehalf() public {
-        (uint256 rootId, uint256 safeA1) =
+        (uint256 rootId, uint256 safeA1Id) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         address rootAddr = palmeraModule.getSafeAddress(rootId);
-        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
         address fakeTargetSafe = address(0xFFE);
 
         // Set palmerahelper safe to org
@@ -1343,13 +1343,13 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
     // TODO: test this scenario in Live Testnet
     function testCannot_ExecTransactionOnBehalf_Wrapper_ExecTransactionOnBehalf_ChildSafe_over_RootSafe_With_SAFE(
     ) public {
-        (uint256 rootId, uint256 safeA1, uint256 childSafeA1,,) =
+        (uint256 rootId, uint256 safeA1Id, uint256 childSafeA1,,) =
         palmeraSafeBuilder.setupOrgThreeTiersTree(
             orgName, safeA1Name, subSafeA1Name
         );
 
         address rootAddr = palmeraModule.getSafeAddress(rootId);
-        address safeA1Addr = palmeraModule.getSafeAddress(safeA1);
+        address safeA1Addr = palmeraModule.getSafeAddress(safeA1Id);
         address childSafeA1Addr = palmeraModule.getSafeAddress(childSafeA1);
 
         // Send ETH to safe&subsafe
@@ -1359,7 +1359,7 @@ contract ExecTransactionOnBehalf is DeployHelper, SignersHelper {
 
         // Create a child safe for safe A2
         address fakeCaller = safeHelper.newPalmeraSafe(4, 2);
-        bool result = safeHelper.createAddSafeTx(safeA1, "ChildSafeA2");
+        bool result = safeHelper.createAddSafeTx(safeA1Id, "ChildSafeA2");
         assertEq(result, true);
 
         // Set Safe Role in Safe A1 over Child Safe A1

@@ -25,13 +25,13 @@ contract Hierarchies is DeployHelper {
             address lead,
             address safe,
             uint256[] memory child,
-            uint256 superSafe
+            uint256 superSafeId
         ) = palmeraModule.getSafeInfo(rootId);
         assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
         assertEq(name, orgName);
         assertEq(lead, address(0));
         assertEq(safe, address(safeHelper.safeWallet()));
-        assertEq(superSafe, 0);
+        assertEq(superSafeId, 0);
         assertEq(child.length, 0);
         assertEq(palmeraModule.isOrgRegistered(orgHash), true);
         assertEq(
@@ -52,7 +52,7 @@ contract Hierarchies is DeployHelper {
             address lead,
             address safe,
             uint256[] memory child,
-            uint256 superSafe
+            uint256 superSafeId
         ) = palmeraModule.getSafeInfo(safeIdA1);
 
         assertEq(uint256(tier), uint256(DataTypes.Tier.SAFE));
@@ -60,7 +60,7 @@ contract Hierarchies is DeployHelper {
         assertEq(lead, address(0));
         assertEq(safe, address(safeHelper.safeWallet()));
         assertEq(child.length, 0);
-        assertEq(superSafe, rootId);
+        assertEq(superSafeId, rootId);
 
         address safeAddr = palmeraModule.getSafeAddress(safeIdA1);
         address rootAddr = palmeraModule.getSafeAddress(rootId);
@@ -139,7 +139,9 @@ contract Hierarchies is DeployHelper {
             orgName, safeA1Name, subSafeA1Name, subSubSafeA1Name
         );
         assertEq(palmeraModule.isSuperSafe(rootId, safeIdA1), true);
+        assertEq(palmeraModule.isSuperSafe(rootId, subSafeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(safeIdA1, subSafeIdA1), true);
+        assertEq(palmeraModule.isSuperSafe(safeIdA1, subsubSafeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(subSafeIdA1, subsubSafeIdA1), true);
         assertEq(palmeraModule.isSuperSafe(subsubSafeIdA1, subSafeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(subsubSafeIdA1, safeIdA1), false);
@@ -186,11 +188,11 @@ contract Hierarchies is DeployHelper {
         palmeraModule.updateSuper(subSafeIdA1, safeIdB);
         vm.stopPrank();
         assertEq(palmeraModule.isSuperSafe(safeIdB, subSafeIdA1), true);
+        assertEq(palmeraModule.isTreeMember(safeIdB, subsubSafeIdA1), true);
         assertEq(palmeraModule.isSuperSafe(safeIdA1, subSafeIdA1), false);
-        assertEq(palmeraModule.isSuperSafe(safeIdA1, subSafeIdA1), false);
+        assertEq(palmeraModule.isTreeMember(safeIdA1, subSafeIdA1), false);
         assertEq(palmeraModule.isSuperSafe(safeIdA1, subsubSafeIdA1), false);
         assertEq(palmeraModule.isTreeMember(safeIdA1, subsubSafeIdA1), false);
-        assertEq(palmeraModule.isTreeMember(safeIdB, subsubSafeIdA1), true);
         assertEq(
             palmeraRolesContract.doesUserHaveRole(
                 safeA1, uint8(DataTypes.Role.SUPER_SAFE)
@@ -261,7 +263,7 @@ contract Hierarchies is DeployHelper {
             address lead,
             address safe,
             uint256[] memory child,
-            uint256 superSafe
+            uint256 superSafeId
         ) = palmeraModule.getSafeInfo(safeA1Id);
 
         assertEq(uint8(tier), uint8(DataTypes.Tier.SAFE));
@@ -270,10 +272,10 @@ contract Hierarchies is DeployHelper {
         assertEq(safe, safeA1Addr);
         assertEq(child.length, 1);
         assertEq(child[0], safeSubSafeA1Id);
-        assertEq(superSafe, orgRootId);
+        assertEq(superSafeId, orgRootId);
 
         /// Reuse the local-variable for avoid stack too deep error
-        (tier, name, lead, safe, child, superSafe) =
+        (tier, name, lead, safe, child, superSafeId) =
             palmeraModule.getSafeInfo(safeSubSafeA1Id);
 
         assertEq(uint8(tier), uint8(DataTypes.Tier.SAFE));
@@ -281,7 +283,7 @@ contract Hierarchies is DeployHelper {
         assertEq(lead, address(0));
         assertEq(safe, safeSubSafeA1Addr);
         assertEq(child.length, 0);
-        assertEq(superSafe, safeA1Id);
+        assertEq(superSafeId, safeA1Id);
     }
 
     /// @notice Test Create Safe Four Tiers Tree
@@ -889,13 +891,13 @@ contract Hierarchies is DeployHelper {
             address lead,
             address safe,
             uint256[] memory child,
-            uint256 superSafe
+            uint256 superSafeId
         ) = palmeraModule.getSafeInfo(rootId);
         assertEq(uint8(tier), uint8(DataTypes.Tier.ROOT));
         assertEq(name, orgName);
         assertEq(lead, address(0));
         assertEq(safe, address(safeHelper.safeWallet()));
-        assertEq(superSafe, 0);
+        assertEq(superSafeId, 0);
         assertEq(child.length, 1);
         assertEq(palmeraModule.isOrgRegistered(orgHash), true);
         assertEq(
@@ -926,7 +928,7 @@ contract Hierarchies is DeployHelper {
             address lead,
             address safe,
             uint256[] memory child,
-            uint256 superSafe
+            uint256 superSafeId
         ) = palmeraModule.getSafeInfo(safeIdA1);
 
         assertEq(uint256(tier), uint256(DataTypes.Tier.SAFE));
@@ -934,7 +936,7 @@ contract Hierarchies is DeployHelper {
         assertEq(lead, address(0));
         assertEq(safe, address(safeHelper.safeWallet()));
         assertEq(child.length, 0);
-        assertEq(superSafe, rootId);
+        assertEq(superSafeId, rootId);
 
         address safeAddr = palmeraModule.getSafeAddress(safeIdA1);
         address rootAddr = palmeraModule.getSafeAddress(rootId);

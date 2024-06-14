@@ -269,12 +269,12 @@ contract PalmeraModule is Auth, Helpers {
     /// @dev Call must come from the root safe
     /// @param role Role to be assigned
     /// @param user User that will have specific role (Can be EAO or safe)
-    /// @param safe Safe safe which will have the user permissions on
+    /// @param safeId Safe Id which will have the user permissions on
     /// @param enabled Enable or disable the role
     function setRole(
         DataTypes.Role role,
         address user,
-        uint256 safe,
+        uint256 safeId,
         bool enabled
     ) external validAddress(user) IsRootSafe(_msgSender()) requiresAuth {
         address caller = _msgSender();
@@ -284,10 +284,10 @@ contract PalmeraModule is Auth, Helpers {
         ) {
             revert Errors.SetRoleForbidden(role);
         }
-        if (!isRootSafeOf(caller, safe)) {
+        if (!isRootSafeOf(caller, safeId)) {
             revert Errors.NotAuthorizedSetRoleAnotherTree();
         }
-        DataTypes.Safe storage _safe = safes[getOrgHashBySafe(caller)][safe];
+        DataTypes.Safe storage _safe = safes[getOrgHashBySafe(caller)][safeId];
         // Check if safe is part of the caller org
         if (
             role == DataTypes.Role.SAFE_LEAD
@@ -342,40 +342,40 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Add a safe to an organisation/safe
     /// @dev Call coming from the safe
-    /// @param superSafe Id of the superSafe
+    /// @param superSafeId Id of the superSafe
     /// @param name string name of the safe
-    function addSafe(uint256 superSafe, string memory name)
+    function addSafe(uint256 superSafeId, string memory name)
         external
-        SafeIdRegistered(superSafe)
+        SafeIdRegistered(superSafeId)
         IsSafe(_msgSender())
         returns (uint256 safeId)
     {
         // check the name of safe is not empty
         if (bytes(name).length == 0) revert Errors.EmptyName();
-        bytes32 org = getOrgBySafe(superSafe);
+        bytes32 org = getOrgBySafe(superSafeId);
         address caller = _msgSender();
         if (isSafeRegistered(caller)) {
             revert Errors.SafeAlreadyRegistered(caller);
         }
         // check to verify if the caller is already exist in the org
-        if (isTreeMember(superSafe, getSafeIdBySafe(org, caller))) {
+        if (isTreeMember(superSafeId, getSafeIdBySafe(org, caller))) {
             revert Errors.SafeAlreadyRegistered(caller);
         }
         // check if the superSafe Reached Depth Tree Limit
-        if (isLimitLevel(superSafe)) {
+        if (isLimitLevel(superSafeId)) {
             revert Errors.TreeDepthLimitReached(depthTreeLimit[org]);
         }
         /// Create a new safe
         DataTypes.Safe storage newSafe = safes[org][indexId];
         /// Add to org root/safe
-        DataTypes.Safe storage superSafeOrgSafe = safes[org][superSafe];
+        DataTypes.Safe storage superSafeOrgSafe = safes[org][superSafeId];
         /// Add child to superSafe
         safeId = indexId++;
         superSafeOrgSafe.child.push(safeId);
 
         newSafe.safe = caller;
         newSafe.name = name;
-        newSafe.superSafe = superSafe;
+        newSafe.superSafe = superSafeId;
         indexSafe[org].push(safeId);
         /// Give Role SuperSafe
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
@@ -392,14 +392,14 @@ contract PalmeraModule is Auth, Helpers {
         }
 
         emit Events.SafeCreated(
-            org, safeId, newSafe.lead, caller, superSafe, name
+            org, safeId, newSafe.lead, caller, superSafeId, name
         );
     }
 
     /// @notice Remove safe and reasign all child to the superSafe
     /// @dev All actions will be driven based on the caller of the method, and args
-    /// @param safe Id of the safe to be removed
-    function removeSafe(uint256 safe)
+    /// @param safeId Id of the safe to be removed
+    function removeSafe(uint256 safeId)
         public
         SafeRegistered(_msgSender())
         requiresAuth
@@ -407,16 +407,19 @@ contract PalmeraModule is Auth, Helpers {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 callerSafe = getSafeIdBySafe(org, caller);
-        uint256 rootSafe = getRootSafe(safe);
+        uint256 rootSafe = getRootSafe(safeId);
         /// Avoid Replay attack
-        if (safes[org][safe].tier == DataTypes.Tier.REMOVED) {
+        if (safes[org][safeId].tier == DataTypes.Tier.REMOVED) {
             revert Errors.SafeAlreadyRemoved();
         }
         // SuperSafe usecase : Check caller is superSafe of the safe
-        if ((!isRootSafeOf(caller, safe)) && (!isSuperSafe(callerSafe, safe))) {
+        if (
+            (!isRootSafeOf(caller, safeId))
+                && (!isSuperSafe(callerSafe, safeId))
+        ) {
             revert Errors.NotAuthorizedAsNotRootOrSuperSafe();
         }
-        DataTypes.Safe storage _safe = safes[org][safe];
+        DataTypes.Safe storage _safe = safes[org][safeId];
         // Check if the safe is Root Safe and has child
         if (
             ((_safe.tier == DataTypes.Tier.ROOT) || (_safe.superSafe == 0))
@@ -430,7 +433,7 @@ contract PalmeraModule is Auth, Helpers {
 
         /// Remove child from superSafe
         for (uint256 i; i < superSafe.child.length;) {
-            if (superSafe.child[i] == safe) {
+            if (superSafe.child[i] == safeId) {
                 superSafe.child[i] = superSafe.child[superSafe.child.length - 1];
                 superSafe.child.pop();
                 break;
@@ -464,7 +467,7 @@ contract PalmeraModule is Auth, Helpers {
 
         // Store the name before to delete the Safe
         emit Events.SafeRemoved(
-            org, safe, superSafe.lead, caller, _safe.superSafe, _safe.name
+            org, safeId, superSafe.lead, caller, _safe.superSafe, _safe.name
         );
         // Assign the with Root Safe (because is not part of the Tree)
         // If the Safe is not Root Safe, pass to depend on Root Safe directly
@@ -476,25 +479,25 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Disconnect Safe of a Org
     /// @dev Disconnect Safe of a Org, Call must come from the root safe
-    /// @param safe Id of the safe to be updated
-    function disconnectSafe(uint256 safe)
+    /// @param safeId Id of the safe to be updated
+    function disconnectSafe(uint256 safeId)
         external
         IsRootSafe(_msgSender())
-        SafeIdRegistered(safe)
+        SafeIdRegistered(safeId)
         requiresAuth
     {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
         uint256 rootSafe = getSafeIdBySafe(org, caller);
-        DataTypes.Safe memory _disconnectSafe = safes[org][safe];
+        DataTypes.Safe memory _disconnectSafe = safes[org][safeId];
         /// RootSafe usecase : Check if the safe is Member of the Tree of the caller (rootSafe)
         if (
             (
-                (!isRootSafeOf(caller, safe))
+                (!isRootSafeOf(caller, safeId))
                     && (_disconnectSafe.tier != DataTypes.Tier.REMOVED)
             )
                 || (
-                    (!isPendingRemove(rootSafe, safe))
+                    (!isPendingRemove(rootSafe, safeId))
                         && (_disconnectSafe.tier == DataTypes.Tier.REMOVED)
                 )
         ) {
@@ -502,10 +505,10 @@ contract PalmeraModule is Auth, Helpers {
         }
         /// In case Root Safe Disconnect Safe without removeSafe Before
         if (_disconnectSafe.tier != DataTypes.Tier.REMOVED) {
-            removeSafe(safe);
+            removeSafe(safeId);
         }
         // Disconnect Safe
-        _exitSafe(safe);
+        _exitSafe(safeId);
         if (indexSafe[org].length == 0) removeOrg(org);
     }
 
@@ -541,24 +544,24 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Method to Promete a safe to Root Safe of an Org to Root Safe
     /// @dev Method to Promete a safe to Root Safe of an Org to Root Safe
-    /// @param safe Id of the safe to be updated
-    function promoteRoot(uint256 safe)
+    /// @param safeId Id of the safe to be updated
+    function promoteRoot(uint256 safeId)
         external
         IsRootSafe(_msgSender())
-        SafeIdRegistered(safe)
+        SafeIdRegistered(safeId)
         requiresAuth
     {
-        bytes32 org = getOrgBySafe(safe);
+        bytes32 org = getOrgBySafe(safeId);
         address caller = _msgSender();
         /// RootSafe usecase : Check if the safe is Member of the Tree of the caller (rootSafe)
-        if (!isRootSafeOf(caller, safe)) {
+        if (!isRootSafeOf(caller, safeId)) {
             revert Errors.NotAuthorizedUpdateNonChildrenSafe();
         }
-        DataTypes.Safe storage newRootSafe = safes[org][safe];
+        DataTypes.Safe storage newRootSafe = safes[org][safeId];
         /// Check if the safe is a Super Safe, and an Direct Children of thr Root Safe
         if (
             (newRootSafe.child.length <= 0)
-                || (!isSuperSafe(getSafeIdBySafe(org, caller), safe))
+                || (!isSuperSafe(getSafeIdBySafe(org, caller), safeId))
         ) {
             revert Errors.NotAuthorizedUpdateNonSuperSafe();
         }
@@ -573,41 +576,41 @@ contract PalmeraModule is Auth, Helpers {
         newRootSafe.lead = address(0);
         newRootSafe.superSafe = 0;
         emit Events.RootSafePromoted(
-            org, safe, caller, newRootSafe.safe, newRootSafe.name
+            org, safeId, caller, newRootSafe.safe, newRootSafe.name
         );
     }
 
     /// @notice update superSafe of a safe
     /// @dev Update the superSafe of a safe with a new superSafe, Call must come from the root safe
-    /// @param safe Id of the safe to be updated
-    /// @param newSuper Id of the new superSafe
-    function updateSuper(uint256 safe, uint256 newSuper)
+    /// @param safeId Id of the safe to be updated
+    /// @param newSuperId Id of the new superSafe
+    function updateSuper(uint256 safeId, uint256 newSuperId)
         external
         IsRootSafe(_msgSender())
-        SafeIdRegistered(newSuper)
+        SafeIdRegistered(newSuperId)
         requiresAuth
     {
-        bytes32 org = getOrgBySafe(safe);
+        bytes32 org = getOrgBySafe(safeId);
         address caller = _msgSender();
         /// RootSafe usecase : Check if the safe is Member of the Tree of the caller (rootSafe)
-        if (!isRootSafeOf(caller, safe)) {
+        if (!isRootSafeOf(caller, safeId)) {
             revert Errors.NotAuthorizedUpdateNonChildrenSafe();
         }
         // Validate are the same org
-        if (org != getOrgBySafe(newSuper)) {
+        if (org != getOrgBySafe(newSuperId)) {
             revert Errors.NotAuthorizedUpdateSafeToOtherOrg();
         }
         /// Check if the new Super Safe is Reached Depth Tree Limit
-        if (isLimitLevel(newSuper)) {
+        if (isLimitLevel(newSuperId)) {
             revert Errors.TreeDepthLimitReached(depthTreeLimit[org]);
         }
-        DataTypes.Safe storage _safe = safes[org][safe];
+        DataTypes.Safe storage _safe = safes[org][safeId];
         /// SuperSafe is either an Org or a Safe
         DataTypes.Safe storage oldSuper = safes[org][_safe.superSafe];
 
         /// Remove child from superSafe
         for (uint256 i; i < oldSuper.child.length;) {
-            if (oldSuper.child[i] == safe) {
+            if (oldSuper.child[i] == safeId) {
                 oldSuper.child[i] = oldSuper.child[oldSuper.child.length - 1];
                 oldSuper.child.pop();
                 break;
@@ -625,8 +628,8 @@ contract PalmeraModule is Auth, Helpers {
         }
 
         /// Update safe superSafe
-        _safe.superSafe = newSuper;
-        DataTypes.Safe storage newSuperSafe = safes[org][newSuper];
+        _safe.superSafe = newSuperId;
+        DataTypes.Safe storage newSuperSafe = safes[org][newSuperId];
         /// Add safe to new superSafe
         /// Give Role SuperSafe if not have it
         if (
@@ -638,14 +641,14 @@ contract PalmeraModule is Auth, Helpers {
                 newSuperSafe.safe, uint8(DataTypes.Role.SUPER_SAFE), true
             );
         }
-        newSuperSafe.child.push(safe);
+        newSuperSafe.child.push(safeId);
         emit Events.SafeSuperUpdated(
             org,
-            safe,
+            safeId,
             _safe.lead,
             caller,
             getSafeIdBySafe(org, oldSuper.safe),
-            newSuper
+            newSuperId
         );
     }
 
@@ -757,12 +760,12 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Get all the information about a safe
     /// @dev Method for getting all info of a safe
-    /// @param safe uint256 of the safe
+    /// @param safeId uint256 of the safe
     /// @return all the information about a safe
-    function getSafeInfo(uint256 safe)
+    function getSafeInfo(uint256 safeId)
         external
         view
-        SafeIdRegistered(safe)
+        SafeIdRegistered(safeId)
         returns (
             DataTypes.Tier,
             string memory,
@@ -772,14 +775,14 @@ contract PalmeraModule is Auth, Helpers {
             uint256
         )
     {
-        bytes32 org = getOrgBySafe(safe);
+        bytes32 org = getOrgBySafe(safeId);
         return (
-            safes[org][safe].tier,
-            safes[org][safe].name,
-            safes[org][safe].lead,
-            safes[org][safe].safe,
-            safes[org][safe].child,
-            safes[org][safe].superSafe
+            safes[org][safeId].tier,
+            safes[org][safeId].name,
+            safes[org][safeId].lead,
+            safes[org][safeId].safe,
+            safes[org][safeId].child,
+            safes[org][safeId].superSafe
         );
     }
 
@@ -791,12 +794,11 @@ contract PalmeraModule is Auth, Helpers {
         address caller,
         bytes32 org,
         address targetSafe
-    ) public view returns (bool hasPermission) {
-        hasPermission = !isRootSafeOf(caller, getSafeIdBySafe(org, targetSafe))
+    ) public view returns (bool hasNotPermission) {
+        hasNotPermission = !isRootSafeOf(caller, getSafeIdBySafe(org, targetSafe))
             && !isSuperSafe(
                 getSafeIdBySafe(org, caller), getSafeIdBySafe(org, targetSafe)
             ) && !isSafeLead(getSafeIdBySafe(org, targetSafe), caller);
-        return hasPermission;
     }
 
     /// @notice check if the Organisation is registered
@@ -808,64 +810,64 @@ contract PalmeraModule is Auth, Helpers {
     }
 
     /// @notice Check if the address, is a rootSafe of the safe within an organisation
-    /// @param safe ID's of the child safe/safe
+    /// @param safeId ID's of the child safe/safe
     /// @param root address of Root Safe of the safe
     /// @return bool
-    function isRootSafeOf(address root, uint256 safe)
+    function isRootSafeOf(address root, uint256 safeId)
         public
         view
-        SafeIdRegistered(safe)
+        SafeIdRegistered(safeId)
         returns (bool)
     {
-        if (root == address(0) || safe == 0) return false;
-        bytes32 org = getOrgBySafe(safe);
+        if (root == address(0) || safeId == 0) return false;
+        bytes32 org = getOrgBySafe(safeId);
         uint256 rootSafe = getSafeIdBySafe(org, root);
         if (rootSafe == 0) return false;
         return (
             (safes[org][rootSafe].tier == DataTypes.Tier.ROOT)
-                && (isTreeMember(rootSafe, safe))
+                && (isTreeMember(rootSafe, safeId))
         );
     }
 
     /// @notice Check if the safe is a Is Tree Member of another safe
-    /// @param superSafe ID's of the superSafe
-    /// @param safe ID's of the safe
+    /// @param superSafeId ID's of the superSafe
+    /// @param safeId ID's of the safe
     /// @return isMember
-    function isTreeMember(uint256 superSafe, uint256 safe)
+    function isTreeMember(uint256 superSafeId, uint256 safeId)
         public
         view
         returns (bool isMember)
     {
-        if (superSafe == 0 || safe == 0) return false;
-        bytes32 org = getOrgBySafe(superSafe);
-        DataTypes.Safe memory childSafe = safes[org][safe];
+        if (superSafeId == 0 || safeId == 0) return false;
+        bytes32 org = getOrgBySafe(superSafeId);
+        DataTypes.Safe memory childSafe = safes[org][safeId];
         if (childSafe.safe == address(0)) return false;
-        if (superSafe == safe) return true;
-        (isMember,,) = _seekMember(superSafe, safe);
+        if (superSafeId == safeId) return true;
+        (isMember,,) = _seekMember(superSafeId, safeId);
     }
 
     /// @dev Method to validate if is Depth Tree Limit
-    /// @param superSafe ID's of Safe
+    /// @param superSafeId ID's of Safe
     /// @return bool
-    function isLimitLevel(uint256 superSafe) public view returns (bool) {
-        if ((superSafe == 0) || (superSafe > indexId)) return false;
-        bytes32 org = getOrgBySafe(superSafe);
-        (, uint256 level,) = _seekMember(indexId + 1, superSafe);
+    function isLimitLevel(uint256 superSafeId) public view returns (bool) {
+        if ((superSafeId == 0) || (superSafeId > indexId)) return false;
+        bytes32 org = getOrgBySafe(superSafeId);
+        (, uint256 level,) = _seekMember(indexId + 1, superSafeId);
         return level >= depthTreeLimit[org];
     }
 
     /// @dev Method to Validate is ID Safe a SuperSafe of a Safe
-    /// @param safe ID's of the safe
-    /// @param superSafe ID's of the Safe
+    /// @param safeId ID's of the safe
+    /// @param superSafeId ID's of the Safe
     /// @return bool
-    function isSuperSafe(uint256 superSafe, uint256 safe)
+    function isSuperSafe(uint256 superSafeId, uint256 safeId)
         public
         view
         returns (bool)
     {
-        if (superSafe == 0 || safe == 0) return false;
-        bytes32 org = getOrgBySafe(superSafe);
-        DataTypes.Safe memory childSafe = safes[org][safe];
+        if (superSafeId == 0 || safeId == 0) return false;
+        bytes32 org = getOrgBySafe(superSafeId);
+        DataTypes.Safe memory childSafe = safes[org][safeId];
         // Check if the Child Safe is was removed or not Exist and Return False
         if (
             (childSafe.safe == address(0))
@@ -874,19 +876,19 @@ contract PalmeraModule is Auth, Helpers {
         ) {
             return false;
         }
-        return (childSafe.superSafe == superSafe);
+        return (childSafe.superSafe == superSafeId);
     }
 
     /// @dev Method to Validate is ID Safe is Pending to Disconnect (was Removed by SuperSafe)
-    /// @param safe ID's of the safe
-    /// @param rootSafe ID's of Root Safe
+    /// @param safeId ID's of the safe
+    /// @param rootSafeId ID's of Root Safe
     /// @return bool
-    function isPendingRemove(uint256 rootSafe, uint256 safe)
+    function isPendingRemove(uint256 rootSafeId, uint256 safeId)
         public
         view
         returns (bool)
     {
-        DataTypes.Safe memory childSafe = safes[getOrgBySafe(safe)][safe];
+        DataTypes.Safe memory childSafe = safes[getOrgBySafe(safeId)][safeId];
         // Check if the Child Safe is was removed or not Exist and Return False
         if (
             (childSafe.safe == address(0))
@@ -895,7 +897,7 @@ contract PalmeraModule is Auth, Helpers {
         ) {
             return false;
         }
-        return (childSafe.superSafe == rootSafe);
+        return (childSafe.superSafe == rootSafeId);
     }
 
     /// @notice Verify if the Safe is registered in any Org
@@ -925,16 +927,16 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Get the safe address of a safe
     /// @dev Method for getting the safe address of a safe
-    /// @param safe uint256 of the safe
+    /// @param safeId uint256 of the safe
     /// @return safe address
-    function getSafeAddress(uint256 safe)
+    function getSafeAddress(uint256 safeId)
         external
         view
-        SafeIdRegistered(safe)
+        SafeIdRegistered(safeId)
         returns (address)
     {
-        bytes32 org = getOrgBySafe(safe);
-        return safes[org][safe].safe;
+        bytes32 org = getOrgBySafe(safeId);
+        return safes[org][safeId].safe;
     }
 
     /// @dev Method to get Org by Safe
@@ -978,32 +980,36 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice call to get the orgHash based on safe id
     /// @dev Method to get the hashed orgHash based on safe id
-    /// @param safe uint256 of the safe
+    /// @param safeId uint256 of the safe
     /// @return orgSafe Hash (On-chain Organisation)
-    function getOrgBySafe(uint256 safe) public view returns (bytes32 orgSafe) {
-        if ((safe == 0) || (safe > indexId)) revert Errors.InvalidSafeId();
+    function getOrgBySafe(uint256 safeId)
+        public
+        view
+        returns (bytes32 orgSafe)
+    {
+        if ((safeId == 0) || (safeId > indexId)) revert Errors.InvalidSafeId();
         for (uint256 i; i < orgHash.length;) {
-            if (safes[orgHash[i]][safe].safe != address(0)) {
+            if (safes[orgHash[i]][safeId].safe != address(0)) {
                 orgSafe = orgHash[i];
             }
             unchecked {
                 ++i;
             }
         }
-        if (orgSafe == bytes32(0)) revert Errors.SafeIdNotRegistered(safe);
+        if (orgSafe == bytes32(0)) revert Errors.SafeIdNotRegistered(safeId);
     }
 
     /// @notice Check if a user is an safe lead of a safe/org
-    /// @param safe address of the safe
+    /// @param safeId address of the safe
     /// @param user address of the user that is a lead or not
     /// @return bool
-    function isSafeLead(uint256 safe, address user)
+    function isSafeLead(uint256 safeId, address user)
         public
         view
         returns (bool)
     {
-        bytes32 org = getOrgBySafe(safe);
-        DataTypes.Safe memory _safe = safes[org][safe];
+        bytes32 org = getOrgBySafe(safeId);
+        DataTypes.Safe memory _safe = safes[org][safeId];
         if (_safe.safe == address(0)) return false;
         if (_safe.lead == user) {
             return true;
@@ -1055,14 +1061,14 @@ contract PalmeraModule is Auth, Helpers {
     }
 
     /// @dev Function for refactoring DisconnectSafe Method, and RemoveWholeTree in one Method
-    /// @param safe ID's of the organisation
-    function _exitSafe(uint256 safe) private {
-        bytes32 org = getOrgBySafe(safe);
-        address _safe = safes[org][safe].safe;
+    /// @param safeId ID's of the organisation
+    function _exitSafe(uint256 safeId) private {
+        bytes32 org = getOrgBySafe(safeId);
+        address _safe = safes[org][safeId].safe;
         address caller = _msgSender();
         ISafe safeTarget = ISafe(_safe);
-        removeIndexSafe(org, safe);
-        delete safes[org][safe];
+        removeIndexSafe(org, safeId);
+        delete safes[org][safeId];
 
         /// Disable Guard
         bytes memory data = abi.encodeCall(ISafe.setGuard, (address(0)));
@@ -1078,7 +1084,7 @@ contract PalmeraModule is Auth, Helpers {
         /// Execute transaction from target safe
         _executeModuleTransaction(_safe, data);
 
-        emit Events.SafeDisconnected(org, safe, address(safeTarget), caller);
+        emit Events.SafeDisconnected(org, safeId, address(safeTarget), caller);
     }
 
     /// @notice disable safe lead roles
@@ -1110,10 +1116,10 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Private method to remove indexId from mapping of indexes into organisations
     /// @param org ID's of the organisation
-    /// @param safe uint256 of the safe
-    function removeIndexSafe(bytes32 org, uint256 safe) private {
+    /// @param safeId uint256 of the safe
+    function removeIndexSafe(bytes32 org, uint256 safeId) private {
         for (uint256 i; i < indexSafe[org].length;) {
-            if (indexSafe[org][i] == safe) {
+            if (indexSafe[org][i] == safeId) {
                 indexSafe[org][i] = indexSafe[org][indexSafe[org].length - 1];
                 indexSafe[org].pop();
                 break;
@@ -1141,15 +1147,15 @@ contract PalmeraModule is Auth, Helpers {
 
     /// @notice Method for refactoring the methods getRootSafe, isTreeMember, and isLimitTree, in one method
     /// @dev Method to Getting if is Member, the  Level and Root Safe
-    /// @param superSafe ID's of the Super Safe safe
-    /// @param childSafe ID's of the Child Safe
-    function _seekMember(uint256 superSafe, uint256 childSafe)
+    /// @param superSafeId ID's of the Super Safe safe
+    /// @param childSafeId ID's of the Child Safe
+    function _seekMember(uint256 superSafeId, uint256 childSafeId)
         private
         view
         returns (bool isMember, uint256 level, uint256 rootSafeId)
     {
-        bytes32 org = getOrgBySafe(childSafe);
-        DataTypes.Safe memory _childSafe = safes[org][childSafe];
+        bytes32 org = getOrgBySafe(childSafeId);
+        DataTypes.Safe memory _childSafe = safes[org][childSafeId];
         // Check if the Child Safe is was removed or not Exist and Return False
         if (
             (_childSafe.safe == address(0))
@@ -1165,7 +1171,7 @@ contract PalmeraModule is Auth, Helpers {
             _childSafe = safes[org][currentSuperSafe];
             // Validate if the Current Super Safe is Equal the SuperSafe try to Found, in case is True, storage True in isMember
             isMember =
-                !isMember && currentSuperSafe == superSafe ? true : isMember;
+                !isMember && currentSuperSafe == superSafeId ? true : isMember;
             // Validate if the Current Super Safe of the Child Safe is Equal Zero
             // Return the isMember, level and rootSafeId with actual value
             if (_childSafe.superSafe == 0) return (isMember, level, rootSafeId);
@@ -1181,10 +1187,10 @@ contract PalmeraModule is Auth, Helpers {
     }
 
     /// @dev Method to getting the All Group Member for the Tree of the Root Safe/Org indicate in the args
-    /// @param rootSafe Gorup ID's of the root safe
+    /// @param rootSafeId Gorup ID's of the root safe
     /// @param indexSafeByOrg Array of the Safe ID's of the Org
     /// @return indexTree Array of the Safe ID's of the Tree
-    function getTreeMember(uint256 rootSafe, uint256[] memory indexSafeByOrg)
+    function getTreeMember(uint256 rootSafeId, uint256[] memory indexSafeByOrg)
         private
         view
         returns (uint256[] memory indexTree)
@@ -1192,8 +1198,8 @@ contract PalmeraModule is Auth, Helpers {
         uint256 index;
         for (uint256 i; i < indexSafeByOrg.length;) {
             if (
-                (getRootSafe(indexSafeByOrg[i]) == rootSafe)
-                    && (indexSafeByOrg[i] != rootSafe)
+                (getRootSafe(indexSafeByOrg[i]) == rootSafeId)
+                    && (indexSafeByOrg[i] != rootSafeId)
             ) {
                 unchecked {
                     ++index;
@@ -1207,8 +1213,8 @@ contract PalmeraModule is Auth, Helpers {
         index = 0;
         for (uint256 i; i < indexSafeByOrg.length;) {
             if (
-                (getRootSafe(indexSafeByOrg[i]) == rootSafe)
-                    && (indexSafeByOrg[i] != rootSafe)
+                (getRootSafe(indexSafeByOrg[i]) == rootSafeId)
+                    && (indexSafeByOrg[i] != rootSafeId)
             ) {
                 indexTree[index] = indexSafeByOrg[i];
                 unchecked {

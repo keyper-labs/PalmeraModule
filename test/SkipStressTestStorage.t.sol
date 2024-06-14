@@ -241,14 +241,14 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
         uint256 lenght = safeWallets / members;
         for (uint256 i; i < lenght; ++i) {
             // SuperSafe of Iteration
-            uint256 superSafe = subSafeAid[level[i]];
+            uint256 superSafeId = subSafeAid[level[i]];
             for (uint256 j; j < members; ++j) {
                 // Create a new Safe
                 subSafeAaddr[indexSafe] = safeHelper.newPalmeraSafe(3, 1);
                 // Start Prank
                 vm.startPrank(subSafeAaddr[indexSafe]);
                 // Add the new Safe as a subSafe
-                try palmeraModule.addSafe(superSafe, safeA1Name) returns (
+                try palmeraModule.addSafe(superSafeId, safeA1Name) returns (
                     uint256 safeId
                 ) {
                     subSafeAid[indexSafe] = safeId;
@@ -260,12 +260,16 @@ contract SkipStressTestStorage is DeployHelper, SigningUtils {
 
                 // Verify that the new Safe is a member of the previous Safe
                 assertEq(
-                    palmeraModule.isTreeMember(superSafe, subSafeAid[indexSafe]),
+                    palmeraModule.isTreeMember(
+                        superSafeId, subSafeAid[indexSafe]
+                    ),
                     true
                 );
                 // Verify that the new Safe is a superSafe of the previous Safe
                 assertEq(
-                    palmeraModule.isSuperSafe(superSafe, subSafeAid[indexSafe]),
+                    palmeraModule.isSuperSafe(
+                        superSafeId, subSafeAid[indexSafe]
+                    ),
                     true
                 );
                 // Verify that the new Safe is a member of the root Safe
