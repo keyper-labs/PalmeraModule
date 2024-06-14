@@ -131,7 +131,7 @@ or
 make deploy-palmera-env-polygon
 ```
 
-- **Steps into the Script**:
+_Steps into the Script_:
 
 - **Create Instance of the CREATE3 Factory contract**. This contract is used to get deterministic addresses for the Palmera Module contract.
 - **Predict with CREATE3 Factory Palmera Module contract** with use the CREATE3 Factory to get deterministic addresses and use in the Palmera Roles contract constructor.
