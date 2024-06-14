@@ -320,7 +320,12 @@ The system consists of a main SafeDAO contract managing multiple SubSafes with c
     - `safeId`: ID of the Safe.
   - **Returns**:
     - `bytes32`: Hash of the organization.
-- **getSafeIdBySafe**: `function getSafeIdBySafe(address safe) public view returns (uint256)`
+- **getSafeIdBySafe**:
+
+    ```solidity
+    function getSafeIdBySafe(address safe) public view returns (uint256)
+    ```
+
   - Retrieves the Safe ID by address.
   - **Parameters**:
     - `safe`: Address of the Safe.
