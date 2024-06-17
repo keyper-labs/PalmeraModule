@@ -2,6 +2,7 @@
 pragma solidity 0.8.23;
 
 import "./helpers/DeployHelper.t.sol";
+import {console} from "forge-std/console.sol";
 
 /// @title Hierarchies
 /// @custom:security-contact general@palmeradao.xyz

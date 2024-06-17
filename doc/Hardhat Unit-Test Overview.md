@@ -1,4 +1,4 @@
-# Technical Overview of Unit Tests
+# Technical Overview of Hardhat Unit Tests
 
 ## Overview
 
