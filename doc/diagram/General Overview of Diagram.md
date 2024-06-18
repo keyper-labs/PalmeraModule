@@ -23,6 +23,7 @@ The Palmera Module is an orchestration framework for On-Chain Organizations base
 ### 1.1. Enable Module and Guard
 
 if you wanna to see in details the process to Enable Module and Set Guard, follow the docs and diagrams in:
+
 - To Enable Module: [Safe Modules](https://docs.safe.global/advanced/smart-account-modules)
 - Set Guard: [Safe Guard](https://docs.safe.global/advanced/smart-account-guards)
 
@@ -38,11 +39,18 @@ sequenceDiagram
     participant M as Palmera Module
     participant G as Palmera Guard
 
-    D->>+C Request the Next Address to Deploy with Salt Random 
-    C->>D Get Palmera Module Address Predicted
-    D->>+R Deploy Palmera Roles with Palmera Module Address Predicted
-    D->>+C Deploy Palmera Module through CREATE3 Factory with Salt and Bytecode
-    C->>D Get Palmera Module Deployed
-    D->>+M Verify Palmera Module was Deployed Correctelly
-    D->>+G Deploy Palmera Guard with Palmera Moduled Deployed 
+    D->>+C: Request the Next Address to Deploy with Salt Random
+    C-->>D: Get Palmera Module Address Predicted
+    D->>+R: Deploy Palmera Roles with
+    opt Setup of Roles and Authorizations
+        R->>+M: Setup Palmera Module like Admin of Roles
+        Note over R, M: Setup Roles and Authorizations for Palmera Module <br> like are defined into Palmera Roles, where the Admin <br> is the Palmera Module and the unique can change <br> the Roles and Authorizations
+    end
+    R-->>D: Get Palmera Roles Deployed
+    D->>+C: Deploy Palmera Module through CREATE3 Factory with Salt and Bytecode
+    C->>D: Get Palmera Module Deployed
+    D->>+M: Verify Palmera Module was Deployed Correctelly
+    M-->>D: Palmera Module Deployed
+    D->>+G: Deploy Palmera Guard with Palmera Moduled Address Deployed
+    G-->>D: Get Palmera Guard Deployed
 ```
