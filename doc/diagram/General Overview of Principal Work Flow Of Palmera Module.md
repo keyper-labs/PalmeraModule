@@ -68,6 +68,9 @@ sequenceDiagram
 
 #### Register a New On-Chain Organization
 
+- **Function**: `registerOrg()`
+- **Description**: Registers an organization and sets the calling  safe as the root  safe.
+
 ```mermaid
 sequenceDiagram
     actor OW as Owner
@@ -93,8 +96,8 @@ sequenceDiagram
 
 #### Add a New Safe
 
-Function: addSafe()
-Description: Adds a new root safe. Only an existing root safe can add another root safe.
+- **Function**: addSafe()
+- **Description**: Adds a new root safe. Only an existing root safe can add another root safe.
 
 ```mermaid
 sequenceDiagram
@@ -127,8 +130,8 @@ sequenceDiagram
 
 #### Add New Roles
 
-Function: setRole()
-Description: Assigns a new role to a user. This must be called by the root safe.
+- **Function**: setRole()
+- **Description**: Assigns a new role to a user. This must be called by the root safe.
 
 ```mermaid
 sequenceDiagram
@@ -154,8 +157,8 @@ sequenceDiagram
 
 #### Add a New Root Safe
 
-Function: createRootSafe()
-Description: A safe can become a Root Safe into On-chain Organization, and handle a different leaf.
+- **Function**: createRootSafe()
+- **Description**: A safe can become a Root Safe into On-chain Organization, and handle a different leaf.
 
 ```mermaid
 sequenceDiagram
@@ -181,8 +184,8 @@ sequenceDiagram
 
 #### Remove a Safe
 
-Function: removeSafe()
-Description: Removes a safe. This must be called by the root safe.
+- **Function**: removeSafe()
+- **Description**: Removes a safe. This must be called by the root safe.
 
 ```mermaid
 sequenceDiagram
@@ -208,8 +211,8 @@ sequenceDiagram
 
 #### Disconnect a Safe
 
-Function: disconnectSafe()
-Description: Disconnects a safe from the organization. This must be called by the root safe.
+- **Function**: disconnectSafe()
+- **Description**: Disconnects a safe from the organization. This must be called by the root safe.
 
 ```mermaid
 sequenceDiagram
@@ -235,8 +238,8 @@ sequenceDiagram
 
 #### Execute a Transaction on Behalf Of
 
-Function: execTransactionOnBehalf()
-Description: Allows a root/super safe or safe lead to execute transactions on behalf of a sub/child safe.
+- **Function**: execTransactionOnBehalf()
+- **Description**: Allows a root/super safe or safe lead to execute transactions on behalf of a sub/child safe.
 
 ```mermaid
 sequenceDiagram
@@ -251,7 +254,7 @@ sequenceDiagram
     PM-->>OW: Get Transaction Hash of Arguments
     OW->>+S: Sign Transaction Hash of Arguments <br> to Execute Transaction on Behalf with Root Safe
     S->>+OW: Get Signature Call Data
-    OW->>PM: Send the Transaction
+    OW->>PM: Send the Transaction (with All Call Data)
     opt Execute Transaction on Behalf Process
         PM-->>+PM: Validate the Caller is a HasPemissions over Target Safe
         PM-->>+PM: Validate the Org of Target Safe is Registered

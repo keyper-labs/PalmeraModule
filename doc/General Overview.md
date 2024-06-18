@@ -39,7 +39,7 @@ This is the very first action required to access the features of the Palmera Mod
 2. **Set Guard**:
     - `setGuard() - GuardManager.sol`
 
-Both actions need to be called by the safe that will be set as the root safe. They can be bundled into one transaction using a service like [Safe](https://app.safe.global/).
+Both actions need to be called by the safe that will be set as the root safe. They can be bundled into one transaction using a service like [Safe](https://app.safe.global/) and more Details about it! in [Palmera Module Docs](https://docs.palmeradao.xyz/palmera).
 
 #### Register an Organization
 
