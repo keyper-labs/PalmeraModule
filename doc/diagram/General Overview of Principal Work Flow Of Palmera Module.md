@@ -1,4 +1,4 @@
-# Palmera Module Principal of Diagrmas - Technical Specification
+# Palmera Module Principal of Diagramas - Technical Specification
 
 ## Table of Contents
 
@@ -7,12 +7,13 @@
   - 1.1. Enable Module and Guard
   - 1.2. Roles and Authorizations
   - 1.3. Features
-  - 1.4. Business Logic
-  - 1.5. Use Cases
-- Technical Requirements
-  - 2.1. Deployment Instructions
-  - 2.2. Architectural Overview
-  - 2.3. Contract Information
+    - Register a New On-Chain Organization
+    - Add a New Safe
+    - Add New Roles
+    - Add a New Root Safe
+    - Remove a Safe
+    - Disconnect a Safe
+    - Execute a Transaction on Behalf Of
 
 ## Project Overview
 
