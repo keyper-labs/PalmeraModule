@@ -144,8 +144,9 @@ sequenceDiagram
     Note over OW,S: Call Data to Execute (setRole) to Palmera Module
     S->>PM: Execute the Transaction
     opt Role Register Process
-        PM-->>+PM: Validate the Safe Id have Role to Assign Roles To User
-        PM-->>+O: Register the Role
+        PM-->>+PM: Validate the Caller have Role to Assign Roles To User
+        PM-->>+PM: Validate the Safe Id is Registered
+        PM-->>+O: Setup the Role
     end
     PM->>OW: Get Role Hash Registered
 ```
@@ -157,23 +158,24 @@ Description: A safe can become a Root Safe into On-chain Organization, and handl
 
 ```mermaid
 sequenceDiagram
-    actor D as Deployer
+    actor OW as Owner
     participant S as Safe Proxy
-    participant M as Palmera Module
+    participant PM as Palmera Module
     actor O as Organization
 
-    D->>+S: Submit Create the Transaction 
-    Note over D,S: Call Data to Execute (createRootSafe) to Palmera Module
-    S-->>D: Transaction Created
-    Note over D,S: Estimation of Gas is OK
-    D->>+S: Submit Execute the Transaction
-    Note over D,S: Call Data to Execute (createRootSafe) to Palmera Module
-    S->>M: Execute the Transaction
-    opt Root Safe Register Process
-        M-->>+M: Validate the Safe Proxy is not Registered
-        M-->>+O: Register the Safe Proxy
+    OW->>+S: Submit Create the Transaction 
+    Note over OW,OW: Call Data to Execute (createRootSafe) to Palmera Module
+    S-->>OW: Transaction Created
+    Note over OW,S: Estimation of Gas is OK
+    OW->>+S: Submit Execute the Transaction
+    Note over OW,S: Call Data to Execute (createRootSafe) to Palmera Module
+    S->>PM: Execute the Transaction
+    opt New Root Safe Register Process
+        PM-->>+PM: Validate the Safe Proxy is not Registered
+        PM-->>+PM: Validate the Caller is a Root Safe
+        PM-->>+O: Register the New Root Safe
     end
-    M->>D: Get Safe Proxy Hash Registered
+    PM->>OW: Get Safe Proxy Hash Registered
 ```
 
 #### Remove a Safe
@@ -183,23 +185,24 @@ Description: Removes a safe. This must be called by the root safe.
 
 ```mermaid
 sequenceDiagram
-    actor D as Deployer
+    actor OW as Owner
     participant S as Safe Proxy
-    participant M as Palmera Module
+    participant PM as Palmera Module
     actor O as Organization
 
-    D->>+S: Submit Create the Transaction 
-    Note over D,S: Call Data to Execute (removeSafe) to Palmera Module
-    S-->>D: Transaction Created
-    Note over D,S: Estimation of Gas is OK
-    D->>+S: Submit Execute the Transaction
-    Note over D,S: Call Data to Execute (removeSafe) to Palmera Module
-    S->>M: Execute the Transaction
+    OW->>+S: Submit Create the Transaction 
+    Note over OW,S: Call Data to Execute (removeSafe) to Palmera Module
+    S-->>OW: Transaction Created
+    Note over OW,S: Estimation of Gas is OK
+    OW->>+S: Submit Execute the Transaction
+    Note over OW,S: Call Data to Execute (removeSafe) to Palmera Module
+    S->>PM: Execute the Transaction
     opt Safe Remove Process
-        M-->>+M: Validate the Safe Proxy is Registered
-        M-->>+O: Remove the Safe Proxy
+        PM-->>+PM: Validate the Caller is a Root Safe or Super Safe
+        PM-->>+PM: Validate the Safe Proxy is Registered
+        PM-->>+O: Remove the Safe Proxy
     end
-    M->>D: Get Safe Proxy Hash Removed
+    PM->>OW: Get Safe Proxy Hash Removed
 ```
 
 #### Disconnect a Safe
@@ -209,23 +212,24 @@ Description: Disconnects a safe from the organization. This must be called by th
 
 ```mermaid
 sequenceDiagram
-    actor D as Deployer
+    actor OW as Owner
     participant S as Safe Proxy
-    participant M as Palmera Module
+    participant PM as Palmera Module
     actor O as Organization
 
-    D->>+S: Submit Create the Transaction 
-    Note over D,S: Call Data to Execute (disconnectSafe) to Palmera Module
-    S-->>D: Transaction Created
-    Note over D,S: Estimation of Gas is OK
-    D->>+S: Submit Execute the Transaction
-    Note over D,S: Call Data to Execute (disconnectSafe) to Palmera Module
-    S->>M: Execute the Transaction
+    OW->>+S: Submit Create the Transaction 
+    Note over OW,S: Call Data to Execute (disconnectSafe) to Palmera Module
+    S-->>OW: Transaction Created
+    Note over OW,S: Estimation of Gas is OK
+    OW->>+S: Submit Execute the Transaction
+    Note over OW,S: Call Data to Execute (disconnectSafe) to Palmera Module
+    S->>PM: Execute the Transaction
     opt Safe Disconnect Process
-        M-->>+M: Validate the Safe Proxy is Registered
-        M-->>+O: Disconnect the Safe Proxy
+        PM-->>+PM: Validate the Caller is a Root Safe or Super Safe
+        PM-->>+PM: Validate the Safe Proxy is Registered
+        PM-->>+O: Disconnect the Safe Proxy
     end
-    M->>D: Get Safe Proxy Hash Disconnected
+    PM->>OW: Get Safe Proxy Hash Disconnected
 ```
 
 #### Execute a Transaction on Behalf Of
@@ -235,21 +239,24 @@ Description: Allows a root/super safe or safe lead to execute transactions on be
 
 ```mermaid
 sequenceDiagram
-    actor D as Deployer
-    participant S as Safe Proxy
-    participant M as Palmera Module
+    actor OW as Owner
+    participant S as Root Safe Proxy
+    participant PM as Palmera Module
     actor O as Organization
 
-    D->>+S: Submit Create the Transaction 
-    Note over D,S: Call Data to Execute (execTransactionOnBehalf) to Palmera Module
-    S-->>D: Transaction Created
-    Note over D,S: Estimation of Gas is OK
-    D->>+S: Submit Execute the Transaction
-    Note over D,S: Call Data to Execute (execTransactionOnBehalf) to Palmera Module
-    S->>M: Execute the Transaction
-    opt Transaction Execute Process
-        M-->>+M: Validate the Safe Proxy is Registered
-        M-->>+O: Execute the Transaction
+    OW->>+PM: Request nonce of Root/Target Safe Organization
+    PM-->>OW: Get nonce of Root/Target Safe Organization
+    OW->>+PM: Request Transaction Hash of Arguments <br> to Execute Transaction on Behalf
+    PM-->>OW: Get Transaction Hash of Arguments
+    OW->>+S: Sign Transaction Hash of Arguments <br> to Execute Transaction on Behalf with Root Safe
+    S->>+OW: Get Signature Call Data
+    OW->>PM: Send the Transaction
+    opt Execute Transaction on Behalf Process
+        PM-->>+PM: Validate the Caller is a HasPemissions over Target Safe
+        PM-->>+PM: Validate the Org of Target Safe is Registered
+        PM-->>+PM: Validate the Target Safe is Registered
+        PM-->>+PM: Validate the Signature Call Data is OK
+        PM-->>+O: Execute the Transaction on Behalf
     end
-    M->>D: Get Transaction Executed
+    PM->>OW: Get Transaction Executed
 ```
