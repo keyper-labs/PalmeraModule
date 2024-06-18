@@ -22,66 +22,27 @@ The Palmera Module is an orchestration framework for On-Chain Organizations base
 
 ### 1.1. Enable Module and Guard
 
-#### 1.1.1. Enable Module
-
-```mermaid
-sequenceDiagram
-    actor B as Owner EOA
-    participant E as Safe Proxy
-    participant P as Safe Singleton
-    actor T as Target
-
-    B->>+E: Submit Enable Module
-    E->>+P: Validate Enable Module
-    E->>+P: Execute User Operation
-    P->>+E: Perform transaction
-    opt Bubble up return data
-        E-->>-A: Call return data
-    end
-```
+if you wanna to see in details the process to Enable Module and Set Guard, follow the docs and diagrams in:
+- To Enable Module: [Safe Modules](https://docs.safe.global/advanced/smart-account-modules)
+- Set Guard: [Safe Guard](https://docs.safe.global/advanced/smart-account-guards)
 
 ### 1.2. Roles and Authorizations
 
+In this point we see the initial setup between Palmera Roles and Palmera Module, for Setup the Roles using the Solmete Auth / Roles Library
+
 ```mermaid
 sequenceDiagram
-    actor B as Bundler
-    participant E as Entry Point
-    participant P as Safe Proxy
-    participant S as Safe Singleton
-    participant M as Safe 4337 Module
-    actor T as Target
+    actor D as Deployer
+    participant C as CREATE3 Factory (Deployed)
+    participant R as Palmera Roles
+    participant M as Palmera Module
+    participant G as Palmera Guard
 
-    B->>+E: Submit User Operations
-    E->>+P: Validate User Operation
-    P-->>S: Load Safe logic
-    Note over P, M: Gas overhead for calls and storage access
-    P->>+M: Forward validation
-    Note over P, M: Load fallback handler ~2100 gas<br>Intital module access ~2600 gas
-    M->>P: Check signatures
-    P-->>S: Load Safe logic
-    Note over P, M: Call to Safe Proxy ~100 gas<br>Load logic ~100 gas
-    opt Pay required fee
-        M->>P: Trigger fee payment
-        P-->>S: Load Safe logic
-        Note over P, M: Module check ~2100 gas<br>Call to Safe Proxy ~100 gas<br>Load logic ~100 gas
-        P->>E: Perform fee payment
-    end
-    M-->>-P: Validation response
-    P-->>-E: Validation response
-    Note over P, M: Total gas overhead<br>Without fee payment ~4.900 gas<br>With fee payment ~7.200 gas
-
-    E->>+P: Execute User Operation
-    P-->>S: Load Safe logic
-    P->>+M: Forward execution
-    Note over P, M: Call to Safe Proxy ~100 gas<br>Call to fallback handler ~100 gas
-    M->>P: Execute From Module
-    P-->>S: Load Safe logic
-    Note over P, M: Call to Safe Proxy ~100 gas<br>Module check ~100 gas
-    P->>+T: Perform transaction
-    opt Bubble up return data
-        T-->>-P: Call Return Data
-        P-->>M: Call Return Data
-        M-->>-P: Call return data
-        P-->>-E: Call return data
-    end
+    D->>+C Request the Next Address to Deploy with Salt Random 
+    C->>D Get Palmera Module Address Predicted
+    D->>+R Deploy Palmera Roles with Palmera Module Address Predicted
+    D->>+C Deploy Palmera Module through CREATE3 Factory with Salt and Bytecode
+    C->>D Get Palmera Module Deployed
+    D->>+M Verify Palmera Module was Deployed Correctelly
+    D->>+G Deploy Palmera Guard with Palmera Moduled Deployed 
 ```
