@@ -164,7 +164,7 @@ sequenceDiagram
     actor O as Organization
 
     OW->>+S: Submit Create the Transaction 
-    Note over OW,OW: Call Data to Execute (createRootSafe) to Palmera Module
+    Note over OW,S: Call Data to Execute (createRootSafe) to Palmera Module
     S-->>OW: Transaction Created
     Note over OW,S: Estimation of Gas is OK
     OW->>+S: Submit Execute the Transaction
