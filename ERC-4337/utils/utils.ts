@@ -149,7 +149,7 @@ export const createAddSafe = async (safe: SafeSmartAccount<ENTRYPOINT_ADDRESS_V0
     // Create the smart account client
     const SmartAccountClient = smartAccountClient(safe);
     const txHash = await SmartAccountClient.sendTransaction({
-        to: "0xace3fdef3ad94fba51d2393138367c6f012a7aa1",
+        to: PALMERA_MODULE,
         data: data,
         value: BigInt(0)
     });
@@ -178,7 +178,7 @@ export const getSafeIdBySafe = async (orgHash: Hex, safeAddress: Hex) => {
         functionName: "getSafeIdBySafe",
         args: [orgHash, safeAddress],
     });
-    const result: CallReturnType  = await publicClient(RPC_URL!!).call({
+    const result: CallReturnType = await publicClient(RPC_URL!!).call({
         to: PALMERA_MODULE,
         data: data,
         value: BigInt(0),
@@ -187,11 +187,11 @@ export const getSafeIdBySafe = async (orgHash: Hex, safeAddress: Hex) => {
 };
 
 // get nonce from Palmera Module
-export const getNonce = async () => {
+export const getNonce = async (org: Hex) => {
     const internalData: Hex = encodeFunctionData({
         abi: palmeraModuleAbi,
         functionName: "nonce",
-        args: [],
+        args: [org],
     });
     const result = await publicClient(RPC_URL!!).call({
         to: PALMERA_MODULE,

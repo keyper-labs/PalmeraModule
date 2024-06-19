@@ -57,7 +57,7 @@ async function main() {
         entryPoint: ENTRYPOINT_ADDRESS_V07,
         signer: signer,
         safeVersion: "1.4.1",
-        saltNonce: BigInt(112),
+        saltNonce: BigInt(52),
     });
 
     const rootSafeClient = smartAccountClient(RootSafe);
@@ -98,7 +98,7 @@ async function main() {
         entryPoint: ENTRYPOINT_ADDRESS_V07,
         signer: signer,
         safeVersion: "1.4.1",
-        saltNonce: BigInt(113),
+        saltNonce: BigInt(53),
     });
 
     // Create Safe
@@ -122,7 +122,7 @@ async function main() {
         entryPoint: ENTRYPOINT_ADDRESS_V07,
         signer: signer,
         safeVersion: "1.4.1",
-        saltNonce: BigInt(114),
+        saltNonce: BigInt(54),
     });
 
     // Create Safe
@@ -155,27 +155,27 @@ async function main() {
     await activateModuleAndGuard(childSafe, PALMERA_MODULE, PALMERA_GUARD);
 
     // Register organization
-    await registerOrg(RootSafe, "Org5");
+    await registerOrg(RootSafe, "Org");
     await snooze(5000);
     const orgHash: CallReturnType = await getOrgHashBySafe(RootSafe.address);
     console.log(`Organization Hash of RootSafe: ${orgHash.data}`);
     const rootSafeId = await getSafeIdBySafe(orgHash.data!!, RootSafe.address);
-    console.log(`Root Safe Id: ${parseInt(rootSafeId.data!!) }`);
+    console.log(`Root Safe Id: ${parseInt(rootSafeId.data!!)}`);
     // Add Safes to the organization Under Root Safe id
-    await createAddSafe(superSafe, parseInt(rootSafeId.data!!), "Level 1 Safe v5");
+    await createAddSafe(superSafe, parseInt(rootSafeId.data!!), "Level 1 Safe v1");
     await snooze(5000);
     const orgHash1: CallReturnType = await getOrgHashBySafe(superSafe.address);
     console.log(`Organization Hash of superSafe: ${orgHash1.data}`);
     const superSafeId = await getSafeIdBySafe(orgHash1.data!!, superSafe.address);
-    console.log(`Super Safe Id: ${parseInt(superSafeId.data!!) }`);
+    console.log(`Super Safe Id: ${parseInt(superSafeId.data!!)}`);
 
     // Add Safes to the organization Under SuperSafe Safe id
-    await createAddSafe(childSafe, parseInt(superSafeId.data!!), "Level 2 Safe v5");
+    await createAddSafe(childSafe, parseInt(superSafeId.data!!), "Level 2 Safe v1");
     await snooze(5000);
     const orgHash2: CallReturnType = await getOrgHashBySafe(childSafe.address);
     console.log(`Organization Hash of childSafe: ${orgHash2.data}`);
     const childSafeId = await getSafeIdBySafe(orgHash2.data!!, childSafe.address);
-    console.log(`Child Safe Id: ${parseInt(childSafeId.data!!) }`);
+    console.log(`Child Safe Id: ${parseInt(childSafeId.data!!)}`);
 
     if (orgHash.data !== orgHash1.data || orgHash1.data !== orgHash2.data || orgHash.data !== orgHash2.data) {
         console.error("Error in Organization Hash");
@@ -185,7 +185,7 @@ async function main() {
     console.log(`Organization Hash of childSafe: ${orgHash2.data}`);
 
     // Get nonce from Palmera Module
-    const nonce: CallReturnType = await getNonce();
+    const nonce: CallReturnType = await getNonce(orgHash.data!!);
     console.log(`Nonce: ${nonce.data}`);
 
     const txHash: CallReturnType = await getTransactionHash(
