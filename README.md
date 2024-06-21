@@ -40,7 +40,7 @@ forge test
 
 [Tests hardat docs](./doc/Hardhat%20Unit-Test%20Overview.md)
 
-To run the tests using the local VM (anvil)
+To run the tests using the local VM (hardhat)
 
 ```
 yarn run test
