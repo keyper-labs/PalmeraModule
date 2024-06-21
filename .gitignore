@@ -1,8 +1,48 @@
 out/
 cache/
+cache_hardhat/
+typechain-types/
 node_modules/
 broadcast/
 .env
 .vscode/
 package-lock.json
 types/
+typechain-types/
+.lcov.info
+.atcrc
+.wake
+node_modules
+.env
+
+# Hardhat files
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
+
+# Hardhat Ignition default folder for deployments against a local node
+ignition/deployments/chain-31337
+
+node_modules
+.env
+
+# Hardhat files
+/cache
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
+
+# Hardhat Ignition default folder for deployments against a local node
+ignition/deployments/chain-31337

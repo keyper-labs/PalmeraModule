@@ -1,12 +1,13 @@
-// SPDX-License-Identifier: MIT
-// Modified version of OpenZeppelin Contracts v4.4.1 (utils/cryptography/draft-EIP712.sol)
-
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity 0.8.23;
 
 import {ECDSA} from "@openzeppelin/utils/cryptography/ECDSA.sol";
-import {Enum} from "@safe-contracts/common/Enum.sol";
+import {Enum} from "@safe-contracts/base/Executor.sol";
 
+/// @title SigningUtils
+/// @custom:security-contact general@palmeradao.xyz
 abstract contract SigningUtils {
+    /// @dev Transaction structure
     struct Transaction {
         address to;
         uint256 value;
@@ -44,16 +45,18 @@ abstract contract SigningUtils {
         return ECDSA.toTypedDataHash(domainSeparator, structHash);
     }
 
+    /**
+     * @dev Given a transaction, it creates a hash of the transaction that can be signed
+     * @param domainSeparatorSafe Hash of the Safe domain separator
+     * @param safeTx Safe transaction
+     * @return Hash of the transaction
+     */
     function createDigestExecTx(
-        bytes32 domainSeparatorGnosis,
+        bytes32 domainSeparatorSafe,
         Transaction memory safeTx
-    )
-        public
-        view
-        returns (bytes32)
-    {
+    ) public view returns (bytes32) {
         bytes32 digest = _hashTypedDataV4(
-            domainSeparatorGnosis,
+            domainSeparatorSafe,
             keccak256(
                 abi.encode(
                     keccak256(

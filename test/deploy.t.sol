@@ -1,17 +1,39 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity 0.8.23;
 
 import "forge-std/Test.sol";
-import "../script/DeployModule.t.sol";
+import "../script/DeployModuleWithMockedSafe.t.sol";
+import "./helpers/DeployHelper.t.sol";
 
-contract TestDeploy is Test {
-    DeployModule deploy;
+/// @title TestDeploy
+/// @custom:security-contact general@palmeradao.xyz
+contract TestDeploy is DeployHelper {
+    DeployModuleWithMockedSafe deploy;
 
+    /// @notice Deploy Libraries
     function setUp() public {
-        deploy = new DeployModule();
+        deploy = new DeployModuleWithMockedSafe();
     }
 
+    /// @notice Deploy Libraries
     function testDeploy() public {
+        // Deplot Libraries
+        (
+            address constantsAddr,
+            address dataTypesAddr,
+            address errorsAddr,
+            address eventsAddr
+        ) = deployLibraries();
+
+        // Deploy Constants Libraries
+        console.log("Constants deployed at: ", constantsAddr);
+        // Deploy DataTypes Libraries
+        console.log("DataTypes deployed at: ", dataTypesAddr);
+        // Deploy Errors Libraries
+        console.log("Errors deployed at: ", errorsAddr);
+        // Deploy Events Libraries
+        console.log("Events deployed at: ", eventsAddr);
+
         deploy.run();
     }
 }

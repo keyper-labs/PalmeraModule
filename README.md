@@ -1,59 +1,89 @@
-# KeyperModule - Gnosis safe module for keyper
+# PalmeraModule - Safe module for Palmera
 
-This contract is a registry of keyper organization/groups setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
-## Setting up groups
+This contract is a registry of palmera organisation/safes setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
 
-The contract is designed as a single point registry. This way not every Safe needs to deploy their own module and it is possible that this module is shared between different Safes.
+## Tech requirements
 
-To create a root organization for a Safe it is first required that the safe creates a "root" **org**. For this a Safe transaction needs to be executed that calls `createRootOrg`. This method will add the root **org** for `msg.sender`, which is the Safe in case of a Safe transaction. The `createRootORg` method can be called multiple times with the same address for a root **org** without failure.
+Copy .env.example as .env and fill it with your own API KEYS (alchemy, etherscan) & mnemonic to be used locally
 
-Once a root **org** has been enabled it is possible to add groups. For this root group (admin) needs to execute the calls `addGroup`.
+Foundry is used as the development framework. Please install it following the instructions:
 
-## Requirements
+```
+https://book.getfoundry.sh/getting-started/installation
+```
 
-Organization=Safe Root has multiple groups
+### Pre commit hooks
+
+Follow instructions https://github.com/0xYYY/foundry-pre-commit
+
+### Init submodules
+
+The external smart contracts dependencies are place in the lib/ folder. In order to initialize them use this command:
+
+```
+git submodule update --init --recursive
+```
+
+### Compile contracts
+
+```
+forge build or make build
+```
+
+### Run tests
+
+To run the tests using the local VM (anvil)
+
+```
+forge test or make test-gas-report
+```
+
+### Deploy contracts
+
+-   Deploy Palmeramodule
+
+Execute the command `deploy-module` located in the Makefile
+
+-   Deploy a new safe using our custom contracts (custom safe master copy & proxy factory)
+
+Execute the command `deploy-new-safe` located in the Makefile
+
+## Setting up a On-Chain Organisation
+
+All the following calls have to be executed from a safe using safe execTransation function. Check documentation https://safe-docs.dev.gnosisdev.com/safe/docs/contracts_tx_execution/
+
+# Register main Organisation
+
+`function registerOrg(string memory name)`
+
+The address of the calling safe is going to be registered with the input name
+
+# Add Subsafes to main organisation
+
+`function addSafe(address org, address superSafe, string memory name)`
+
+Need to specify to which organisation the new safe will belong
+
+## Requirements (not finalized)
+
+Organisation=Safe Root has multiple safes
+Safes/Safe relationship
+
+
+-   Each safe is associated to a safe
+-   Each safe has a superSafe (superSafe has ownership over the safe)
+-   Each safe has set of child
 
 Validate transfer rules - execTransactionFromModule:
-- Safe signers can execute transactions if threshold met (normal safe verification)
-- Safe group signers can execute transactions in behalf of any child safe
-    - Group threshold kept 
-    - Should be able to mix signers auth? yes
 
-Setup groups rules:
-- Root admin has full control over all groups (or over all groups that he is a designed admin?)
-    => Remove/Add groups.
+-   Safe signers can execute transactions if threshold met (normal safe verification)
+-   Safe safe signers can execute transactions in behalf of any child safe
+    -   Safe threshold kept
+
+Setup safes rules:
+
+-   Root lead has full control over all safes (or over all safes that he is a designed lead?)
+    => Remove/Add safes.
     => Remove/Add signers of any child safe
-- Each group has a designed admin (full ownership of the safe)
-- Can an admin be something different than a Safe contract?
-
-Groups/Safe relationship
-- Each group is associated to a safe
-- Each group has a parent (parent has ownership over the group)
-- Each group has set of childs
-
-
-## Data structure
-// TODO: analyze if this storage optimal
-organizations map Orgs -> Set of groups
-map (address -> map (address -> group))
-
-
-Group:
-- name
-- safe address
-- list of child groups
-- admin
-- parent
-
-
-Full set of signers for the group
-// Safe -> All signers associated to the safe/group
-full_signers map (address -> map -> (address -> bool))
-
-## Keyper module functions
-
-High level Safe needs to execute the following functions 
-createRootOrg(...)
-addGroup(...)
-addChildGroup(...)
-removeGroup(...)
+-   Each safe has a designed lead (full ownership of the safe)
+-   Can an lead be something different than a Safe contract?
