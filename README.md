@@ -1,6 +1,6 @@
 # PalmeraModule - Safe module for Palmera
 
-This contract is a registry of palmera organisation/safes setup on a Safe that can be used by specific accounts. For this the contract needs to be enabled as a module on the Safe that holds the assets that should be transferred.
+[Overview](./doc/General%20Overview.md)
 
 ## Tech requirements
 
@@ -12,10 +12,6 @@ Foundry is used as the development framework. Please install it following the in
 https://book.getfoundry.sh/getting-started/installation
 ```
 
-### Pre commit hooks
-
-Follow instructions https://github.com/0xYYY/foundry-pre-commit
-
 ### Init submodules
 
 The external smart contracts dependencies are place in the lib/ folder. In order to initialize them use this command:
@@ -24,66 +20,28 @@ The external smart contracts dependencies are place in the lib/ folder. In order
 git submodule update --init --recursive
 ```
 
-### Compile contracts
+### Compile contracts foundry
 
 ```
 forge build or make build
 ```
 
-### Run tests
+### Run tests foundry
+
+[Tests foundry docs](./doc/Foundry%20Unit-Test%20Overview.md)
 
 To run the tests using the local VM (anvil)
 
 ```
-forge test or make test-gas-report
+forge test
 ```
 
-### Deploy contracts
+### Run tests hardhat
 
--   Deploy Palmeramodule
+[Tests hardat docs](./doc/Hardhat%20Unit-Test%20Overview.md)
 
-Execute the command `deploy-module` located in the Makefile
+To run the tests using the local VM (anvil)
 
--   Deploy a new safe using our custom contracts (custom safe master copy & proxy factory)
-
-Execute the command `deploy-new-safe` located in the Makefile
-
-## Setting up a On-Chain Organisation
-
-All the following calls have to be executed from a safe using safe execTransation function. Check documentation https://safe-docs.dev.gnosisdev.com/safe/docs/contracts_tx_execution/
-
-# Register main Organisation
-
-`function registerOrg(string memory name)`
-
-The address of the calling safe is going to be registered with the input name
-
-# Add Subsafes to main organisation
-
-`function addSafe(address org, address superSafe, string memory name)`
-
-Need to specify to which organisation the new safe will belong
-
-## Requirements (not finalized)
-
-Organisation=Safe Root has multiple safes
-Safes/Safe relationship
-
-
--   Each safe is associated to a safe
--   Each safe has a superSafe (superSafe has ownership over the safe)
--   Each safe has set of child
-
-Validate transfer rules - execTransactionFromModule:
-
--   Safe signers can execute transactions if threshold met (normal safe verification)
--   Safe safe signers can execute transactions in behalf of any child safe
-    -   Safe threshold kept
-
-Setup safes rules:
-
--   Root lead has full control over all safes (or over all safes that he is a designed lead?)
-    => Remove/Add safes.
-    => Remove/Add signers of any child safe
--   Each safe has a designed lead (full ownership of the safe)
--   Can an lead be something different than a Safe contract?
+```
+yarn run test
+```
