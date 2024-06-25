@@ -11,7 +11,6 @@ import {
     DataTypes,
     Events,
     Address,
-    GnosisSafeMath,
     Enum,
     ISafe
 } from "./Helpers.sol";
@@ -19,7 +18,6 @@ import {
 /// @title Palmera Module
 /// @custom:security-contact general@palmeradao.xyz
 contract PalmeraModule is Auth, Helpers {
-    using GnosisSafeMath for uint256;
     using Address for address;
 
     /// @dev Definition of Safe Palmera Module
@@ -727,7 +725,7 @@ contract PalmeraModule is Auth, Helpers {
         address prevUser = getPrevUser(org, user);
         listed[org][prevUser] = listed[org][user];
         listed[org][user] = address(0);
-        listCount[org] = listCount[org] > 1 ? listCount[org].sub(1) : 0;
+        listCount[org] = listCount[org] > 1 ? listCount[org] - 1 : 0;
         emit Events.DroppedFromList(user);
     }
 
@@ -1143,6 +1141,8 @@ contract PalmeraModule is Auth, Helpers {
                 ++i;
             }
         }
+        delete listCount[org];
+        delete listed[org][Constants.SENTINEL_ADDRESS];
     }
 
     /// @notice Method for refactoring the methods getRootSafe, isTreeMember, and isLimitTree, in one method
