@@ -332,8 +332,6 @@ contract PalmeraModule is Auth, Helpers {
         bytes32 org = getOrgHashBySafe(caller);
         uint256 newIndex = indexId;
         safeId = _createOrgOrRoot(name, caller, newRootSafe);
-        // Setting level by default
-        depthTreeLimit[org] = 8;
 
         emit Events.RootSafeCreated(org, newIndex, caller, newRootSafe, name);
     }
