@@ -30,7 +30,7 @@ contract PalmeraModule is Auth, Helpers {
     /// @dev Max Depth Tree Limit
     uint256 immutable maxDepthTreeLimit;
     /// @dev RoleAuthority
-    address immutable rolesAuthority;
+    address public immutable rolesAuthority;
     /// @dev Array of Orgs (based on Hash (On-chain Organisation) of the Org)
     bytes32[] private orgHash;
     /// @dev Index of Safe
@@ -143,7 +143,17 @@ contract PalmeraModule is Auth, Helpers {
         address caller = _msgSender();
         // Caller is Safe Lead: bypass check of signatures
         // Caller is another kind of wallet: check if it has the corrects signatures of the root/super safe
-        if (!isSafeLead(getSafeIdBySafe(org, targetSafe), caller)) {
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        if (
+            !(
+                _authority.doesUserHaveRole(
+                    caller, uint8(DataTypes.Role.SAFE_LEAD)
+                )
+                    || _authority.doesUserHaveRole(
+                        caller, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+                    )
+            )
+        ) {
             // Check if caller is a superSafe of the target safe (checking with isTreeMember because is the same method!!)
             if (hasNotPermissionOverTarget(superSafe, org, targetSafe)) {
                 revert Errors.NotAuthorizedExecOnBehalf();
@@ -293,7 +303,7 @@ contract PalmeraModule is Auth, Helpers {
                 || role == DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
         ) {
             // Update safe/org lead
-            _safe.lead = user;
+            _safe.lead = enabled ? user : address(0);
         }
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         _authority.setUserRole(user, uint8(role), enabled);
@@ -793,8 +803,8 @@ contract PalmeraModule is Auth, Helpers {
     ) public view returns (bool hasNotPermission) {
         uint256 targetSafeId = getSafeIdBySafe(org, targetSafe);
         hasNotPermission = !isRootSafeOf(caller, targetSafeId)
-            && !isSuperSafe(getSafeIdBySafe(org, caller), targetSafeId)
-            && !isSafeLead(targetSafeId, caller);
+            && !isSuperSafe(getSafeIdBySafe(org, caller), targetSafeId); // &&
+            // !isSafeLead(targetSafeId, caller);
     }
 
     /// @notice check if the Organisation is registered
@@ -995,24 +1005,6 @@ contract PalmeraModule is Auth, Helpers {
         if (orgSafe == bytes32(0)) revert Errors.SafeIdNotRegistered(safeId);
     }
 
-    /// @notice Check if a user is an safe lead of a safe/org
-    /// @param safeId address of the safe
-    /// @param user address of the user that is a lead or not
-    /// @return bool
-    function isSafeLead(uint256 safeId, address user)
-        public
-        view
-        returns (bool)
-    {
-        bytes32 org = getOrgBySafe(safeId);
-        DataTypes.Safe memory _safe = safes[org][safeId];
-        if (_safe.safe == address(0)) return false;
-        if (_safe.lead == user) {
-            return true;
-        }
-        return false;
-    }
-
     /// @notice Refactoring method for Create Org or RootSafe
     /// @dev Method Private for Create Org or RootSafe
     /// @param name String Name of the Organisation
@@ -1105,12 +1097,21 @@ contract PalmeraModule is Auth, Helpers {
     /// @param org ID's of the organisation
     /// @param safeId uint256 of the safe
     function removeIndexSafe(bytes32 org, uint256 safeId) private {
-        for (uint256 i; i < indexSafe[org].length;) {
-            if (indexSafe[org][i] == safeId) {
-                indexSafe[org][i] = indexSafe[org][indexSafe[org].length - 1];
-                indexSafe[org].pop();
+        address safe = safes[org][safeId].safe;
+        uint256[] storage safeIndex = indexSafe[org];
+        for (uint256 i; i < safeIndex.length;) {
+            if (safeIndex[i] == safeId) {
+                safeIndex[i] = safeIndex[safeIndex.length - 1];
+                safeIndex.pop();
                 break;
             }
+            unchecked {
+                ++i;
+            }
+        }
+        for (uint256 i; i < safeIndex.length;) {
+            safes[org][safeIndex[i]].lead = safes[org][safeIndex[i]].lead
+                == safe ? address(0) : safes[org][safeIndex[i]].lead;
             unchecked {
                 ++i;
             }

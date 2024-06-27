@@ -7,9 +7,11 @@ import {
     PalmeraModule,
     Context,
     Errors,
+    DataTypes,
     Constants,
     ISafe,
-    Enum
+    Enum,
+    RolesAuthority
 } from "./PalmeraModule.sol";
 
 /// @title Palmera Guard
@@ -77,8 +79,28 @@ contract PalmeraGuard is BaseGuard, Context {
             if (!palmeraModule.isSafe(caller)) {
                 bool isSafeLead;
                 // Caller is EAO (lead) : check if it has the rights over the target safe
+                RolesAuthority _authority =
+                    RolesAuthority(palmeraModule.rolesAuthority());
                 for (uint256 i = 1; i < palmeraModule.indexId();) {
-                    if (palmeraModule.isSafeLead(i, caller)) {
+                    if (
+                        (
+                            _authority.doesUserHaveRole(
+                                caller, uint8(DataTypes.Role.SAFE_LEAD)
+                            )
+                                || _authority.doesUserHaveRole(
+                                    caller,
+                                    uint8(
+                                        DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
+                                    )
+                                )
+                                || _authority.doesUserHaveRole(
+                                    caller,
+                                    uint8(
+                                        DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
+                                    )
+                                )
+                        )
+                    ) {
                         isSafeLead = true;
                         break;
                     }

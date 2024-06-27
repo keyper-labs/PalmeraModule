@@ -711,24 +711,3 @@ _Method to get the hashed orgHash based on safe id_
 | ---- | ---- | ----------- |
 | orgSafe | bytes32 | Hash (On-chain Organisation) |
 
-### isSafeLead
-
-```solidity
-function isSafeLead(uint256 safeId, address user) public view returns (bool)
-```
-
-**Check if a user is an safe lead of a safe/org**
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| safeId | uint256 | address of the safe |
-| user | address | address of the user that is a lead or not |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bool | bool |
-
