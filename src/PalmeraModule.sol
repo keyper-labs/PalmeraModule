@@ -1070,6 +1070,10 @@ contract PalmeraModule is Auth, Helpers {
         removeIndexSafe(org, safeId);
         delete safes[org][safeId];
 
+        // Remove Root Role
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        _authority.setUserRole(_safe, uint8(DataTypes.Role.ROOT_SAFE), false);
+
         /// Disable Guard
         bytes memory data = abi.encodeCall(ISafe.setGuard, (address(0)));
         /// Execute transaction from target safe
@@ -1095,7 +1099,8 @@ contract PalmeraModule is Auth, Helpers {
         if (_authority.doesUserHaveRole(user, uint8(DataTypes.Role.SAFE_LEAD)))
         {
             _authority.setUserRole(user, uint8(DataTypes.Role.SAFE_LEAD), false);
-        } else if (
+        }
+        if (
             _authority.doesUserHaveRole(
                 user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
             )
@@ -1103,7 +1108,8 @@ contract PalmeraModule is Auth, Helpers {
             _authority.setUserRole(
                 user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY), false
             );
-        } else if (
+        }
+        if (
             _authority.doesUserHaveRole(
                 user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
             )
