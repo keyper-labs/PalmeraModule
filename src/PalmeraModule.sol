@@ -1082,6 +1082,10 @@ contract PalmeraModule is Auth, Helpers {
         removeIndexSafe(org, safeId);
         delete safes[org][safeId];
 
+        // Disable Roles RootSafe
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        _authority.setUserRole(_safe, uint8(DataTypes.Role.ROOT_SAFE), false);
+
         /// Disable Guard
         bytes memory data = abi.encodeCall(ISafe.setGuard, (address(0)));
         /// Execute transaction from target safe
