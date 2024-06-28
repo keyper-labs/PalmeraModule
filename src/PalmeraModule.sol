@@ -5,12 +5,10 @@ import {Auth, Authority} from "@solmate/auth/Auth.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {
     Helpers,
-    Context,
     Errors,
     Constants,
     DataTypes,
     Events,
-    Address,
     Enum,
     ISafe
 } from "./Helpers.sol";
@@ -18,8 +16,6 @@ import {
 /// @title Palmera Module
 /// @custom:security-contact general@palmeradao.xyz
 contract PalmeraModule is Auth, Helpers {
-    using Address for address;
-
     /// @dev Definition of Safe Palmera Module
     /// @notice NAME Name of the Palmera Module
     string public constant NAME = "Palmera Module";
@@ -30,7 +26,7 @@ contract PalmeraModule is Auth, Helpers {
     /// @dev Max Depth Tree Limit
     uint256 immutable maxDepthTreeLimit;
     /// @dev RoleAuthority
-    address immutable rolesAuthority;
+    address public immutable rolesAuthority;
     /// @dev Array of Orgs (based on Hash (On-chain Organisation) of the Org)
     bytes32[] private orgHash;
     /// @dev Index of Safe
@@ -63,7 +59,8 @@ contract PalmeraModule is Auth, Helpers {
                 || !isSafe(safe)
         ) {
             revert Errors.InvalidSafe(safe);
-        } else if (!isSafeRegistered(safe)) {
+        }
+        if (!isSafeRegistered(safe)) {
             revert Errors.SafeNotRegistered(safe);
         }
         _;
@@ -77,13 +74,13 @@ contract PalmeraModule is Auth, Helpers {
                 || !isSafe(safe)
         ) {
             revert Errors.InvalidSafe(safe);
-        } else if (!isSafeRegistered(safe)) {
+        }
+        if (!isSafeRegistered(safe)) {
             revert Errors.SafeNotRegistered(safe);
-        } else if (
-            safes[getOrgHashBySafe(safe)][getSafeIdBySafe(
-                getOrgHashBySafe(safe), safe
-            )].tier != DataTypes.Tier.ROOT
-        ) {
+        }
+        bytes32 org = getOrgHashBySafe(safe);
+        if (safes[org][getSafeIdBySafe(org, safe)].tier != DataTypes.Tier.ROOT)
+        {
             revert Errors.InvalidRootSafe(safe);
         }
         _;
@@ -143,7 +140,7 @@ contract PalmeraModule is Auth, Helpers {
         address caller = _msgSender();
         // Caller is Safe Lead: bypass check of signatures
         // Caller is another kind of wallet: check if it has the corrects signatures of the root/super safe
-        if (!isSafeLead(getSafeIdBySafe(org, targetSafe), caller)) {
+        if (!isSafeLeadExecOnBehalf(getSafeIdBySafe(org, targetSafe), caller)) {
             // Check if caller is a superSafe of the target safe (checking with isTreeMember because is the same method!!)
             if (hasNotPermissionOverTarget(superSafe, org, targetSafe)) {
                 revert Errors.NotAuthorizedExecOnBehalf();
@@ -518,13 +515,13 @@ contract PalmeraModule is Auth, Helpers {
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         for (uint256 j; j < _indexSafe.length;) {
             uint256 safe = _indexSafe[j];
-            DataTypes.Safe memory _safe = safes[org][safe];
+            address _safeAddr = safes[org][safe].safe;
             // Revoke roles to safe
             _authority.setUserRole(
-                _safe.safe, uint8(DataTypes.Role.SUPER_SAFE), false
+                _safeAddr, uint8(DataTypes.Role.SUPER_SAFE), false
             );
             // Disable safe lead role
-            disableSafeLeadRoles(safes[org][safe].safe);
+            disableSafeLeadRoles(_safeAddr);
             _exitSafe(safe);
             unchecked {
                 ++j;
@@ -657,13 +654,13 @@ contract PalmeraModule is Auth, Helpers {
     {
         address caller = _msgSender();
         bytes32 org = getOrgHashBySafe(caller);
-        uint256 rootSafe = getSafeIdBySafe(org, caller);
+        uint256 currentLimit = depthTreeLimit[org];
         if ((newLimit > maxDepthTreeLimit) || (newLimit <= depthTreeLimit[org]))
         {
             revert Errors.InvalidLimit();
         }
         emit Events.NewLimitLevel(
-            org, rootSafe, caller, depthTreeLimit[org], newLimit
+            org, getSafeIdBySafe(org, caller), caller, currentLimit, newLimit
         );
         depthTreeLimit[org] = newLimit;
     }
@@ -771,14 +768,14 @@ contract PalmeraModule is Auth, Helpers {
             uint256
         )
     {
-        bytes32 org = getOrgBySafe(safeId);
+        DataTypes.Safe memory safe = safes[getOrgBySafe(safeId)][safeId];
         return (
-            safes[org][safeId].tier,
-            safes[org][safeId].name,
-            safes[org][safeId].lead,
-            safes[org][safeId].safe,
-            safes[org][safeId].child,
-            safes[org][safeId].superSafe
+            safe.tier,
+            safe.name,
+            safe.lead,
+            safe.safe,
+            safe.child,
+            safe.superSafe
         );
     }
 
@@ -902,9 +899,42 @@ contract PalmeraModule is Auth, Helpers {
         if ((safe == address(0)) || safe == Constants.SENTINEL_ADDRESS) {
             return false;
         }
-        if (getOrgHashBySafe(safe) == bytes32(0)) return false;
-        if (getSafeIdBySafe(getOrgHashBySafe(safe), safe) == 0) return false;
+        bytes32 _orgHash = getOrgHashBySafe(safe);
+        if (_orgHash == bytes32(0)) return false;
+        if (getSafeIdBySafe(_orgHash, safe) == 0) return false;
         return true;
+    }
+
+    /// @notice Check if a user is an safe lead of a safe/org
+    /// @param safeId address of the safe
+    /// @param user address of the user that is a lead or not
+    /// @return bool
+    function isSafeLead(uint256 safeId, address user)
+        public
+        view
+        returns (bool)
+    {
+        bytes32 org = getOrgBySafe(safeId);
+        DataTypes.Safe memory _safe = safes[org][safeId];
+        if (_safe.safe == address(0)) return false;
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        if (
+            (_safe.lead == user)
+                && (
+                    _authority.doesUserHaveRole(
+                        user, uint8(DataTypes.Role.SAFE_LEAD)
+                    )
+                        || _authority.doesUserHaveRole(
+                            user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+                        )
+                        || _authority.doesUserHaveRole(
+                            user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+                        )
+                )
+        ) {
+            return true;
+        }
+        return false;
     }
 
     /// @dev Method to get Root Safe of a Safe
@@ -940,8 +970,9 @@ contract PalmeraModule is Auth, Helpers {
     /// @return Org Hashed Name
     function getOrgHashBySafe(address safe) public view returns (bytes32) {
         for (uint256 i; i < orgHash.length;) {
-            if (getSafeIdBySafe(orgHash[i], safe) != 0) {
-                return orgHash[i];
+            bytes32 _orgHash = orgHash[i];
+            if (getSafeIdBySafe(_orgHash, safe) != 0) {
+                return _orgHash;
             }
             unchecked {
                 ++i;
@@ -965,8 +996,9 @@ contract PalmeraModule is Auth, Helpers {
         /// Check if the Safe address is into an Safe mapping
         uint256[] memory indexSafeOrg = indexSafe[org];
         for (uint256 i; i < indexSafeOrg.length;) {
-            if (safes[org][indexSafeOrg[i]].safe == safe) {
-                return indexSafeOrg[i];
+            uint256 _index = indexSafeOrg[i];
+            if (safes[org][_index].safe == safe) {
+                return _index;
             }
             unchecked {
                 ++i;
@@ -986,32 +1018,15 @@ contract PalmeraModule is Auth, Helpers {
     {
         if ((safeId == 0) || (safeId > indexId)) revert Errors.InvalidSafeId();
         for (uint256 i; i < orgHash.length;) {
-            if (safes[orgHash[i]][safeId].safe != address(0)) {
-                orgSafe = orgHash[i];
+            bytes32 _orgHash = orgHash[i];
+            if (safes[_orgHash][safeId].safe != address(0)) {
+                orgSafe = _orgHash;
             }
             unchecked {
                 ++i;
             }
         }
         if (orgSafe == bytes32(0)) revert Errors.SafeIdNotRegistered(safeId);
-    }
-
-    /// @notice Check if a user is an safe lead of a safe/org
-    /// @param safeId address of the safe
-    /// @param user address of the user that is a lead or not
-    /// @return bool
-    function isSafeLead(uint256 safeId, address user)
-        public
-        view
-        returns (bool)
-    {
-        bytes32 org = getOrgBySafe(safeId);
-        DataTypes.Safe memory _safe = safes[org][safeId];
-        if (_safe.safe == address(0)) return false;
-        if (_safe.lead == user) {
-            return true;
-        }
-        return false;
     }
 
     /// @notice Refactoring method for Create Org or RootSafe
@@ -1225,5 +1240,33 @@ contract PalmeraModule is Auth, Helpers {
                 ++i;
             }
         }
+    }
+
+    /// @dev Verify if the Safe is Any Safe Lead
+    /// @param safeId Id of the Safe
+    /// @param user address of the user that is a lead or not
+    function isSafeLeadExecOnBehalf(uint256 safeId, address user)
+        private
+        view
+        returns (bool)
+    {
+        bytes32 org = getOrgBySafe(safeId);
+        DataTypes.Safe memory _safe = safes[org][safeId];
+        if (_safe.safe == address(0)) return false;
+        RolesAuthority _authority = RolesAuthority(rolesAuthority);
+        if (
+            (_safe.lead == user)
+                && (
+                    _authority.doesUserHaveRole(
+                        user, uint8(DataTypes.Role.SAFE_LEAD)
+                    )
+                        || _authority.doesUserHaveRole(
+                            user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+                        )
+                )
+        ) {
+            return true;
+        }
+        return false;
     }
 }

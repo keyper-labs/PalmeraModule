@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import {Address} from "@openzeppelin/utils/Address.sol";
 import {Context} from "@openzeppelin/utils/Context.sol";
 import {Constants} from "./libraries/Constants.sol";
 import {DataTypes} from "./libraries/DataTypes.sol";
@@ -26,8 +25,6 @@ abstract contract ValidAddress is Context {
 /// @notice Deny Helpers Methods for the Palmera module
 /// @dev RDeny Helper Palmera Modules
 abstract contract DenyHelper is ValidAddress {
-    using Address for address;
-
     /// @dev Deny/Allowlist Flags by Org
     /// @dev Org ID ---> Flag
     mapping(bytes32 => bool) public allowFeature;

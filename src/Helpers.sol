@@ -5,14 +5,9 @@ import {ISafe} from "./SafeInterfaces.sol";
 import {RolesAuthority} from "@solmate/auth/authorities/RolesAuthority.sol";
 import {Enum} from "@safe-contracts/base/Executor.sol";
 import {
-    DenyHelper,
-    Address,
-    Context,
-    Constants,
-    DataTypes,
-    Errors,
-    Events
+    DenyHelper, Constants, DataTypes, Errors, Events
 } from "./DenyHelper.sol";
+import {Address} from "@openzeppelin/utils/Address.sol";
 import {ISignatureValidator} from
     "@safe-contracts/interfaces/ISignatureValidator.sol";
 import {SignatureDecoder} from "@safe-contracts/common/SignatureDecoder.sol";
@@ -23,8 +18,6 @@ import {ReentrancyGuard} from "@openzeppelin/security/ReentrancyGuard.sol";
 /// @notice This contract is a helper contract for the Palmera Module
 /// @dev Helper Methods for the Palmera module
 abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
-    using Address for address;
-
     /// @dev Modifier for Validate if the address is a Safe Smart Account Wallet
     /// @param safe Address of the Safe Smart Account Wallet
     modifier IsSafe(address safe) {
@@ -129,7 +122,7 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
     /// @return bool
     function isSafe(address safe) public view returns (bool) {
         /// Check if the address is a Safe Smart Account Wallet
-        if (safe.isContract()) {
+        if (Address.isContract(safe)) {
             /// Check if the address is a Safe Multisig Wallet
             bytes memory payload = abi.encodeCall(ISafe.getThreshold, ());
             (bool success, bytes memory returnData) = safe.staticcall(payload);
