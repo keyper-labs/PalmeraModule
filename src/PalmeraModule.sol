@@ -1089,13 +1089,28 @@ contract PalmeraModule is Auth, Helpers {
     /// @param user Address of the user to disable roles
     function disableSafeLeadRoles(address user) private {
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        _authority.setUserRole(user, uint8(DataTypes.Role.SAFE_LEAD), false);
-        _authority.setUserRole(
-            user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY), false
-        );
-        _authority.setUserRole(
-            user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY), false
-        );
+        if (_authority.doesUserHaveRole(user, uint8(DataTypes.Role.SAFE_LEAD)))
+        {
+            _authority.setUserRole(user, uint8(DataTypes.Role.SAFE_LEAD), false);
+        }
+        if (
+            _authority.doesUserHaveRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            )
+        ) {
+            _authority.setUserRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY), false
+            );
+        }
+        if (
+            _authority.doesUserHaveRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            )
+        ) {
+            _authority.setUserRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY), false
+            );
+        }
     }
 
     /// @notice Private method to remove indexId from mapping of indexes into organisations

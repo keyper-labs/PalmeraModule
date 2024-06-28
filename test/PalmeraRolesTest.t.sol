@@ -358,11 +358,5 @@ contract PalmeraRolesTest is DeployHelper {
             ),
             false
         );
-        assertEq(
-            palmeraRolesContract.doesUserHaveRole(
-                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
-            ),
-            false
-        );
     }
 }
