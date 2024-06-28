@@ -614,8 +614,8 @@ contract PalmeraRolesTest is DeployHelper {
     function test_SafeLeadExecuteTxOnBehalf_CanExecuteTransactionOnBehalf()
         public
     {
-        (uint256 rootIdA, uint256 safeAId,,, uint256 subSafeIdA1,) =
-        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeAndOneChildEach(
+        (uint256 rootIdA,,,, uint256 subSafeIdA1,) = palmeraSafeBuilder
+            .setupTwoRootOrgWithOneSafeAndOneChildEach(
             orgName,
             safeA1Name,
             root2Name,
@@ -626,7 +626,6 @@ contract PalmeraRolesTest is DeployHelper {
 
         ///get Address of the safes of both Orgs
         address rootAddr = palmeraModule.getSafeAddress(rootIdA);
-        address safeAIdAddr = palmeraModule.getSafeAddress(safeAId);
         address subSafeAIdAddr = palmeraModule.getSafeAddress(subSafeIdA1);
 
         ///Set at least Two Safe Lead Role to safeAIdAddr over rootIdA
@@ -649,6 +648,9 @@ contract PalmeraRolesTest is DeployHelper {
         assertTrue(palmeraModule.isSafeLead(rootIdA, subSafeAIdAddr));
 
         /// try to thief the Native Token of the Root Safe after disconnect the Safe
+        bytes memory data;
+        bytes memory signature; // empty signature because is not necessary for Safe Lead Role
+        uint256 balanceRecipient = subSafeAIdAddr.balance;
         vm.startPrank(subSafeAIdAddr);
         bool result = palmeraModule.execTransactionOnBehalf(
             orgHash,
@@ -657,12 +659,12 @@ contract PalmeraRolesTest is DeployHelper {
             subSafeAIdAddr,
             50 gwei,
             /// try to thief the Native Token of the Root Safe
-            "0x",
+            data,
             Enum.Operation.Call,
-            "0x"
+            signature
         );
         vm.stopPrank();
-        assertEq(subSafeAIdAddr.balance, 50 gwei);
+        assertEq(subSafeAIdAddr.balance, balanceRecipient + 50 gwei);
         assertTrue(result);
     }
 
@@ -670,8 +672,8 @@ contract PalmeraRolesTest is DeployHelper {
     function testCannotSafeLeadRoleExecuteTxOnBehalfAfterDisconnectSafe()
         public
     {
-        (uint256 rootIdA, uint256 safeAId,,, uint256 subSafeIdA1,) =
-        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeAndOneChildEach(
+        (uint256 rootIdA,,,, uint256 subSafeIdA1,) = palmeraSafeBuilder
+            .setupTwoRootOrgWithOneSafeAndOneChildEach(
             orgName,
             safeA1Name,
             root2Name,
@@ -682,7 +684,6 @@ contract PalmeraRolesTest is DeployHelper {
 
         ///get Address of the safes of both Orgs
         address rootAddr = palmeraModule.getSafeAddress(rootIdA);
-        address safeAIdAddr = palmeraModule.getSafeAddress(safeAId);
         address subSafeAIdAddr = palmeraModule.getSafeAddress(subSafeIdA1);
 
         ///Set at least Two Safe Lead Role to safeAIdAddr over rootIdA
@@ -726,7 +727,8 @@ contract PalmeraRolesTest is DeployHelper {
         );
         assertTrue(palmeraModule.isSafeLead(rootIdA, subSafeAIdAddr));
 
-        ///onfirm can execute on behalf after assign role
+        /// confirm can execute on behalf after assign role
+        uint256 balanceRecipient = subSafeAIdAddr.balance;
         bytes memory data;
         vm.startPrank(subSafeAIdAddr);
         bool result = palmeraModule.execTransactionOnBehalf(
@@ -740,6 +742,7 @@ contract PalmeraRolesTest is DeployHelper {
             "0x"
         );
         vm.stopPrank();
+        assertEq(subSafeAIdAddr.balance, balanceRecipient + 50 gwei);
         assertTrue(result);
 
         ///Disconnect subSafeIdA1 from RootIdA
@@ -771,9 +774,7 @@ contract PalmeraRolesTest is DeployHelper {
 
         /// try to thief the Native Token of the Root Safe after disconnect the Safe
         vm.startPrank(subSafeAIdAddr);
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.NotAuthorizedExecOnBehalf.selector)
-        );
+        vm.expectRevert("GS020");
         result = palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
@@ -793,7 +794,7 @@ contract PalmeraRolesTest is DeployHelper {
     function test_SafeLeadModifyOwnersOnly_CannotCanExecuteTransactionOnBehalf()
         public
     {
-        (uint256 rootIdA, uint256 safeAId,,, uint256 subSafeIdA1,) =
+        (uint256 rootIdA,,,, uint256 subSafeIdA1,) =
         palmeraSafeBuilder.setupTwoRootOrgWithOneSafeAndOneChildEach(
             orgName,
             safeA1Name,
@@ -805,7 +806,6 @@ contract PalmeraRolesTest is DeployHelper {
 
         ///get Address of the safes of both Orgs
         address rootAddr = palmeraModule.getSafeAddress(rootIdA);
-        address safeAIdAddr = palmeraModule.getSafeAddress(safeAId);
         address subSafeAIdAddr = palmeraModule.getSafeAddress(subSafeIdA1);
 
         ///Set at least Two Safe Lead Role to safeAIdAddr over rootIdA
@@ -828,10 +828,11 @@ contract PalmeraRolesTest is DeployHelper {
         assertTrue(palmeraModule.isSafeLead(rootIdA, subSafeAIdAddr));
 
         /// try to thief the Native Token of the Root Safe after disconnect the Safe
+        uint256 balanceRecipient = subSafeAIdAddr.balance;
+        bytes memory data;
+        bytes memory signature; // empty signature because is not necessary for Safe Lead Role
         vm.startPrank(subSafeAIdAddr);
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.NotAuthorizedExecOnBehalf.selector)
-        );
+        vm.expectRevert("GS020");
         palmeraModule.execTransactionOnBehalf(
             orgHash,
             rootAddr,
@@ -839,11 +840,11 @@ contract PalmeraRolesTest is DeployHelper {
             subSafeAIdAddr,
             50 gwei,
             /// try to thief the Native Token of the Root Safe
-            "0x",
+            data,
             Enum.Operation.Call,
-            "0x"
+            signature
         );
         vm.stopPrank();
-        assertEq(subSafeAIdAddr.balance, 0 gwei);
+        assertEq(subSafeAIdAddr.balance, balanceRecipient);
     }
 }
