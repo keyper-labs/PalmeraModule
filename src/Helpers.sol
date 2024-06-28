@@ -41,7 +41,9 @@ abstract contract Helpers is DenyHelper, SignatureDecoder, ReentrancyGuard {
     /// @return Hash of the domain separator
     function domainSeparator() public view returns (bytes32) {
         return keccak256(
-            abi.encode(Constants.DOMAIN_SEPARATOR_TYPEHASH, getChainId(), address(this))
+            abi.encode(
+                Constants.DOMAIN_SEPARATOR_TYPEHASH, getChainId(), address(this)
+            )
         );
     }
 

@@ -19,5 +19,4 @@ abstract contract SigningUtils {
         address refundReceiver;
         bytes signatures;
     }
-
 }
