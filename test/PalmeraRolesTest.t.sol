@@ -1022,20 +1022,20 @@ contract PalmeraRolesTest is DeployHelper {
             // Verify the Roles Setting for subSafeB1
             assertEq(
                 palmeraRolesContract.doesUserHaveRole(
-                    subSafeAaddr[i], uint8(DataTypes.Role.SAFE_LEAD)
+                    subSafeAaddr[5], uint8(DataTypes.Role.SAFE_LEAD)
                 ),
                 true
             );
             assertEq(
                 palmeraRolesContract.doesUserHaveRole(
-                    subSafeAaddr[i],
+                    subSafeAaddr[5],
                     uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
                 ),
                 true
             );
             assertEq(
                 palmeraRolesContract.doesUserHaveRole(
-                    subSafeAaddr[i],
+                    subSafeAaddr[5],
                     uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
                 ),
                 true
@@ -1139,20 +1139,20 @@ contract PalmeraRolesTest is DeployHelper {
             // Verify the Roles Setting for subSafeB1
             assertEq(
                 palmeraRolesContract.doesUserHaveRole(
-                    subSafeAaddr[i], uint8(DataTypes.Role.SAFE_LEAD)
+                    subSafeAaddr[5], uint8(DataTypes.Role.SAFE_LEAD)
                 ),
                 true
             );
             assertEq(
                 palmeraRolesContract.doesUserHaveRole(
-                    subSafeAaddr[i],
+                    subSafeAaddr[5],
                     uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
                 ),
                 true
             );
             assertEq(
                 palmeraRolesContract.doesUserHaveRole(
-                    subSafeAaddr[i],
+                    subSafeAaddr[5],
                     uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
                 ),
                 true
@@ -1183,20 +1183,20 @@ contract PalmeraRolesTest is DeployHelper {
             // Verify the Roles Setting for subSafeB1
             assertEq(
                 palmeraRolesContract.doesUserHaveRole(
-                    subSafeAaddr[i], uint8(DataTypes.Role.SAFE_LEAD)
+                    subSafeAaddr[5], uint8(DataTypes.Role.SAFE_LEAD)
                 ),
                 false
             );
             assertEq(
                 palmeraRolesContract.doesUserHaveRole(
-                    subSafeAaddr[i],
+                    subSafeAaddr[5],
                     uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
                 ),
                 false
             );
             assertEq(
                 palmeraRolesContract.doesUserHaveRole(
-                    subSafeAaddr[i],
+                    subSafeAaddr[5],
                     uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
                 ),
                 false
