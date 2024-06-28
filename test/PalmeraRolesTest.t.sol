@@ -192,8 +192,10 @@ contract PalmeraRolesTest is DeployHelper {
 
     /// ************** Additional Test for SetRoles  / disableSafeLeadRoles ************** ///
 
-    /// @notice Vefigy setting multiples Lead roles, in any case when the safe is disconnect not preserve any Safe Lead Role in Org Differents
-    function testNotPreserveAnySafeLeadRoleAfterDisconnectSafeDifferentOrg() public {
+    /// @notice Verify setting multiples Lead roles, in any case when the safe is disconnect not preserve any Safe Lead Role in Org Differents
+    function testNotPreserveAnySafeLeadRoleAfterDisconnectSafeDifferentOrg()
+        public
+    {
         (uint256 rootIdA, uint256 safeAId) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
@@ -399,10 +401,14 @@ contract PalmeraRolesTest is DeployHelper {
         );
     }
 
-        /// @notice Vefigy setting multiples Lead roles, in any case when the safe is disconnect not preserve any Safe Lead Role in Org Differents
-    function testNotPreserveAnySafeLeadRoleAfterDisconnectSafeSameOrg() public {
+    /// @notice Verify setting multiples Lead roles, in any case when the safe is disconnect not preserve any Safe Lead Role in Org Differents
+    function testNotPreserveAnySafeLeadRoleAfterDisconnectSafeSameOrg()
+        public
+    {
         (uint256 rootIdA, uint256 safeAId, uint256 rootIdB, uint256 safeBId) =
-            palmeraSafeBuilder.setupTwoRootOrgWithOneSafeEach(orgName, safeA1Name, root2Name, safeBName);
+        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeEach(
+            orgName, safeA1Name, root2Name, safeBName
+        );
 
         // get Address of the safes of both Orgs
         address rootAddr = palmeraModule.getSafeAddress(rootIdA);
@@ -602,5 +608,242 @@ contract PalmeraRolesTest is DeployHelper {
             ),
             false
         );
+    }
+
+    /// @notice Verify any Safe config like Safe Lead Roles Modify Owners Only can execute any action like Safe Lead Role Exec on Behalf
+    function test_SafeLeadExecuteTxOnBehalf_CanExecuteTransactionOnBehalf()
+        public
+    {
+        (uint256 rootIdA, uint256 safeAId,,, uint256 subSafeIdA1,) =
+        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeAndOneChildEach(
+            orgName,
+            safeA1Name,
+            root2Name,
+            safeBName,
+            subSafeA1Name,
+            "subSafeB1"
+        );
+
+        ///get Address of the safes of both Orgs
+        address rootAddr = palmeraModule.getSafeAddress(rootIdA);
+        address safeAIdAddr = palmeraModule.getSafeAddress(safeAId);
+        address subSafeAIdAddr = palmeraModule.getSafeAddress(subSafeIdA1);
+
+        ///Set at least Two Safe Lead Role to safeAIdAddr over rootIdA
+        vm.startPrank(rootAddr);
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+            subSafeAIdAddr,
+            rootIdA,
+            true
+        );
+        vm.stopPrank();
+        ///Verify the Roles Setting for safeAIdAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAIdAddr,
+                uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            true
+        );
+        assertTrue(palmeraModule.isSafeLead(rootIdA, subSafeAIdAddr));
+
+        /// try to thief the Native Token of the Root Safe after disconnect the Safe
+        vm.startPrank(subSafeAIdAddr);
+        bool result = palmeraModule.execTransactionOnBehalf(
+            orgHash,
+            rootAddr,
+            rootAddr,
+            subSafeAIdAddr,
+            50 gwei,
+            /// try to thief the Native Token of the Root Safe
+            "0x",
+            Enum.Operation.Call,
+            "0x"
+        );
+        vm.stopPrank();
+        assertEq(subSafeAIdAddr.balance, 50 gwei);
+        assertTrue(result);
+    }
+
+    /// @notice Verify any Safe config like Safe Lead Role can't execute any action like Safe Lead Role on Execute on Behalf after disconnect Safe
+    function testCannotSafeLeadRoleExecuteTxOnBehalfAfterDisconnectSafe()
+        public
+    {
+        (uint256 rootIdA, uint256 safeAId,,, uint256 subSafeIdA1,) =
+        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeAndOneChildEach(
+            orgName,
+            safeA1Name,
+            root2Name,
+            safeBName,
+            subSafeA1Name,
+            "subSafeB1"
+        );
+
+        ///get Address of the safes of both Orgs
+        address rootAddr = palmeraModule.getSafeAddress(rootIdA);
+        address safeAIdAddr = palmeraModule.getSafeAddress(safeAId);
+        address subSafeAIdAddr = palmeraModule.getSafeAddress(subSafeIdA1);
+
+        ///Set at least Two Safe Lead Role to safeAIdAddr over rootIdA
+        vm.startPrank(rootAddr);
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD, subSafeAIdAddr, rootIdA, true
+        );
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
+            subSafeAIdAddr,
+            rootIdA,
+            true
+        );
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+            subSafeAIdAddr,
+            rootIdA,
+            true
+        );
+        vm.stopPrank();
+        ///Verify the Roles Setting for safeAIdAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAIdAddr, uint8(DataTypes.Role.SAFE_LEAD)
+            ),
+            true
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAIdAddr,
+                uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            true
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAIdAddr,
+                uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            true
+        );
+        assertTrue(palmeraModule.isSafeLead(rootIdA, subSafeAIdAddr));
+
+        ///onfirm can execute on behalf after assign role
+        bytes memory data;
+        vm.startPrank(subSafeAIdAddr);
+        bool result = palmeraModule.execTransactionOnBehalf(
+            orgHash,
+            rootAddr,
+            rootAddr,
+            subSafeAIdAddr,
+            50 gwei,
+            data,
+            Enum.Operation.Call,
+            "0x"
+        );
+        vm.stopPrank();
+        assertTrue(result);
+
+        ///Disconnect subSafeIdA1 from RootIdA
+        vm.startPrank(rootAddr);
+        palmeraModule.disconnectSafe(subSafeIdA1);
+        vm.stopPrank();
+        ///Verify the Roles Setting for subSafeAIdAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAIdAddr, uint8(DataTypes.Role.SAFE_LEAD)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAIdAddr,
+                uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAIdAddr,
+                uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            false
+        );
+        assertFalse(palmeraModule.isSafeLead(rootIdA, subSafeAIdAddr));
+
+        /// try to thief the Native Token of the Root Safe after disconnect the Safe
+        vm.startPrank(subSafeAIdAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.NotAuthorizedExecOnBehalf.selector)
+        );
+        result = palmeraModule.execTransactionOnBehalf(
+            orgHash,
+            rootAddr,
+            rootAddr,
+            subSafeAIdAddr,
+            50 gwei,
+            /// try to thief the Native Token of the Root Safe
+            data,
+            Enum.Operation.Call,
+            "0x"
+        );
+        vm.stopPrank();
+        assertFalse(result);
+    }
+
+    /// @notice Verify any Safe config like Safe Lead Roles Modify Owners Only can't execute any action like Safe Lead Role Exec on Behalf
+    function test_SafeLeadModifyOwnersOnly_CannotCanExecuteTransactionOnBehalf()
+        public
+    {
+        (uint256 rootIdA, uint256 safeAId,,, uint256 subSafeIdA1,) =
+        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeAndOneChildEach(
+            orgName,
+            safeA1Name,
+            root2Name,
+            safeBName,
+            subSafeA1Name,
+            "subSafeB1"
+        );
+
+        ///get Address of the safes of both Orgs
+        address rootAddr = palmeraModule.getSafeAddress(rootIdA);
+        address safeAIdAddr = palmeraModule.getSafeAddress(safeAId);
+        address subSafeAIdAddr = palmeraModule.getSafeAddress(subSafeIdA1);
+
+        ///Set at least Two Safe Lead Role to safeAIdAddr over rootIdA
+        vm.startPrank(rootAddr);
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
+            subSafeAIdAddr,
+            rootIdA,
+            true
+        );
+        vm.stopPrank();
+        ///Verify the Roles Setting for safeAIdAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAIdAddr,
+                uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            true
+        );
+        assertTrue(palmeraModule.isSafeLead(rootIdA, subSafeAIdAddr));
+
+        /// try to thief the Native Token of the Root Safe after disconnect the Safe
+        vm.startPrank(subSafeAIdAddr);
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.NotAuthorizedExecOnBehalf.selector)
+        );
+        palmeraModule.execTransactionOnBehalf(
+            orgHash,
+            rootAddr,
+            rootAddr,
+            subSafeAIdAddr,
+            50 gwei,
+            /// try to thief the Native Token of the Root Safe
+            "0x",
+            Enum.Operation.Call,
+            "0x"
+        );
+        vm.stopPrank();
+        assertEq(subSafeAIdAddr.balance, 0 gwei);
     }
 }
