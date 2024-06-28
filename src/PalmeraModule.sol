@@ -290,7 +290,7 @@ contract PalmeraModule is Auth, Helpers {
                 || role == DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
         ) {
             // Update safe/org lead
-            _safe.lead = user;
+            _safe.lead = enabled ? user : address(0);
         }
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         _authority.setUserRole(user, uint8(role), enabled);
@@ -1136,12 +1136,24 @@ contract PalmeraModule is Auth, Helpers {
     /// @param org ID's of the organisation
     /// @param safeId uint256 of the safe
     function removeIndexSafe(bytes32 org, uint256 safeId) private {
+        address _safe = safes[org][safeId].safe;
         uint256[] storage indexSafeOrg = indexSafe[org];
         for (uint256 i; i < indexSafeOrg.length;) {
             if (indexSafeOrg[i] == safeId) {
                 indexSafeOrg[i] = indexSafeOrg[indexSafeOrg.length - 1];
                 indexSafeOrg.pop();
                 break;
+            }
+            unchecked {
+                ++i;
+            }
+        }
+        // Remove Safe Address from the Any Safe Lead into the Same Org
+        mapping(uint256 => DataTypes.Safe) storage _safes = safes[org];
+        for (uint256 i; i < indexSafeOrg.length;) {
+            uint256 _safeId = indexSafeOrg[i];
+            if (_safes[_safeId].lead == _safe) {
+                _safes[_safeId].lead = address(0);
             }
             unchecked {
                 ++i;
