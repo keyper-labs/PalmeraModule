@@ -3,15 +3,14 @@ pragma solidity 0.8.23;
 
 import {BaseGuard} from "@safe-contracts/base/GuardManager.sol";
 import {StorageAccessible} from "@safe-contracts/common/StorageAccessible.sol";
+import {Context} from "@openzeppelin/utils/Context.sol";
 import {
     PalmeraModule,
-    Context,
     Errors,
     DataTypes,
     Constants,
     ISafe,
-    Enum,
-    RolesAuthority
+    Enum
 } from "./PalmeraModule.sol";
 
 /// @title Palmera Guard
@@ -79,28 +78,8 @@ contract PalmeraGuard is BaseGuard, Context {
             if (!palmeraModule.isSafe(caller)) {
                 bool isSafeLead;
                 // Caller is EAO (lead) : check if it has the rights over the target safe
-                RolesAuthority _authority =
-                    RolesAuthority(palmeraModule.rolesAuthority());
                 for (uint256 i = 1; i < palmeraModule.indexId();) {
-                    if (
-                        (
-                            _authority.doesUserHaveRole(
-                                caller, uint8(DataTypes.Role.SAFE_LEAD)
-                            )
-                                || _authority.doesUserHaveRole(
-                                    caller,
-                                    uint8(
-                                        DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
-                                    )
-                                )
-                                || _authority.doesUserHaveRole(
-                                    caller,
-                                    uint8(
-                                        DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
-                                    )
-                                )
-                        )
-                    ) {
+                    if (palmeraModule.isSafeLead(i, caller)) {
                         isSafeLead = true;
                         break;
                     }

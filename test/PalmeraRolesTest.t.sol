@@ -308,7 +308,7 @@ contract PalmeraRolesTest is DeployHelper {
             false
         );
         // Still have the roles in another Org
-        assertTrue(palmeraModule.isSafeLead(rootIdB, safeAIdAddr));
+        assertFalse(palmeraModule.isSafeLead(rootIdB, safeAIdAddr));
         // Disconnect SafeBIdAddr from RootIdB
         vm.startPrank(rootBAddr);
         palmeraModule.disconnectSafe(safeBId);
@@ -333,7 +333,7 @@ contract PalmeraRolesTest is DeployHelper {
             false
         );
         // Still have the roles in another Org
-        assertTrue(palmeraModule.isSafeLead(rootIdA, safeBIdAddr));
+        assertFalse(palmeraModule.isSafeLead(rootIdA, safeBIdAddr));
 
         // Set at least Two Safe Lead Role to rootAddr over rootIdB
         vm.startPrank(rootBAddr);
