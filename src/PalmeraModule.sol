@@ -390,7 +390,7 @@ contract PalmeraModule is Auth, Helpers {
                 !_authority.doesUserHaveRole(
                     superSafeOrgSafe.safe, uint8(DataTypes.Role.SUPER_SAFE)
                 )
-            ) && (superSafeOrgSafe.child.length > 0)
+            ) && (superSafeOrgSafe.child.length != 0)
         ) {
             _authority.setUserRole(
                 superSafeOrgSafe.safe, uint8(DataTypes.Role.SUPER_SAFE), true
@@ -429,7 +429,7 @@ contract PalmeraModule is Auth, Helpers {
         // Check if the safe is Root Safe and has child
         if (
             ((_safe.tier == DataTypes.Tier.ROOT) || (_safe.superSafe == 0))
-                && (_safe.child.length > 0)
+                && (_safe.child.length != 0)
         ) {
             revert Errors.CannotRemoveSafeBeforeRemoveChild(_safe.child.length);
         }
@@ -973,9 +973,10 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.OrgNotRegistered(org);
         }
         /// Check if the Safe address is into an Safe mapping
-        for (uint256 i; i < indexSafe[org].length;) {
-            if (safes[org][indexSafe[org][i]].safe == safe) {
-                return indexSafe[org][i];
+        uint256[] memory indexSafeOrg = indexSafe[org];
+        for (uint256 i; i < indexSafeOrg.length;) {
+            if (safes[org][indexSafeOrg[i]].safe == safe) {
+                return indexSafeOrg[i];
             }
             unchecked {
                 ++i;
@@ -1058,10 +1059,6 @@ contract PalmeraModule is Auth, Helpers {
         removeIndexSafe(org, safeId);
         delete safes[org][safeId];
 
-        // Remove Root Role
-        RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        _authority.setUserRole(_safe, uint8(DataTypes.Role.ROOT_SAFE), false);
-
         /// Disable Guard
         bytes memory data = abi.encodeCall(ISafe.setGuard, (address(0)));
         /// Execute transaction from target safe
@@ -1084,34 +1081,41 @@ contract PalmeraModule is Auth, Helpers {
     /// @param user Address of the user to disable roles
     function disableSafeLeadRoles(address user) private {
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
-        _authority.setUserRole(user, uint8(DataTypes.Role.SAFE_LEAD), false);
-        _authority.setUserRole(
-            user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY), false
-        );
-        _authority.setUserRole(
-            user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY), false
-        );
+        if (_authority.doesUserHaveRole(user, uint8(DataTypes.Role.SAFE_LEAD)))
+        {
+            _authority.setUserRole(user, uint8(DataTypes.Role.SAFE_LEAD), false);
+        }
+        if (
+            _authority.doesUserHaveRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            )
+        ) {
+            _authority.setUserRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY), false
+            );
+        }
+        if (
+            _authority.doesUserHaveRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            )
+        ) {
+            _authority.setUserRole(
+                user, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY), false
+            );
+        }
     }
 
     /// @notice Private method to remove indexId from mapping of indexes into organisations
     /// @param org ID's of the organisation
     /// @param safeId uint256 of the safe
     function removeIndexSafe(bytes32 org, uint256 safeId) private {
-        address safe = safes[org][safeId].safe;
-        uint256[] storage safeIndex = indexSafe[org];
-        for (uint256 i; i < safeIndex.length;) {
-            if (safeIndex[i] == safeId) {
-                safeIndex[i] = safeIndex[safeIndex.length - 1];
-                safeIndex.pop();
+        uint256[] storage indexSafeOrg = indexSafe[org];
+        for (uint256 i; i < indexSafeOrg.length;) {
+            if (indexSafeOrg[i] == safeId) {
+                indexSafeOrg[i] = indexSafeOrg[indexSafeOrg.length - 1];
+                indexSafeOrg.pop();
                 break;
             }
-            unchecked {
-                ++i;
-            }
-        }
-        for (uint256 i; i < safeIndex.length;) {
-            safes[org][safeIndex[i]].lead = safes[org][safeIndex[i]].lead
-                == safe ? address(0) : safes[org][safeIndex[i]].lead;
             unchecked {
                 ++i;
             }

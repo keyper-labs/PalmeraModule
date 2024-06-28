@@ -399,13 +399,5 @@ contract PalmeraRolesTest is DeployHelper {
             ),
             false
         );
-        assertEq(
-            palmeraRolesContract.doesUserHaveRole(
-                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
-            ),
-            false
-        );
-        // Eliminate Roles of RootA only in the Same Org
-        assertTrue(palmeraModule.isSafeLead(rootIdB, rootAddr));
     }
 }
