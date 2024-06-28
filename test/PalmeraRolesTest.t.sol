@@ -399,6 +399,12 @@ contract PalmeraRolesTest is DeployHelper {
             ),
             false
         );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
+            ),
+            false
+        );
     }
 
     /// @notice Verify setting multiples Lead roles, in any case when the safe is disconnect not preserve any Safe Lead Role in Org Differents
@@ -605,6 +611,12 @@ contract PalmeraRolesTest is DeployHelper {
         assertEq(
             palmeraRolesContract.doesUserHaveRole(
                 rootAddr, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
             ),
             false
         );
@@ -846,5 +858,104 @@ contract PalmeraRolesTest is DeployHelper {
         );
         vm.stopPrank();
         assertEq(subSafeAIdAddr.balance, balanceRecipient);
+    }
+
+    /// @notice Test to create a root Safe in one onchain org, remove Whole Tree it and after to add another or and verify not preserve any role
+    function test_AnyRootSafeNotPreserveRootSafeRoleAfterRemoveWholeTree() public {
+        (uint256 rootIdA,) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
+
+        (, uint256 safeBId) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(org2Name, safeBName);
+        // get Address of the safes of both Orgs
+        address rootAddr = palmeraModule.getSafeAddress(rootIdA);
+
+        // Verify Role of Root Safe
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
+            ),
+            true
+        );
+
+        // Disconnect Root Safe from Org
+        vm.startPrank(rootAddr);
+        palmeraModule.removeWholeTree();
+        vm.stopPrank();
+
+        // Verify the Roles Setting for rootAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
+            ),
+            false
+        );
+
+        // add old Root A Safe to Org 2 like subSafeA1
+        vm.startPrank(rootAddr);
+        uint256 subSafeB1Id = palmeraModule.addSafe(safeBId, "oldRootSafe");
+        vm.stopPrank();
+
+        address subSafeB1Addr = palmeraModule.getSafeAddress(subSafeB1Id);
+        // Verify is the Same Address
+        assertEq(rootAddr, subSafeB1Addr);
+
+        // Verify the Roles Setting for rootAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeB1Addr, uint8(DataTypes.Role.ROOT_SAFE)
+            ),
+            false
+        );
+    }
+
+        /// @notice Test to create a root Safe in one onchain org, disconnect it and after to add another or and verify not preserve any role
+    function test_AnyRootSafeNotPreserveRootSafeRoleAfterDisconnect() public {
+        (uint256 rootIdA, uint256 safeAId) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
+
+        (, uint256 safeBId) =
+            palmeraSafeBuilder.setupRootOrgAndOneSafe(org2Name, safeBName);
+        // get Address of the safes of both Orgs
+        address rootAddr = palmeraModule.getSafeAddress(rootIdA);
+
+        // Verify Role of Root Safe
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
+            ),
+            true
+        );
+
+        // Disconnect Root Safe from Org
+        vm.startPrank(rootAddr);
+        palmeraModule.disconnectSafe(safeAId);
+        palmeraModule.disconnectSafe(rootIdA);
+        vm.stopPrank();
+
+        // Verify the Roles Setting for rootAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.ROOT_SAFE)
+            ),
+            false
+        );
+
+        // add old Root A Safe to Org 2 like subSafeA1
+        vm.startPrank(rootAddr);
+        uint256 subSafeB1Id = palmeraModule.addSafe(safeBId, "oldRootSafe");
+        vm.stopPrank();
+
+        address subSafeB1Addr = palmeraModule.getSafeAddress(subSafeB1Id);
+        // Verify is the Same Address
+        assertEq(rootAddr, subSafeB1Addr);
+
+        // Verify the Roles Setting for rootAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeB1Addr, uint8(DataTypes.Role.ROOT_SAFE)
+            ),
+            false
+        );
     }
 }
