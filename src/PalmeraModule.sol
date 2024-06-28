@@ -380,7 +380,7 @@ contract PalmeraModule is Auth, Helpers {
                 !_authority.doesUserHaveRole(
                     superSafeOrgSafe.safe, uint8(DataTypes.Role.SUPER_SAFE)
                 )
-            ) && (superSafeOrgSafe.child.length > 0)
+            ) && (superSafeOrgSafe.child.length != 0)
         ) {
             _authority.setUserRole(
                 superSafeOrgSafe.safe, uint8(DataTypes.Role.SUPER_SAFE), true
@@ -419,7 +419,7 @@ contract PalmeraModule is Auth, Helpers {
         // Check if the safe is Root Safe and has child
         if (
             ((_safe.tier == DataTypes.Tier.ROOT) || (_safe.superSafe == 0))
-                && (_safe.child.length > 0)
+                && (_safe.child.length != 0)
         ) {
             revert Errors.CannotRemoveSafeBeforeRemoveChild(_safe.child.length);
         }
@@ -963,9 +963,10 @@ contract PalmeraModule is Auth, Helpers {
             revert Errors.OrgNotRegistered(org);
         }
         /// Check if the Safe address is into an Safe mapping
-        for (uint256 i; i < indexSafe[org].length;) {
-            if (safes[org][indexSafe[org][i]].safe == safe) {
-                return indexSafe[org][i];
+        uint256[] memory indexSafeOrg = indexSafe[org];
+        for (uint256 i; i < indexSafeOrg.length;) {
+            if (safes[org][indexSafeOrg[i]].safe == safe) {
+                return indexSafeOrg[i];
             }
             unchecked {
                 ++i;
@@ -1114,10 +1115,11 @@ contract PalmeraModule is Auth, Helpers {
     /// @param org ID's of the organisation
     /// @param safeId uint256 of the safe
     function removeIndexSafe(bytes32 org, uint256 safeId) private {
-        for (uint256 i; i < indexSafe[org].length;) {
-            if (indexSafe[org][i] == safeId) {
-                indexSafe[org][i] = indexSafe[org][indexSafe[org].length - 1];
-                indexSafe[org].pop();
+        uint256[] storage indexSafeOrg = indexSafe[org];
+        for (uint256 i; i < indexSafeOrg.length;) {
+            if (indexSafeOrg[i] == safeId) {
+                indexSafeOrg[i] = indexSafeOrg[indexSafeOrg.length - 1];
+                indexSafeOrg.pop();
                 break;
             }
             unchecked {
