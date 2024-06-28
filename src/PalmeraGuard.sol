@@ -90,7 +90,7 @@ contract PalmeraGuard is BaseGuard, Context {
                                 || _authority.doesUserHaveRole(
                                     caller,
                                     uint8(
-                                        DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY
+                                        DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
                                     )
                                 )
                                 || _authority.doesUserHaveRole(
