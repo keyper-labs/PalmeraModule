@@ -290,7 +290,7 @@ contract PalmeraModule is Auth, Helpers {
                 || role == DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY
         ) {
             // Update safe/org lead
-            _safe.lead = enabled ? user : address(0);
+            _safe.lead = user;
         }
         RolesAuthority _authority = RolesAuthority(rolesAuthority);
         _authority.setUserRole(user, uint8(role), enabled);

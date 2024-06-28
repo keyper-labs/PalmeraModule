@@ -193,7 +193,7 @@ contract PalmeraRolesTest is DeployHelper {
     /// ************** Additional Test for SetRoles  / disableSafeLeadRoles ************** ///
 
     /// @notice Vefigy setting multiples Lead roles, in any case when the safe is disconnect not preserve any Safe Lead Role
-    function testNotPreserveAnyRoleAfterDisconnectSafeOnlyInTheSameOrg()
+    function testNotPreserveAnySafeLeadRoleAfterDisconnectSafe()
         public
     {
         (uint256 rootIdA, uint256 safeAId) =
@@ -307,7 +307,7 @@ contract PalmeraRolesTest is DeployHelper {
             ),
             false
         );
-        // Still have the roles in another Org
+        // Must be false because the safe is disconnected, and all safe lead roles are removed
         assertFalse(palmeraModule.isSafeLead(rootIdB, safeAIdAddr));
         // Disconnect SafeBIdAddr from RootIdB
         vm.startPrank(rootBAddr);
@@ -332,7 +332,7 @@ contract PalmeraRolesTest is DeployHelper {
             ),
             false
         );
-        // Still have the roles in another Org
+        // Must be false because the safe is disconnected, and all safe lead roles are removed
         assertFalse(palmeraModule.isSafeLead(rootIdA, safeBIdAddr));
 
         // Set at least Two Safe Lead Role to rootAddr over rootIdB
