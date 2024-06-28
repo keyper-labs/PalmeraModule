@@ -192,15 +192,218 @@ contract PalmeraRolesTest is DeployHelper {
 
     /// ************** Additional Test for SetRoles  / disableSafeLeadRoles ************** ///
 
-    /// @notice Vefigy setting multiples Lead roles, in any case when the safe is disconnect not preserve any Safe Lead Role
-    function testNotPreserveAnySafeLeadRoleAfterDisconnectSafe()
-        public
-    {
+    /// @notice Vefigy setting multiples Lead roles, in any case when the safe is disconnect not preserve any Safe Lead Role in Org Differents
+    function testNotPreserveAnySafeLeadRoleAfterDisconnectSafeDifferentOrg() public {
         (uint256 rootIdA, uint256 safeAId) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
         (uint256 rootIdB, uint256 safeBId) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(org2Name, safeBName);
+        // get Address of the safes of both Orgs
+        address rootAddr = palmeraModule.getSafeAddress(rootIdA);
+        address rootBAddr = palmeraModule.getSafeAddress(rootIdB);
+        address safeAIdAddr = palmeraModule.getSafeAddress(safeAId);
+        address safeBIdAddr = palmeraModule.getSafeAddress(safeBId);
+
+        // Set at least Two Safe Lead Role to safeBIdAddr over rootIdA
+        vm.startPrank(rootAddr);
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD, safeBIdAddr, rootIdA, true
+        );
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
+            safeBIdAddr,
+            rootIdA,
+            true
+        );
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+            safeBIdAddr,
+            rootIdA,
+            true
+        );
+        vm.stopPrank();
+        // Verify the Roles Setting for safeBIdAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeBIdAddr, uint8(DataTypes.Role.SAFE_LEAD)
+            ),
+            true
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeBIdAddr, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            true
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeBIdAddr, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            true
+        );
+        assertTrue(palmeraModule.isSafeLead(rootIdA, safeBIdAddr));
+        // Set at least Two Safe Lead Role to safeAIdAddr over rootIdB
+        vm.startPrank(rootBAddr);
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD, safeAIdAddr, rootIdB, true
+        );
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
+            safeAIdAddr,
+            rootIdB,
+            true
+        );
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+            safeAIdAddr,
+            rootIdB,
+            true
+        );
+        vm.stopPrank();
+        // Verify the Roles Setting for safeAIdAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeAIdAddr, uint8(DataTypes.Role.SAFE_LEAD)
+            ),
+            true
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeAIdAddr, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            true
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeAIdAddr, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            true
+        );
+        assertTrue(palmeraModule.isSafeLead(rootIdB, safeAIdAddr));
+
+        // Disconnect SafeAIdAddr from RootIdA
+        vm.startPrank(rootAddr);
+        palmeraModule.disconnectSafe(safeAId);
+        vm.stopPrank();
+        // Verify the Roles Setting for safeAIdAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeAIdAddr, uint8(DataTypes.Role.SAFE_LEAD)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeAIdAddr, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeAIdAddr, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            false
+        );
+        // Must be false because the safe is disconnected, and all safe lead roles are removed
+        assertFalse(palmeraModule.isSafeLead(rootIdB, safeAIdAddr));
+        // Disconnect SafeBIdAddr from RootIdB
+        vm.startPrank(rootBAddr);
+        palmeraModule.disconnectSafe(safeBId);
+        vm.stopPrank();
+        // Verify the Roles Setting for safeBIdAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeBIdAddr, uint8(DataTypes.Role.SAFE_LEAD)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeBIdAddr, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                safeBIdAddr, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            false
+        );
+        // Must be false because the safe is disconnected, and all safe lead roles are removed
+        assertFalse(palmeraModule.isSafeLead(rootIdA, safeBIdAddr));
+
+        // Set at least Two Safe Lead Role to rootAddr over rootIdB
+        vm.startPrank(rootBAddr);
+        palmeraModule.setRole(DataTypes.Role.SAFE_LEAD, rootAddr, rootIdB, true);
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY, rootAddr, rootIdB, true
+        );
+        palmeraModule.setRole(
+            DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+            rootAddr,
+            rootIdB,
+            true
+        );
+        vm.stopPrank();
+        // Verify the Roles Setting for safeAIdAddr
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.SAFE_LEAD)
+            ),
+            true
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            true
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            true
+        );
+        assertTrue(palmeraModule.isSafeLead(rootIdB, rootAddr));
+
+        // disconnect RootA
+        vm.startPrank(rootAddr);
+        palmeraModule.disconnectSafe(rootIdA);
+        vm.stopPrank();
+
+        // verify the roles setting for rootA
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.SUPER_SAFE)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.SAFE_LEAD)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                rootAddr, uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            false
+        );
+    }
+
+        /// @notice Vefigy setting multiples Lead roles, in any case when the safe is disconnect not preserve any Safe Lead Role in Org Differents
+    function testNotPreserveAnySafeLeadRoleAfterDisconnectSafeSameOrg() public {
+        (uint256 rootIdA, uint256 safeAId, uint256 rootIdB, uint256 safeBId) =
+            palmeraSafeBuilder.setupTwoRootOrgWithOneSafeEach(orgName, safeA1Name, root2Name, safeBName);
+
         // get Address of the safes of both Orgs
         address rootAddr = palmeraModule.getSafeAddress(rootIdA);
         address rootBAddr = palmeraModule.getSafeAddress(rootIdB);
