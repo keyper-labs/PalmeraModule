@@ -806,8 +806,8 @@ contract PalmeraRolesTest is DeployHelper {
     function test_SafeLeadModifyOwnersOnly_CannotCanExecuteTransactionOnBehalf()
         public
     {
-        (uint256 rootIdA,,,, uint256 subSafeIdA1,) =
-        palmeraSafeBuilder.setupTwoRootOrgWithOneSafeAndOneChildEach(
+        (uint256 rootIdA,,,, uint256 subSafeIdA1,) = palmeraSafeBuilder
+            .setupTwoRootOrgWithOneSafeAndOneChildEach(
             orgName,
             safeA1Name,
             root2Name,
@@ -861,7 +861,9 @@ contract PalmeraRolesTest is DeployHelper {
     }
 
     /// @notice Test to create a root Safe in one onchain org, remove Whole Tree it and after to add another or and verify not preserve any role
-    function test_AnyRootSafeNotPreserveRootSafeRoleAfterRemoveWholeTree() public {
+    function test_AnyRootSafeNotPreserveRootSafeRoleAfterRemoveWholeTree()
+        public
+    {
         (uint256 rootIdA,) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
 
@@ -909,7 +911,7 @@ contract PalmeraRolesTest is DeployHelper {
         );
     }
 
-        /// @notice Test to create a root Safe in one onchain org, disconnect it and after to add another or and verify not preserve any role
+    /// @notice Test to create a root Safe in one onchain org, disconnect it and after to add another or and verify not preserve any role
     function test_AnyRootSafeNotPreserveRootSafeRoleAfterDisconnect() public {
         (uint256 rootIdA, uint256 safeAId) =
             palmeraSafeBuilder.setupRootOrgAndOneSafe(orgName, safeA1Name);
@@ -957,5 +959,286 @@ contract PalmeraRolesTest is DeployHelper {
             ),
             false
         );
+    }
+
+    /// @notice Test to create a complex multi Root Org, assign one child Safe like a Safe Lead Role in multiples Safe of OnChain Org and Validate all al removed after disconnect
+    function test_AnySafeNotPreserveSafeLeadRolesAfterDisconnectinTheSameOrg()
+        public
+    {
+        (
+            uint256 rootIdA,
+            uint256 safeIdA1,
+            uint256 rootIdB,
+            uint256 safeIdB1,
+            uint256 subSafeA1,
+            uint256 subSafeB1
+        ) = palmeraSafeBuilder.setupTwoRootOrgWithOneSafeAndOneChildEach(
+            orgName,
+            safeA1Name,
+            org2Name,
+            safeBName,
+            subSafeA1Name,
+            subSafeB1Name
+        );
+        // Array of Address for the subSafes
+        address[] memory subSafeAaddr = new address[](6);
+        uint256[] memory subSafeAid = new uint256[](6);
+
+        // Assig the Address to first two subSafes
+        subSafeAaddr[0] = palmeraModule.getSafeAddress(rootIdA);
+        subSafeAaddr[1] = palmeraModule.getSafeAddress(safeIdA1);
+        subSafeAaddr[2] = palmeraModule.getSafeAddress(subSafeA1);
+        subSafeAaddr[3] = palmeraModule.getSafeAddress(rootIdB);
+        subSafeAaddr[4] = palmeraModule.getSafeAddress(safeIdB1);
+        subSafeAaddr[5] = palmeraModule.getSafeAddress(subSafeB1);
+
+        // Assig the Id to first two subSafes
+        subSafeAid[0] = rootIdA;
+        subSafeAid[1] = safeIdA1;
+        subSafeAid[2] = subSafeA1;
+        subSafeAid[3] = rootIdB;
+        subSafeAid[4] = safeIdB1;
+        subSafeAid[5] = subSafeB1;
+
+        // Address of Root B
+        address rootBAddr = palmeraModule.getSafeAddress(rootIdB);
+
+        // Assign subSafeB1 as Safe Lead Role in multiples Safe of OnChain Org
+        for (uint256 i = 0; i < subSafeAaddr.length - 1; i++) {
+            // Set at least Two Safe Lead Role to safeAIdAddr over rootIdA
+            vm.startPrank(subSafeAaddr[i <= 2 ? 0 : 3]);
+            palmeraModule.setRole(
+                DataTypes.Role.SAFE_LEAD, subSafeAaddr[5], subSafeAid[i], true
+            );
+            palmeraModule.setRole(
+                DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
+                subSafeAaddr[5],
+                subSafeAid[i],
+                true
+            );
+            palmeraModule.setRole(
+                DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+                subSafeAaddr[5],
+                subSafeAid[i],
+                true
+            );
+            vm.stopPrank();
+            // Verify the Roles Setting for subSafeB1
+            assertEq(
+                palmeraRolesContract.doesUserHaveRole(
+                    subSafeAaddr[5], uint8(DataTypes.Role.SAFE_LEAD)
+                ),
+                true
+            );
+            assertEq(
+                palmeraRolesContract.doesUserHaveRole(
+                    subSafeAaddr[5],
+                    uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+                ),
+                true
+            );
+            assertEq(
+                palmeraRolesContract.doesUserHaveRole(
+                    subSafeAaddr[5],
+                    uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+                ),
+                true
+            );
+            assertTrue(palmeraModule.isSafeLead(subSafeAid[i], subSafeAaddr[5]));
+        }
+
+        // disconnect subSafeB1 from RootIdB
+        vm.startPrank(rootBAddr);
+        palmeraModule.disconnectSafe(subSafeB1);
+        vm.stopPrank();
+
+        // Verify the Roles Setting for subSafeB1
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAaddr[5], uint8(DataTypes.Role.SAFE_LEAD)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAaddr[5],
+                uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAaddr[5],
+                uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            false
+        );
+        for (uint256 i = 0; i < subSafeAaddr.length - 1; i++) {
+            (,, address safeLead,,,) = palmeraModule.getSafeInfo(subSafeAid[i]);
+            assertEq(safeLead, address(0));
+            assertFalse(
+                palmeraModule.isSafeLead(subSafeAid[i], subSafeAaddr[5])
+            );
+        }
+    }
+
+    /// @notice Test to create a complex multi Root Org, assign one child Safe like a Safe Lead Role in multiples Safe of OnChain Org and Validate all al removed after disconnect
+    function test_AnySafeNotPreserveSafeLeadRolesAfterUnSetRole() public {
+        (
+            uint256 rootIdA,
+            uint256 safeIdA1,
+            uint256 rootIdB,
+            uint256 safeIdB1,
+            uint256 subSafeA1,
+            uint256 subSafeB1
+        ) = palmeraSafeBuilder.setupTwoRootOrgWithOneSafeAndOneChildEach(
+            orgName,
+            safeA1Name,
+            org2Name,
+            safeBName,
+            subSafeA1Name,
+            subSafeB1Name
+        );
+        // Array of Address for the subSafes
+        address[] memory subSafeAaddr = new address[](6);
+        uint256[] memory subSafeAid = new uint256[](6);
+
+        // Assig the Address to first two subSafes
+        subSafeAaddr[0] = palmeraModule.getSafeAddress(rootIdA);
+        subSafeAaddr[1] = palmeraModule.getSafeAddress(safeIdA1);
+        subSafeAaddr[2] = palmeraModule.getSafeAddress(subSafeA1);
+        subSafeAaddr[3] = palmeraModule.getSafeAddress(rootIdB);
+        subSafeAaddr[4] = palmeraModule.getSafeAddress(safeIdB1);
+        subSafeAaddr[5] = palmeraModule.getSafeAddress(subSafeB1);
+
+        // Assig the Id to first two subSafes
+        subSafeAid[0] = rootIdA;
+        subSafeAid[1] = safeIdA1;
+        subSafeAid[2] = subSafeA1;
+        subSafeAid[3] = rootIdB;
+        subSafeAid[4] = safeIdB1;
+        subSafeAid[5] = subSafeB1;
+
+        // Address of Root B
+        address rootBAddr = palmeraModule.getSafeAddress(rootIdB);
+
+        // Assign subSafeB1 as Safe Lead Role in multiples Safe of OnChain Org
+        for (uint256 i = 0; i < subSafeAaddr.length - 1; i++) {
+            // Set at least Two Safe Lead Role to safeAIdAddr over rootIdA
+            vm.startPrank(subSafeAaddr[i <= 2 ? 0 : 3]);
+            palmeraModule.setRole(
+                DataTypes.Role.SAFE_LEAD, subSafeAaddr[5], subSafeAid[i], true
+            );
+            palmeraModule.setRole(
+                DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
+                subSafeAaddr[5],
+                subSafeAid[i],
+                true
+            );
+            palmeraModule.setRole(
+                DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+                subSafeAaddr[5],
+                subSafeAid[i],
+                true
+            );
+            vm.stopPrank();
+            // Verify the Roles Setting for subSafeB1
+            assertEq(
+                palmeraRolesContract.doesUserHaveRole(
+                    subSafeAaddr[5], uint8(DataTypes.Role.SAFE_LEAD)
+                ),
+                true
+            );
+            assertEq(
+                palmeraRolesContract.doesUserHaveRole(
+                    subSafeAaddr[5],
+                    uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+                ),
+                true
+            );
+            assertEq(
+                palmeraRolesContract.doesUserHaveRole(
+                    subSafeAaddr[5],
+                    uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+                ),
+                true
+            );
+            assertTrue(palmeraModule.isSafeLead(subSafeAid[i], subSafeAaddr[5]));
+        }
+
+        // UnAssign subSafeB1 as Safe Lead Role in multiples Safe of OnChain Org
+        for (uint256 i = 0; i < subSafeAaddr.length - 1; i++) {
+            // Set at least Two Safe Lead Role to safeAIdAddr over rootIdA
+            vm.startPrank(subSafeAaddr[i <= 2 ? 0 : 3]);
+            palmeraModule.setRole(
+                DataTypes.Role.SAFE_LEAD, subSafeAaddr[5], subSafeAid[i], false
+            );
+            palmeraModule.setRole(
+                DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY,
+                subSafeAaddr[5],
+                subSafeAid[i],
+                false
+            );
+            palmeraModule.setRole(
+                DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY,
+                subSafeAaddr[5],
+                subSafeAid[i],
+                false
+            );
+            vm.stopPrank();
+            // Verify the Roles Setting for subSafeB1
+            assertEq(
+                palmeraRolesContract.doesUserHaveRole(
+                    subSafeAaddr[5], uint8(DataTypes.Role.SAFE_LEAD)
+                ),
+                false
+            );
+            assertEq(
+                palmeraRolesContract.doesUserHaveRole(
+                    subSafeAaddr[5],
+                    uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+                ),
+                false
+            );
+            assertEq(
+                palmeraRolesContract.doesUserHaveRole(
+                    subSafeAaddr[5],
+                    uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+                ),
+                false
+            );
+            assertFalse(
+                palmeraModule.isSafeLead(subSafeAid[i], subSafeAaddr[5])
+            );
+        }
+
+        // Verify the Roles Setting for subSafeB1
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAaddr[5], uint8(DataTypes.Role.SAFE_LEAD)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAaddr[5],
+                uint8(DataTypes.Role.SAFE_LEAD_MODIFY_OWNERS_ONLY)
+            ),
+            false
+        );
+        assertEq(
+            palmeraRolesContract.doesUserHaveRole(
+                subSafeAaddr[5],
+                uint8(DataTypes.Role.SAFE_LEAD_EXEC_ON_BEHALF_ONLY)
+            ),
+            false
+        );
+        for (uint256 i = 0; i < subSafeAaddr.length - 1; i++) {
+            (,, address safeLead,,,) = palmeraModule.getSafeInfo(subSafeAid[i]);
+            assertEq(safeLead, address(0));
+            assertFalse(
+                palmeraModule.isSafeLead(subSafeAid[i], subSafeAaddr[5])
+            );
+        }
     }
 }
