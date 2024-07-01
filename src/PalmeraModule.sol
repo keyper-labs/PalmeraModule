@@ -1020,13 +1020,13 @@ contract PalmeraModule is Auth, Helpers {
         for (uint256 i; i < orgHash.length;) {
             bytes32 _orgHash = orgHash[i];
             if (safes[_orgHash][safeId].safe != address(0)) {
-                orgSafe = _orgHash;
+                return orgHash[i];
             }
             unchecked {
                 ++i;
             }
         }
-        if (orgSafe == bytes32(0)) revert Errors.SafeIdNotRegistered(safeId);
+        revert Errors.SafeIdNotRegistered(safeId);
     }
 
     /// @notice Refactoring method for Create Org or RootSafe
